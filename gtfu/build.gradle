@@ -1,0 +1,30 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'gtfu.Main'
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile "com.google.transit:gtfs-realtime-bindings:0.0.4"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.7.0"
+    compile "com.google.cloud:google-cloud-datastore:1.2.1"
+    compile "org.apache.httpcomponents.client5:httpclient5:5.1"
+    compile "com.googlecode.json-simple:json-simple:1.1.1"
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "gtfu.RealtimeVisualization"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+

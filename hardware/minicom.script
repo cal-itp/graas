@@ -1,0 +1,4 @@
+send AT+CUSBPIDSWITCH=9011,1,1
+expect "OK"
+! killall minicom
+

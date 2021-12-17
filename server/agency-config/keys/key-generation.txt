@@ -1,0 +1,21 @@
+The system supports to different types of keys: RSA keys (1024 and 2048 bits), and ECDSA keys (256 bits).
+
+To generate an RSA 1024 bit key pair:
+- run 'ssh-keygen -t rsa -m PKCS8 -b 1024'
+- this will ask you to for a location for the private key file
+- a private and public key file will be created
+- run 'ssh-keygen -f <private-key-file> -e -m pem > <tmp-file>'
+- this creates a version of the public key ingestible by the AVL server
+- run 'mv <tmp-file> <public-key-file>' to replace the public key file
+
+To generate an RSA 2048 bit key pair, follow the steps above, except for the first command, specify '-b 2048'
+
+To generate an ECDSA 256 bit key pair:
+- run 'ssh-keygen -t ecdsa -m PKCS8 -b 256'
+- this will ask you to for a location for the private key file
+- a private and public key file will be created
+- run 'openssl ec -in <private-key-file> -pubout -out <tmp-file>'
+- this creates a version of the public key ingestible by the AVL server
+- run 'mv <tmp-file> <public-key-file>' to replace the public key file
+
+to dump an EC private key: openssl ec -in id_ecdsa -text -noout

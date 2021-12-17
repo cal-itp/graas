@@ -1,0 +1,18 @@
+indexes:
+
+- kind: position
+  properties:
+  - name: uuid
+  - name: timestamp
+
+- kind: position
+  properties:
+  - name: agency-id
+  - name: timestamp
+
+- kind: alert
+  properties:
+  - name: agency_key
+  - name: time_stamp
+    direction: desc
+

@@ -1,0 +1,49 @@
+once a day check if gtfs.zip has changed since last download. if so:
+- download gtfs.zip and unpack
+- create empty grid as sparse matric, aka hash table with grid indices as keys and segment lists as values
+- for each trip with matching calendar day:
+  + read in all shape points for trip
+  + read in all stops for trip
+  + for each stop:
+    . find closest shape point and set stop as closest stop
+  + for each shape point:
+    . calculate predicted arrival time
+  + create new trip segment with trip id, area, start time and offset to line in file that contains first point of area
+  + for all shape points of trip:
+    . update area with current point
+    . add point to segment point list
+    . if length of current segment > MAX_SEGMENT_LENGTH or at end of shape points
+      o at end time and offset to line in file that contains last point of area to trip segment
+      o create list of grid indices for trip segment based on grid indices for each shape point in list 
+      o discard segment point list
+      o add trip segment to grid in all lists for found grid indices
+      o create new trip segment with trip id, area, start time and offset to line in file that contains first point of area
+
+every n seconds:
+- get current time
+- get current lat/long
+# - create empty list of segment matches
+# - for all trips
+#  + if current day doesn't match service id calendar, disregard
+#  + if current time doesn't fall between trip start and end time, disregard
+#  + if trip has segment that contains lat/long at the appropriate time
+#    . add segment to list of segment matches
+#  + else discard
+- copy list of segment matches in grid based on lat/long grid index
+- remove all segments that don't match current time
+- if list of segment matches is empty -> done
+- if list length is 1, send position update for trip id associated with segment
+- if list length is > 1, select segment that contains the shape point closest in space and time to current lat/long, and send position update for associated trip id
+
+visualization:
+- draw grid from bounding box aspect ratio and subdivision count
+- segment drawing:
+  + don't draw segments that don't match current time
+  + draw unmatched segments in translucent outline from bounding box in route color
+  + draw segments with matching bounding box in opaque outline from bounding box in route color
+  + for segment with highest non-zero score, additionally draw segment points
+- draw current position from graas-bt debug output
+- draw live/replay time
+- draw agency name
+- draw list of currently active trips (head sign @ departure time)
+

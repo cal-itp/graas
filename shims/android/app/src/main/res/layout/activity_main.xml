@@ -1,0 +1,20 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<LinearLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+    android:layout_width = "fill_parent"
+    android:layout_height = "fill_parent"
+    android:orientation = "vertical" >
+
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <EditText
+        android:id="@+id/text_field"
+        android:layout_width="fill_parent"
+        android:layout_height="131dp"
+        android:background="#800000"
+        android:gravity="top"
+        android:inputType="textMultiLine" />
+
+</LinearLayout>

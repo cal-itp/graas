@@ -1,0 +1,18 @@
+{
+    "filter-config": {
+        "filter-by-day-of-week": true,
+        "time-of-day-window": 30,
+        "stop-lat-long-window": 5280
+    },
+    "route-names": {
+        "Select Route": null,
+        "2 @ 6:10 am": {"trip_id": "2WD2_0610", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 34.637390, "long": -120.459579}},
+        "2 @ 6:55 am": {"trip_id": "2WD2_0655", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 34.637390, "long": -120.459579}},
+        "2 @ 7:50 am": {"trip_id": "2WD2_0750", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 34.637390, "long": -120.459579}}
+    },
+    "vehicle-ids": [
+        "123",
+        "456",
+        "789"
+    ]
+}

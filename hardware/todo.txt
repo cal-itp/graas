@@ -1,0 +1,8 @@
+- [done] update app on pixel
+- [done] points[] vs unsent_points[]
+- [done] /etc/rc.local
+- [done] DEBUG nop
+- [done] shorter USB cable
+- kill button: upon receiving kill touch event, remove kill button from UI and send shutdown event to android app
+- run BT scan command in separate thread regularly
+- how to handle hanging lat/long server updates?

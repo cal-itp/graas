@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <title>GRaaS</title>
+    <link rel="apple-touch-icon" href="bus.png">
+    <script src="https://www.gstatic.com/firebasejs/7.14.3/firebase-app.js"></script>
+    <script src="../static/firebaseconfig.js"></script>
+    <script src="../static/html5-qrcode.min.js"></script>
+    <script src="../static/nosleep.js"></script>
+    <script src="../static/configmatrix.js"></script>
+    <link type="text/css" rel="stylesheet" href="../static/style.css">
+  </head>
+
+  <body style="background-color: var(--main-bg-color)" onblur="handleOnBlur()" onfocus="handleOnFocus()">
+    <div id="qr-reader" style="width: 100%"></div>
+    <div align="left" style="width: 100%">
+        <button onclick="handleStartStop()" id="start-stop" style="display: block; background-color: green">Load trips</button>
+    </div>
+    <div id="config" align="left" style="width: 100%; display: none" class="config">
+      <select id="route-select" onchange="handleRouteChoice()" style="margin-left: 15px; width: 100%"></select>
+      <select id="bus-select" onchange="handleBusChoice()" style="margin-left: 15px; width: 100%"></select>
+      <select id="driver-select" onchange="handleDriverChoice()" style="display: none; margin-left: 15px; width: 100%"></select>
+      <button id="okay" disabled style="display:inline-block; margin-left: 10px">Go</button>
+    </div>
+    <div id="stats" style="width: 100%; display: none; padding-left: 25px" class="stats">
+      <p id="version">Version: 0.15 (12/06/21)</p>
+      <p id="vehicle-id">Vehicle ID:</p>
+      <p id="uuid">UUID:</p>
+      <p id="lat">Lat:</p>
+      <p id="long">Long:</p>
+      <p id="server-response">Server response:</p>
+      <p id="last-update">Last update:</p>
+    </div>
+    <div id="keyEntryModal" class="modal">
+      <div class="modal-content">
+        <p id="key-title" style="text-align: center">Enter Key</p>
+        <textarea id="keyTextArea" rows="5"></textarea>
+        <button id="key-okay" onclick="handleKeyOkay()" type="submit" class="btn" style="background-color: blue">Go</button>
+      </div>
+    </div>
+    <div id="staleModal" class="modal">
+      <div class="modal-content">
+        <p id="stale-title" style="text-align: center">Page will refresh</p>
+        <button id="stale-okay" onclick="handleRefreshOkay()" type="submit" class="btn" style="background-color: blue">Go</button>
+      </div>
+    </div>
+    <div id="resumeModal" class="modal">
+      <div class="modal-content">
+        <button id="resume" onclick="handleResumeButton()" type="submit" class="btn" style="background-color: blue">Resume</button>
+      </div>
+    </div>
+    <p id="console" style="display: none; font-size: 12pt">okay<br/></p>
+    <div id="login-info" hidden=true>
+    </div>
+    <script src="../static/gtfs-rt-util.js"></script>
+    <script src="../static/graas.js"></script>
+  </body>
+</html>

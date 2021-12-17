@@ -1,0 +1,9 @@
+to start web app in safari window from command line without cert warnings and permission dialogs:
+- set safari as default browser under System Preferences->General
+- start local lat-long-prototype server with 'python main.py' after activating venv
+- manually start safari and go to https://127.0.0.1:8080
+- on the cert warning page that appears, choose 'view certificate settings', then expand trust settings and set to 'always trust'
+- safari will ask for login password to confirm changes
+- go to "Safari->Settings for this Website" and set permissions for location and camera to Allow
+- quit safari and from Terminal issue "open https://127.0.0.1:8080"
+- web app should load without any warnings or permission dialogs

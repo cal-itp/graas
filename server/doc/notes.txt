@@ -1,0 +1,29 @@
+project id: lat-long-prototype
+run locally: python main.py
+deploy: gcloud app deploy
+activate python virtual environment with: 'source venv/bin/activate'
+DB: https://console.cloud.google.com/datastore/entities;kind=authorized;ns=__$DEFAULT$__/query/kind?project=lat-long-prototype
+deployment URL: https://lat-long-prototype.wl.r.appspot.com
+
+configure CORS for bucket access:
+gsutil cors set cors.json gs://transitclock-resources
+gsutil cors get gs://transitclock-resources
+
+show current project: gcloud config get-value project
+set current project: gcloud config set project lat-long-prototype
+show logs: gcloud app logs tail
+
+acct: gps-collect@foo.com where'sWald0
+      unauthorized@foo.com not-authorized
+
+After making changes to index.yaml, the updated indices must be deployed:
+gcloud app deploy index.yaml
+
+List indexes with 'gcloud datastore indexes list'
+Remove unused indexes with 'gcloud datastore indexes cleanup index.yaml'
+Indexes need to be defined separately, not aggregated: 'uuid' & 'timestamp', 'agency-id' & 'timestamp' versus 'uuid' & 'agency-id' & 'timestamp'
+
+docker (compose):
+- docker ps to get running containers
+- docker exec -it <container name> /bin/bash
+

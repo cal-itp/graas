@@ -1,0 +1,10 @@
+certifi==2021.5.30
+chardet==4.0.0
+ecdsa==0.17.0
+idna==2.10
+pyserial==3.5
+requests==2.25.1
+six==1.16.0
+urllib3==1.26.5
+pybluez==0.23
+adafruit-circuitpython-ADXL34x==1.11.8

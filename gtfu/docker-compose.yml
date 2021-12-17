@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  positions_feed:
+    build: .
+    image: gtfu:latest
+    entrypoint: ["scripts/monitor-position-updates.sh"]
+
+  service_alerts:
+    build: .
+    image: gtfu:latest
+    entrypoint: ["scripts/dump-service-alerts.sh"]
+
+  trip_list_generator:
+    build: .
+    image: gtfu:latest
+    entrypoint: ["scripts/trip-list-generator.sh"]

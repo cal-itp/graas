@@ -1,0 +1,12 @@
+[
+    {"route_name": "San Jose @ 4:10 am", "trip_id": "29d31103-248b-4ff5-b6cf-643c4a031464", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.957058, "long": -121.278946}},
+    {"route_name": "San Jose @ 4:10 am", "trip_id": "ACE 01", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.957058, "long": -121.278946}},
+    {"route_name": "San Jose @ 5:35 am", "trip_id": "ACE 03", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.957058, "long": -121.278946}},
+    {"route_name": "San Jose @ 5:35 am", "trip_id": "3fb49963-8038-4ac3-ab9e-1085e046aac0", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.957058, "long": -121.278946}},
+    {"route_name": "San Jose @ 6:40 am", "trip_id": "ACE 05", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.957058, "long": -121.278946}},
+    {"route_name": "Stockton @ 3:35 pm", "trip_id": "ACE 04", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.329567, "long": -121.903191}},
+    {"route_name": "Stockton @ 3:35 pm", "trip_id": "a42f60b1-d644-4a22-946e-4189a90e6a43", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.329567, "long": -121.903191}},
+    {"route_name": "Stockton @ 4:35 pm", "trip_id": "9d4cc9d2-b6e2-4357-a532-497477d9dc61", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.329567, "long": -121.903191}},
+    {"route_name": "Stockton @ 4:35 pm", "trip_id": "ACE 06", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.329567, "long": -121.903191}},
+    {"route_name": "Stockton @ 5:35 pm", "trip_id": "ACE 08", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 37.329567, "long": -121.903191}}
+]

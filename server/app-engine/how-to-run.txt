@@ -1,0 +1,19 @@
+How to run locally:
+
+- create a venv from requirements.txt
+- start up that venv
+- either generate a cert.pem and key.pem for use as https cert
+  and point to them as below, or change main.py to e.g. use
+  an ad hoc ssl context
+- `python main.py -c <path-to-cert> -k <path-to-key>`
+- create a QR code to set agency credentials
+  + `cd $ROOT/server/agency-config/keys; ./make-agency-keys.sh <agency-name>`
+  + `cd $ROOT/server/qr-gen/run.sh ROOT/server/agency-config/keys/foo/id_ecdsa FOO`
+- navigate to https://127.0.0.1:8080 to start web app. Scan QR code
+
+How to run in the cloud:
+
+- create a google cloud app engine project
+- add files from $ROOT/server/app-engine to project
+- deploy with `gcloud app deploy`, note URL that server is running on
+- proceed as above, but subsitute local URL for given one

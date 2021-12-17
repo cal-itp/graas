@@ -1,0 +1,12 @@
+[
+    {"route_name": "Arcata @ 7:05 am","trip_id": "t_1229657_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.884735, "long": -123.999458}},
+    {"route_name": "Arcata @ 8:05 am","trip_id": "t_1229656_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.884735, "long": -123.999458}},
+    {"route_name": "Arcata @ 1:05 pm","trip_id": "t_1229658_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.884735, "long": -123.999458}},
+    {"route_name": "Arcata @ 4:05 pm","trip_id": "t_1229659_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.884735, "long": -123.999458}},
+    {"route_name": "Arcata @ 5:05 pm","trip_id": "t_1229660_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.884735, "long": -123.999458}},
+    {"route_name": "Blue Lake @ 7:35 am","trip_id": "t_1229661_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.868565, "long": -124.084099}},
+    {"route_name": "Blue Lake @ 8:35 am","trip_id": "t_1229662_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.868565, "long": -124.084099}},
+    {"route_name": "Blue Lake @ 1:35 pm","trip_id": "t_1229663_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.868565, "long": -124.084099}},
+    {"route_name": "Blue Lake @ 4:35 pm","trip_id": "t_1229664_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.868565, "long": -124.084099}},
+    {"route_name": "Blue Lake @ 5:35 pm","trip_id": "t_1229665_b_18361_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 40.868565, "long": -124.084099}}
+]

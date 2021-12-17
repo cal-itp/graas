@@ -1,0 +1,35 @@
+geo coordinates:
+    // California lat/long box:
+    //   upper left   41.973678, -124.589876
+    //   lower right: 32.553637, -114.196810
+
+
+Alerts GTFS-rt feed:
+- /service_alerts.pb?[agency] endpoint
+- empty feed
+- client for authoring alerts
+  + authenticate
+  + alert
+    . header text
+    . description
+    . URL
+    . time range
+    . entity selector (agency, route, route type, trip, stop)
+    . cause (UNKNOWN_CAUSE, OTHER_CAUSE, TECHNICAL_PROBLEM, STRIKE, DEMONSTRATION, ACCIDENT, HOLIDAY, WEATHER, MAINTENANCE, CONSTRUCTION, POLICE_ACTIVITY, MEDICAL_EMERGENCY)
+    . effect (NO_SERVICE, REDUCED_SERVICE, SIGNIFICANT_DELAYS, DETOUR, ADDITIONAL_SERVICE, MODIFIED_SERVICE, OTHER_EFFECT, UNKNOWN_EFFECT, STOP_MOVED)
+  + data:
+    . agency id (agency.txt, compare cached version date with gtfs zip modification date)
+    . mapping of route names to route IDs (routes.txt, compare cached version date with gtfs zip modification date)
+    . mapping of trip names to trip IDs (from TC bucket)
+    . mapping of stop naes to stop IDs (from stops.txt, compare cached version date with gtfs zip modification date) 
+- write each alert to db
+- use cache (memcache?)
+- how do alerts without an explicit time range expire?
+  + after a set amount of time (1 hour?)
+  + alert queue grows beyond a max
+  + alerts without a time range need to submission time stamp
+
+trip updates as a service:
+- object serialization protocol is slow and creates sizable output
+- parsing a feed message with com.google.transit.realtime.GtfsRealtime is very slow (50 ms for a 5K file!)
+

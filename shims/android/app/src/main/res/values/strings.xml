@@ -1,0 +1,9 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<resources>
+    <string name = "app_name">Find My Bus</string>
+    <string name = "agency_id">santa-barbara-clean-air-express</string>
+    <string name = "base_url">https://lat-long-prototype.wl.r.appspot.com/</string>
+    <string name = "uuid">7595a0d2-0e2e-4dbe-a3a9-3a9cf008e567</string>
+    <string name = "service_name">GRaaS Service</string>
+</resources>
+

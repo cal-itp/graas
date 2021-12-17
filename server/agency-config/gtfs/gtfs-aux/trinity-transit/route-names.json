@@ -1,0 +1,19 @@
+[
+    {"route_name": "Hayfork @ 12:00 pm", "trip_id": "t_1265732_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Hayfork @ 5:00 pm", "trip_id": "t_1265733_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Junction City @ 7:14 am", "trip_id": "t_1265722_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.730335, "long": -123.054787}},
+    {"route_name": "Junction City @ 5:14 pm", "trip_id": "t_1265721_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.720604, "long": -122.928192}},
+    {"route_name": "Lewiston @ 12:00 pm", "trip_id": "t_1265730_b_27648_tn_0", "calendar": [0, 0, 1, 0, 0, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Lewiston @ 5:00 pm", "trip_id": "t_1265731_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Redding @ 7:15 am", "trip_id": "t_1265728_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Redding @ 11:00 am", "trip_id": "t_1265729_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Weaverville @ 6:30 am", "trip_id": "t_1265734_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.552525, "long": -123.191566}},
+    {"route_name": "Weaverville @ 9:15 am", "trip_id": "t_1265726_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.939976, "long": -123.631416}},
+    {"route_name": "Weaverville @ 10:15 am", "trip_id": "t_1265723_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.589043, "long": -122.353500}},
+    {"route_name": "Weaverville @ 12:57 pm", "trip_id": "t_1265738_b_27648_tn_0", "calendar": [0, 0, 1, 0, 0, 0, 0], "departure_pos": {"lat": 40.718548, "long": -122.823608}},
+    {"route_name": "Weaverville @ 1:30 pm", "trip_id": "t_1265735_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.552525, "long": -123.191566}},
+    {"route_name": "Weaverville @ 3:30 pm", "trip_id": "t_1265724_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.589043, "long": -122.353500}},
+    {"route_name": "Weaverville @ 4:45 pm", "trip_id": "t_1265737_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.939976, "long": -123.631416}},
+    {"route_name": "Willow Creek @ 7:25 am", "trip_id": "t_1265725_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}},
+    {"route_name": "Willow Creek @ 2:30 pm", "trip_id": "t_1265736_b_27648_tn_0", "calendar": [1, 0, 1, 0, 1, 0, 0], "departure_pos": {"lat": 40.737720, "long": -122.928665}}
+]

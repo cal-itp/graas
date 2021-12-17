@@ -1,0 +1,59 @@
+trip updates feed:
+- for every vehicle in vehicle positions feed
+  + determine schedule offset in minutes
+    . each vehicle has a reference to the last stop visited
+    . each stop has a fourier approx or similar to describe path segment to next stop
+    . use approx to determine fraction of segment travelled
+    . assuming linear distribution of travel time for segment, calculate scheduled time for position
+    . take delta of actual time and calculated time
+  + for every upcoming stop on trip
+    . add delta to scheduled stop time to get predicted arrival
+- a trip update feed message is a sequence of individual trip updates.
+  Each update has a trip field, a vehicle field, and a list of stop_time_update fields
+- algorithm to describe a path segment as an equation
+
+- position update:
+  + check that request IP is in IP cache
+  + if not, verify sig
+  + if verification fails, error out
+  + check entity key cache for entity key for [agency, vehicle id]
+  + entity = query(agency == update_agency, vehicle_id == update_vehicle_id, max_results: 1)
+  + if no results, create new entity
+  + if now() > entity['time_stamp']
+    . entity['lat'] = update_lat, entity['timestamp'] = now(), etc.
+    . datastore_client.put(entity)
+- GET vehicle-positions.pb?agency=<get_agency>:
+  + check if agency is in agency list (created at startup from pub-key.txt)
+  + check agency position cache
+  + if cache miss or cache entry older than <n> seconds, read from datastore, create protobuf entry and put in cache (datastore_client.query(kind='vehicle_pos', agency=get_agency))
+  + return cache entry
+
+approach:
+- create new kind: vehicle_pos
+  + agency_key
+  + vehicle_id
+  + timestamp
+  + lat
+  + long
+  + speed
+  + bearing
+- stop writing regular 'position' kind entries to datastore
+- delete all position entries
+
+
+
+- signature only for initial hello message. Add an entry with sender IP to verified table. For incoming messages, check if verified table has IP entry. If not, ask to reverify
+- write tool that runs a sim vehicle along a trip from a static GTFS zip
+  + initially, just post lat/long of first stop on trip
+  + as a next step, inch along points of matching shape in shapes.txt
+  + finally, add args such as speed, speed variability, lat/long accuracy, etc.
+- fix nosleep for android
+- design and implement a process to restart a core with the changes being reflected on the TC server
+- add Unitrans as an operator
+- health check for:
+  + TC RMI server
+  + TC API and map server
+  + TC DB instances
+  + TC cluster instances
+  + AVL server
+

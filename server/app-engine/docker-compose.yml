@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  weekly_report:
+    build: .
+    image: lat-long-prototype:latest
+    entrypoint: ["./weekly-report.sh"]
+
+  make_agency_keys:
+    build: .
+    image: lat-long-prototype:latest
+    entrypoint: ["/usr/src/app/keys/make-agency-keys.sh"]

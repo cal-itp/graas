@@ -1,0 +1,360 @@
+<!doctype html>
+<html>
+<head>
+  <title>Device Test</title>
+</head>
+<body style='font-family: Tahoma, sans-serif; font-size: 5vw; margin-left: 15%; margin-right: 15%; margin-top: 15%'>
+<p id="too-old">DEVICE IS TOO OLD!</p>
+<table id='test-table' style='width:100%'>
+</table>
+<script>
+    const STATUS_SUCCESS = '&#9989;'
+    const STATUS_FAIL    = '&#10060;'
+    const STATUS_MEH     = '&#128528;'
+    const STATUS_UNKNOWN = '&#10067;'
+    const TEST_NAMES = ['browser', 'connectivity', 'crypto', 'location', 'camera'];
+    const table = document.getElementById('test-table');
+    const inProgressMap = {};
+    const results = {};
+
+    var dotCount = 0;
+
+    function addRow(s1, s2) {
+        var row = table.insertRow(table.rows.length);
+
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+
+        cell1.innerHTML = s1;
+
+        cell2.innerHTML = s2;
+        cell2.style = 'text-align:right';
+    }
+
+    function setColumn(rowName, index, value) {
+        ri = -1;
+
+        for (var i=0; i<TEST_NAMES.length; i++) {
+            if (rowName === TEST_NAMES[i]) {
+                ri = i;
+                break;
+            }
+        }
+
+        if (ri < 0) {
+            console.error(`row name '${rowName}' not found`);
+            return
+        }
+
+        table.rows[ri].cells[index].innerHTML = value;
+    }
+
+    function setResult(name, value) {
+        setColumn(name, 1, value);
+        results[name] = value === STATUS_SUCCESS
+    }
+
+    function progressTick() {
+        var names = Object.keys(inProgressMap);
+
+        for (var i=0; i<names.length; i++) {
+            if (inProgressMap[names[i]]) {
+                //console.log(`-- ${names[i]}`);
+
+                var s = names[i];
+
+                for (var j=0; j<dotCount; j++) {
+                    s += '.';
+                }
+
+                setColumn(names[i], 0, s);
+            } else {
+                setColumn(names[i], 0, names[i]);
+            }
+        }
+
+        dotCount++;
+        if (dotCount > 3) dotCount = 0;
+
+        setTimeout(progressTick, 400);
+    }
+
+    function b64(buffer) {
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+
+        return window.btoa(binary);
+    }
+
+    async function getCoords(arg) {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, arg);
+        });
+
+        return {
+          long: pos.coords.longitude,
+          lat: pos.coords.latitude,
+        };
+    };
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function runBrowserTest() {
+        inProgressMap['browser'] = true;
+
+        var features = 0;
+
+        if (window.fetch) {
+            features++;
+        }
+
+        if (window.TextEncoder) {
+            features++;
+        }
+
+        if (window.AbortController) {
+            features++;
+        }
+
+        if (Object.entries) {
+            features++;
+        }
+
+        setResult('browser', features == 4 ? STATUS_SUCCESS : STATUS_FAIL);
+        inProgressMap['browser'] = false;
+    }
+
+    async function runConnectivityTest() {
+        var iterations = 5;
+        var responses = 0;
+
+        inProgressMap['connectivity'] = true;
+
+        try {
+            for (var i=0; i<iterations; i++) {
+                var response = await fetch('https://storage.googleapis.com/graas-resources/test/test.txt');
+                console.log('-- response.status: ' + response.status);
+
+                var txt = (await response.text()).trim();
+                console.log(`-- txt: ${txt}`);
+
+                if (txt === 'Bite me!') {
+                    responses++;
+                    console.log(`-- responses: ${responses}`);
+                }
+
+                await sleep(1000);
+            }
+
+            setResult('connectivity', responses === iterations ? STATUS_SUCCESS : STATUS_FAIL);
+        } catch (error) {
+            console.error(`connectivity exception: ${error}`);
+            setResult('connectivity', STATUS_FAIL);
+        }
+
+        inProgressMap['connectivity'] = false;
+    }
+
+    async function runCryptoTest() {
+        if (!window.crypto) {
+            console.error('crypto not available');
+            setResult('crypto', STATUS_FAIL);
+            return;
+        }
+
+        inProgressMap['crypto'] = true;
+
+        try {
+            var keyPair = await crypto.subtle.generateKey(
+                {
+                    name: 'ECDSA',
+                    namedCurve: 'P-256'
+                },
+                true,
+                ['sign', 'verify']
+            );
+
+            console.log(`- keyPair.privateKey: ${b64(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey))}`);
+            console.log(`- keyPair.publicKey: ${b64(await crypto.subtle.exportKey('spki', keyPair.publicKey))}`);
+
+            var encodedMsg = (new TextEncoder()).encode('my secret message');
+
+            var sig = await window.crypto.subtle.sign(
+                {
+                    name: "ECDSA",
+                    hash: {name: "SHA-256"},
+                },
+                keyPair.privateKey,
+                encodedMsg
+            );
+
+            console.log(`- sig: ${b64(sig)}`);
+
+            var result = await window.crypto.subtle.verify(
+                {
+                name: "ECDSA",
+                hash: {name: "SHA-256"},
+                },
+                keyPair.publicKey,
+                sig,
+                encodedMsg
+            );
+
+            console.log(`- result: ${result}`);
+
+            setResult('crypto', result ? STATUS_SUCCESS : STATUS_FAIL);
+        } catch (error) {
+            console.error(`crypto exception: ${error}`);
+            setResult('crypto', STATUS_FAIL);
+        }
+
+        inProgressMap['crypto'] = false;
+    }
+
+    async function runLocationTest() {
+        inProgressMap['location'] = true;
+
+        var points = [];
+
+        var arg = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        try {
+            for (var i=0; i<5; i++) {
+                var coords = await getCoords(arg);
+                var s = JSON.stringify(coords);
+                console.log(`- s: ${s}`);
+
+                if (!points.includes(s)) {
+                    points.push(s);
+                }
+
+                await sleep(2000);
+            }
+
+            console.log(`- points:`);
+            console.log(points);
+            console.log(`- points.length: ${points.length}`);
+
+            setResult('location', points.length >= 3 ? STATUS_SUCCESS : STATUS_FAIL);
+        } catch (error) {
+            console.error(`location exception: ${error}`);
+            setResult('location', STATUS_FAIL);
+        }
+
+        inProgressMap['location'] = false;
+    }
+
+    async function runCameraTest() {
+        const mediaAccess = !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
+        console.log(`- mediaAccess: ${mediaAccess}`);
+
+        if (!mediaAccess) {
+            console.error(`location exception: ${error}`);
+            setResult('camera', STATUS_FAIL);
+
+            return;
+        }
+
+        var matchingDevices = 0;
+
+        var constraints = {
+            video: {
+                width: {
+                    min: 640
+                },
+                height: {
+                    min: 640
+                },
+                facingMode: 'environment'
+            }
+        };
+
+        inProgressMap['camera'] = true;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const devices = await navigator.mediaDevices.enumerateDevices();
+
+            matchingDevices = devices.length;
+
+            for (var device of devices) {
+                console.log(`-- kind: ${device.kind}, id: ${device.deviceId}`);
+            }
+
+            const tracks = stream.getTracks();
+
+            tracks.forEach(function(track) {
+                track.stop();
+            });
+
+            setResult('camera', matchingDevices > 0 ? STATUS_SUCCESS : STATUS_FAIL);
+        } catch (error) {
+            console.error(`camera exception: ${error}`);
+            setResult('camera', STATUS_FAIL);
+        }
+
+        inProgressMap['camera'] = false;
+    }
+
+    async function sendReport() {
+        console.log('sendReport()');
+
+        results['agent'] = navigator.userAgent.match(/\(.*?\)/);
+        var s = JSON.stringify(results);
+        console.log(`- s: ${s}`);
+
+        const origin = window.location.href;
+        const i = origin.lastIndexOf('/');
+        var url = origin.substring(0, i + 1) + "test-report";
+        console.log(`- url: ${url}`);
+
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: s
+        });
+
+        console.log(`- response.status: ${response.status}`);
+    }
+
+    function initalize() {
+        var p = document.getElementById('too-old');
+        if (p) p.style.display = 'none';
+
+        for (const name of TEST_NAMES) {
+            addRow(name, STATUS_UNKNOWN);
+            inProgressMap[name] = false;
+            results[name] = false;
+        }
+
+        progressTick();
+
+        runBrowserTest().then(function(result) {
+            return runConnectivityTest();
+        }).then(function(result) {
+            return runCryptoTest();
+        }).then(function(result) {
+            return runLocationTest();
+        }).then(function(result) {
+            return runCameraTest();
+        }).then(function(result) {
+            return sendReport();
+        });
+    }
+
+    initalize();
+</script>
+</body>
+</html>
