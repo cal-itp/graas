@@ -65,14 +65,14 @@ class test_agency:
 		print('post()')
 		endpoint = 'new-pos-sig'
 		url = domain + endpoint
-		startTime = util.get_current_time_millis()
+		postTime = util.get_current_time_millis()
 		post_data = {
 	        "uuid": "stresstest",
 	        "agent":
 	        [
 	            "(Macintosh; Intel Mac OS X 10_15_7)"
 	        ],
-	        "timestamp": startTime,
+	        "timestamp": postTime,
 	        "lat": 37.83915227205035,
 	        "long": -122.28377128957112,
 	        "speed": 0,
@@ -82,7 +82,7 @@ class test_agency:
 	        "trip-id": "stresstest",
 	        "agency-id": self.id,
 	        "vehicle-id": vehicleid,
-	        "pos-timestamp": startTime
+	        "pos-timestamp": postTime
 		}
 		post_data_string = json.dumps(post_data,separators=(',',':'))
 		base64 = elliptic_curve.sign(post_data_string,self.id_ecdsa)
@@ -97,10 +97,11 @@ class test_agency:
 		statusCode = response.status_code
 		responseJson = response.json()
 		status = responseJson['status']
+		print(json.dumps(responseJson))
 		print(f'status: {status}')
 		print(f'response time: {str(responseTime)}')
 		print(f'status code: {str(statusCode)}')
-		return post_metadata(self.id, vehicleid, startTime, responseTime, statusCode, status)
+		return post_metadata(self.id, vehicleid, postTime, responseTime, statusCode, status)
 
 	def clean(self):
 		print(f'deleting entity and local files for {self.id}')
@@ -179,13 +180,12 @@ def main(argv):
 	dirName = 'stress-test'
 	client = ndb.Client()
 
-	# Create agencies & vehicles
+	# 1.  Create agencies & vehicles
 	for i in range(agencyCount):
-		agencyID = "stress-test-agency-" + str(i)
+		agencyID = "stress-test-" + str(startTime) + "-agency-" + str(i)
 		agencyList.append(test_agency(agencyID, vehicleCount, client))
 
-
-	# Generate keys for each agency
+	# 2. Generate keys for each agency
 	dirExists = os.path.exists(dirName)
 	if not dirExists:
 		os.mkdir(dirName)
@@ -193,22 +193,21 @@ def main(argv):
 	for agency in agencyList:
 		agency.keyGen()
 
-	# Send initial post, to trigger key update. Without this post, a multi-agency test for N agencies has N-1 failures.
-	# TODO: create more elegant solution
-	agencyList[0].post(domain,agencyList[0].vehicleList[0])
-
-	# Start service!!
+	# 3. Start service!!
 	threads = list()
 	for agency in agencyList:
 		x = threading.Thread(target=agency.startService, args=(domain, intervalTime, intervalVariation, numRepeats))
 		threads.append(x)
+
+	#    Start each thread
+	for x in threads:
 		x.start()
 
-	# Wait for all of them to finish
+	#    Wait for all of them to finish
 	for x in threads:
 		x.join()
 
-	# Clean up file tree & remove keys from gcloud
+	# 4. Clean up file tree & remove keys from gcloud
 	for agency in agencyList:
 		agency.clean()
 	shutil.rmtree(dirName)
@@ -262,6 +261,7 @@ def main(argv):
 	print("------Summary------")
 	print(f'- Initiated: {str(len(post_metadata_list))}')
 	print(f'- Accepted: {str(successes)}')
+	print(f'- In gcloud: {str(gcloudUpdates)}')
 	print(f'- Verification issues: {str(verificationIssues)}')
 	print(f'- HTTP issues: {str(httpIssues)}')
 	print(f'- Avg response time: {str(round(totalResponseTime/updates,3))} secs')

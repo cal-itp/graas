@@ -23,7 +23,7 @@ import com.google.transit.realtime.GtfsRealtime.Position;
 
 
 public class ServerTest {
-    private static final String DOMAIN = "https://lat-long-prototype.wl.r.appspot.com";
+    private static final String DOMAIN = "http://127.0.0.1:8080";
     private static final String POST_ALERT_ENDPOINT = "/post-alert";
     private static final String VEHICLE_POSITION_ENDPOINT = "/vehicle-positions.pb?agency=";
     private static final String SERVICE_ALERTS_ENDPOINT = "/service-alerts.pb?agency=";

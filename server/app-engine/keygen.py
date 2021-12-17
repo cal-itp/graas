@@ -1,8 +1,9 @@
 from subprocess import call
 from google.cloud import ndb
-from google.cloud import storage
 import sys
 import os
+
+# local imports
 import util
 
 class agency(ndb.Model):
@@ -55,25 +56,9 @@ def generate(agencyid, path):
 			)
 		key = newAgency.put()
 
-	update_bucket_timestamp()
+	util.update_bucket_timestamp()
 
 	return key
-
-# For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
-def update_bucket_timestamp():
-	client = storage.Client()
-	bucket = client.get_bucket('graas-resources')
-	blob = bucket.blob('server/last_public_key_update.txt')
-	now = util.get_current_time_millis()
-	blob.upload_from_string(str(now))
-	print(f'Latest public key update is now {now}')
-
-def get_bucket_timestamp():
-	client = storage.Client()
-	bucket = client.get_bucket('graas-resources')
-	blob = bucket.get_blob('server/last_public_key_update.txt')
-	last_key_update = int(blob.download_as_text())
-	return last_key_update
 
 def main(argv):
 	argc = len(sys.argv)
