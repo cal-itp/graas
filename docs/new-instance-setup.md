@@ -14,7 +14,7 @@ Follow these instructions to set up your own instance of GRaaS.
 10. Generate keys for HTTPS authentication, by running the following command:
 `openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365`. This will generate two files, cert.pem and key.pem.
 11. You are ready to run the server locally: from your virtual environment, run  `python main.py -c <path-to-cert.pem> -k <path-to-key.pem>`. This should launch the local server - from a web browser, go to the URL listed (likely https://127.0.0.1:8080). If the webpage loads correctly, continue to the next step.
-12. Follow instructions in the [Onboarding Runbook](server/onboarding-runbook.md) to create a new test agency. Note that you'll need to replace the directory path 'graas-resources' in `server/agency-config/gtfs/copy-to-bucket.sh`,`server/app-engine/static/graas.js`, `server/app-engine/keygen.py`.
+12. Follow instructions in the [Onboarding Runbook](server/onboarding-runbook.md) to create a new test agency. Note that you'll need to replace the directory path 'graas-resources' in `server/agency-config/gtfs/copy-to-bucket.sh`,`server/app-engine/static/graas.js`, `server/app-engine/util.py`.
 13. Once you have a new agency created, load the local web app again and scan the QR you've just created (you'll need to pull it up on a separate device, or print it).
 14. Deploy the app with `gcloud app deploy`.
 

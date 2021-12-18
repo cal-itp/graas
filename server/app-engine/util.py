@@ -8,9 +8,7 @@ import os.path
 import sys
 import time
 from google.cloud import datastore
-
-# local imports
-import keygen
+from google.cloud import storage
 
 datastore_client = datastore.Client()
 last_bucket_check = 0
@@ -51,7 +49,7 @@ def verify_signature(agency_id, data, signature):
         # If we haven't checked the bucket for a new timestamp in the last minute, check now
         if (now - last_bucket_check > ONE_MINUTE_MILLIS):
             last_bucket_check = now
-            last_key_update = keygen.get_bucket_timestamp()
+            last_key_update = get_bucket_timestamp()
             print(f'Last time public key was updated: {last_key_update}')
             print(f'Last time public keys were refreshed: {last_key_refresh}')
 
@@ -94,6 +92,23 @@ def verify_signature(agency_id, data, signature):
 
 def get_current_time_millis():
     return int(round(time.time() * 1000))
+
+# For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
+def update_bucket_timestamp():
+    client = storage.Client()
+    bucket = client.get_bucket('graas-resources')
+    blob = bucket.blob('server/last_public_key_update.txt')
+    # Could use util.get_current_time_millis() but it would create circular dependency
+    now = int(round(time.time() * 1000))
+    blob.upload_from_string(str(now))
+    print(f'Latest public key update is now {now}')
+
+def get_bucket_timestamp():
+    client = storage.Client()
+    bucket = client.get_bucket('graas-resources')
+    blob = bucket.get_blob('server/last_public_key_update.txt')
+    last_key_update = int(blob.download_as_text())
+    return last_key_update
 
 def get_file(filename, mode):
     try:
