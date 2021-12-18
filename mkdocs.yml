@@ -2,7 +2,7 @@ site_name: GRaaS Documentation
 theme:
   name: material
 nav:
-  - Introduction: "index.md"
+  - Introduction: "README.md"
   - General Transit Feed Utilities: "gtfu/README.md"
   - Runbook: "server/onboarding-runbook.md"
   - Server: "server/README.md"
