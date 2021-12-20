@@ -1,0 +1,513 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.0">
+    
+    
+      
+        <title>GRaaS Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.82f3c0b9.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.9204c3b2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#background-overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="GRaaS Documentation" class="md-header__button md-logo" aria-label="GRaaS Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GRaaS Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Introduction
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="GRaaS Documentation" class="md-nav__button md-logo" aria-label="GRaaS Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    GRaaS Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Introduction
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        Introduction
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background-overview" class="md-nav__link">
+    Background &amp; Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-deployment" class="md-nav__link">
+    Setup &amp; deployment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support" class="md-nav__link">
+    Support
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-roadmap" class="md-nav__link">
+    Development Roadmap
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing" class="md-nav__link">
+    Contributing
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gtfu/" class="md-nav__link">
+        General Transit Feed Utilities
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="server/onboarding-runbook/" class="md-nav__link">
+        Runbook
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="server/" class="md-nav__link">
+        Server
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hardware/" class="md-nav__link">
+        Hardware
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="attribution/" class="md-nav__link">
+        Attribution
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background-overview" class="md-nav__link">
+    Background &amp; Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-deployment" class="md-nav__link">
+    Setup &amp; deployment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support" class="md-nav__link">
+    Support
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-roadmap" class="md-nav__link">
+    Development Roadmap
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing" class="md-nav__link">
+    Contributing
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+  <h1>Introduction</h1>
+
+<p>==================================</p>
+<p>GRaaS is a software program which creates GTFS-RT data using a variety of Android, iOS, and other internet capable devices. This lets you - and transit riders - know where your vehicle is in real time and plan your trip accordingly!</p>
+<h2 id="background-overview">Background &amp; Overview</h2>
+<p>The <a href="https://www.calitp.org/">California Integrated Travel Project (Cal-ITP)</a> launched in 2019 with specific goals to improve public transport across the state and beyond. One of the main goals of the project was to provide accurate and complete information for trip planning in real time in a way that gave transit agencies ownership over their own data: an end to black boxes. Cal-ITP looked to create an open-source software which created open data in an open standard. Thus, GRaaS was born.</p>
+<p>GRaaS adds to the growing number of <a href="https://en.wikipedia.org/wiki/Mobility_as_a_service">Mobility ‘as a Service’</a> projects in the transit sphere. The software creates real-time data in the <a href="https://gtfs.org/">General Transit Feed Standard</a> (GTFS) format: vehicle positions and service alerts. (Note: At this time, we are not providing trip updates). We’re working to make transit data open and accessible for all.</p>
+<p>As the industry standard, GTFS-rt feeds can be read by most <a href="https://en.wikipedia.org/wiki/Journey_planner">journey planning apps</a> like Google Maps, Apple Maps, TransitApp, etc. Before GRaaS, transit agencies could either pay specialized companies or simply not provide real-time information. We created GRaaS to change that.</p>
+<p>The software runs on variety of Android, iOS, and other internet capable devices and generates a set of URLs that journey planning apps accept. It’s easy for agencies and easy for riders, who see the up-to-date info right on their smartphones.</p>
+<p>Components:</p>
+<ul>
+<li>Flask/Python server deployed to Google App engine</li>
+<li>A library of Java tools</li>
+<li>A web app for transit vehicles to post updates</li>
+<li>On-board internet capable device</li>
+</ul>
+<p>Pre-requisites</p>
+<ul>
+<li>A dedicated internet-capable smartphone tablets on each transit vehicle</li>
+<li>The technical ability to deploy a GCP flask app</li>
+</ul>
+<h2 id="setup-deployment">Setup &amp; deployment</h2>
+<p>To set up and begin running your own instance of GRaaS, follow <a href="new-instance-setup">the GRaaS setup instructions</a>.</p>
+<p>To see if you have everything set up correctly. Try deploying the web app, as outlined in the <a href="server/">server README</a>.</p>
+<p>See the <a href="server/onboarding-runbook/">Agency Onboarding Runbook</a> for instructions on adding a specific agency to your GRaaS instance.</p>
+<p>For instructions on how to get a transit agency set up with the GRaaS mobile app, see the <a href="https://docs.google.com/document/d/1wlE91hMZ4HbYk1TcTEhbaRaz_T_7rdsDazqphVUZ2l0/">Agency Onboarding Instructions</a>.</p>
+<p>Recommended Hardware:</p>
+<p>The team has also developed a hardware version of GRaaS that is completely dedicated to transmitting GTFS data. This was developed as a solution to various issues that we found during our demonstrations using different tablets and smartphones such as screen timeouts, OS updates, and more.</p>
+<p>You can still use GRaaS on other hardware such as tablets and smartphones. However, the following operational guidelines should be followed:</p>
+<ul>
+<li>Use an internet enabled device, not a WIFI only device</li>
+<li>Ensure that the device is connected to data, either via a SIM card or WIFI connection</li>
+<li>Do not lock the device as it disrupts location data</li>
+<li>Check that all software is up-to-date before running the app to eliminate any pop-ups which disrupt location services</li>
+</ul>
+<p>The team has tested the following tablets and phones in the field and are confident in their ability to run the software:</p>
+<ol>
+<li>iPad</li>
+<li>Samsung Galaxy Tab</li>
+</ol>
+<h2 id="support">Support</h2>
+<p>Transit Agency or Operator in California:</p>
+<p>If you would like to use this software as a part of the on-going California Integrated Travel Project (Cal-ITP), please contact <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;">&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;</a>. Our team is available to help as a complementary service offered through Caltrans. If this message is displayed, the opportunity is still available for CA transit agencies and operators.</p>
+<p>Transit Agency or Operator outside CA:</p>
+<p>If you tried the software and would like to learn more about how Caltrans and the California Integrated Travel Project (Cal-ITP) are supporting open-source data solutions, please contact <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#104;&#101;&#108;&#108;&#111;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;">&#104;&#101;&#108;&#108;&#111;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;</a>. If you would like to see a similar partnership in your state, encourage your state DOT to engage with Cal-ITP staff.</p>
+<p>If you would like to ask a question, create an issue labeled as a question in github. If you would like to report an issue, submit a bug-report issue in github.</p>
+<h2 id="development-roadmap">Development Roadmap</h2>
+<p>Here are some areas that we working on:</p>
+<ul>
+<li>Removing driver interaction</li>
+<li>Automating trip reports</li>
+<li>Adding full trip updates feature (i.e., arrival predictions in-house, rather than through journey planning app)</li>
+<li>Setting up alerts feature with ADA integrations</li>
+</ul>
+<p>If you would like to make an edit or request a new feature, send a pull request / submit an issue in github. Alternatively, you can email <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;">&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#64;&#99;&#97;&#108;&#105;&#116;&#112;&#46;&#111;&#114;&#103;</a>.</p>
+<h2 id="contributing">Contributing</h2>
+<p>We are still working on contribution guidelines as this is a new project. We expect to accept suggestions and edits, which adhere to a code of conduct, but are still refining the process.</p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+      
+        
+        <a href="gtfu/" class="md-footer__link md-footer__link--next" aria-label="Next: General Transit Feed Utilities" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              General Transit Feed Utilities
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.cefbb252.min.js"}</script>
+    
+    
+      <script src="assets/javascripts/bundle.17f42bbf.min.js"></script>
+      
+    
+  </body>
+</html>
