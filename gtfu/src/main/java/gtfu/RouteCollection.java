@@ -60,7 +60,7 @@ public class RouteCollection implements Iterable<Route>, Serializable {
 
             if (route == null) {
                 Util.fail(String.format(
-                    "*** fatal error, trip '%s' references non-existing route ID '%s'",
+                    "fatal error, trip '%s' references non-existing route ID '%s'",
                     trip.getID(),
                     trip.getRouteID()
                 ));

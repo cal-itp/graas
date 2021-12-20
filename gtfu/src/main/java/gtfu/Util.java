@@ -44,6 +44,10 @@ public class Util {
     private final static int EARTH_RADIUS_IN_FEET = 20902231;
     private static final String WHITESPACE = " \t\r\n";
 
+    private static FailureReporter NULL_REPORTER = new NullFailureReporter();
+
+    private static FailureReporter reporter = NULL_REPORTER;
+
     public static String repeat(char c, int count) {
         StringBuffer sb = new StringBuffer();
 
@@ -64,9 +68,18 @@ public class Util {
         throw new Fail("Implement me!");
     }
 
+    public static void setReporter(FailureReporter reporter) {
+        Util.reporter = reporter;
+    }
+
     public static void fail(String s) {
+        fail(s, reporter);
+    }
+
+    public static void fail(String s, FailureReporter reporter) {
         Debug.error(s);
-        // ### TODO: post message to slack graas_internal using webhooks
+        reporter.addLine("* " + s);
+
         throw new Fail(s);
     }
 
@@ -318,9 +331,14 @@ public class Util {
         return value;
     }
 
+    public static String getURLContent(String url, ProgressObserver observer) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        downloadURLContent(url, bos, observer);
+        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+    }
+
     public static void downloadURLContent(String url, OutputStream os, ProgressObserver observer) {
         HttpURLConnection con = null;
-        StringBuilder content = new StringBuilder("");
 
         try {
             URL myurl = new URL(url);
