@@ -73,14 +73,18 @@ public class Util {
     }
 
     public static void fail(String s) {
-        fail(s, reporter);
+        fail(s, true);
     }
 
-    public static void fail(String s, FailureReporter reporter) {
+    public static void fail(String s, boolean except) {
+        fail(s, reporter, except);
+    }
+
+    public static void fail(String s, FailureReporter reporter, boolean except) {
         Debug.error(s);
         reporter.addLine("* " + s);
 
-        throw new Fail(s);
+        if (except) throw new Fail(s);
     }
 
     public static String base64Encode(String s) {
@@ -775,7 +779,7 @@ public class Util {
     }
 
     public static String getGTFSURL(AgencyData[] list, String id) {
-        //Debug.log("Util.loadCollections()");
+        //Debug.log("Util.getGTFSURL()");
         //Debug.log("- id: " + id);
 
         for (AgencyData d : list) {
@@ -788,6 +792,10 @@ public class Util {
     }
 
     public static Map<String, Object> loadCollections(String cacheRoot, String agencyID, ProgressObserver po) {
+        return loadCollections(cacheRoot, agencyID, po, false);
+    }
+
+    public static Map<String, Object> loadCollections(String cacheRoot, String agencyID, ProgressObserver po, boolean skipErrors) {
         Debug.log("Util.loadCollections()");
 
         String path = cacheRoot + "/"  + agencyID;
@@ -827,7 +835,7 @@ public class Util {
 
         //Debug.log("routes:");
         t = new Timer("routes");
-        RouteCollection routeCollection = new RouteCollection(path, tripCollection);
+        RouteCollection routeCollection = new RouteCollection(path, tripCollection, skipErrors);
         collections.put("routes", routeCollection);
         t.dumpLap();
 

@@ -19,6 +19,10 @@ public class RouteCollection implements Iterable<Route>, Serializable {
 
     // route_id,route_short_name,route_long_name,route_desc,route_url,route_color,route_text_color,route_type
     public RouteCollection(String path, TripCollection tripCollection) {
+        this(path, tripCollection, false);
+    }
+
+    public RouteCollection(String path, TripCollection tripCollection, boolean skipErrors) {
         this();
 
         TextFile tf = new TextFile(path + "/routes.txt");
@@ -59,14 +63,17 @@ public class RouteCollection implements Iterable<Route>, Serializable {
             Route route = map.get(trip.getRouteID());
 
             if (route == null) {
-                Util.fail(String.format(
-                    "fatal error, trip '%s' references non-existing route ID '%s'",
-                    trip.getID(),
-                    trip.getRouteID()
-                ));
+                Util.fail(
+                    String.format(
+                        "fatal error, trip '%s' references non-existing route ID '%s'",
+                        trip.getID(),
+                        trip.getRouteID()
+                    ),
+                    !skipErrors
+                );
+            } else {
+                route.addTrip(trip);
             }
-
-            route.addTrip(trip);
         }
     }
 

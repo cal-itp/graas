@@ -27,7 +27,7 @@ public class LoadAgencyDataTest {
         ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
         Util.updateCacheIfNeeded(cacheDir, agencyID, gtfsUrl, progressObserver);
 
-        Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver);
+        Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver, true);
 
         TripCollection tripCollection = (TripCollection)collections.get("trips");
         Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
