@@ -27,7 +27,6 @@ jobs:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Java tests
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.ServerTest pr-test
+        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
-

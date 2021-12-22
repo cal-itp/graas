@@ -1,4 +1,4 @@
-package gtfu;
+package gtfu.test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -21,6 +21,9 @@ import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.Position;
 
+import gtfu.Debug;
+import gtfu.GTFSRTUtil;
+import gtfu.Util;
 
 public class ServerTest {
     private static final String DOMAIN = "https://lat-long-prototype.wl.r.appspot.com";
