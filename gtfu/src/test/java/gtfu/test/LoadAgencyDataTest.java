@@ -51,7 +51,7 @@ public class LoadAgencyDataTest {
         String agencyID = null;
         String url = null;
 
-        String r = System.getenv("GRAAS_REPORT_RECIPIENTS");
+        String r = System.getenv("ERROR_EMAIL_RECIPIENTS");
 
         if (r == null) {
             System.err.println("* missing recipient list, please set GRAAS_REPORT_RECIPIENTS env variable");
