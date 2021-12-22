@@ -4,6 +4,9 @@ import java.util.Map;
 
 import gtfu.ConsoleProgressObserver;
 import gtfu.Debug;
+import gtfu.EmailFailureReporter;
+import gtfu.FailureReporter;
+import gtfu.ProgressObserver;
 import gtfu.Util;
 import gtfu.TripCollection;
 import gtfu.RouteCollection;
@@ -24,7 +27,7 @@ public class LoadAgencyDataTest {
         ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
         Util.updateCacheIfNeeded(cacheDir, agencyID, gtfsUrl, progressObserver);
 
-        Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver);
+        Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver, true);
 
         TripCollection tripCollection = (TripCollection)collections.get("trips");
         Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
@@ -38,12 +41,27 @@ public class LoadAgencyDataTest {
 
     private static void usage() {
         System.err.println("usage: LoadAgencyDataTest -c|--cache-dir <cache-dir> -a|--agency-id <agency-id>");
+        System.err.println("usage: LoadAgencyDataTest -c|--cache-dir <cache-dir> -u|--url <url>");
+        System.err.println("    <url> is assumed to point to a plain text document that has an agency ID per line");
         System.exit(1);
     }
 
     public static void main(String[] arg) throws Exception {
         String cacheDir = null;
         String agencyID = null;
+        String url = null;
+
+        String r = System.getenv("GRAAS_REPORT_RECIPIENTS");
+
+        if (r == null) {
+            System.err.println("* missing recipient list, please set GRAAS_REPORT_RECIPIENTS env variable");
+            System.exit(1);
+        }
+
+        String[] recipients = r.split(", ");
+
+        FailureReporter reporter = new EmailFailureReporter(recipients, "LoadAgencyDataTest Report");
+        Util.setReporter(reporter);
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
@@ -56,11 +74,42 @@ public class LoadAgencyDataTest {
                 continue;
             }
 
+            if ((arg[i].equals("-u") || arg[i].equals("--url")) && i < arg.length - 1) {
+                url = arg[++i];
+                continue;
+            }
+
             usage();
         }
 
-        if (cacheDir == null || agencyID == null) usage();
+        if (cacheDir == null || (agencyID == null && url == null)) usage();
 
-        new LoadAgencyDataTest(cacheDir, agencyID);
+        if (url == null) {
+            reporter.addLine("agency: " + agencyID);
+
+            try {
+                new LoadAgencyDataTest(cacheDir, agencyID);
+            } catch (Exception e) {
+                Debug.error("* test failed: " + e);
+            }
+        } else {
+            ProgressObserver po = new ConsoleProgressObserver(40);
+            String context = Util.getURLContent(url, po);
+            String[] agencyIDList = context.split("\n");
+
+            for (String id : agencyIDList) {
+                Debug.log("-- id: " + id);
+
+                reporter.addLine("agency: " + id);
+
+                try {
+                    new LoadAgencyDataTest(cacheDir, id);
+                } catch (Exception e) {
+                    Debug.error("* test failed: " + e);
+                }
+            }
+        }
+
+        reporter.send();
     }
 }

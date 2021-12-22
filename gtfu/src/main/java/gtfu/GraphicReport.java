@@ -211,8 +211,8 @@ public class GraphicReport {
 
         String[] recipients = recipientList.split(",");
 
-        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", blobs);
-        Integer responseCode = grid.setupThenSend();
+        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobs);
+        int responseCode = grid.send();
         // Debug.log("- responseCode: " + responseCode);
     }
 
