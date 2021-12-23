@@ -46,6 +46,9 @@ def from_b64(s):
 def get_current_time_millis():
     return int(round(time.time() * 1000))
 
+def now():
+    return get_current_time_millis()
+
 def get_seconds_since_midnight():
     now = datetime.now()
     return (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
@@ -115,7 +118,7 @@ def debug(s):
     ts = datetime.now().strftime('%H:%M:%S ')
 
     if debug_callback is None:
-        print(ts + s)
+        print(ts + str(s))
         sys.stdout.flush()
     else:
         debug_callback(s)

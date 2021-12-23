@@ -7,6 +7,7 @@ from shapepoint import ShapePoint
 from area import Area
 from grid import Grid
 from segment import Segment
+from timer import Timer
 
 FEET_PER_MILE = 5280
 STOP_PROXIMITY = 150
@@ -42,11 +43,18 @@ class TripInference:
         self.stops = self.get_stops()
         #util.debug(f'-- stops: {stops}')
 
+        self.preload_stop_times()
+        self.preload_shapes()
+
         with open(path + '/trips.txt', 'r') as f:
             reader = csv.DictReader(f)
             rows = list(reader)
+            count = 1
+
+            load_timer = Timer('load')
 
             for r in rows:
+                loop_timer = Timer('loop')
                 trip_id = r['trip_id']
                 service_id = r['service_id']
                 shape_id = r['shape_id']
@@ -60,13 +68,15 @@ class TripInference:
                     continue
 
                 util.debug(f'')
-                util.debug(f'-- trip_id: {trip_id}')
-                #util.debug(f'-- trip_id: {trip_id}')
+                util.debug(f'-- trip_id: {trip_id} ({count}/{len(rows)})')
+                count += 1
 
                 route_id = r['route_id']
                 shape_id = r['shape_id']
                 #util.debug(f'-- shape_id: {shape_id}')
+                timer = Timer('way points')
                 way_points = self.get_shape_points(shape_id)
+                util.debug(timer)
                 #util.debug(f'-- way_points: {way_points}')
                 util.debug(f'-- len(way_points): {len(way_points)}')
 
@@ -74,17 +84,28 @@ class TripInference:
                     util.debug(f'* no way points for trip_id \'{trip_id}\', shape_id \'{shape_id}\'')
                     continue
 
+                timer = Timer('stop times')
                 stop_times = self.get_stop_times(trip_id)
+                util.debug(timer)
                 #util.debug(f'-- stop_times: {stop_times}')
                 util.debug(f'-- len(stop_times): {len(stop_times)}')
+                timer = Timer('interpolate')
                 self.interpolate_way_point_times(way_points, stop_times, self.stops)
+                util.debug(timer)
 
                 trip_name = route_map[route_id]['name'] + ' @ ' + util.seconds_to_ampm_hhmm(stop_times[0]['arrival_time'])
                 util.debug(f'-- trip_name: {trip_name}')
                 segment_length = 2 * FEET_PER_MILE ### TODO derive segment length from trip length
+                timer = Timer('segments')
                 self.make_trip_segments(trip_id, trip_name, way_points, segment_length)
+                util.debug(timer)
+                util.debug(loop_timer)
 
+        util.debug(load_timer)
         util.debug(f'-- self.grid: {self.grid}')
+
+        self.stop_time_map = {}
+        self.shape_map = {}
 
     def populateBoundingBox(self, area):
         with open(self.path + '/shapes.txt', 'r') as f:
@@ -105,8 +126,8 @@ class TripInference:
                 lon = float(r['shape_pt_lon'])
                 area.update(lat, lon)
 
-    def get_shape_points(self, shape_id):
-        plist = []
+    def preload_shapes(self):
+        self.shape_map = {}
 
         with open(self.path + '/shapes.txt', 'r') as f:
             names = f.readline().strip()
@@ -123,17 +144,22 @@ class TripInference:
 
                 line = line.strip()
                 r = csvline.parse(line)
-                sid = r['shape_id']
+                shape_id = r['shape_id']
                 #debug.log(f'-- sid: {sid}')
-
-                if sid != shape_id:
-                    continue
 
                 lat = float(r['shape_pt_lat'])
                 lon = float(r['shape_pt_lon'])
+
+                plist = self.shape_map.get(shape_id, None)
+
+                if plist is None:
+                    plist = []
+                    self.shape_map[shape_id] = plist
+
                 plist.append({'lat': lat, 'long': lon, 'file_offset': file_offset})
 
-        return plist
+    def get_shape_points(self, shape_id):
+        return self.shape_map.get(shape_id, None)
 
     def get_stops(self):
         slist = {}
@@ -193,28 +219,32 @@ class TripInference:
 
         return calendar_map
 
-    def get_stop_times(self, trip_id):
-        slist = []
+    def preload_stop_times(self):
+        self.stop_time_map = {}
 
         with open(self.path + '/stop_times.txt', 'r') as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
             for r in rows:
-                tid = r['trip_id']
-                #debug.log(f'-- tid: {tid}')
-
-                if tid != trip_id:
-                    continue
+                trip_id = r['trip_id']
 
                 arrival_time = r['arrival_time']
                 if len(arrival_time) == 0:
                     continue
 
                 stop_id = r['stop_id']
+
+                slist = self.stop_time_map.get(trip_id, None)
+
+                if slist is None:
+                    slist = []
+                    self.stop_time_map[trip_id] = slist
+
                 slist.append({'arrival_time': util.hhmmss_to_seconds(arrival_time), 'stop_id': stop_id})
 
-        return slist
+    def get_stop_times(self, trip_id):
+        return self.stop_time_map.get(trip_id, None)
 
     def get_distance(self, way_points, wi, stop_times, stops, si):
             wp = way_points[wi]
