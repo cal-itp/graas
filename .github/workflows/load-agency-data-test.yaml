@@ -21,3 +21,4 @@ jobs:
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
         env:
           ERROR_EMAIL_RECIPIENTS: ${{ secrets.ERROR_EMAIL_RECIPIENTS }}
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
