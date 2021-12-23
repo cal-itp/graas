@@ -18,6 +18,6 @@ jobs:
         run: ./gradlew build
       - name: Load agency data
         working-directory: gtfu
-        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c ~/tmp/tuff -u ${{ secrets.LIVE_AGENCIES_URL }}
+        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
         env:
           ERROR_EMAIL_RECIPIENTS: ${{ secrets.ERROR_EMAIL_RECIPIENTS }}
