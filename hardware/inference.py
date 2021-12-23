@@ -382,7 +382,7 @@ class TripInference:
                 return stop_id
         return None
 
-    def check_for_trip_start(stop_id):
+    def check_for_trip_start(self, stop_id):
         if not stop_id in self.stops:
             return
 

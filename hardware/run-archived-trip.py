@@ -21,11 +21,12 @@ def main(data_file, cache_folder, static_gtfs_url):
             #print(f'- line: {line}')
             tok = line.split(',')
             seconds = int(tok[0])
+            day_seconds = util.get_seconds_since_midnight(seconds)
             lat = float(tok[1])
             lon = float(tok[2])
             grid_index = inf.grid.get_index(lat, lon)
-            util.debug(f'current location: lat={lat} long={lon} grid_index={grid_index}')
-            trip_id = inf.get_trip_id(lat, lon, seconds)
+            util.debug(f'current location: lat={lat} long={lon} seconds={day_seconds} grid_index={grid_index}')
+            trip_id = inf.get_trip_id(lat, lon, day_seconds)
             print(f'- trip_id: {trip_id}')
 
 def usage():

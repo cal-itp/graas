@@ -56,6 +56,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final Color INACTIVE_SEGMENT_COLOR = new Color(10, 40, 10);
     private static final Color ACTIVE_SEGMENT_COLOR = ACCENT_COLORS[10];
     private static final Color BORDER_COLOR = new Color(32, 32, 32);
+    private static final Color ACTIVE_LOCATION = Color.magenta;
+    private static final Color INACTIVE_LOCATION = Color.magenta.darker().darker();
 
     private static final int MAX_SLEEP_MILLIS = 500;
     private static final int MAX_ACC = 4;
@@ -73,8 +75,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private List<TripEvent> eventList;
     private int eventIndex;
     private Deque<Area> areaStack;
+    private String frameString;
     private Font font;
-    private String hhmmss = "";
     private Button playButton;
     private Button fwdButton;
     private Button rewButton;
@@ -146,6 +148,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         sleepMillis = MAX_SLEEP_MILLIS;
         eventList = new ArrayList<>();
         eventIndex = 0;
+        frameString = "";
 
         segmentTable = new HashMap();
         font = new Font("Consolas", Font.PLAIN, 11);
@@ -257,14 +260,14 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                             float lon = getFloatProperty(line, "long");
                             //Debug.log("- lon: " + lon);
 
-                            if (hasProperty(line, "seconds"))  {
-                                int seconds = getIntProperty(line, "seconds");
-                                //Debug.log("- seconds: " + seconds);
+                            int seconds = -1;
 
-                                hhmmss = Time.getHMSForMillis(seconds * 1000);
+                            if (hasProperty(line, "seconds"))  {
+                                seconds = getIntProperty(line, "seconds");
+                                //Debug.log("- seconds: " + seconds);
                             }
 
-                            eventList.add(new TripEvent(new ShapePoint(lat, lon)));
+                            eventList.add(new TripEvent(new ShapePoint(lat, lon), seconds));
                         }
 
                         if (line.startsWith(UPDATE_HEADER)) {
@@ -299,8 +302,10 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                         if (fwdState > 0) eventIndex++;
                         else if (rewState > 0) eventIndex--;
 
-                        if (eventIndex < 0) eventIndex = 0;
-                        if (eventIndex >= eventList.size()) eventIndex = eventList.size() - 1;
+                        if (eventIndex < 0) eventIndex = eventList.size() - 1;
+                        if (eventIndex >= eventList.size()) eventIndex = 0;
+
+                        frameString = "frame: " + eventIndex + "/" + eventList.size();
 
                         if (eventIndex != lastEventIndex) {
                             synchronized (TripInferenceVisualizer.this) {
@@ -614,19 +619,35 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         playButton.paint(g);
         fwdButton.paint(g);
 
+        if (mouseDownX > 0 && mouseDownY > 0) {
+            int x = Math.min(mouseDownX, mouseX);
+            y = Math.min(mouseDownY, mouseY);
+            int w = Math.abs(mouseDownX - mouseX);
+            int h = Math.abs(mouseDownY - mouseY);
+
+            g.setColor(Color.green);
+            g.drawRect(x, y, w, h);
+        }
+
+        ShapePoint p;
+        int radius = 2;
+
+        g.setColor(INACTIVE_LOCATION);
+
+        for (TripEvent e : eventList) {
+            p = e.position;
+            latLongToScreenXY(gridWidth, gridHeight, p);
+
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY, radius);
+        }
+
         if (eventList.size() == 0) return;
 
+        g.setColor(ACTIVE_LOCATION);
+
         TripEvent e = eventList.get(eventIndex);
-        ShapePoint p = e.position;
-
-        g.setColor(Color.magenta);
+        p = e.position;
         latLongToScreenXY(gridWidth, gridHeight, p);
-        Debug.log("- eventIndex: " + eventIndex);
-        Debug.log("- p: (" + p.screenX + ", " + p.screenY + ")");
-
-        //Debug.log("- area: " + area);
-
-        int radius = 2;
 
         drawPoint(g, PADDING + p.screenX, voff + p.screenY, radius);
 
@@ -644,17 +665,15 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         }
 
         g.setColor(ACCENT_COLORS[0]);
-        GraphicsUtil.drawString(g, hhmmss, 5, 5);
+        int seconds = e.getDaySeconds();
+        String hhmmss = "";
 
-        if (mouseDownX > 0 && mouseDownY > 0) {
-            int x = Math.min(mouseDownX, mouseX);
-            y = Math.min(mouseDownY, mouseY);
-            int w = Math.abs(mouseDownX - mouseX);
-            int h = Math.abs(mouseDownY - mouseY);
-
-            g.setColor(Color.green);
-            g.drawRect(x, y, w, h);
+        if (seconds >= 0) {
+            hhmmss = Time.getHMSForMillis(seconds * 1000);
         }
+
+        GraphicsUtil.drawString(g, hhmmss, 5, 5);
+        GraphicsUtil.drawString(g, frameString, 80, 5);
     }
 
     public static void main(String[] arg) throws Exception {
@@ -680,12 +699,18 @@ class Score implements Comparable<Score> {
 
 class TripEvent {
     ShapePoint position;
+    private int daySeconds;
     private List<Score> scoreList;
     boolean sorted;
 
-    TripEvent(ShapePoint position) {
+    TripEvent(ShapePoint position, int daySeconds) {
         this.position = position;
+        this.daySeconds = daySeconds;
         scoreList = new ArrayList();
+    }
+
+    public int getDaySeconds() {
+        return daySeconds;
     }
 
     void add(Score score) {

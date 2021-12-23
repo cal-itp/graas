@@ -49,9 +49,13 @@ def get_current_time_millis():
 def now():
     return get_current_time_millis()
 
-def get_seconds_since_midnight():
-    now = datetime.now()
-    return (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+def get_seconds_since_midnight(seconds = None):
+    if seconds is None:
+        now = datetime.now()
+    else:
+        now = datetime.fromtimestamp(seconds)
+
+    return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 def hhmmss_to_seconds(s):
     arr = s.split(':')
