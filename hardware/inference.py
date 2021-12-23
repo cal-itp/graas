@@ -51,7 +51,12 @@ class TripInference:
                 service_id = r['service_id']
                 shape_id = r['shape_id']
 
-                if not service_id in calendar_map or calendar_map[service_id][dow] != 1:
+                if not service_id in calendar_map:
+                    util.debug(f'* service id \'{service_id}\' not found in calendar map, skipping trip \'{trip_id}\'')
+                    continue
+
+                if calendar_map[service_id][dow] != 1:
+                    util.debug(f'* dow \'{dow}\' not set, skipping trip \'{trip_id}\'')
                     continue
 
                 util.debug(f'')
@@ -138,6 +143,7 @@ class TripInference:
             rows = list(reader)
 
             for r in rows:
+                # util.debug(f'-- r: {r}')
                 id = r['stop_id']
                 lat = float(r['stop_lat'])
                 lon = float(r['stop_lon'])
@@ -176,14 +182,14 @@ class TripInference:
 
             for r in rows:
                 service_id = r['service_id']
-                #debug.log(f'-- service id: {service_id}')
+                #util.debug(f'-- service id: {service_id}')
                 cal = []
 
                 for d in dow:
                     cal.append(int(r[d]))
                 #util.debug(f'-- cal: {cal}')
 
-            calendar_map[service_id] = cal
+                calendar_map[service_id] = cal
 
         return calendar_map
 

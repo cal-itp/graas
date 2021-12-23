@@ -180,7 +180,7 @@ def update_cache_if_needed(cache_path, url):
     if not os.path.isdir(cache_path):
         os.makedirs(cache_path)
 
-    r = requests.head(url)
+    r = requests.head(url, allow_redirects=True)
     url_time = r.headers.get('last-modified', None)
     debug(f'- url_time: {url_time}')
 
@@ -199,13 +199,20 @@ def update_cache_if_needed(cache_path, url):
         return
 
     debug('+ gtfs.zip out of date, downloading...')
+
+    """
     req = request.Request(url)
     resp = request.urlopen(req)
     debug(f'- resp.code: {resp.code}')
     content = resp.read()
+    """
+
+    r = requests.get(url)
+    debug(f'- r.status_code: {r.status_code}')
 
     with open(file_name, 'wb') as f:
-        f.write(content)
+        #f.write(content)
+        f.write(r.content)
         f.close()
 
     debug('+ gtfs.zip downloaded')

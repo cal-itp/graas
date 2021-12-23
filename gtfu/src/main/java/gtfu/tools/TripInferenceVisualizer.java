@@ -13,16 +13,23 @@ import java.awt.Panel;
 import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import gtfu.*;
 
-public class TripInferenceVisualizer extends Panel implements KeyListener{
+public class TripInferenceVisualizer extends Panel implements KeyListener, MouseListener, MouseMotionListener {
     private static final String GRID_HEADER = "grid: ";
     private static final String SEGMENT_HEADER = "segment: ";
     private static final String CURRENT_HEADER = "current location: ";
@@ -65,18 +72,20 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
     //private List<Score> scoreList;
     private List<TripEvent> eventList;
     private int eventIndex;
-    private Area area;
+    private Deque<Area> areaStack;
     private Font font;
     private String hhmmss = "";
-    private Button zoomButton;
     private Button playButton;
     private Button fwdButton;
     private Button rewButton;
-    private int zoomState;
     private int playState;
     private int fwdState;
     private int rewState;
     private int sleepMillis;
+    private int mouseDownX;
+    private int mouseDownY;
+    private int mouseX;
+    private int mouseY;
 
     private static String getProperty(String line, String name, char separator) {
         int i1 = line.indexOf(name + "=");
@@ -141,21 +150,33 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
         segmentTable = new HashMap();
         font = new Font("Consolas", Font.PLAIN, 11);
 
-        zoomState = ZOOMED_OUT;
         playState = PLAYING;
         rewState = 0;
         fwdState = 1;
+
+        areaStack = new ArrayDeque();
+
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(TripInferenceVisualizer.this);
 
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                    Pattern p = Pattern.compile("^[0-9]+:[0-9]+:[0-9]+ .*");
 
                     for (;;) {
                         String line = in.readLine();
                         if (line == null) break;
 
-                        //Debug.log("- line: " + line);
+                        Debug.log("- line: " + line);
+
+                        Matcher matcher = p.matcher(line);
+
+                        if (matcher.matches()) {
+                            line = line.substring(9);
+                        }
 
                         if (line.startsWith(GRID_HEADER)) {
                             //Debug.log(">> got grid");
@@ -165,16 +186,18 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
                             float[] bottomRight = getFloatTupleProperty(line, "bottom_right");
                             //Debug.log("- bottomRight: (" + bottomRight[0] + ", " + bottomRight[1] + ")");
 
-                            area = new Area(
+                            Area area = new Area(
                                 new ShapePoint(topLeft[0], topLeft[1]),
                                 new ShapePoint(bottomRight[0], bottomRight[1])
                             );
+
+                            areaStack.clear();
+                            areaStack.push(area);
 
                             subdivisions = getIntProperty(line, "subdivisions");
                             //Debug.log("- subdivisions: " + subdivisions);
 
                             Frame f = new Frame("Trip Inference");
-                            f.addKeyListener(TripInferenceVisualizer.this);
 
                             int width = 0;
                             int height = 0;
@@ -319,18 +342,11 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
             System.exit(0);
         }
 
-        if (c == 'z') {
-            zoomState = 1 - zoomState;
-            zoomButton.setText(zoomState == ZOOMED_OUT ? "ZOOM IN" : "ZOOM OUT");
-
-            if (zoomState == ZOOMED_OUT) {
-                // reset area to total area
-            } else {
-                // save total area
-                // create area from all active segments
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            synchronized (this) {
+                areaStack.pop();
+                repaint();
             }
-
-            repaint();
         }
 
         if (c == ' ') {
@@ -392,6 +408,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
         //Debug.log("- displayHeight: " + displayHeight);
         //Debug.log("- p: " + p);
 
+        Area area = areaStack.peek();
         float fractionLat = area.getLatFraction(p.lat, false);
         //Debug.log("- fractionLat: " + fractionLat);
         float fractionLong = area.getLongFraction(p.lon, false);
@@ -404,11 +421,93 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
         //Debug.log("- p.screenY: " + p.screenY);
     }
 
+    public void screenXYToLatLong(int displayWidth, int displayHeight, ShapePoint p) {
+        float fractionX = (float)p.screenX / displayWidth;
+        float fractionY = (float)p.screenY / displayHeight;
+        Area area = areaStack.peek();
+
+        p.lat = area.topLeft.lat - area.getLatDelta() * fractionY;
+        p.lon = area.topLeft.lon + area.getLongDelta() * fractionX;
+    }
+
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    public void mouseExited(MouseEvent e) {
+    }
+
+    public synchronized void mousePressed(MouseEvent e) {
+        //Debug.log("mousePressed()");
+        //Debug.log("- e.getX(): " + e.getX());
+        //Debug.log("- e.getY(): " + e.getY());
+
+        mouseDownX = mouseX = e.getX();
+        mouseDownY = mouseY = e.getY();
+
+        repaint();
+    }
+
+    public synchronized void mouseReleased(MouseEvent e) {
+        //Debug.log("mouseReleased()");
+
+        if (areaStack.size() < 2) {
+            int hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
+            int vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
+            int gridWidth = hslice * subdivisions;
+            int gridHeight = vslice * subdivisions;
+            int hoff = PADDING;
+            int voff = (getHeight() - gridHeight) / 2;
+
+            int x = Math.min(mouseDownX, mouseX);
+            int y = Math.min(mouseDownY, mouseY);
+            int w = Math.abs(mouseDownX - mouseX);
+            int h = Math.abs(mouseDownY - mouseY);
+
+            ShapePoint topLeft = new ShapePoint();
+            topLeft.screenX = x - hoff;
+            topLeft.screenY = y - voff;
+
+            screenXYToLatLong(gridWidth, gridHeight, topLeft);
+
+            ShapePoint bottomRight = new ShapePoint();
+            bottomRight.screenX = x - hoff + w;
+            bottomRight.screenY = y - voff + h;
+
+            screenXYToLatLong(gridWidth, gridHeight, bottomRight);
+
+            Area area = new Area(topLeft, bottomRight);
+            areaStack.push(area);
+        }
+
+        mouseDownX = -1;
+        mouseDownY = -1;
+
+        repaint();
+    }
+
+    public synchronized void mouseDragged(MouseEvent e) {
+        //Debug.log("mouseDragged()");
+        //Debug.log("- e.getX(): " + e.getX());
+        //Debug.log("- e.getY(): " + e.getY());
+
+        mouseX = e.getX();
+        mouseY = e.getY();
+
+        repaint();
+    }
+
+    public void mouseMoved(MouseEvent e) {
+    }
+
     public void update(Graphics g) {
         if (buf == null) {
             buf = createImage(getWidth(), getHeight());
         }
 
+        requestFocus();
         paint(buf.getGraphics());
         g.drawImage(buf, 0, 0, null);
     }
@@ -502,21 +601,18 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
             g.setColor(c);
 
             int xx = hoff;
-            int w = PANEL_SIZE / 2 / 4;
+            int w = PANEL_SIZE / 2 / 3;
 
             rewButton = new Button("", c, xx, y, w - 10, buttonHeight);
             xx += w;
             playButton = new Button("PAUSE", c, xx, y, w - 10, buttonHeight);
             xx += w;
             fwdButton = new Button(">", c, xx, y, w - 10, buttonHeight);
-            xx += w;
-            zoomButton = new Button("ZOOM IN", c, xx, y, w - 10, buttonHeight);
         }
 
         rewButton.paint(g);
         playButton.paint(g);
         fwdButton.paint(g);
-        zoomButton.paint(g);
 
         if (eventList.size() == 0) return;
 
@@ -549,6 +645,16 @@ public class TripInferenceVisualizer extends Panel implements KeyListener{
 
         g.setColor(ACCENT_COLORS[0]);
         GraphicsUtil.drawString(g, hhmmss, 5, 5);
+
+        if (mouseDownX > 0 && mouseDownY > 0) {
+            int x = Math.min(mouseDownX, mouseX);
+            y = Math.min(mouseDownY, mouseY);
+            int w = Math.abs(mouseDownX - mouseX);
+            int h = Math.abs(mouseDownY - mouseY);
+
+            g.setColor(Color.green);
+            g.drawRect(x, y, w, h);
+        }
     }
 
     public static void main(String[] arg) throws Exception {
