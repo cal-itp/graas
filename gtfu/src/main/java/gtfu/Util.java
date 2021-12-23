@@ -846,4 +846,32 @@ public class Util {
         return collections;
     }
 
+    public static Map<String, String> hashMapFromTextFile(String path, String delimiter) {
+
+        Map<String, String> map = new HashMap<String, String>();
+        BufferedReader br = null;
+
+        try {
+            File file = new File(path);
+            br = new BufferedReader(new FileReader(file));
+            String line = null;
+
+            while ((line = br.readLine()) != null) {
+
+                String[] parts = line.split(delimiter);
+                String name = parts[0].trim();
+                String recipients = parts[1].trim();
+
+                if (!name.equals("") && !recipients.equals("")){
+                    map.put(name, recipients);
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("** error: no such file " + path);
+            System.exit(1);
+        }
+
+        return map;
+    }
 }
