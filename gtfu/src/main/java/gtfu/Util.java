@@ -27,6 +27,7 @@ import java.util.zip.ZipEntry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public class Util {
     public static final String[] GTFS_FILE_LIST = {
@@ -822,7 +823,7 @@ public class Util {
         //Debug.log("- stopCollection.getSize(): " + stopCollection.getSize());
         //Debug.log("trips:");
         t = new Timer("trips");
-        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po);
+        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po, skipErrors);
         collections.put("trips", tripCollection);
         //Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
@@ -846,32 +847,14 @@ public class Util {
         return collections;
     }
 
-    public static Map<String, String> hashMapFromTextFile(String path, String delimiter) {
-
-        Map<String, String> map = new HashMap<String, String>();
-        BufferedReader br = null;
-
+    public static Map<String, Object> parseJSONasMap(String path) {
         try {
-            File file = new File(path);
-            br = new BufferedReader(new FileReader(file));
-            String line = null;
+            TypeReference<HashMap<String, String[]>> typeRef
+              = new TypeReference<HashMap<String, String[]>>() {};
+            return new ObjectMapper().readValue(new File(path), typeRef);
 
-            while ((line = br.readLine()) != null) {
-
-                String[] parts = line.split(delimiter);
-                String name = parts[0].trim();
-                String recipients = parts[1].trim();
-
-                if (!name.equals("") && !recipients.equals("")){
-                    map.put(name, recipients);
-                }
-            }
+        } catch (IOException e) {
+            throw new Fail(e);
         }
-        catch (Exception e) {
-            System.out.println("** error: no such file " + path);
-            System.exit(1);
-        }
-
-        return map;
     }
 }
