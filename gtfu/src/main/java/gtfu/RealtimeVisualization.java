@@ -752,12 +752,7 @@ public class RealtimeVisualization implements CollectionOwner, Drawable, UIEvent
         }
 
         if (list == null) {
-            try {
-                InputStream is = RealtimeVisualization.class.getResourceAsStream("/conf/agency-data.json");
-                list = (AgencyData[])Util.readJSONObjectFromStream(is, AgencyData[].class);
-            } catch (Exception e) {
-                throw new Fail(e);
-            }
+            usage();
         }
 
         int dataIndex = 0;
