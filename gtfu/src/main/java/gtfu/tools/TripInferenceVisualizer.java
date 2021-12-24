@@ -56,8 +56,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final Color INACTIVE_SEGMENT_COLOR = new Color(10, 40, 10);
     private static final Color ACTIVE_SEGMENT_COLOR = ACCENT_COLORS[10];
     private static final Color BORDER_COLOR = new Color(32, 32, 32);
-    private static final Color ACTIVE_LOCATION = Color.magenta;
-    private static final Color INACTIVE_LOCATION = Color.magenta.darker().darker();
+    private static final Color ACTIVE_LOCATION = new Color(255, 0, 255);
+    private static final Color INACTIVE_LOCATION = new Color(64, 0, 64);
 
     private static final int MAX_SLEEP_MILLIS = 500;
     private static final int MAX_ACC = 4;
