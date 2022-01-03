@@ -13,21 +13,32 @@ public class Recipients {
 
 	public String[] get(String reportType) {
 
-		String[] recipientsList = null;
-
 		// Default to local recipient list if env variable is present
-		String recipientsString = System.getenv("LOCAL_REPORT_RECIPIENTS");
+		String localRecipientsString = System.getenv("LOCAL_REPORT_RECIPIENTS");
 
-		if (recipientsString != null){
-			recipientsList = recipientsString.split(",");
+		if (localRecipientsString != null){
+			return localRecipientsString.split(",");
 		}
 		else {
-			recipientsList = (String[]) recipientsMap.get(reportType);
+			ArrayList recipients = (ArrayList) recipientsMap.get(reportType);
 
-			if (recipientsList == null) {
+			if (recipients == null) {
 				throw new Fail("** error: no report type " + reportType + " listed in " + RECIPIENTS_FILE_PATH);
 			}
+
+			// Convert arraylist of objects to array of strings
+			try{
+				String[] recipientsList = new String[recipients.size()];
+
+				for (int i = 0; i < recipients.size(); i++) {
+					recipientsList[i] = (String) recipients.get(i);
+				}
+
+				return recipientsList;
+
+			} catch (Exception e) {
+	            throw new Fail(e);
+	        }
 		}
-		return recipientsList;
 	}
 }

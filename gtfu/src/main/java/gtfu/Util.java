@@ -849,11 +849,8 @@ public class Util {
 
     public static Map<String, Object> parseJSONasMap(String path) {
         try {
-            TypeReference<HashMap<String, String[]>> typeRef
-              = new TypeReference<HashMap<String, String[]>>() {};
-            return new ObjectMapper().readValue(new File(path), typeRef);
-
-        } catch (IOException e) {
+            return new ObjectMapper().readValue(new File(path), HashMap.class);
+        } catch (Exception e) {
             throw new Fail(e);
         }
     }
