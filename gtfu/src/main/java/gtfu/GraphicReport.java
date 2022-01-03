@@ -197,7 +197,6 @@ public class GraphicReport {
 
         SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobs);
         int responseCode = grid.send();
-        // Debug.log("- responseCode: " + responseCode);
     }
 
     private Graphics2D createCanvas(String name, String date) {
