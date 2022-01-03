@@ -11,10 +11,14 @@ import gtfu.Util;
 import gtfu.TripCollection;
 import gtfu.RouteCollection;
 import gtfu.ShapeCollection;
+import gtfu.Recipients;
 
 import gtfu.tools.AgencyYML;
 
+
+
 public class LoadAgencyDataTest {
+
     public LoadAgencyDataTest(String cacheDir, String agencyID) throws Exception {
         Debug.log("LoadAgencyDataTest.LoadAgencyDataTest()");
         Debug.log("- cacheDir: " + cacheDir);
@@ -51,14 +55,8 @@ public class LoadAgencyDataTest {
         String agencyID = null;
         String url = null;
 
-        String r = System.getenv("GRAAS_REPORT_RECIPIENTS");
-
-        if (r == null) {
-            System.err.println("* missing recipient list, please set GRAAS_REPORT_RECIPIENTS env variable");
-            System.exit(1);
-        }
-
-        String[] recipients = r.split(", ");
+        Recipients r = new Recipients();
+        String[] recipients = r.get("error_report");
 
         FailureReporter reporter = new EmailFailureReporter(recipients, "LoadAgencyDataTest Report");
         Util.setReporter(reporter);

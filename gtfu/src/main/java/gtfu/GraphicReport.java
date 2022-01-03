@@ -52,7 +52,6 @@ public class GraphicReport {
     private static final String[] PROPERTY_NAMES = {
         "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
     };
-    private static final String recipientListPath = "src/main/resources/conf/graas-report-recipients.txt";
     private static final int SCALE = 2;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 200 * SCALE;
@@ -70,8 +69,6 @@ public class GraphicReport {
     private Font font;
     private Font smallFont;
     private int timeRowCount;
-    private String recipientList;
-
 
     public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean downloadReport) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
@@ -181,20 +178,7 @@ public class GraphicReport {
                 }
             }
         } else {
-
-        // Default to local recipient list if env variable is present
-        recipientList = System.getenv("GRAAS_REPORT_RECIPIENTS");
-        if (recipientList == null) {
-            try {
-               recipientList = Util.getFileAsString(recipientListPath);
-            }
-            catch (Exception e) {
-                System.out.println("** error: no such file " + recipientListPath);
-                System.out.println("** to download files directly, rerun script using the '-D' flag");
-                System.exit(0);
-            }
-        }
-        sendEmail(blobs);
+            sendEmail(blobs);
         }
     }
 
@@ -208,12 +192,11 @@ public class GraphicReport {
         Debug.log("GraphicReport.sendEmail()");
         // Debug.log("- blobs: " + blobs);
 
-
-        String[] recipients = recipientList.split(",");
+        Recipients r = new Recipients();
+        String[] recipients = r.get("graas_report");
 
         SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobs);
         int responseCode = grid.send();
-        // Debug.log("- responseCode: " + responseCode);
     }
 
     private Graphics2D createCanvas(String name, String date) {

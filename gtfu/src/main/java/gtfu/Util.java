@@ -822,7 +822,7 @@ public class Util {
         //Debug.log("- stopCollection.getSize(): " + stopCollection.getSize());
         //Debug.log("trips:");
         t = new Timer("trips");
-        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po);
+        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po, skipErrors);
         collections.put("trips", tripCollection);
         //Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
@@ -846,4 +846,11 @@ public class Util {
         return collections;
     }
 
+    public static Map<String, Object> parseJSONasMap(String path) {
+        try {
+            return new ObjectMapper().readValue(new File(path), HashMap.class);
+        } catch (Exception e) {
+            throw new Fail(e);
+        }
+    }
 }
