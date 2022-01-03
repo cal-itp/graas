@@ -26,13 +26,9 @@ public class Recipients {
 				throw new Fail("** error: no report type " + reportType + " listed in " + RECIPIENTS_FILE_PATH);
 			}
 
-			// Convert arraylist of objects to array of strings
 			try{
-				String[] recipientsList = new String[recipients.size()];
-
-				for (int i = 0; i < recipients.size(); i++) {
-					recipientsList[i] = (String) recipients.get(i);
-				}
+        		String[] recipientsList = new String[recipients.size()];
+        		recipients.toArray(recipientsList);
 
 				return recipientsList;
 
