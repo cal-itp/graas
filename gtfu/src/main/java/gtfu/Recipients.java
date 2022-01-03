@@ -27,14 +27,14 @@ public class Recipients {
 			}
 
 			try{
-        		String[] recipientsList = new String[recipients.size()];
-        		recipients.toArray(recipientsList);
+				String[] recipientsList = new String[recipients.size()];
+				recipients.toArray(recipientsList);
 
 				return recipientsList;
 
 			} catch (Exception e) {
-	            throw new Fail(e);
-	        }
+				throw new Fail(e);
+			}
 		}
 	}
 }
