@@ -27,7 +27,6 @@ import java.util.zip.ZipEntry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 public class Util {
     public static final String[] GTFS_FILE_LIST = {
