@@ -57,6 +57,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#babyshark-open-source-hardware-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -238,10 +243,91 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Hardware
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         Hardware
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bill-of-materials" class="md-nav__link">
+    Bill of Materials
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-fabrication" class="md-nav__link">
+    Pre-Fabrication:
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-Fabrication:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#led" class="md-nav__link">
+    LED:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accelerometer" class="md-nav__link">
+    Accelerometer:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-connector-between-pi-and-waveshare" class="md-nav__link">
+    USB Connector between Pi and Waveshare:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assembly-stage-i" class="md-nav__link">
+    Assembly - Stage I:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-assembly-stage-ii" class="md-nav__link">
+    Final Assembly - Stage II:
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -269,15 +355,387 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bill-of-materials" class="md-nav__link">
+    Bill of Materials
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-fabrication" class="md-nav__link">
+    Pre-Fabrication:
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-Fabrication:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#led" class="md-nav__link">
+    LED:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accelerometer" class="md-nav__link">
+    Accelerometer:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-connector-between-pi-and-waveshare" class="md-nav__link">
+    USB Connector between Pi and Waveshare:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assembly-stage-i" class="md-nav__link">
+    Assembly - Stage I:
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-assembly-stage-ii" class="md-nav__link">
+    Final Assembly - Stage II:
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
 
-  <h1>Hardware</h1>
-
-<p>An in-depth summary of open-source GRaaS hardware, including parts list and assembly instructions, is coming soon.</p>
+<h1 id="babyshark-open-source-hardware-documentation">Babyshark Open-source Hardware Documentation:</h1>
+<h3 id="bill-of-materials">Bill of Materials</h3>
+<p>Below are the materials used by the Cal-ITP team to construct the original Baby Shark. These materials are not requirements, rather they are suggestions. So long as the end product meets the product goals and is completed at a low cost, modifications are allowed and encouraged.</p>
+<table>
+<thead>
+<tr>
+<th>Item #</th>
+<th>Component</th>
+<th>Units</th>
+<th>Unit cost</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="https://www.raspberrypi.com/products/raspberry-pi-4-model-b/?variant=raspberry-pi-4-model-b-4gb">Raspberry Pi 4 GB</a></td>
+<td>1</td>
+<td>$59.54</td>
+<td>Open source hardware</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://www.waveshare.com/product/iot-communication/sim7600a-h-4g-hat.htm">SIM7600A-H 4G HAT</a></td>
+<td>1</td>
+<td>$78.58</td>
+<td>Make sure that you are choosing the correct region for this product</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://easycargo.hk/product/raspberry-pi-fan-30x30x7mm-raspberry-pi-cooling-fan-brushless-3-3v-5v-dc-quiet-fan-for-raspberry-pi-3-pi-2-pi-b-retroflag-nespi-case-30mmx30mmx7mm-black-4-pack/">Cooling Fan</a></td>
+<td>1</td>
+<td>$3.60</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://www.amazon.com/gp/product/B0185FK574">470 Ohm resistor</a></td>
+<td>1</td>
+<td>$0.84</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://www.amazon.com/gp/product/B077N5RLHN?th=1">Ribbon cables 8inch, 4-wire strand</a></td>
+<td>1</td>
+<td>$0.86</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="http://www.hiletgo.com/ProductDetail/1949452.html">Accelerometer</a></td>
+<td>1</td>
+<td>$7.35</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="http://eshop.sintech.cn/index.php?main_page=product_info&amp;cPath=52&amp;products_id=1088">SIM Extender</a></td>
+<td>1</td>
+<td>$19.60</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://www.amazon.com/100pcs-Standoff-Spacer-Replacement-Female/dp/B07LFKP7ND?th=1">15mm M2 nylon spacer</a></td>
+<td>4</td>
+<td>$0.16</td>
+<td></td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://www.amazon.com/MroMax-Machine-Phillips-Stainless-Cabinet/dp/B07YS5Y9W6/ref=sr_1_2?dchild=1&amp;keywords=M2+x+25mm&amp;qid=1628879636&amp;sr=8-2">25mm flathead M2 screw</a></td>
+<td>4</td>
+<td>$0.14</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://www.amazon.com/50PCS-Grade-Socket-Oxidation-Screws/dp/B07PP9H29B/ref=sr_1_3?dchild=1&amp;keywords=5mm+flat+head+m2+screw&amp;qid=1628646491&amp;sr=8-3">5mm flathead M2 screw</a></td>
+<td>2</td>
+<td>$0.25</td>
+<td></td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://www.amazon.com/50PCS-Grade-Socket-Oxidation-Screws/dp/B07PM7NMGD/ref=sr_1_11?dchild=1&amp;keywords=4mm+flat+head+m2+screw&amp;qid=1628646565&amp;sr=8-11">4mm flathead M2 screws</a></td>
+<td>4</td>
+<td>$0.25</td>
+<td></td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://www.amazon.com/M2-0-4-Tapping-Stainless-Phillips-Drilling/dp/B093ZRNGF1/ref=sr_1_3?dchild=1&amp;keywords=25mm%2Bflat%2Bhead%2Bm2%2Bscrew&amp;qid=1628646357&amp;sr=8-3&amp;th=1">6mm flathead M2 screws</a></td>
+<td>4</td>
+<td>$0.13</td>
+<td></td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://www.amazon.com/Uxcell-a11110900ux0075-Shrinkable-Shrink-Tubing/dp/B00843KWKS/ref=sr_1_3?dchild=1&amp;keywords=1mm+heat+shrink+tubes&amp;qid=1628646712&amp;sr=8-3">1mm heat shrink tubes</a></td>
+<td>0.5</td>
+<td>$0.85</td>
+<td>Units is in feet</td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://www.cellularizeme.com/product/cellularize-usb-c-extender-adapter/">USB-C extender</a></td>
+<td>1</td>
+<td>$4.54</td>
+<td></td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://www.amazon.com/uxcell-Insulating-Washers-Gaskets-Spacers/dp/B01N6B5KJN/ref=sr_1_3?dchild=1&amp;keywords=M2+x+5+x+1mm+Black+Nylon+Flat+washer&amp;qid=1628646949&amp;sr=8-3">M2 nylon washer</a></td>
+<td>20</td>
+<td>$0.04</td>
+<td></td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://www.amazon.com/SanDisk-SDSQUNS-016G-GN3MN-microSDHC-Everything-Stromboli/dp/B07MR6K8PD">SD card</a></td>
+<td>1</td>
+<td>$8.62</td>
+<td></td>
+</tr>
+<tr>
+<td>17</td>
+<td><a href="https://www.raspberrypi.com/products/type-c-power-supply/">Raspberry pi power connector</a></td>
+<td>1</td>
+<td>$10.60</td>
+<td>Open source hardware</td>
+</tr>
+<tr>
+<td>18</td>
+<td><a href="https://www.amazon.com/gp/product/B07QV5P9KT">uxcell USB 2.0 Type A Male Socket Connector Jack Port</a></td>
+<td>30</td>
+<td>$0.29</td>
+<td></td>
+</tr>
+<tr>
+<td>19</td>
+<td><a href="https://www.amazon.com/gp/product/B07Q4J5NKZ">WEIJ 20 Pcs Micro USB Male Type B 5-Pin Jack Port Solder Connector</a></td>
+<td>20</td>
+<td>$0.35</td>
+<td></td>
+</tr>
+<tr>
+<td>20</td>
+<td><a href="https://www.amazon.com/gp/product/B01GE4WGTS">LED</a></td>
+<td>1</td>
+<td>$0.46</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td><strong>Total:</strong></td>
+<td><strong>$197.54</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="pre-fabrication">Pre-Fabrication:</h3>
+<h4 id="led">LED:</h4>
+<p>Components include  (numbers correspond to bill of materials above):</p>
+<ul>
+<li>01 - Raspberry Pi 4 GB</li>
+<li>04 - 470 Ohm resistor</li>
+<li>05 - Ribbon cables 8inch, 4-wire strand</li>
+<li>13 - 1mm heat shrink tubes</li>
+</ul>
+<p>To start assembling the LED, go through the following steps:</p>
+<ol>
+<li>Peel off 2 wires from the bunch of ribbon cables.</li>
+<li>Cut to 11 cm in length measuring from the female side.</li>
+<li>Shorten LED leads to 3 and 6 mm respectively, making sure to leave a length difference.</li>
+<li>Shorten resistor leads to 3 mm on each side</li>
+<li>Cut 2.5 mm heat shrink tube to size, a couple of mm longer than resistor span</li>
+<li>Solder resistor to shorter LED lead using flux</li>
+<li>Strip one wire in strand</li>
+<li>Hold LED and resistor next to strand so that tip of stripped wire is level with bottom of LED</li>
+<li>Cut other wire so that its end is level with bottom end of resistor body</li>
+<li>Strip said wire</li>
+<li>Flux and tin wire tips</li>
+<li>Push 2.5 mm heat shrink tube over shorter wire, 1 mm heat shrink tube over longer wire</li>
+<li>Solder short wire end to open resistor lead using flux</li>
+<li>Solder longer wire to open LED lead using flux</li>
+<li>Push heat shrink tubes up against LED</li>
+<li>Use heat gun to shrink tubes</li>
+<li>Once you are done with these steps you should have something that looks like this:</li>
+</ol>
+<p><img alt="Assembled LED" src="img/image5.png" /></p>
+<h4 id="accelerometer">Accelerometer:</h4>
+<p>Components include (numbers correspond to bill of materials above):</p>
+<ul>
+<li>01 - Raspberry Pi 4 GB</li>
+<li>05 - Ribbon cables 8inch, 4-wire strand</li>
+<li>06 - Accelerometer</li>
+<li>13 - 1mm heat shrink tubes</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Wire length = 9 cm</li>
+<li>Be sure to use 1 mm heat shrink tube</li>
+<li>Accelerometer ground (gnd) to pi gnd (6)</li>
+<li>Accelerometer vcc to pi 3v3 (1)</li>
+<li>Accelerometer sda to pi sda (3)</li>
+<li>
+<p>Accelerometer scl to pi scl (5)
+(numbers in parentheses correspond to pins on the Raspberry Pi’s general IO connector.)</p>
+</li>
+<li>
+<p>Divide short ribbon into strands of 4 wires each</p>
+</li>
+<li>Remove male ends</li>
+<li>Strip insulation from individual wires</li>
+<li>Apply flux and tin to stripped wire tips</li>
+<li>Push heat shrink tubes over wire tips</li>
+<li>Hold PCB components down and screw holes facing away</li>
+<li>Stick tinned ends through two leftmost and two rightmost solder holes on the accelerometer board when it is oriented so that the components face the user and the holes face down.</li>
+<li>Clamp board into third hand or similar without tinned ends slipping out of holes</li>
+<li>Prop up wire strand from below to keep ends inserted</li>
+<li>Flux holes with ends</li>
+<li>Solder tinned tips to holes</li>
+<li>Using flush cutters, snip off solder and wire tips protruding past bottom of PCB</li>
+<li>Re-melt solder in holes for smoother surface</li>
+<li>Push up heat shrink tubes against PCB and shrink with heat gun</li>
+</ul>
+<p><img alt="Assembled Accelerometer" src="img/image3.png" /></p>
+<h4 id="usb-connector-between-pi-and-waveshare">USB Connector between Pi and Waveshare:</h4>
+<p>Components:</p>
+<ul>
+<li>01 - Raspberry Pi 4 GB</li>
+<li>02 - SIM7600A-H 4G HAT</li>
+<li>05 - Ribbon cables 8inch, 4-wire strand</li>
+<li>
+<p>13 - 1mm heat shrink tubes ("units" is in feet)</p>
+</li>
+<li>
+<p>Cut ribbon to 13.5 cm length, removing both male and female ends</p>
+</li>
+<li>Divide into strands of 4 wires each</li>
+<li>Peel individual wires apart at each end to about 3 cm</li>
+<li>Strip insulation from individual wires</li>
+<li>Flux and tin wire tips</li>
+<li>Push about 1.25 cm of heat shrink tube over each wire, continuing up as much as the wire allows</li>
+<li>If necessary, bend USB A pins to be at right angle to connector and parallel to each other</li>
+<li>Flux and tin pins</li>
+<li>Starting with a center pin, solder a tinned wire end to each pin</li>
+<li>Push up heat shrink tubes against pins and apply heat gun to shrink</li>
+<li>Flux and tin USB micro pins (only one of the pins on the two-pin side needs connecting, refer to diagram above)</li>
+<li>Attach wires to pins according to diagram above</li>
+<li>Push up heat shrink tubes against pins and apply heat gun to shrink</li>
+<li>Check if the cable is working by connecting the Raspberry Pi and the waveshare and running 'microcom -D /dev/ttyUSB2'. At prompt, enter 'at'. If the cable is correctly connected, waveshare will reply with 'OK'.</li>
+</ul>
+<p><img alt="USB Connector Diagram" src="img/image15.png" />
+<img alt="USB Connector" src="img/image8.png" />
+<img alt="USB Connector Close 1" src="img/image4.png" />
+<img alt="USB Connector Close 2" src="img/image19.png" /></p>
+<h3 id="assembly-stage-i">Assembly - Stage I:</h3>
+<ol>
+<li>Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see: <img alt="Waveshare" src="img/image17.png" /></li>
+<li>Slide sim connector to the right to open:
+<img alt="Waveshare SIM Connector" src="img/image6.png" /></li>
+<li>Thread male end of sim extender through bracket as shown:
+<img alt="Waveshare connecting to SIM extender 1" src="img/image12.png" /></li>
+<li>Pull male end through further, then feed into bracket as shown:
+<img alt="Waveshare connecting to SIM extender 2" src="img/image9.png" /></li>
+<li>Close bracket on connector, making sure that sim male end fits into connector cutouts, then slide top bracket to the left to secure
+<img alt="Waveshare connecting to SIM extender 3" src="img/image1.png" /></li>
+<li>Remove pi from packaging, turn upside down and insert micro SD card with OS image into card slot as shown:
+<img alt="Raspberry Pi with SIM" src="img/image14.png" /></li>
+<li>Connect pi and Waveshare GPIO pins, being careful to properly align both banks. <strong>Don't insert pins all the way; leave 1mm of space. See step 8.</strong>
+<img alt="Raspberry Pi and Waveshare attaching" src="img/image11.jpg" /></li>
+<li>Further connect boards using 4 M2 25 mm screws, 8 M2 nylon washers and 4 hex M2 nylon spacers, as shown. Then push GPIO pins in all the way
+<img alt="Raspberry Pi and Waveshare attached" src="img/image10.png" /></li>
+<li>Connect LTE cable to board MAIN and GPS cable to board GNSS as shown. There needs to be a clearly audible snap from each connector
+<img alt="Raspberry Pi and Waveshare attached" src="img/image7.png" /></li>
+<li>Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image
+<img alt="Connected Raspberry Pi and Waveshare" src="img/image18.jpg" /></li>
+<li>Connect LTE and GPS antennas, display, keyboard, mouse and power</li>
+<li>Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.</li>
+<li>Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.</li>
+<li>After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.
+<strong>NOTE: software set up instructions coming soon.</strong></li>
+</ol>
+<h3 id="final-assembly-stage-ii">Final Assembly - Stage II:</h3>
+<ol>
+<li>Thread two M2 nuts each onto 2 M2 x 10mm screws. Attach fan to case using top two fan housing screw holes</li>
+<li>Put an M2 nylon washer each onto 2 M2 x 5mm screws. Attach SIM extender to case using top two extender screw holes</li>
+<li>Put an M2 nylon washer each onto 2 M2 x 6mm screws. Attach accelerometer to case using top two accelerometer screw holes</li>
+<li>Attach USB-C extender to case using a glob of Kwik Weld or similar. Roughen plastic housing of extender with a few diagonal serrated knife cuts to provide better grip for the glue.</li>
+</ol>
 
               
             </article>
