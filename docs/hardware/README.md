@@ -39,6 +39,7 @@ Components include (numbers correspond to Bill of Materials above):
 *  04 - 470 Ohm resistor
 *  05 - Ribbon cables 8inch, 4-wire strand
 *  13 - 1mm heat shrink tubes
+*  20 - LED
 
 **To assemble the LED, go through the following steps:**
 
@@ -101,6 +102,7 @@ Notes:
 13. Re-melt solder in holes for smoother surface
 14. Push up heat shrink tubes against PCB and shrink with heat gun
 
+Once you are done with these steps you should have something that looks like this:
 ![Assembled Accelerometer](img/image3.png)
 
 #### 3. USB Connector between Raspberry Pi and Waveshare:
@@ -110,7 +112,9 @@ Components include (numbers correspond to Bill of Materials above):
 * 01 - Raspberry Pi 4 GB
 * 02 - SIM7600A-H 4G HAT
 * 05 - Ribbon cables 8inch, 4-wire strand
-* 13 - 1mm heat shrink tubes ("units" is in feet)
+* 13 - 1mm heat shrink tubes
+* 18 - Micro USB 2.0 Type A Male Socket Connector Jack Port
+* 19 - WEIJ Micro USB Male Type B 5-Pin Jack Port Solder Connector
 
 **To assemble the Pi/Waveshare connector, go through the following steps:**
 
@@ -124,45 +128,52 @@ Components include (numbers correspond to Bill of Materials above):
 8. Flux and tin pins
 9. Starting with a center pin, solder a tinned wire end to each pin
 10. Push up heat shrink tubes against pins and apply heat gun to shrink
-11. Flux and tin USB micro pins (only one of the pins on the two-pin side needs connecting, refer to diagram above)
-12. Attach wires to pins according to diagram above
+11. Flux and tin micro USB pins (only one of the pins on the two-pin side needs connecting, refer to diagram above)  
+![USB Connector Diagram](img/image15.png)  
+12. Attach wires to pins according to diagram above  
 13. Push up heat shrink tubes against pins and apply heat gun to shrink
 14. Check if the cable is working by connecting the Raspberry Pi and the waveshare and running 'microcom -D /dev/ttyUSB2'. At prompt, enter 'at'. If the cable is correctly connected, waveshare will reply with 'OK'.
 
-![USB Connector Diagram](img/image15.png)
+Once you are done with these steps you should have something that looks like this:  
 ![USB Connector](img/image8.png)
 ![USB Connector Close 1](img/image4.png)
 ![USB Connector Close 2](img/image19.png)
 
 ### Assembly - Stage I:
 
-1. Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see: ![Waveshare](img/image17.png)
-2. Slide sim connector to the right to open:
-![Waveshare SIM Connector](img/image6.png)
-3. Thread male end of sim extender through bracket as shown:
-![Waveshare connecting to SIM extender 1](img/image12.png)
-4. Pull male end through further, then feed into bracket as shown:
-![Waveshare connecting to SIM extender 2](img/image9.png)
-5. Close bracket on connector, making sure that sim male end fits into connector cutouts, then slide top bracket to the left to secure
-![Waveshare connecting to SIM extender 3](img/image1.png)
-6. Remove pi from packaging, turn upside down and insert micro SD card with OS image into card slot as shown:
-![Raspberry Pi with SIM](img/image14.png)
-7. Connect pi and Waveshare GPIO pins, being careful to properly align both banks. **Don't insert pins all the way; leave 1mm of space. See step 8.**
-![Raspberry Pi and Waveshare attaching](img/image11.jpg)
-8. Further connect boards using 4 M2 25 mm screws, 8 M2 nylon washers and 4 hex M2 nylon spacers, as shown. Then push GPIO pins in all the way
-![Raspberry Pi and Waveshare attached](img/image10.png)
-9. Connect LTE cable to board MAIN and GPS cable to board GNSS as shown. There needs to be a clearly audible snap from each connector
-![Raspberry Pi and Waveshare attached](img/image7.png)
-10. Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image
-![Connected Raspberry Pi and Waveshare](img/image18.jpg)
-11. Connect LTE and GPS antennas, display, keyboard, mouse and power
-12. Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.
-13. Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.
-14. After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.
+1. Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see:
+![Waveshare](img/image17.png)
+2. Slide sim connector to the right to open:  
+![Waveshare SIM Connector](img/image6.png)  
+3. Thread male end of sim extender through bracket as shown:  
+![Waveshare connecting to SIM extender 1](img/image12.png)  
+4. Pull male end through further, then feed into bracket as shown:  
+![Waveshare connecting to SIM extender 2](img/image9.png)  
+5. Close bracket on connector, making sure that sim male end fits into connector cutouts, then slide top bracket to the left to secure  
+![Waveshare connecting to SIM extender 3](img/image1.png)  
+6. Remove pi from packaging, turn upside down and insert micro SD card with OS image into card slot as shown:  
+![Raspberry Pi with SIM](img/image14.png)  
+7. Connect pi and Waveshare GPIO pins, being careful to properly align both banks. **Don't insert pins all the way; leave 1mm of space. See step 8.**  
+![Raspberry Pi and Waveshare attaching](img/image11.jpg)  
+8. Further connect boards using 4 M2 25 mm screws, 8 M2 nylon washers and 4 hex M2 nylon spacers, as shown. Then push GPIO pins in all the way  
+![Raspberry Pi and Waveshare attached](img/image10.png)  
+9. Connect LTE cable to board MAIN and GPS cable to board GNSS as shown. There needs to be a clearly audible snap from each connector  
+![Raspberry Pi and Waveshare attached](img/image7.png)  
+10. Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image  
+![Connected Raspberry Pi and Waveshare](img/image18.jpg)  
+11. Connect LTE and GPS antennas, display, keyboard, mouse and power  
+12. Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.  
+13. Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.  
+14. After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.  
 
 **NOTE: software set up instructions coming soon.**
 
 ### Final Assembly - Stage II:
+
+A 3D printed case was used to house the hardware. You can find a 3D .stl CAD model [here](https://github.com/cal-itp/graas/tree/main/hardware/3d-print).
+
+Using the above case is not a requirement. However, the final product needs to be housed in a safe protective casing that does not pose a health or safety issue by exposing the internal components or by affecting the utility of the product.
+
 1. Thread two M2 nuts each onto 2 M2 x 10mm screws. Attach fan to case using top two fan housing screw holes
 2. Put an M2 nylon washer each onto 2 M2 x 5mm screws. Attach SIM extender to case using top two extender screw holes
 3. Put an M2 nylon washer each onto 2 M2 x 6mm screws. Attach accelerometer to case using top two accelerometer screw holes
