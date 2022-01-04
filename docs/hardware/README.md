@@ -39,7 +39,7 @@ Components include (numbers correspond to Bill of Materials above):
 *  04 - 470 Ohm resistor
 *  05 - Ribbon cables 8inch, 4-wire strand
 *  13 - 1mm heat shrink tubes
-*  13 - LED
+*  20 - LED
 
 **To assemble the LED, go through the following steps:**
 
