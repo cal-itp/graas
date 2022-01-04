@@ -1,7 +1,6 @@
-Babyshark Open-source Hardware Documentation:
-==================================
+# Babyshark Open-source Hardware Documentation:
 
-### Bill of Materials
+## Bill of Materials
 
 Below are the materials used by the Cal-ITP team to construct the original Baby Shark. These materials are not requirements, rather they are suggestions. So long as the end product meets the product goals and is completed at a low cost, modifications are allowed and encouraged.
 
@@ -30,8 +29,8 @@ Item # | Component | Units  | Unit cost  | Notes
 | | **Total:** | **$197.54** |
 
 
-### Pre-Fabrication:
-#### 1. LED:
+## Pre-Fabrication
+### 1. LED
 
 Components include (numbers correspond to Bill of Materials above):
 
@@ -64,7 +63,7 @@ Once you are done with these steps you should have something that looks like thi
 
 ![Assembled LED](img/image5.png)
 
-#### 2. Accelerometer:
+### 2. Accelerometer
 
 Components include (numbers correspond to Bill of Materials above):
 
@@ -105,7 +104,7 @@ Notes:
 Once you are done with these steps you should have something that looks like this:
 ![Assembled Accelerometer](img/image3.png)
 
-#### 3. USB Connector between Raspberry Pi and Waveshare:
+### 3. USB Connector between Raspberry Pi and Waveshare
 
 Components include (numbers correspond to Bill of Materials above):
 
@@ -139,7 +138,7 @@ Once you are done with these steps you should have something that looks like thi
 ![USB Connector Close 1](img/image4.png)
 ![USB Connector Close 2](img/image19.png)
 
-### Assembly - Stage I:
+## Assembly
 
 1. Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see:
 ![Waveshare](img/image17.png)
@@ -168,7 +167,7 @@ Once you are done with these steps you should have something that looks like thi
 
 **NOTE: software set up instructions coming soon.**
 
-### Final Assembly - Stage II:
+## Final Assembly
 
 A 3D printed case was used to house the hardware. You can find a 3D .stl CAD model [here](https://github.com/cal-itp/graas/tree/main/hardware/3d-print).
 
