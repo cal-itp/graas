@@ -8,11 +8,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import gtfu.tools.AgencyYML;
 
-class CheckAgencyName {
+class TestAgencyName {
 
     @Test
-    @DisplayName("CheckAgencyName")
-    void checkName() {
+    @DisplayName("TestAgencyName")
+    void testName() {
         AgencyYML agencies = new AgencyYML();
         assertEquals("Tulare County Regional Transit Agency", agencies.getName("tcrta"));
     }

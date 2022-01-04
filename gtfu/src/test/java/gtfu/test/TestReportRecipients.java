@@ -8,11 +8,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import gtfu.Recipients;
 
-class CheckReportRecipients {
+class TestReportRecipients {
 
     @Test
-    @DisplayName("CheckReportRecipients")
-    void CheckReportRecipients() {
+    @DisplayName("TestReportRecipients")
+    void TestReportRecipients() {
         Recipients r = new Recipients();
         assertNotNull(r.get("graas_report"));
     }
