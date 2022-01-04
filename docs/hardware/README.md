@@ -23,10 +23,10 @@ Item # | Component | Units  | Unit cost  | Notes
 15 | [M2 nylon washer](https://www.amazon.com/uxcell-Insulating-Washers-Gaskets-Spacers/dp/B01N6B5KJN/ref=sr_1_3?dchild=1&keywords=M2+x+5+x+1mm+Black+Nylon+Flat+washer&qid=1628646949&sr=8-3) | 20 | $0.04 |
 16 | [SD card](https://www.amazon.com/SanDisk-SDSQUNS-016G-GN3MN-microSDHC-Everything-Stromboli/dp/B07MR6K8PD) | 1 | $8.62 |
 17 | [Raspberry pi power connector](https://www.raspberrypi.com/products/type-c-power-supply/) | 1 | $10.60 | Open source hardware
-18 | [uxcell USB 2.0 Type A Male Socket Connector Jack Port](https://www.amazon.com/gp/product/B07QV5P9KT) | 30 | $0.29 |
-19 | [WEIJ 20 Pcs Micro USB Male Type B 5-Pin Jack Port Solder Connector](https://www.amazon.com/gp/product/B07Q4J5NKZ) | 20 | $0.35 |
+18 | [uxcell USB 2.0 Type A Male Socket Connector Jack Port](https://www.amazon.com/gp/product/B07QV5P9KT) | 1 | $0.62 |
+19 | [WEIJ 20 Pcs Micro USB Male Type B 5-Pin Jack Port Solder Connector](https://www.amazon.com/gp/product/B07Q4J5NKZ) | 1 | $0.71 |
 20 | [LED](https://www.amazon.com/gp/product/B01GE4WGTS) | 1 | $0.46 |
-| | **Total:** | **$197.54** |
+| | **Total:** | **$197.75** |
 
 
 ## Pre-Fabrication
