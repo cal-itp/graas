@@ -286,22 +286,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#led" class="md-nav__link">
-    LED:
+  <a href="#1-led" class="md-nav__link">
+    1. LED:
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#accelerometer" class="md-nav__link">
-    Accelerometer:
+  <a href="#2-accelerometer" class="md-nav__link">
+    2. Accelerometer:
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#usb-connector-between-pi-and-waveshare" class="md-nav__link">
-    USB Connector between Pi and Waveshare:
+  <a href="#3-usb-connector-between-raspberry-pi-and-waveshare" class="md-nav__link">
+    3. USB Connector between Raspberry Pi and Waveshare:
   </a>
   
 </li>
@@ -390,22 +390,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#led" class="md-nav__link">
-    LED:
+  <a href="#1-led" class="md-nav__link">
+    1. LED:
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#accelerometer" class="md-nav__link">
-    Accelerometer:
+  <a href="#2-accelerometer" class="md-nav__link">
+    2. Accelerometer:
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#usb-connector-between-pi-and-waveshare" class="md-nav__link">
-    USB Connector between Pi and Waveshare:
+  <a href="#3-usb-connector-between-raspberry-pi-and-waveshare" class="md-nav__link">
+    3. USB Connector between Raspberry Pi and Waveshare:
   </a>
   
 </li>
@@ -606,15 +606,15 @@
 </tbody>
 </table>
 <h3 id="pre-fabrication">Pre-Fabrication:</h3>
-<h4 id="led">LED:</h4>
-<p>Components include  (numbers correspond to bill of materials above):</p>
+<h4 id="1-led">1. LED:</h4>
+<p>Components include (numbers correspond to Bill of Materials above):</p>
 <ul>
 <li>01 - Raspberry Pi 4 GB</li>
 <li>04 - 470 Ohm resistor</li>
 <li>05 - Ribbon cables 8inch, 4-wire strand</li>
 <li>13 - 1mm heat shrink tubes</li>
 </ul>
-<p>To start assembling the LED, go through the following steps:</p>
+<p><strong>To assemble the LED, go through the following steps:</strong></p>
 <ol>
 <li>Peel off 2 wires from the bunch of ribbon cables.</li>
 <li>Cut to 11 cm in length measuring from the female side.</li>
@@ -632,11 +632,11 @@
 <li>Solder longer wire to open LED lead using flux</li>
 <li>Push heat shrink tubes up against LED</li>
 <li>Use heat gun to shrink tubes</li>
-<li>Once you are done with these steps you should have something that looks like this:</li>
 </ol>
+<p>Once you are done with these steps you should have something that looks like this:</p>
 <p><img alt="Assembled LED" src="img/image5.png" /></p>
-<h4 id="accelerometer">Accelerometer:</h4>
-<p>Components include (numbers correspond to bill of materials above):</p>
+<h4 id="2-accelerometer">2. Accelerometer:</h4>
+<p>Components include (numbers correspond to Bill of Materials above):</p>
 <ul>
 <li>01 - Raspberry Pi 4 GB</li>
 <li>05 - Ribbon cables 8inch, 4-wire strand</li>
@@ -650,13 +650,12 @@
 <li>Accelerometer ground (gnd) to pi gnd (6)</li>
 <li>Accelerometer vcc to pi 3v3 (1)</li>
 <li>Accelerometer sda to pi sda (3)</li>
-<li>
-<p>Accelerometer scl to pi scl (5)
-(numbers in parentheses correspond to pins on the Raspberry Pi’s general IO connector.)</p>
-</li>
-<li>
-<p>Divide short ribbon into strands of 4 wires each</p>
-</li>
+<li>Accelerometer scl to pi scl (5)</li>
+</ul>
+<p>(numbers in parentheses correspond to pins on the Raspberry Pi’s general IO connector.)</p>
+<p><strong>To assemble the Acceleromter, go through the following steps:</strong></p>
+<ol>
+<li>Divide short ribbon into strands of 4 wires each</li>
 <li>Remove male ends</li>
 <li>Strip insulation from individual wires</li>
 <li>Apply flux and tin to stripped wire tips</li>
@@ -670,20 +669,19 @@
 <li>Using flush cutters, snip off solder and wire tips protruding past bottom of PCB</li>
 <li>Re-melt solder in holes for smoother surface</li>
 <li>Push up heat shrink tubes against PCB and shrink with heat gun</li>
-</ul>
+</ol>
 <p><img alt="Assembled Accelerometer" src="img/image3.png" /></p>
-<h4 id="usb-connector-between-pi-and-waveshare">USB Connector between Pi and Waveshare:</h4>
-<p>Components:</p>
+<h4 id="3-usb-connector-between-raspberry-pi-and-waveshare">3. USB Connector between Raspberry Pi and Waveshare:</h4>
+<p>Components include (numbers correspond to Bill of Materials above):</p>
 <ul>
 <li>01 - Raspberry Pi 4 GB</li>
 <li>02 - SIM7600A-H 4G HAT</li>
 <li>05 - Ribbon cables 8inch, 4-wire strand</li>
-<li>
-<p>13 - 1mm heat shrink tubes ("units" is in feet)</p>
-</li>
-<li>
-<p>Cut ribbon to 13.5 cm length, removing both male and female ends</p>
-</li>
+<li>13 - 1mm heat shrink tubes ("units" is in feet)</li>
+</ul>
+<p><strong>To assemble the Pi/Waveshare connector, go through the following steps:</strong></p>
+<ol>
+<li>Cut ribbon to 13.5 cm length, removing both male and female ends</li>
 <li>Divide into strands of 4 wires each</li>
 <li>Peel individual wires apart at each end to about 3 cm</li>
 <li>Strip insulation from individual wires</li>
@@ -697,7 +695,7 @@
 <li>Attach wires to pins according to diagram above</li>
 <li>Push up heat shrink tubes against pins and apply heat gun to shrink</li>
 <li>Check if the cable is working by connecting the Raspberry Pi and the waveshare and running 'microcom -D /dev/ttyUSB2'. At prompt, enter 'at'. If the cable is correctly connected, waveshare will reply with 'OK'.</li>
-</ul>
+</ol>
 <p><img alt="USB Connector Diagram" src="img/image15.png" />
 <img alt="USB Connector" src="img/image8.png" />
 <img alt="USB Connector Close 1" src="img/image4.png" />
@@ -726,9 +724,9 @@
 <li>Connect LTE and GPS antennas, display, keyboard, mouse and power</li>
 <li>Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.</li>
 <li>Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.</li>
-<li>After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.
-<strong>NOTE: software set up instructions coming soon.</strong></li>
+<li>After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.</li>
 </ol>
+<p><strong>NOTE: software set up instructions coming soon.</strong></p>
 <h3 id="final-assembly-stage-ii">Final Assembly - Stage II:</h3>
 <ol>
 <li>Thread two M2 nuts each onto 2 M2 x 10mm screws. Attach fan to case using top two fan housing screw holes</li>
