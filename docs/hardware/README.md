@@ -31,16 +31,16 @@ Item # | Component | Units  | Unit cost  | Notes
 
 
 ### Pre-Fabrication:
-#### LED:
+#### 1. LED:
 
-Components include  (numbers correspond to bill of materials above):
+Components include (numbers correspond to Bill of Materials above):
 
 *  01 - Raspberry Pi 4 GB
 *  04 - 470 Ohm resistor
 *  05 - Ribbon cables 8inch, 4-wire strand
 *  13 - 1mm heat shrink tubes
 
-To start assembling the LED, go through the following steps:
+**To assemble the LED, go through the following steps:**
 
 1. Peel off 2 wires from the bunch of ribbon cables.
 2. Cut to 11 cm in length measuring from the female side.
@@ -48,23 +48,24 @@ To start assembling the LED, go through the following steps:
 4. Shorten resistor leads to 3 mm on each side
 5. Cut 2.5 mm heat shrink tube to size, a couple of mm longer than resistor span
 6. Solder resistor to shorter LED lead using flux
-6. Strip one wire in strand
-7. Hold LED and resistor next to strand so that tip of stripped wire is level with bottom of LED
-8. Cut other wire so that its end is level with bottom end of resistor body
-9. Strip said wire
-10. Flux and tin wire tips
-11. Push 2.5 mm heat shrink tube over shorter wire, 1 mm heat shrink tube over longer wire
-12. Solder short wire end to open resistor lead using flux
-13. Solder longer wire to open LED lead using flux
-14. Push heat shrink tubes up against LED
-15. Use heat gun to shrink tubes
-16. Once you are done with these steps you should have something that looks like this:
+7. Strip one wire in strand
+8. Hold LED and resistor next to strand so that tip of stripped wire is level with bottom of LED
+9. Cut other wire so that its end is level with bottom end of resistor body
+10. Strip said wire
+11. Flux and tin wire tips
+12. Push 2.5 mm heat shrink tube over shorter wire, 1 mm heat shrink tube over longer wire
+13. Solder short wire end to open resistor lead using flux
+14. Solder longer wire to open LED lead using flux
+15. Push heat shrink tubes up against LED
+16. Use heat gun to shrink tubes
+
+Once you are done with these steps you should have something that looks like this:
 
 ![Assembled LED](img/image5.png)
 
-#### Accelerometer:
+#### 2. Accelerometer:
 
-Components include (numbers correspond to bill of materials above):
+Components include (numbers correspond to Bill of Materials above):
 
 * 01 - Raspberry Pi 4 GB
 * 05 - Ribbon cables 8inch, 4-wire strand
@@ -79,7 +80,11 @@ Notes:
 * Accelerometer vcc to pi 3v3 (1)
 * Accelerometer sda to pi sda (3)
 * Accelerometer scl to pi scl (5)
+
 (numbers in parentheses correspond to pins on the Raspberry Pi’s general IO connector.)
+
+
+**To assemble the Acceleromter, go through the following steps:**
 
 1. Divide short ribbon into strands of 4 wires each
 2. Remove male ends
@@ -98,14 +103,16 @@ Notes:
 
 ![Assembled Accelerometer](img/image3.png)
 
-#### USB Connector between Pi and Waveshare:
+#### 3. USB Connector between Raspberry Pi and Waveshare:
 
-Components:
+Components include (numbers correspond to Bill of Materials above):
 
 * 01 - Raspberry Pi 4 GB
 * 02 - SIM7600A-H 4G HAT
 * 05 - Ribbon cables 8inch, 4-wire strand
 * 13 - 1mm heat shrink tubes ("units" is in feet)
+
+**To assemble the Pi/Waveshare connector, go through the following steps:**
 
 1. Cut ribbon to 13.5 cm length, removing both male and female ends
 2. Divide into strands of 4 wires each
@@ -152,6 +159,7 @@ Components:
 12. Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.
 13. Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.
 14. After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.
+
 **NOTE: software set up instructions coming soon.**
 
 ### Final Assembly - Stage II:
