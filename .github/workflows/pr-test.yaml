@@ -30,6 +30,10 @@ jobs:
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@v3
+        with:
+          path: "server/app-engine/requirements.txt"
       - name: Run Python unit tests
         working-directory: server/tests
         run: python unit-test.py
