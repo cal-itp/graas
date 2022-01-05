@@ -31,8 +31,7 @@ jobs:
       #   env:
       #     PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Python unit tests
-        working-directory: server/tests
         uses: actions/setup-python@v2
         with:
           python-version: '3.9.2'
-      - run: python my_script.py
+      - run: python server/tests/my_script.py
