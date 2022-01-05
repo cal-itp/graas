@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-sys.path.append("../app-engine")
+sys.path.append("server/app-engine")
 import util
 
 class TestUtil(unittest.TestCase):
