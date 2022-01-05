@@ -30,6 +30,12 @@ jobs:
       #   run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
       #   env:
       #     PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
       - name: Run Python unit tests
         uses: actions/setup-python@v2
         with:
@@ -37,6 +43,3 @@ jobs:
       - run: |
           pip install -r server/app-engine/requirements.txt
           python server/tests/unit-test.py
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
