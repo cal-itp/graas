@@ -140,32 +140,44 @@ Once you are done with these steps you should have something that looks like thi
 
 ## Assembly
 
-1. Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see:
+* Remove waveshare from packaging, take styrofoam protector off GPIO pins and turn board upside down. This is what you should see:
 ![Waveshare](img/image17.png)
-2. Slide sim connector to the right to open:  
+* Slide sim connector to the right to open:  
 ![Waveshare SIM Connector](img/image6.png)  
-3. Thread male end of sim extender through bracket as shown:  
+* Thread male end of sim extender through bracket as shown:  
 ![Waveshare connecting to SIM extender 1](img/image12.png)  
-4. Pull male end through further, then feed into bracket as shown:  
+* Pull male end through further, then feed into bracket as shown:  
 ![Waveshare connecting to SIM extender 2](img/image9.png)  
-5. Close bracket on connector, making sure that sim male end fits into connector cutouts, then slide top bracket to the left to secure  
+* Close bracket on connector, making sure that sim male end fits into connector cutouts, then slide top bracket to the left to secure  
 ![Waveshare connecting to SIM extender 3](img/image1.png)  
-6. Remove pi from packaging, turn upside down and insert micro SD card with OS image into card slot as shown:  
+* Remove pi from packaging, turn upside down and insert micro SD card with OS image into card slot as shown:  
 ![Raspberry Pi with SIM](img/image14.png)  
-7. Connect pi and Waveshare GPIO pins, being careful to properly align both banks. **Don't insert pins all the way; leave 1mm of space. See step 8.**  
+* Connect pi and Waveshare GPIO pins, being careful to properly align both banks. **Don't insert pins all the way; leave 1mm of space. See step 8.**  
 ![Raspberry Pi and Waveshare attaching](img/image11.jpg)  
-8. Further connect boards using 4 M2 25 mm screws, 8 M2 nylon washers and 4 hex M2 nylon spacers, as shown. Then push GPIO pins in all the way  
+* Further connect boards using 4 M2 25 mm screws, 8 M2 nylon washers and 4 hex M2 nylon spacers, as shown. Then push GPIO pins in all the way  
 ![Raspberry Pi and Waveshare attached](img/image10.png)  
-9. Connect LTE cable to board MAIN and GPS cable to board GNSS as shown. There needs to be a clearly audible snap from each connector  
+* Connect LTE cable to board MAIN and GPS cable to board GNSS as shown. There needs to be a clearly audible snap from each connector  
 ![Raspberry Pi and Waveshare attached](img/image7.png)  
-10. Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image  
+* Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image  
 ![Connected Raspberry Pi and Waveshare](img/image18.jpg)  
-11. Connect LTE and GPS antennas, display, keyboard, mouse and power  
-12. Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.  
-13. Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.  
-14. After pi reboots, log in with the password you set, open a terminal window and type tf. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.  
-
-**NOTE: software set up instructions coming soon.**
+* Connect LTE and GPS antennas, display, keyboard, mouse and power  
+* Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.  
+* Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.  
+* After updates complete, open up a terminal window and type:
+```
+mkdir projects
+cd projects
+git clone https://github.com/cal-itp/graas.git
+cd graas/hardware
+mkdir ~/tmp
+cp setup.cfg ~/tmp
+```
+* Edit `~/tmp/setup.cfg` to populate unset values. *Note*: setting `ngrok` values is optional *Note*: check [here](https://github.com/cal-itp/graas/blob/main/server/agency-config/keys/key-generation.txt) for how to generate an ECDSA 256 signing key.  
+* In the opened termminal window type:
+```
+./setup.sh ~/tmp/setup.cfg
+```
+* After pi reboots, log in with the password you set, open a terminal window and type `tf`. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.  
 
 ## Final Assembly
 
