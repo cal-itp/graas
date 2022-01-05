@@ -6,34 +6,33 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-      - name: Build with Gradle (incl unit tests)
-        working-directory: gtfu
-        run: ./gradlew build
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.1.0'
-      - name: Run position update script
-        working-directory: server/tests/
-        run: NODE_PATH=`pwd`/node_modules node post-position-update.js
-        env:
-          PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
-      - name: Run Java tests
-        working-directory: gtfu
-        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
-        env:
-          PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
-      - name: Install Python dependencies
-        uses: py-actions/py-dependency-install@v3
-        with:
-          path: "server/app-engine/requirements.txt"
+      # - name: Setup Java
+      #   uses: actions/setup-java@v2
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '11'
+      # - name: Validate Gradle wrapper
+      #   uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      # - name: Build with Gradle (incl unit tests)
+      #   working-directory: gtfu
+      #   run: ./gradlew build
+      # - name: Setup Node
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: '16.1.0'
+      # - name: Run position update script
+      #   working-directory: server/tests/
+      #   run: NODE_PATH=`pwd`/node_modules node post-position-update.js
+      #   env:
+      #     PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
+      # - name: Run Java tests
+      #   working-directory: gtfu
+      #   run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
+      #   env:
+      #     PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Python unit tests
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.2'
         working-directory: server/tests
-        run: python unit-test.py
+      - run: python my_script.py
