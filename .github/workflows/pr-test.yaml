@@ -34,4 +34,4 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.9.2'
-      - run: python server/tests/my_script.py
+      - run: python server/tests/unit-test.py
