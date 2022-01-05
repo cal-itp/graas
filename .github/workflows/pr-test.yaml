@@ -42,4 +42,4 @@ jobs:
           python-version: '3.9.2'
       - run: |
           pip install -r server/app-engine/requirements.txt
-          python server/tests/unit-test.py
+          python server/tests/unit-tests.py
