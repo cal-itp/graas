@@ -37,3 +37,6 @@ jobs:
       - run: |
           pip install -r server/app-engine/requirements.txt
           python server/tests/unit-test.py
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
