@@ -161,8 +161,8 @@ Once you are done with these steps you should have something that looks like thi
 * Connect Pi and waveshare USB ports through cable as shown. Note that cable may look different from image  
 ![Connected Raspberry Pi and Waveshare](img/image18.jpg)  
 * Connect LTE and GPS antennas, display, keyboard, mouse and power  
-* Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the Pi.  
-* Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates.  
+* Boot up pi. There may be a message about resizing the root file system and then the screen may go and stay blank. If that happens, wait a few minutes, then unplug and restart the pi  
+* Go through the operating system (OS) setup process, make sure to configure a wireless network to join. Setup process may include substantial OS updates  
 * After updates complete, open up a terminal window and type:
 ```
 mkdir projects
@@ -172,12 +172,12 @@ cd graas/hardware
 mkdir ~/tmp
 cp setup.cfg ~/tmp
 ```
-* Edit `~/tmp/setup.cfg` to populate unset values. *Note*: setting `ngrok` values is optional *Note*: check [here](https://github.com/cal-itp/graas/blob/main/server/agency-config/keys/key-generation.txt) for how to generate an ECDSA 256 signing key.  
-* In the opened termminal window type:
+* Edit `~/tmp/setup.cfg` to populate unset values. *Note*: setting `ngrok` values is optional *Note*: check [here](https://github.com/cal-itp/graas/blob/main/server/agency-config/keys/key-generation.txt) for how to generate an ECDSA 256 signing key  
+* In the opened terminal window type:
 ```
 ./setup.sh ~/tmp/setup.cfg
 ```
-* After pi reboots, log in with the password you set, open a terminal window and type `tf`. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right.  
+* After pi reboots, log in with the password you set, open a terminal window and type `tf`. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right  
 
 ## Final Assembly
 
