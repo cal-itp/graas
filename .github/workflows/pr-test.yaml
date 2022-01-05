@@ -1,5 +1,5 @@
 name: PR Test
-on: [pull_request]
+on: [push]
 jobs:
   Run-tests:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
           java-version: '11'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-      - name: Build with Gradle
+      - name: Build with Gradle (incl unit tests)
         working-directory: gtfu
         run: ./gradlew build
       - name: Setup Node
@@ -30,3 +30,6 @@ jobs:
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
+      - name: Run Python unit tests
+        working-directory: server/tests
+        run: python unit-test.py
