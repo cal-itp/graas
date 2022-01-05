@@ -34,4 +34,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.9.2'
-      - run: python server/tests/unit-test.py
+      - run: |
+          pip install -r server/app-engine/requirements.txt
+          python server/tests/unit-test.py
