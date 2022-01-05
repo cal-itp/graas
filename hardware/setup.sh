@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 get_config_attr() {
     FILE=$1
@@ -114,23 +114,6 @@ echo "PASSWD: $PASSWD"
 GRASS_ROOT=`pwd -P`
 echo "GRASS_ROOT: \"$GRASS_ROOT\""
 
-T1=$( is_attr_set "" )
-echo "T1: \"$T1\""
-
-T2=$( is_attr_set "SET_ME" )
-echo "T2: \"$T2\""
-
-T3=$( is_attr_set "foo" )
-echo "T3: \"$T3\""
-
-if [ $(is_attr_set "x" ) == "1" ]
-then
-  echo set
-fi
-
-ESC_TEST=$( esc_slashes $GRASS_ROOT )
-echo "ESC_TEST: \"$ESC_TEST\""
-
 # env
 ENV_FILE=/etc/environment
 sudo touch $ENV_FILE
@@ -138,14 +121,17 @@ RESULT=`grep GRASS $ENV_FILE`
 if [ -z "$RESULT" ]
 then
     echo "setting /etc/environment vars"
-    sudo echo 'GRASS_ROOT=$GRASS_ROOT' >> $ENV_FILE
-    sudo echo 'GRASS_BRANCH=$GRASS_BRANCH' >> $ENV_FILE
-    sudo echo 'GRASS_REPO=$GRASS_REPO' >> $ENV_FILE
+    TMP_FILE=/tmp/environment
+    cat $ENV_FILE > $TMP_FILE
+    echo "GRASS_ROOT=$GRASS_ROOT" >> $TMP_FILE
+    echo "GRASS_BRANCH=$GRASS_BRANCH" >> $TMP_FILE
+    echo "GRASS_REPO=$GRASS_REPO" >> $TMP_FILE
 
     if [ $(is_attr_set $NGROK_TUNNEL ) == "1" ]
     then
-        sudo echo 'GRASS_TUNNEL=$NGROK_TUNNEL' >> $ENV_FILE
+        echo "GRASS_TUNNEL=$NGROK_TUNNEL" >> $TMP_FILE
     fi
+    sudo mv $TMP_FILE $ENV_FILE
 fi
 
 if [ ! -e /dev/ttyUSB2 ]
@@ -182,11 +168,11 @@ CONF_FILE=/home/pi/doc/graas.cfg
 if [ ! -f $CONF_FILE ]
 then
     echo "setting up graas.cfg"
-    sudo touch $CONF_FILE
-    sudo echo 'agency_name: $AGENCY_ID' >> $CONF_FILE
-    sudo echo 'vehicle_id: $VEHICLE_ID' >> $CONF_FILE
-    sudo echo 'static_gtfs_url: $STATIC_GTFS_URL' >> $CONF_FILE
-    sudo echo 'agency_key: $SIGNING_KEY' >> $CONF_FILE
+    touch $CONF_FILE
+    echo "agency_name: $AGENCY_ID" >> $CONF_FILE
+    echo "vehicle_id: $VEHICLE_ID" >> $CONF_FILE
+    echo "static_gtfs_url: $STATIC_GTFS_URL" >> $CONF_FILE
+    echo "agency_key: $SIGNING_KEY" >> $CONF_FILE
 fi
 
 sudo sh -c "echo pi:$PASSWD | chpasswd"
@@ -199,17 +185,18 @@ then
 fi
 
 # ngrok
-cd /home/pi/bin
 if [ ! -f /home/pi/bin/ngrok ]
 then
+    pushd /home/pi/bin
     wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm.zip
     unzip ngrok-stable-linux-arm.zip
     rm ngrok-stable-linux-arm.zip
+    popd
 fi
 
 if [ [ $(is_attr_set $NGROK_AUTH ) == "1" ] ]
 then
-    ./ngrok authtoken $NGROK_AUTH
+    home/pi/bin/ngrok authtoken $NGROK_AUTH
     sudo mkdir -p /root/.ngrok2
     sudo cp /home/pi/.ngrok2/ngrok.yml /root/.ngrok2
 fi
