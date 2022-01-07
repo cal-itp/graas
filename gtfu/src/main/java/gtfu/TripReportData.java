@@ -31,7 +31,8 @@ public class TripReportData implements Comparable<TripReportData> {
             || (start >= td.start && start < td.start + td.duration);
     }
 
-    // This logic performs cleanup on use cases that may or may not still be present. Consider removing.
+    // This logic performs cleanup on use cases that may or may not still be present.
+    // TODO: Consider removing
     private String getCleanRouteName() {
         String s = new String(routeName);
         int i = s.length();
