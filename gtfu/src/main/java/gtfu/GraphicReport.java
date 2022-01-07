@@ -50,7 +50,7 @@ public class GraphicReport {
     private static final Color ACCENT     = new Color(0xd8ebb5);*/
 
     private static final String[] PROPERTY_NAMES = {
-        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
+        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id","uuid","agent"
     };
     private static final int SCALE = 2;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
@@ -79,7 +79,7 @@ public class GraphicReport {
         long queryStartTime = 0;
         long queryEndTime = 0;
         if (selectedDate == null) {
-            queryStartTime = Time.getMidnightTimestamp(Util.now()) / 1000;
+            queryStartTime = Time.getMidnightTimestamp() / 1000;
         } else {
             queryStartTime = Time.parseDateAsLong("MM/dd/yy", selectedDate) / 1000;
         }
@@ -94,15 +94,16 @@ public class GraphicReport {
         font = new Font("Arial", Font.PLAIN, 10 * SCALE);
         smallFont = new Font("Arial", Font.PLAIN, 9 * SCALE);
 
-        AgencyYML yml = new AgencyYML();
+        AgencyYML a = new AgencyYML();
 
         for (String key : logs.keySet()) {
+            // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>
             String agencyID = key.substring(0, key.length() - 15);
 
-            String gtfsUrl = yml.getURL(agencyID);
-            String shortName = yml.getName(agencyID);
+            String gtfsUrl = a.getURL(agencyID);
+            String name = a.getName(agencyID);
 
-            if (shortName == null) {
+            if (name == null) {
                 System.out.println(agencyID + " has no name in agencies.yml, will appear as Null");
             }
             if (gtfsUrl == null) {
@@ -123,8 +124,6 @@ public class GraphicReport {
                 e.printStackTrace();
                 continue;
             }
-
-
 
             List<String> lines = logs.get(key);
             DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
@@ -151,13 +150,13 @@ public class GraphicReport {
             String date = sdf.format(new Date(startSecond * 1000l));
 
             // Debug.log("- startSecond: " + startSecond);
-            // Debug.log("- shortName: " + shortName);
+            // Debug.log("- name: " + name);
             // Debug.log("- date: " + date);
 
             //addRandomTestData(1);
             // Debug.log("- tdList.size(): " + tdList.size());
 
-            Graphics2D g = createCanvas(shortName, date);
+            Graphics2D g = createCanvas(name, date);
 
             reportTimeCoverage(g);
             reportGPSCoverage(g);
@@ -199,6 +198,7 @@ public class GraphicReport {
         int responseCode = grid.send();
     }
 
+    // Creates one report per agency per day
     private Graphics2D createCanvas(String name, String date) {
         timeRowCount = getTimeRowCount();
         //Debug.log("- timeRowCount: " + timeRowCount);
@@ -253,7 +253,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getFriendlyID(), start, duration);
+                    TripReportData td = new TripReportData(id, t.getName(), start, duration,"testUuid","testAgent");
                     tdList.add(td);
                     tdMap.put(id, td);
 
@@ -374,23 +374,6 @@ public class GraphicReport {
         g.translate(0, Math.max(2, timeRowCount) * ROW_HEIGHT);
     }
 
-    private String getTripName(TripReportData td) {
-        String s = new String(td.headSign);
-        int i = s.length();
-
-        int i1 = s.indexOf('(');
-        if (i1 > 0) i = i1 - 1;
-        if (i1 < 0) i1 = s.length();
-
-        int i2 = s.indexOf('/');
-        if (i2 > 0 && i2 < i1) i = i2;
-        if (i2 < 0) i2 = s.length();
-
-        s = s.substring(0, i);
-
-        return s;
-    }
-
     private void reportGPSCoverage(Graphics2D g) throws Exception {
         int tilesPerRow = img.getWidth() / TILE_SIZE;
         //Debug.log("- tilesPerRow: " + tilesPerRow);
@@ -409,21 +392,32 @@ public class GraphicReport {
         }
 
         int inset = TILE_SIZE / 10;
-        int length = TILE_SIZE - 2 * inset;
+        int numLines = 3; // replace with actual count
+        int lineHeight = (int)(font.getSize() * 1.33);
 
+        // int length = TILE_SIZE - 2 * inset;
+        int length = TILE_SIZE - numLines * lineHeight;
         for (int i=0; i<tdList.size(); i++) {
             TripReportData td = tdList.get(i);
             //Debug.log("-- td.id: " + td.id);
 
-            x = i % tilesPerRow * TILE_SIZE;
+            x = i % tilesPerRow * TILE_SIZE + 1;
             y = i / tilesPerRow * TILE_SIZE;
 
-            String s  = getTripName(td) + " @ " + Time.getHMForMillis(td.start);
+            String s = "Trip: " + td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
             g.setColor(FONT_COLOR);
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y + (int)(font.getSize() * 1.33));
 
+            //TODO: create addLine() function to replace below redundant code
+            y = y + lineHeight;
+            g.drawString(s, x, y);
+            y = y + lineHeight;
+            s = "Device agent: " + td.getAgent();
+            g.drawString(s, x, y);
+            y = y + lineHeight;
+            s = "UUID tail: " + td.getUuidTail();
+            g.drawString(s, x, y);
             AffineTransform t = g.getTransform();
 
             g.translate(x + inset, y + inset);

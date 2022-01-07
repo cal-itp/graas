@@ -13,7 +13,7 @@ public class Trip implements Serializable {
     String id;
     String routeID;
     String serviceID;
-    String headSign;
+    String name;
     List<Stop> stopList;
     List<Integer> milliList;
     Map<String, Integer> stopMap;
@@ -23,13 +23,13 @@ public class Trip implements Serializable {
     int accelerator;
     int startTime;
 
-    public Trip(String id, String routeID, String serviceID, String headSign, Shape shape) {
+    public Trip(String id, String routeID, String serviceID, String name, Shape shape) {
         this();
 
         this.id = id;
         this.routeID = routeID;
         this.serviceID = serviceID;
-        this.headSign = headSign;
+        this.name = name;
         this.shape = shape;
         shapeID = shape.getID();
         //Debug.log("- shapeID: " + shapeID);
@@ -56,7 +56,7 @@ public class Trip implements Serializable {
         try {
             out.writeUTF(id);
             out.writeUTF(routeID);
-            out.writeUTF(headSign);
+            out.writeUTF(name);
 
             out.writeInt(stopList.size());
 
@@ -85,7 +85,7 @@ public class Trip implements Serializable {
 
             t.id = in.readUTF();
             t.routeID = in.readUTF();
-            t.headSign = in.readUTF();
+            t.name = in.readUTF();
 
             int count = in.readInt();
 
@@ -134,8 +134,8 @@ public class Trip implements Serializable {
         return Time.getHMForMillis(e.daySeconds * 1000);
     }
 
-    public String getFriendlyID() {
-        return headSign;
+    public String getName() {
+        return name;
     }
 
     public TripSchedule getSchedule() {
@@ -160,10 +160,6 @@ public class Trip implements Serializable {
 
     public String getRouteID() {
         return routeID;
-    }
-
-    public String getHeadSign() {
-        return headSign;
     }
 
     public Shape getShape() {
