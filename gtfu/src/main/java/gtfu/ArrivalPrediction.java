@@ -18,7 +18,7 @@ public class ArrivalPrediction implements Comparable<ArrivalPrediction>, Seriali
     }
 
     public String getArrivalString() {
-        return vehicle.trip.getFriendlyID() + " in " + minutes + " minutes";
+        return vehicle.trip.getName() + " in " + minutes + " minutes";
     }
 
     public String toString() {

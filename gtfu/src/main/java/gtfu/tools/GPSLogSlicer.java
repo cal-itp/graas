@@ -20,7 +20,9 @@ public class GPSLogSlicer {
     public GPSLogSlicer(List<String> input, String path) {
         logs = new HashMap<String, List<String>>();
 
+        // The following line is required in order for the program to run successfully:
         input.add("vid,2000000000,0,0,tid,aid"); // sentinel
+
         CSVHeader header = new CSVHeader(input.remove(0));
         Map<String, List<String>> map = new HashMap<String, List<String>>();
         int lastMidnight = -1;
@@ -39,7 +41,6 @@ public class GPSLogSlicer {
 
             int midnight = (int)(Time.getMidnightTimestamp(ts * 1000l) / 1000);
             //Debug.log("- midnight: " + midnight);
-            //System.exit(0);
 
             if (lastMidnight > 0 &&  midnight != lastMidnight) {
                 for (String key : map.keySet()) {
@@ -74,7 +75,7 @@ public class GPSLogSlicer {
     }
 
     private static String makeLogName(String path, String agencyID, long millis) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return path + agencyID + "-" + sdf.format(new Date(millis)) + ".txt";
     }
 
