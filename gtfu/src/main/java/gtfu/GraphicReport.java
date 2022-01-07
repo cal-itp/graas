@@ -50,7 +50,7 @@ public class GraphicReport {
     private static final Color ACCENT     = new Color(0xd8ebb5);*/
 
     private static final String[] PROPERTY_NAMES = {
-        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id","uuid","agent"
+        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
     };
     private static final int SCALE = 2;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
@@ -253,7 +253,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getName(), start, duration,"testUuid","testAgent");
+                    TripReportData td = new TripReportData(id, t.getName(), start, duration);
                     tdList.add(td);
                     tdMap.put(id, td);
 
@@ -392,32 +392,21 @@ public class GraphicReport {
         }
 
         int inset = TILE_SIZE / 10;
-        int numLines = 3; // replace with actual count
-        int lineHeight = (int)(font.getSize() * 1.33);
+        int length = TILE_SIZE - 2 * inset;
 
-        // int length = TILE_SIZE - 2 * inset;
-        int length = TILE_SIZE - numLines * lineHeight;
         for (int i=0; i<tdList.size(); i++) {
             TripReportData td = tdList.get(i);
             //Debug.log("-- td.id: " + td.id);
 
-            x = i % tilesPerRow * TILE_SIZE + 1;
+            x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
 
-            String s = "Trip: " + td.getTripName();
+            String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
             g.setColor(FONT_COLOR);
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y + (int)(font.getSize() * 1.33));
 
-            //TODO: create addLine() function to replace below redundant code
-            y = y + lineHeight;
-            g.drawString(s, x, y);
-            y = y + lineHeight;
-            s = "Device agent: " + td.getAgent();
-            g.drawString(s, x, y);
-            y = y + lineHeight;
-            s = "UUID tail: " + td.getUuidTail();
-            g.drawString(s, x, y);
             AffineTransform t = g.getTransform();
 
             g.translate(x + inset, y + inset);

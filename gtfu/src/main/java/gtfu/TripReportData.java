@@ -9,16 +9,12 @@ public class TripReportData implements Comparable<TripReportData> {
     int y;
     int width;
     int height;
-    String uuid;
-    String agent;
 
-    public TripReportData(String id, String routeName, int start, int duration, String uuid, String agent) {
+    public TripReportData(String id, String routeName, int start, int duration) {
         this.id = id;
         this.routeName = routeName;
         this.start = start;
         this.duration = duration;
-        this.uuid = uuid;
-        this.agent = agent;
     }
 
     public int compareTo(TripReportData o) {
@@ -30,14 +26,6 @@ public class TripReportData implements Comparable<TripReportData> {
         return getCleanRouteName() + " @ " + Time.getHMForMillis(start);
     }
 
-    public String getUuidTail() {
-        return uuid.substring(uuid.length() - 4, uuid.length());
-    }
-
-    public String getAgent() {
-        return agent.substring(8,agent.length() - 3);
-    }
-
     public boolean overlaps(TripReportData td) {
         return (td.start >= start && td.start < start + duration)
             || (start >= td.start && start < td.start + td.duration);
@@ -45,8 +33,6 @@ public class TripReportData implements Comparable<TripReportData> {
 
     // This logic performs cleanup on use cases that may or may not still be present. Consider removing.
     private String getCleanRouteName() {
-        Debug.log("getCleanRouteName()");
-        Debug.log("routeName: " + routeName);
         String s = new String(routeName);
         int i = s.length();
 
@@ -60,7 +46,6 @@ public class TripReportData implements Comparable<TripReportData> {
 
         s = s.substring(0, i);
 
-        Debug.log("cleanRouteName: " + s);
         return s;
     }
 }

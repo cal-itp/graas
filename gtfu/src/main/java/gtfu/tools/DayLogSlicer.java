@@ -14,16 +14,12 @@ import gtfu.Debug;
 
 public class DayLogSlicer {
     private Map<String, List<GPSData>> gpsMap;
-    private Map<String, String> uuidMap;
-    private Map<String, String> agentMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
     private int startSecond;
 
     public DayLogSlicer(TripCollection tripCollection, List<String> lines) {
         gpsMap = new HashMap();
-        uuidMap = new HashMap();
-        agentMap = new HashMap();
         tdList = new ArrayList();
         tdMap = new HashMap();
         startSecond = -1;
@@ -34,17 +30,11 @@ public class DayLogSlicer {
             float lat = Float.parseFloat(arg[2]);
             float lon = Float.parseFloat(arg[3]);
             String tripID = arg[4];
-            String uuid = arg[6];
-            String agent = arg[10];
 
             if (startSecond < 0) {
                 startSecond = seconds;
             }
 
-            Debug.log("uuid: " + uuid);
-            Debug.log("agent: " + agent);
-            uuidMap.put(tripID,uuid);
-            agentMap.put(tripID,agent);
             List<GPSData> list = gpsMap.get(tripID);
 
             if (list == null) {
@@ -80,7 +70,7 @@ public class DayLogSlicer {
 
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, trip.getName(), start, duration, uuidMap.get(id), agentMap.get(id));
+                TripReportData td = new TripReportData(id, trip.getName(), start, duration);
                 tdList.add(td);
                 tdMap.put(id, td);
             }
