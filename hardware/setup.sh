@@ -194,7 +194,7 @@ then
     popd
 fi
 
-if [ [ $(is_attr_set $NGROK_AUTH ) == "1" ] ]
+if [ $(is_attr_set $NGROK_AUTH ) == "1" ]
 then
     home/pi/bin/ngrok authtoken $NGROK_AUTH
     sudo mkdir -p /root/.ngrok2
