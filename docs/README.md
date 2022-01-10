@@ -29,7 +29,7 @@ Pre-requisites
 Setup & deployment
 --------------------
 
-To set up and begin running your own instance of GRaaS, follow [the GRaaS setup instructions](new-instance-setup).
+To set up and begin running your own instance of GRaaS, follow [the GRaaS setup instructions](new-instance-setup.md).
 
 To see if you have everything set up correctly. Try deploying the web app, as outlined in the [server README](server/README.md).
 
