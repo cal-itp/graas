@@ -180,7 +180,8 @@ def update_cache_if_needed(cache_path, url):
     if not os.path.isdir(cache_path):
         os.makedirs(cache_path)
 
-    r = requests.head(url)
+    r = requests.head(url, allow_redirects=True)
+    debug(f'- r.headers: {r.headers}')
     url_time = r.headers.get('last-modified', None)
     debug(f'- url_time: {url_time}')
 
