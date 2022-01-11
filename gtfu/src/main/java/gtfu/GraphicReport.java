@@ -52,7 +52,6 @@ public class GraphicReport {
     private static final String[] PROPERTY_NAMES = {
         "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
     };
-    private static final String recipientListPath = "src/main/resources/conf/graas-report-recipients.txt";
     private static final int SCALE = 2;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 200 * SCALE;
@@ -70,8 +69,6 @@ public class GraphicReport {
     private Font font;
     private Font smallFont;
     private int timeRowCount;
-    private String recipientList;
-
 
     public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean downloadReport) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
@@ -82,7 +79,7 @@ public class GraphicReport {
         long queryStartTime = 0;
         long queryEndTime = 0;
         if (selectedDate == null) {
-            queryStartTime = Time.getMidnightTimestamp(Util.now()) / 1000;
+            queryStartTime = Time.getMidnightTimestamp() / 1000;
         } else {
             queryStartTime = Time.parseDateAsLong("MM/dd/yy", selectedDate) / 1000;
         }
@@ -97,15 +94,16 @@ public class GraphicReport {
         font = new Font("Arial", Font.PLAIN, 10 * SCALE);
         smallFont = new Font("Arial", Font.PLAIN, 9 * SCALE);
 
-        AgencyYML yml = new AgencyYML();
+        AgencyYML a = new AgencyYML();
 
         for (String key : logs.keySet()) {
+            // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>
             String agencyID = key.substring(0, key.length() - 15);
 
-            String gtfsUrl = yml.getURL(agencyID);
-            String shortName = yml.getName(agencyID);
+            String gtfsUrl = a.getURL(agencyID);
+            String name = a.getName(agencyID);
 
-            if (shortName == null) {
+            if (name == null) {
                 System.out.println(agencyID + " has no name in agencies.yml, will appear as Null");
             }
             if (gtfsUrl == null) {
@@ -126,8 +124,6 @@ public class GraphicReport {
                 e.printStackTrace();
                 continue;
             }
-
-
 
             List<String> lines = logs.get(key);
             DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
@@ -154,13 +150,13 @@ public class GraphicReport {
             String date = sdf.format(new Date(startSecond * 1000l));
 
             // Debug.log("- startSecond: " + startSecond);
-            // Debug.log("- shortName: " + shortName);
+            // Debug.log("- name: " + name);
             // Debug.log("- date: " + date);
 
             //addRandomTestData(1);
             // Debug.log("- tdList.size(): " + tdList.size());
 
-            Graphics2D g = createCanvas(shortName, date);
+            Graphics2D g = createCanvas(name, date);
 
             reportTimeCoverage(g);
             reportGPSCoverage(g);
@@ -181,20 +177,7 @@ public class GraphicReport {
                 }
             }
         } else {
-
-        // Default to local recipient list if env variable is present
-        recipientList = System.getenv("GRAAS_REPORT_RECIPIENTS");
-        if (recipientList == null) {
-            try {
-               recipientList = Util.getFileAsString(recipientListPath);
-            }
-            catch (Exception e) {
-                System.out.println("** error: no such file " + recipientListPath);
-                System.out.println("** to download files directly, rerun script using the '-D' flag");
-                System.exit(0);
-            }
-        }
-        sendEmail(blobs);
+            sendEmail(blobs);
         }
     }
 
@@ -208,14 +191,14 @@ public class GraphicReport {
         Debug.log("GraphicReport.sendEmail()");
         // Debug.log("- blobs: " + blobs);
 
+        Recipients r = new Recipients();
+        String[] recipients = r.get("graas_report");
 
-        String[] recipients = recipientList.split(",");
-
-        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", blobs);
-        Integer responseCode = grid.setupThenSend();
-        // Debug.log("- responseCode: " + responseCode);
+        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobs);
+        int responseCode = grid.send();
     }
 
+    // Creates one report per agency per day
     private Graphics2D createCanvas(String name, String date) {
         timeRowCount = getTimeRowCount();
         //Debug.log("- timeRowCount: " + timeRowCount);
@@ -270,7 +253,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getFriendlyID(), start, duration);
+                    TripReportData td = new TripReportData(id, t.getName(), start, duration);
                     tdList.add(td);
                     tdMap.put(id, td);
 
@@ -391,23 +374,6 @@ public class GraphicReport {
         g.translate(0, Math.max(2, timeRowCount) * ROW_HEIGHT);
     }
 
-    private String getTripName(TripReportData td) {
-        String s = new String(td.headSign);
-        int i = s.length();
-
-        int i1 = s.indexOf('(');
-        if (i1 > 0) i = i1 - 1;
-        if (i1 < 0) i1 = s.length();
-
-        int i2 = s.indexOf('/');
-        if (i2 > 0 && i2 < i1) i = i2;
-        if (i2 < 0) i2 = s.length();
-
-        s = s.substring(0, i);
-
-        return s;
-    }
-
     private void reportGPSCoverage(Graphics2D g) throws Exception {
         int tilesPerRow = img.getWidth() / TILE_SIZE;
         //Debug.log("- tilesPerRow: " + tilesPerRow);
@@ -435,7 +401,7 @@ public class GraphicReport {
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
 
-            String s  = getTripName(td) + " @ " + Time.getHMForMillis(td.start);
+            String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
             g.setColor(FONT_COLOR);

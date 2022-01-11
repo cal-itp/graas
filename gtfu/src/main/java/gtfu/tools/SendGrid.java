@@ -11,12 +11,28 @@ import gtfu.HTTPClient;
 public class SendGrid {
     private String[] tos;
     private String subject;
+    private String body;
     private List<byte[]> blobs;
 
-    public SendGrid(String[] recipients, String emailSubject, List<byte[]> images) {
+    public SendGrid(String[] recipients, String emailSubject, String body, List<byte[]> images) {
         this.tos = recipients;
         this.subject = emailSubject;
+        this.body = escape(body);
         this.blobs = images;
+    }
+
+    private String escape(String s) {
+        StringBuilder sb = new StringBuilder();
+
+        for (char c : s.toCharArray()) {
+            if (c == '\n') {
+                sb.append("\\n");
+            } else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
     }
 
     private String makeTos() {
@@ -56,12 +72,24 @@ public class SendGrid {
         return sb.toString();
     }
 
-    public Integer setupThenSend() {
-        String urlData = String.format("{\"personalizations\": [{\"to\": [%s]}],\"from\": {\"email\": \"calitp.gtfsrt@gmail.com\"},\"subject\": \"%s\",\"content\": [{\"type\": \"text/plain\", \"value\": \"Attached\"}],\"attachments\": [%s]}", makeTos(), subject, makeAttachments());
-        return send(urlData);
-    }
+    public int send() {
+        String attach = "";
 
-    private Integer send(String urlData) {
+        if (blobs != null) {
+            attach = String.format(",\"attachments\": [%s]", makeAttachments());
+        }
+
+        String from = "calitp.gtfsrt@gmail.com";
+        String f = System.getenv("GRAAS_REPORT_FROM");
+
+        if (f != null) {
+            from = f;
+        }
+
+        String urlData = String.format("{\"personalizations\": [{\"to\": [%s]}],\"from\": {\"email\": \"%s\"},\"subject\": \"%s\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]%s}", makeTos(), from, subject, body, attach);
+
+        //Debug.log("- urlData: " + urlData);
+
         int responseCode = 0;
         String apiKey = System.getenv("SENDGRID_API_KEY");
         String auth = String.format("Bearer %s", apiKey);

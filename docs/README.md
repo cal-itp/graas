@@ -1,6 +1,6 @@
+
 GRaaS: GTFS Realtime as a Service
 ==================================
-
 GRaaS is a software program which creates GTFS-RT data using a variety of Android, iOS, and other internet capable devices. This lets you - and transit riders - know where your vehicle is in real time and plan your trip accordingly!
 
 Background & Overview
@@ -29,7 +29,7 @@ Pre-requisites
 Setup & deployment
 --------------------
 
-To set up and begin running your own instance of GRaaS, follow [the GRaaS setup instructions](new-instance-setup).
+To set up and begin running your own instance of GRaaS, follow [the GRaaS setup instructions](new-instance-setup.md).
 
 To see if you have everything set up correctly. Try deploying the web app, as outlined in the [server README](server/README.md).
 
