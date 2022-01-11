@@ -41,7 +41,7 @@ public class Vehicle implements Filterable, GeoObject, Serializable {
     }
 
     public String[] getLabelText() {
-        String label = trip.getFriendlyID() + ": ";
+        String label = trip.getName() + ": ";
 
         if (Math.abs(scheduleOffset) < Time.SECONDS_PER_DAY) {
             label += Time.getTimeDeltaString(scheduleOffset, true);

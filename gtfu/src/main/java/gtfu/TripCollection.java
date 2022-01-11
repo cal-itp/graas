@@ -18,6 +18,11 @@ public class TripCollection implements Iterable<Trip>, Serializable {
 
     // trip_id,route_id,service_id,trip_headsign,trip_short_name,direction_id,shape_id,wheelchair_accessible,bikes_allowed,block_id,block_name
     public TripCollection(String path, StopCollection stopCollection, ShapeCollection shapeCollection, ProgressObserver observer) {
+        this(path, stopCollection, shapeCollection, observer, false);
+    }
+
+    // trip_id,route_id,service_id,trip_headsign,trip_short_name,direction_id,shape_id,wheelchair_accessible,bikes_allowed,block_id,block_name
+    public TripCollection(String path, StopCollection stopCollection, ShapeCollection shapeCollection, ProgressObserver observer, boolean skipErrors) {
         this();
 
         TextFile tf = new TextFile(path + "/trips.txt");
@@ -35,10 +40,21 @@ public class TripCollection implements Iterable<Trip>, Serializable {
             String serviceID = r.get("service_id");
             String headSign = r.get("trip_headsign");
             String shapeID = r.get("shape_id");
-            Trip trip = new Trip(id, routeID, serviceID, headSign, shapeCollection.get(shapeID));
-
-            map.put(id, trip);
-            list.add(trip);
+            Shape shape = shapeCollection.get(shapeID);
+            if (shape == null) {
+                Util.fail(
+                    String.format(
+                        "fatal error, trip '%s' references non-existing shape ID '%s'",
+                        id,
+                        shapeID
+                    ),
+                    !skipErrors
+                );
+            } else {
+                Trip trip = new Trip(id, routeID, serviceID, headSign, shape);
+                map.put(id, trip);
+                list.add(trip);
+            }
         }
 
         tf.dispose();

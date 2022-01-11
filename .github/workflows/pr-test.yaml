@@ -13,7 +13,7 @@ jobs:
           java-version: '11'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-      - name: Build with Gradle
+      - name: Build with Gradle (incl unit tests)
         working-directory: gtfu
         run: ./gradlew build
       - name: Setup Node
@@ -27,7 +27,19 @@ jobs:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Java tests
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.ServerTest pr-test
+        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
-
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      - name: Run Python unit tests
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.2'
+      - run: |
+          pip install -r server/app-engine/requirements.txt
+          python server/tests/unit-tests.py

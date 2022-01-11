@@ -10,15 +10,16 @@ import gtfu.GPSData;
 import gtfu.Trip;
 import gtfu.TripCollection;
 import gtfu.TripReportData;
+import gtfu.Debug;
 
 public class DayLogSlicer {
-    private Map<String, List<GPSData>> map;
+    private Map<String, List<GPSData>> gpsMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
     private int startSecond;
 
     public DayLogSlicer(TripCollection tripCollection, List<String> lines) {
-        map = new HashMap();
+        gpsMap = new HashMap();
         tdList = new ArrayList();
         tdMap = new HashMap();
         startSecond = -1;
@@ -34,11 +35,11 @@ public class DayLogSlicer {
                 startSecond = seconds;
             }
 
-            List<GPSData> list = map.get(tripID);
+            List<GPSData> list = gpsMap.get(tripID);
 
             if (list == null) {
                 list = new ArrayList<GPSData>();
-                map.put(tripID, list);
+                gpsMap.put(tripID, list);
             }
 
             list.add(new GPSData(seconds * 1000l, lat, lon));
@@ -46,7 +47,7 @@ public class DayLogSlicer {
 
         // Debug.log("- map.size(): " + map.size());
 
-        for (String id : map.keySet()) {
+        for (String id : gpsMap.keySet()) {
             Trip trip = tripCollection.get(id);
 
             if (trip == null) {
@@ -54,7 +55,7 @@ public class DayLogSlicer {
                 continue;
             }
 
-            // Debug.log("++ id: " + trip.getFriendlyID());
+            // Debug.log("++ id: " + trip.getName());
 
             int start = trip.getStartTime() * 1000;
             // Debug.log("++ start: " + Time.getHMForMillis(start));
@@ -69,7 +70,7 @@ public class DayLogSlicer {
 
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, trip.getFriendlyID(), start, duration);
+                TripReportData td = new TripReportData(id, trip.getName(), start, duration);
                 tdList.add(td);
                 tdMap.put(id, td);
             }
@@ -79,7 +80,7 @@ public class DayLogSlicer {
     }
 
     public Map<String, List<GPSData>> getMap() {
-        return map;
+        return gpsMap;
     }
 
     public List<TripReportData> getTripReportDataList() {

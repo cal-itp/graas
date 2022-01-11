@@ -44,6 +44,10 @@ public class Util {
     private final static int EARTH_RADIUS_IN_FEET = 20902231;
     private static final String WHITESPACE = " \t\r\n";
 
+    private static FailureReporter NULL_REPORTER = new NullFailureReporter();
+
+    private static FailureReporter reporter = NULL_REPORTER;
+
     public static String repeat(char c, int count) {
         StringBuffer sb = new StringBuffer();
 
@@ -64,10 +68,23 @@ public class Util {
         throw new Fail("Implement me!");
     }
 
+    public static void setReporter(FailureReporter reporter) {
+        Util.reporter = reporter;
+    }
+
     public static void fail(String s) {
+        fail(s, true);
+    }
+
+    public static void fail(String s, boolean except) {
+        fail(s, reporter, except);
+    }
+
+    public static void fail(String s, FailureReporter reporter, boolean except) {
         Debug.error(s);
-        // ### TODO: post message to slack graas_internal using webhooks
-        throw new Fail(s);
+        reporter.addLine("* " + s);
+
+        if (except) throw new Fail(s);
     }
 
     public static String base64Encode(String s) {
@@ -318,9 +335,14 @@ public class Util {
         return value;
     }
 
+    public static String getURLContent(String url, ProgressObserver observer) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        downloadURLContent(url, bos, observer);
+        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+    }
+
     public static void downloadURLContent(String url, OutputStream os, ProgressObserver observer) {
         HttpURLConnection con = null;
-        StringBuilder content = new StringBuilder("");
 
         try {
             URL myurl = new URL(url);
@@ -757,7 +779,7 @@ public class Util {
     }
 
     public static String getGTFSURL(AgencyData[] list, String id) {
-        //Debug.log("Util.loadCollections()");
+        //Debug.log("Util.getGTFSURL()");
         //Debug.log("- id: " + id);
 
         for (AgencyData d : list) {
@@ -770,6 +792,10 @@ public class Util {
     }
 
     public static Map<String, Object> loadCollections(String cacheRoot, String agencyID, ProgressObserver po) {
+        return loadCollections(cacheRoot, agencyID, po, false);
+    }
+
+    public static Map<String, Object> loadCollections(String cacheRoot, String agencyID, ProgressObserver po, boolean skipErrors) {
         Debug.log("Util.loadCollections()");
 
         String path = cacheRoot + "/"  + agencyID;
@@ -796,7 +822,7 @@ public class Util {
         //Debug.log("- stopCollection.getSize(): " + stopCollection.getSize());
         //Debug.log("trips:");
         t = new Timer("trips");
-        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po);
+        TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po, skipErrors);
         collections.put("trips", tripCollection);
         //Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
@@ -809,7 +835,7 @@ public class Util {
 
         //Debug.log("routes:");
         t = new Timer("routes");
-        RouteCollection routeCollection = new RouteCollection(path, tripCollection);
+        RouteCollection routeCollection = new RouteCollection(path, tripCollection, skipErrors);
         collections.put("routes", routeCollection);
         t.dumpLap();
 
@@ -820,4 +846,11 @@ public class Util {
         return collections;
     }
 
+    public static Map<String, Object> parseJSONasMap(String path) {
+        try {
+            return new ObjectMapper().readValue(new File(path), HashMap.class);
+        } catch (Exception e) {
+            throw new Fail(e);
+        }
+    }
 }

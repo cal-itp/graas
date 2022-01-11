@@ -53,14 +53,15 @@ def verify_signature(agency_id, data, signature):
             print(f'Last time public key was updated: {last_key_update}')
             print(f'Last time public keys were refreshed: {last_key_refresh}')
 
-            # If a key update has happened since the last refresh, and we haven't refreshed in the last minute, reload keys and then verify
+            # If a key update has happened since the last refresh, and we haven't refreshed in the last minute, reload keys and then continue with verification
             if (last_key_update > last_key_refresh and now - last_key_refresh > ONE_MINUTE_MILLIS):
                 last_key_refresh = now
                 print('Re-running read_public_keys()...')
                 key_map = read_public_keys()
-                # Potential risk: is key_map always being updated before verify_signature runs?
-                # We are calling verify_signature recursively, but it won't run more than twice a minute due to the (... > ONE_MINUTE_MILLIS) if statement
-                return verify_signature(agency_id, data, signature)
+                key = key_map.get(agency_id, None)
+                if not key:
+                    # If there IS a key in key_map for agency_id, verify_signature will continue with verification
+                    return False
             else:
                 return False
         else:
