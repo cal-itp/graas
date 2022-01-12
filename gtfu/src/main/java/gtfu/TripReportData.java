@@ -1,4 +1,6 @@
 package gtfu;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TripReportData implements Comparable<TripReportData> {
     public String id;
@@ -9,12 +11,18 @@ public class TripReportData implements Comparable<TripReportData> {
     int y;
     int width;
     int height;
+    String uuid;
+    String agent;
+    String vehicleId;
 
-    public TripReportData(String id, String routeName, int start, int duration) {
+    public TripReportData(String id, String routeName, int start, int duration, String uuid, String agent, String vehicleId) {
         this.id = id;
         this.routeName = routeName;
         this.start = start;
         this.duration = duration;
+        this.uuid = uuid;
+        this.agent = agent;
+        this.vehicleId = vehicleId;
     }
 
     public int compareTo(TripReportData o) {
@@ -24,6 +32,30 @@ public class TripReportData implements Comparable<TripReportData> {
     // Combining route name with start time creates a trip name
     public String getTripName() {
         return getCleanRouteName() + " @ " + Time.getHMForMillis(start);
+    }
+
+    public String getUuidTail() {
+        return uuid.substring(uuid.length() - 4, uuid.length());
+    }
+
+    public String getAgent() {
+        if (agent.contains("value=")){
+            return agent.substring(8,agent.length() - 3);
+        } else return agent;
+    }
+
+    public String getVehicleId() {
+        return vehicleId;
+    }
+
+    // Maybe should be array of strings or just not exist
+    public Map<String, String> getAttributeMap(){
+        Map<String, String> attributeMap = new HashMap();
+        attributeMap.put("v: ",getVehicleId());
+        attributeMap.put("a: ",getAgent());
+        attributeMap.put("u: ",getUuidTail());
+
+        return attributeMap;
     }
 
     public boolean overlaps(TripReportData td) {
