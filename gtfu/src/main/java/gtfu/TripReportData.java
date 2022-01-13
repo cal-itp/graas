@@ -1,8 +1,6 @@
 package gtfu;
 import java.util.HashMap;
 import java.util.Map;
-import ua_parser.Parser;
-import ua_parser.Client;
 
 public class TripReportData implements Comparable<TripReportData> {
     public String id;
@@ -16,8 +14,6 @@ public class TripReportData implements Comparable<TripReportData> {
     String uuid;
     String agent;
     String vehicleId;
-    Client deviceClient;
-    Parser uaParser = new Parser();
 
     public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId) {
         this.id = id;
@@ -27,7 +23,6 @@ public class TripReportData implements Comparable<TripReportData> {
         this.uuid = uuid;
         this.agent = agent;
         this.vehicleId = vehicleId;
-        this.deviceClient = uaParser.parse(agent);
     }
 
     public int compareTo(TripReportData o) {
@@ -44,19 +39,7 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getAgent() {
-        return deviceClient.userAgent.family + "."
-                + deviceClient.userAgent.major + "."
-                + deviceClient.userAgent.minor;
-    }
-
-    public String getOS() {
-        return deviceClient.os.family + "."
-                + deviceClient.os.major + "."
-                + deviceClient.os.minor;
-    }
-
-    public String getDevice() {
-        return deviceClient.device.family;
+        return agent;
     }
 
     public String getVehicleId() {
