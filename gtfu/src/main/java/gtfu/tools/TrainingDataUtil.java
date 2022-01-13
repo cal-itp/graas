@@ -24,6 +24,7 @@ public class TrainingDataUtil {
     private static void processGraphicReportOutput(String dataFile, String mapFile, String cacheDir, String outputDir) throws Exception {
         List<String> lines = Util.getFileContentsAsStrings(dataFile);
         TripCollection tripCollection;
+        RouteCollection routeCollection;
         ShapeCollection shapeCollection;
         List<BufferedImage> tileList = getCroppedTiles(mapFile);
 
@@ -39,6 +40,7 @@ public class TrainingDataUtil {
         try {
             Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver);
             tripCollection = (TripCollection)collections.get("trips");
+            routeCollection = (RouteCollection)collections.get("routes");
             shapeCollection = (ShapeCollection)collections.get("shapes");
         } catch(Exception e) {
             Debug.error("* can't load agency data for: " + agencyID);
@@ -46,7 +48,7 @@ public class TrainingDataUtil {
             return;
         }
 
-        DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
+        DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
         List<TripReportData> tdList = dls.getTripReportDataList();
         Map<String, List<GPSData>> map = dls.getMap();
         int tileIndex = 0;
