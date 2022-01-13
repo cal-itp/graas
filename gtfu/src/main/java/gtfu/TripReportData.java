@@ -25,6 +25,7 @@ public class TripReportData implements Comparable<TripReportData> {
         this.uuid = uuid;
         this.agent = agent;
         this.vehicleId = vehicleId;
+        // TODO: Create new file for getting deviceClient info
         this.deviceClient = uaParser.parse(agent);
     }
 
