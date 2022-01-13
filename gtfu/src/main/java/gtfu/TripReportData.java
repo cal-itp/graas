@@ -1,4 +1,6 @@
 package gtfu;
+import ua_parser.Parser;
+import ua_parser.Client;
 
 public class TripReportData implements Comparable<TripReportData> {
     public String id;
@@ -12,6 +14,8 @@ public class TripReportData implements Comparable<TripReportData> {
     String uuid;
     String agent;
     String vehicleId;
+    Client deviceClient;
+    Parser uaParser = new Parser();
 
     public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId) {
         this.id = id;
@@ -21,6 +25,7 @@ public class TripReportData implements Comparable<TripReportData> {
         this.uuid = uuid;
         this.agent = agent;
         this.vehicleId = vehicleId;
+        this.deviceClient = uaParser.parse(agent);
     }
 
     public int compareTo(TripReportData o) {
@@ -37,7 +42,25 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getAgent() {
-        return agent;
+        String userAgentFamily = deviceClient.userAgent.family;
+        String userAgentMajor = deviceClient.userAgent.major;
+        String userAgentMinor = deviceClient.userAgent.minor;
+
+        return userAgentFamily + ((userAgentMajor == null) ? "" :
+                    ((userAgentMinor == null) ? "." + userAgentMajor :  "." + userAgentMajor + "." + userAgentMinor));
+    }
+
+    public String getOs() {
+        String osFamily = deviceClient.os.family;
+        String osMajor = deviceClient.os.major;
+        String osMinor = deviceClient.os.minor;
+
+        return osFamily + ((osMajor == null) ? "" :
+                    ((osMinor == null) ? "." + osMajor :  "." + osMajor + "." + osMinor));
+    }
+
+    public String getDevice() {
+        return deviceClient.device.family;
     }
 
     public String getVehicleId() {

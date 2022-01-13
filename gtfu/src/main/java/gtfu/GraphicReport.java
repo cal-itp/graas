@@ -411,12 +411,12 @@ public class GraphicReport {
             g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
 
             g.setColor(FONT_COLOR);
-            s = "a: " + td.getAgent();
+            s = "a: " + td.getAgent() + " o: " + td.getOs();
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
-            s = "v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            s =  "d: " + td.getDevice() + " v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
