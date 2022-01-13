@@ -49,7 +49,11 @@ class DictReader:
             if not line:
                 break
 
-            self.rows.append(parse(self.names, line.strip()))
+            line = line.strip()
+            if (len(line) == 0):
+                continue
+
+            self.rows.append(parse(self.names, line))
 
     def __iter__(self):
         return self

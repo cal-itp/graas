@@ -46,9 +46,16 @@ def from_b64(s):
 def get_current_time_millis():
     return int(round(time.time() * 1000))
 
-def get_seconds_since_midnight():
-    now = datetime.now()
-    return (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+def now():
+    return get_current_time_millis()
+
+def get_seconds_since_midnight(seconds = None):
+    if seconds is None:
+        now = datetime.now()
+    else:
+        now = datetime.fromtimestamp(seconds)
+
+    return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 def hhmmss_to_seconds(s):
     arr = s.split(':')
@@ -115,7 +122,7 @@ def debug(s):
     ts = datetime.now().strftime('%H:%M:%S ')
 
     if debug_callback is None:
-        print(ts + s)
+        print(ts + str(s))
         sys.stdout.flush()
     else:
         debug_callback(s)
@@ -180,7 +187,9 @@ def update_cache_if_needed(cache_path, url):
     if not os.path.isdir(cache_path):
         os.makedirs(cache_path)
 
-    r = requests.head(url)
+    headers = {'User-Agent': 'python-3'}
+    r = requests.head(url, headers=headers, allow_redirects=True)
+    debug(f'- r.headers: {r.headers}')
     url_time = r.headers.get('last-modified', None)
     debug(f'- url_time: {url_time}')
 
@@ -199,13 +208,20 @@ def update_cache_if_needed(cache_path, url):
         return
 
     debug('+ gtfs.zip out of date, downloading...')
+
+    """
     req = request.Request(url)
     resp = request.urlopen(req)
     debug(f'- resp.code: {resp.code}')
     content = resp.read()
+    """
+
+    r = requests.get(url)
+    debug(f'- r.status_code: {r.status_code}')
 
     with open(file_name, 'wb') as f:
-        f.write(content)
+        #f.write(content)
+        f.write(r.content)
         f.close()
 
     debug('+ gtfs.zip downloaded')
