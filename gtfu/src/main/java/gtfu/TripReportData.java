@@ -29,7 +29,7 @@ public class TripReportData implements Comparable<TripReportData> {
         return start - o.start;
     }
 
-    // Combining route name with start time creates a trip name
+    // Combining name with start time creates a trip name
     public String getTripName() {
         return getCleanName() + " @ " + Time.getHMForMillis(start);
     }
