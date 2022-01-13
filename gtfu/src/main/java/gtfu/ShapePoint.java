@@ -116,6 +116,10 @@ public class ShapePoint implements Serializable {
         return String.format("(%f, %f), index = %d, distance = %f", lat, lon, index, distance);
     }
 
+    public String toCSVLine() {
+        return String.format("%f,%f", lat, lon);
+    }
+
     public boolean equals(Object o) {
         if (o instanceof ShapePoint) {
             ShapePoint p = (ShapePoint)o;

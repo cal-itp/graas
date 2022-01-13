@@ -25,6 +25,7 @@ public class TrainingDataUtil {
         List<String> lines = Util.getFileContentsAsStrings(dataFile);
         TripCollection tripCollection;
         RouteCollection routeCollection;
+        ShapeCollection shapeCollection;
         List<BufferedImage> tileList = getCroppedTiles(mapFile);
 
         Debug.log("- lines.get(0): " + lines.get(0));
@@ -40,6 +41,7 @@ public class TrainingDataUtil {
             Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver);
             tripCollection = (TripCollection)collections.get("trips");
             routeCollection = (RouteCollection)collections.get("routes");
+            shapeCollection = (ShapeCollection)collections.get("shapes");
         } catch(Exception e) {
             Debug.error("* can't load agency data for: " + agencyID);
             e.printStackTrace();
@@ -59,6 +61,10 @@ public class TrainingDataUtil {
 
             writePositionsToFile(folderName + "/updates.txt", list);
             writeStringToFile(folderName + "/metadata.txt", td.id);
+
+            Trip trip = tripCollection.get(td.id);
+            Shape shape = shapeCollection.get(trip.getShapeID());
+            writeShapeToFile(folderName + "/trip-outline.txt", shape);
 
             ImageIO.write(tileList.get(tileIndex++), "PNG", new File(folderName + "/tile.png"));
         }
@@ -80,6 +86,17 @@ public class TrainingDataUtil {
         ) {
             for (GPSData gps : list) {
                 out.println(gps.toCSVLine());
+            }
+        }
+    }
+
+    private static void writeShapeToFile(String path, Shape shape) throws Exception {
+        try (
+            FileOutputStream fos = new FileOutputStream(path);
+            PrintWriter out = new PrintWriter(fos)
+        ) {
+            for (ShapePoint p : shape.getList()) {
+                out.println(p.toCSVLine());
             }
         }
     }
@@ -143,6 +160,7 @@ public class TrainingDataUtil {
         System.err.println("usage: TrainingDataUtil -C|--cache-dir -o|--output-folder <output-folder> <cache-dir> -c|--cmd <cmd> <options>");
         System.err.println("    cmds:");
         System.err.println("        graphicreportout|gro: -d <data-file> -m <map-file>");
+        System.err.println("            <data-file>: path to file");
         System.err.println("    <output-folder>: root folder for output (must already exist)");
 
         System.exit(1);
