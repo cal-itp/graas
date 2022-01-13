@@ -46,16 +46,6 @@ public class TripReportData implements Comparable<TripReportData> {
         return vehicleId;
     }
 
-    // Maybe should be array of strings or just not exist
-    public Map<String, String> getAttributeMap(){
-        Map<String, String> attributeMap = new HashMap();
-        attributeMap.put("v: ",getVehicleId());
-        attributeMap.put("a: ",getAgent());
-        attributeMap.put("u: ",getUuidTail());
-
-        return attributeMap;
-    }
-
     public boolean overlaps(TripReportData td) {
         return (td.start >= start && td.start < start + duration)
             || (start >= td.start && start < td.start + td.duration);
