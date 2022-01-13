@@ -8,7 +8,7 @@ public class Debug {
     }
 
     public static void error(Object msg) {
-        System.out.println(msg);
+        System.out.println("* error: " + msg);
     }
 
     public static void bail() {

@@ -40,14 +40,11 @@ import java.time.ZoneId;
 import java.time.Clock;
 
 public class GraphicReport {
-    private static final Color BACKGROUND = new Color(0xffffff);
-    private static final Color DARK       = new Color(0xe0e0e0);
-    private static final Color FONT_COLOR = Color.gray;
-    private static final Color ACCENT     = new Color(0x00b000);
-    /*private static final Color BACKGROUND = new Color(0x1c3a08);
-    private static final Color DARK       = new Color(0x324e34);
-    private static final Color FONT_COLOR = new Color(0xd9bf77);
-    private static final Color ACCENT     = new Color(0xd8ebb5);*/
+    // NOTE: tools such as TrainingDataUtil use the symbolic constants below
+    public static final Color BACKGROUND = new Color(0xffffff);
+    public static final Color DARK       = new Color(0xe0e0e0);
+    public static final Color FONT_COLOR = Color.gray;
+    public static final Color ACCENT     = new Color(0x00b000);
 
     private static final String[] PROPERTY_NAMES = {
         "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
