@@ -9,6 +9,8 @@ import java.util.List;
 import gtfu.GPSData;
 import gtfu.Trip;
 import gtfu.TripCollection;
+import gtfu.RouteCollection;
+import gtfu.Route;
 import gtfu.TripReportData;
 import gtfu.Debug;
 
@@ -21,7 +23,7 @@ public class DayLogSlicer {
     private Map<String, TripReportData> tdMap;
     private int startSecond;
 
-    public DayLogSlicer(TripCollection tripCollection, List<String> lines) {
+    public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
         gpsMap = new HashMap();
         uuidMap = new HashMap();
         agentMap = new HashMap();
@@ -69,6 +71,13 @@ public class DayLogSlicer {
                 System.err.println("* no trip found for id " + id + ", skipping");
                 continue;
             }
+            String name = trip.getHeadsign();
+            // Default to trip_headsign. Use routeName if null
+            if (name == null){
+                String route_id = trip.getRouteID();
+                Route route = routeCollection.get(route_id);
+                name = route.getName();
+            }
 
             // Debug.log("++ id: " + trip.getName());
 
@@ -85,7 +94,7 @@ public class DayLogSlicer {
 
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, trip.getName(), start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), getAgent(agentMap.get(id)), vehicleIdMap.get(id));
                 tdList.add(td);
                 tdMap.put(id, td);
             }
@@ -106,6 +115,11 @@ public class DayLogSlicer {
         return tdMap;
     }
 
+    public static String getAgent(String agentString) {
+        if (agentString.contains("value=")){
+            return agentString.substring(8,agentString.length() - 3);
+        } else return agentString;
+    }
     public int getStartSecond() {
         return startSecond;
     }

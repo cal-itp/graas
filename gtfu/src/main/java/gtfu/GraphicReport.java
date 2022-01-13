@@ -43,7 +43,7 @@ public class GraphicReport {
     private static final Color BACKGROUND = new Color(0xffffff);
     private static final Color DARK       = new Color(0xe0e0e0);
     private static final Color FONT_COLOR = Color.gray;
-    private static final Color FONT_COLOR_BLACK = Color.black;
+    private static final Color TITLE_COLOR = Color.black;
     private static final Color ACCENT     = new Color(0x00b000);
     /*private static final Color BACKGROUND = new Color(0x1c3a08);
     private static final Color DARK       = new Color(0x324e34);
@@ -127,7 +127,7 @@ public class GraphicReport {
             }
 
             List<String> lines = logs.get(key);
-            DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
+            DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
             map = dls.getMap();
             tdList = dls.getTripReportDataList();
             tdMap = dls.getTripReportDataMap();
@@ -254,7 +254,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getName(), start, duration,"testUuid","testAgent","testVehicleId");
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration,"testUuid","testAgent","testVehicleId");
                     tdList.add(td);
                     tdMap.put(id, td);
 
@@ -392,9 +392,9 @@ public class GraphicReport {
             g.drawLine(x * TILE_SIZE, 0, x * TILE_SIZE, TILE_SIZE * tileRowCount);
         }
 
-        int inset = TILE_SIZE / 10;
-        int length = TILE_SIZE - 2 * inset;
         int lineHeight = (int)(font.getSize() * 1.33);
+        int inset = TILE_SIZE / 10;
+        int length = TILE_SIZE - lineHeight * 4 - inset;
 
         for (int i=0; i<tdList.size(); i++) {
             //Debug.log("-- td.id: " + td.id);
@@ -408,20 +408,21 @@ public class GraphicReport {
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
-
-            g.setColor(FONT_COLOR_BLACK);
+            g.setColor(TITLE_COLOR);
             y = y + lineHeight;
             x = x + 5;
-            g.drawString(s, x , y);
+            g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
 
             g.setColor(FONT_COLOR);
             s = "a: " + td.getAgent();
+            sw = fm.stringWidth(s);
             y = y + lineHeight;
-            g.drawString(s, x, y + lineHeight);
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             s = "v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            sw = fm.stringWidth(s);
             y = y + lineHeight;
-            g.drawString(s, x, y + lineHeight);
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             AffineTransform t = g.getTransform();
 
