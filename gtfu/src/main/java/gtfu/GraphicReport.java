@@ -410,6 +410,7 @@ public class GraphicReport {
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
 
+            // TODO: dynamic text formatting/resizing to prevent overflow
             g.setColor(FONT_COLOR);
             s = "a: " + td.getAgent() + " o: " + td.getOs();
             sw = fm.stringWidth(s);
