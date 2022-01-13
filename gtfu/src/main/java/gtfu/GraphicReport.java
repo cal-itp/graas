@@ -10,6 +10,8 @@ import java.awt.FontMetrics;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+
 import java.awt.geom.Path2D;
 
 import javax.imageio.ImageIO;
@@ -67,6 +69,7 @@ public class GraphicReport {
     private Map<String, TripReportData> tdMap;
     private BufferedImage img;
     private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, 1.75f * SCALE, 1.75f * SCALE);
+    private Rectangle2D clipRect = new Rectangle2D.Float();
     private Font font;
     private Font smallFont;
     private int timeRowCount;
@@ -399,18 +402,19 @@ public class GraphicReport {
         for (int i=0; i<tdList.size(); i++) {
 
             TripReportData td = tdList.get(i);
-
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
-
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
             g.setColor(TITLE_COLOR);
+            // TODO: dynamic text formatting/resizing to prevent overflow. For now we just clip:
+            clipRect.setRect(x, y,TILE_SIZE,TILE_SIZE);
+            g.setClip(clipRect);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
 
-            // TODO: dynamic text formatting/resizing to prevent overflow
+
             g.setColor(FONT_COLOR);
             s = "a: " + td.getAgent() + " o: " + td.getOs();
             sw = fm.stringWidth(s);
@@ -427,8 +431,11 @@ public class GraphicReport {
             g.translate(x + inset, y + inset);
             drawMap(g, td, length);
 
+
             g.setTransform(t);
         }
+
+        g.setClip(null);
     }
 
     private void drawMap(Graphics2D g, TripReportData td, int length) {
