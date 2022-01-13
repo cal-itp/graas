@@ -67,7 +67,7 @@ public class GraphicReport {
     private Font smallFont;
     private int timeRowCount;
 
-    public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean downloadReport) throws Exception {
+    public GraphicReport(String cacheDir, String selectedDate, String savePath) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
         Debug.log("- cacheDir: " + cacheDir);
         Debug.log("- selectedDate: " + selectedDate);
@@ -160,20 +160,28 @@ public class GraphicReport {
 
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
-                blobs.add(imageToBlob(img));
-            }
-        }
-        if (downloadReport) {
-            for (int i=0; i<blobs.size(); i++) {
-                byte[] buf = blobs.get(i);
-                String fn = "/tmp/report-" + i + ".png";
-                Debug.log("writing " + fn + "...");
+                byte[] buf = imageToBlob(img);
+                blobs.add(buf);
 
-                try (FileOutputStream fos = new FileOutputStream(fn)) {
-                    fos.write(buf, 0, buf.length);
+                if (savePath != null) {
+                    String prefix = new String(key);
+                    int index = key.lastIndexOf('.');
+
+                    // strip off file name suffix, e.g. '.txt'
+                    if (index > 0) {
+                        prefix = prefix.substring(0, index);
+                    }
+
+                    String path = savePath + "/" + prefix + "-map.png";
+                    Debug.log("writing " + path + "...");
+
+                    try (FileOutputStream fos = new FileOutputStream(path)) {
+                        fos.write(buf, 0, buf.length);
+                    }
                 }
             }
-        } else {
+        }
+        if (savePath == null) {
             sendEmail(blobs);
         }
     }
@@ -506,7 +514,7 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-D|--download]");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
         System.err.println("    <save-path> (if given) is the path to a folder where to save intermediate position data");
         System.exit(1);
@@ -516,7 +524,6 @@ public class GraphicReport {
         String cacheDir = null;
         String date = null;
         String savePath = null;
-        boolean downloadReport = false;
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
@@ -531,11 +538,6 @@ public class GraphicReport {
 
             if ((arg[i].equals("-d") || arg[i].equals("--date")) && i < arg.length - 1) {
                 date = arg[++i];
-                continue;
-            }
-
-            if (arg[i].equals("-D") || arg[i].equals("--download")) {
-                downloadReport = true;
                 continue;
             }
 
@@ -557,6 +559,6 @@ public class GraphicReport {
             Debug.log("-- date: " + date);
         }
 
-        new GraphicReport(cacheDir, date, savePath, downloadReport);
+        new GraphicReport(cacheDir, date, savePath);
     }
 }
