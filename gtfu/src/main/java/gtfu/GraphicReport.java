@@ -10,6 +10,8 @@ import java.awt.FontMetrics;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+
 import java.awt.geom.Path2D;
 
 import javax.imageio.ImageIO;
@@ -43,6 +45,7 @@ public class GraphicReport {
     private static final Color BACKGROUND = new Color(0xffffff);
     private static final Color DARK       = new Color(0xe0e0e0);
     private static final Color FONT_COLOR = Color.gray;
+    private static final Color TITLE_COLOR = Color.black;
     private static final Color ACCENT     = new Color(0x00b000);
     /*private static final Color BACKGROUND = new Color(0x1c3a08);
     private static final Color DARK       = new Color(0x324e34);
@@ -50,7 +53,7 @@ public class GraphicReport {
     private static final Color ACCENT     = new Color(0xd8ebb5);*/
 
     private static final String[] PROPERTY_NAMES = {
-        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id"
+        "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id", "uuid", "agent"
     };
     private static final int SCALE = 2;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
@@ -66,6 +69,7 @@ public class GraphicReport {
     private Map<String, TripReportData> tdMap;
     private BufferedImage img;
     private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, 1.75f * SCALE, 1.75f * SCALE);
+    private Rectangle2D clipRect = new Rectangle2D.Float();
     private Font font;
     private Font smallFont;
     private int timeRowCount;
@@ -126,7 +130,7 @@ public class GraphicReport {
             }
 
             List<String> lines = logs.get(key);
-            DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
+            DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
             map = dls.getMap();
             tdList = dls.getTripReportDataList();
             tdMap = dls.getTripReportDataMap();
@@ -253,7 +257,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getName(), start, duration);
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId");
                     tdList.add(td);
                     tdMap.put(id, td);
 
@@ -391,29 +395,47 @@ public class GraphicReport {
             g.drawLine(x * TILE_SIZE, 0, x * TILE_SIZE, TILE_SIZE * tileRowCount);
         }
 
+        int lineHeight = (int)(font.getSize() * 1.33);
         int inset = TILE_SIZE / 10;
-        int length = TILE_SIZE - 2 * inset;
+        int length = TILE_SIZE - lineHeight * 4 - inset;
 
         for (int i=0; i<tdList.size(); i++) {
-            TripReportData td = tdList.get(i);
-            //Debug.log("-- td.id: " + td.id);
 
+            TripReportData td = tdList.get(i);
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
-
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
+            g.setColor(TITLE_COLOR);
+            // TODO: dynamic text formatting/resizing to prevent overflow. For now we just clip:
+            clipRect.setRect(x, y,TILE_SIZE,TILE_SIZE);
+            g.setClip(clipRect);
+            y = y + lineHeight;
+            g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
+
+
             g.setColor(FONT_COLOR);
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y + (int)(font.getSize() * 1.33));
+            s = "a: " + td.getAgent() + " o: " + td.getOs();
+            sw = fm.stringWidth(s);
+            y = y + lineHeight;
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
+
+            s =  "d: " + td.getDevice() + " v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            sw = fm.stringWidth(s);
+            y = y + lineHeight;
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             AffineTransform t = g.getTransform();
 
             g.translate(x + inset, y + inset);
             drawMap(g, td, length);
 
+
             g.setTransform(t);
         }
+
+        g.setClip(null);
     }
 
     private void drawMap(Graphics2D g, TripReportData td, int length) {
