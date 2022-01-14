@@ -34,6 +34,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final String SEGMENT_HEADER = "segment: ";
     private static final String CURRENT_HEADER = "current location: ";
     private static final String UPDATE_HEADER = "segment update:";
+    private static final int RADIUS = 2;
 
     private static final Color[] ACCENT_COLORS = {
         new Color(0xf7f305),
@@ -73,9 +74,12 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private Map<Integer, Segment> segmentTable;
     //private List<Score> scoreList;
     private List<TripEvent> eventList;
+    private List<ShapePoint> tripPoints;
     private int eventIndex;
     private Deque<Area> areaStack;
     private String frameString;
+    private String dataDir;
+    private String declaredTripID;
     private Font font;
     private Button playButton;
     private Button fwdButton;
@@ -88,6 +92,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private int mouseDownY;
     private int mouseX;
     private int mouseY;
+    private float zoomFactor;
 
     private static String getProperty(String line, String name, char separator) {
         int i1 = line.indexOf(name + "=");
@@ -144,11 +149,27 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         return f;
     }
 
-    public TripInferenceVisualizer() {
+    public TripInferenceVisualizer(String dataDir) throws Exception {
+        this.dataDir = dataDir;
+        tripPoints = new ArrayList<ShapePoint>();
+
+        List<String> list = Util.getFileContentsAsStrings(dataDir + "/trip-outline.txt");
+
+        for (String line : list) {
+            if (Util.isEmpty(line)) continue;
+
+            String[] arg = line.split(",");
+            float lat = Float.parseFloat(arg[0]);
+            float lon = Float.parseFloat(arg[1]);
+
+            tripPoints.add(new ShapePoint(lat, lon));
+        }
+
         sleepMillis = MAX_SLEEP_MILLIS;
         eventList = new ArrayList<>();
         eventIndex = 0;
         frameString = "";
+        zoomFactor = 1;
 
         segmentTable = new HashMap();
         font = new Font("Consolas", Font.PLAIN, 11);
@@ -162,6 +183,9 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         addMouseListener(this);
         addMouseMotionListener(this);
         addKeyListener(TripInferenceVisualizer.this);
+
+        declaredTripID = "declared trip ID: " + getPropertyFromFile(dataDir + "/metadata.txt", "trip-id");
+        Debug.log(declaredTripID);
 
         Thread t = new Thread(new Runnable() {
             public void run() {
@@ -339,6 +363,19 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         t.start();
     }
 
+    private String getPropertyFromFile(String path, String name) throws Exception {
+        List<String> strings = Util.getFileContentsAsStrings(path);
+        String key = name + ": ";
+
+        for (String line : strings) {
+            if (line.startsWith(key)) {
+                return line.substring(key.length());
+            }
+        }
+
+        return null;
+    }
+
     public void keyPressed(KeyEvent e) {
         int c = e.getKeyChar();
 
@@ -347,9 +384,10 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             System.exit(0);
         }
 
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE && areaStack.size() > 1) {
             synchronized (this) {
                 areaStack.pop();
+                zoomFactor = 1;
                 repaint();
             }
         }
@@ -471,6 +509,14 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             int w = Math.abs(mouseDownX - mouseX);
             int h = Math.abs(mouseDownY - mouseY);
 
+            float wFactor = (float)gridWidth / w;
+            float hFactor = (float)gridHeight / h;
+            float zoomFactor = (wFactor + hFactor) / 2;
+
+            // preserve aspect ratio
+            w = (int)(gridWidth / zoomFactor);
+            h = (int)(gridHeight / zoomFactor);
+
             ShapePoint topLeft = new ShapePoint();
             topLeft.screenX = x - hoff;
             topLeft.screenY = y - voff;
@@ -517,20 +563,26 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         g.drawImage(buf, 0, 0, null);
     }
 
-    private void drawPoint(Graphics g, int x, int y, int radius) {
+    private void drawPoint(Graphics g, int x, int y) {
         g.fillOval(
-            x - radius,
-            y - radius,
-            2 * radius,
-            2 * radius
+            x - RADIUS,
+            y - RADIUS,
+            2 * RADIUS,
+            2 * RADIUS
         );
     }
 
     public synchronized void paint(Graphics g) {
+        int hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
+        int vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
+        int gridWidth = hslice * subdivisions;
+        int gridHeight = vslice * subdivisions;
+        int hoff = PADDING;
+        int voff = (getHeight() - gridHeight) / 2;
         int y;
 
         g.setColor(Color.black);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        g.drawRect(0, 0, getWidth(), getHeight());
 
         ((Graphics2D)g).setRenderingHint(
             RenderingHints.KEY_ANTIALIASING,
@@ -543,13 +595,6 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         );
 
         g.setColor(GRID_COLOR);
-
-        int hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
-        int vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
-        int gridWidth = hslice * subdivisions;
-        int gridHeight = vslice * subdivisions;
-        int hoff = PADDING;
-        int voff = (getHeight() - gridHeight) / 2;
 
         for (int i=0; i<(subdivisions+1); i++) {
             g.drawLine(hoff, voff + i * vslice, hoff + gridWidth, voff + i * vslice);
@@ -629,8 +674,14 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             g.drawRect(x, y, w, h);
         }
 
+        g.setColor(Color.gray);
+
+        for (ShapePoint p : tripPoints) {
+            latLongToScreenXY(gridWidth, gridHeight, p);
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY);
+        }
+
         ShapePoint p;
-        int radius = 2;
 
         g.setColor(INACTIVE_LOCATION);
 
@@ -638,7 +689,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             p = e.position;
             latLongToScreenXY(gridWidth, gridHeight, p);
 
-            drawPoint(g, PADDING + p.screenX, voff + p.screenY, radius);
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY);
         }
 
         if (eventList.size() == 0) return;
@@ -649,7 +700,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         p = e.position;
         latLongToScreenXY(gridWidth, gridHeight, p);
 
-        drawPoint(g, PADDING + p.screenX, voff + p.screenY, radius);
+        drawPoint(g, PADDING + p.screenX, voff + p.screenY);
 
         y = voff + 6;
         int step = g.getFontMetrics().getHeight() + 1;
@@ -674,10 +725,27 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         GraphicsUtil.drawString(g, hhmmss, 5, 5);
         GraphicsUtil.drawString(g, frameString, 80, 5);
+        GraphicsUtil.drawString(g, declaredTripID, 5, 30);
+    }
+
+    private static void usage() {
+        System.err.println("usage: TripInferenceVisualizer -D|--data-dir <data-dir>");
+        System.exit(1);
     }
 
     public static void main(String[] arg) throws Exception {
-        new TripInferenceVisualizer();
+        String dataDir = null;
+
+        for (int i=0; i<arg.length; i++) {
+            if ((arg[i].equals("-D") || arg[i].equals("--data-dir")) && i < arg.length - 1) {
+                dataDir = arg[++i];
+                continue;
+            }
+        }
+
+        if (dataDir == null) usage();
+
+        new TripInferenceVisualizer(dataDir);
     }
 }
 
