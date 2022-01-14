@@ -257,7 +257,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration,"testUuid","testAgent","testVehicleId");
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId");
                     tdList.add(td);
                     tdMap.put(id, td);
 
