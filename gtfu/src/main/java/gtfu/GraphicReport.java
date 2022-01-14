@@ -58,7 +58,7 @@ public class GraphicReport {
     private static final float DOT_SIZE = 1.75f * SCALE;
     private static final int DOT_SIZE_MULTIPLIER = 5;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
-    private static final int TILE_SIZE = 200 * SCALE;
+    private static final int TILE_SIZE = 300 * SCALE;
     private static final int MIN_HEIGHT = 40 * SCALE;
     private static final int ROW_HEIGHT = 30 * SCALE;
 

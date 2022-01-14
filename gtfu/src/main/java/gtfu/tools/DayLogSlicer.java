@@ -84,12 +84,13 @@ public class DayLogSlicer {
             }
             String name = trip.getHeadsign();
 
-            // Default to trip_headsign. Use routeName if null
-            if (name == null) {
+            // Use routeName if Headsign is null
+            if (name == null || name == "") {
                 String route_id = trip.getRouteID();
                 Route route = routeCollection.get(route_id);
                 name = route.getName();
-                if (name == null) {
+                // Use tripID if routeName is null
+                if (name == null || name == "") {
                     name = id;
                 }
             }
