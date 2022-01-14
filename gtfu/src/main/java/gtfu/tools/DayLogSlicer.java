@@ -15,7 +15,7 @@ import gtfu.TripReportData;
 import gtfu.Debug;
 
 public class DayLogSlicer {
-    private Map<String, List<GPSData>> gpsMap;
+    private Map<String, Map<String, GPSData>> gpsMap;
     private Map<String, String> uuidMap;
     private Map<String, String> agentMap;
     private Map<String, String> vehicleIdMap;
@@ -23,7 +23,7 @@ public class DayLogSlicer {
     private Map<String, TripReportData> tdMap;
     private int startSecond;
 
-    public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
+  public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
         gpsMap = new HashMap();
         uuidMap = new HashMap();
         agentMap = new HashMap();
@@ -56,14 +56,21 @@ public class DayLogSlicer {
             vehicleIdMap.put(tripID,vehicleId);
             uuidMap.put(tripID,uuid);
             agentMap.put(tripID,agent);
-            List<GPSData> list = gpsMap.get(tripID);
 
-            if (list == null) {
-                list = new ArrayList<GPSData>();
-                gpsMap.put(tripID, list);
+            String latLon = String.valueOf(lat) + String.valueOf(lon);
+            if(gpsMap.get(tripID) == null){
+                Map<String, GPSData> latLongMap = new HashMap();
+                latLongMap.put(latLon, new GPSData(seconds * 1000l, lat, lon, 1));
+                gpsMap.put(tripID,latLongMap);
             }
-
-            list.add(new GPSData(seconds * 1000l, lat, lon));
+            else {
+                if (gpsMap.get(tripID).get(latLon) == null) {
+                    gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, lat, lon, 1));
+                }
+                else{
+                    gpsMap.get(tripID).get(latLon).increment();
+                }
+            }
         }
 
         // Debug.log("- map.size(): " + map.size());
@@ -76,13 +83,16 @@ public class DayLogSlicer {
                 continue;
             }
             String name = trip.getHeadsign();
+
             // Default to trip_headsign. Use routeName if null
-            if (name == null){
+            if (name == null) {
                 String route_id = trip.getRouteID();
                 Route route = routeCollection.get(route_id);
                 name = route.getName();
+                if (name == null) {
+                    name = id;
+                }
             }
-
             // Debug.log("++ id: " + trip.getName());
 
             int start = trip.getStartTime() * 1000;
@@ -107,7 +117,7 @@ public class DayLogSlicer {
         Collections.sort(tdList);
     }
 
-    public Map<String, List<GPSData>> getMap() {
+    public Map<String, Map<String, GPSData>> getMap() {
         return gpsMap;
     }
 

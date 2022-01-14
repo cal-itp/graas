@@ -11,7 +11,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
-
 import java.awt.geom.Path2D;
 
 import javax.imageio.ImageIO;
@@ -56,6 +55,8 @@ public class GraphicReport {
         "vehicle-id", "timestamp", "lat", "long", "trip-id", "agency-id", "uuid", "agent"
     };
     private static final int SCALE = 2;
+    private static final float DOT_SIZE = 1.75f * SCALE;
+    private static final int DOT_SIZE_MULTIPLIER = 5;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 200 * SCALE;
     private static final int MIN_HEIGHT = 40 * SCALE;
@@ -64,11 +65,11 @@ public class GraphicReport {
     private TripCollection tripCollection;
     private RouteCollection routeCollection;
     private ShapeCollection shapeCollection;
-    private Map<String, List<GPSData>> map;
+    private Map<String, Map<String, GPSData>> gpsMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
     private BufferedImage img;
-    private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, 1.75f * SCALE, 1.75f * SCALE);
+    private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, DOT_SIZE, DOT_SIZE);
     private Rectangle2D clipRect = new Rectangle2D.Float();
     private Font font;
     private Font smallFont;
@@ -131,7 +132,7 @@ public class GraphicReport {
 
             List<String> lines = logs.get(key);
             DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
-            map = dls.getMap();
+            gpsMap = dls.getMap();
             tdList = dls.getTripReportDataList();
             tdMap = dls.getTripReportDataMap();
             int startSecond = dls.getStartSecond();
@@ -251,7 +252,7 @@ public class GraphicReport {
             if (Math.random() < prob) {
                 String id = t.getID();
 
-                if (map.get(id) == null) {
+                if (gpsMap.get(id) == null) {
                     int start = t.getStartTime() * 1000;
                     int t1 = t.getTimeAt(0);
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
@@ -261,19 +262,19 @@ public class GraphicReport {
                     tdList.add(td);
                     tdMap.put(id, td);
 
-                    List<GPSData> l = new ArrayList<GPSData>();
+                    Map<String, GPSData> latLongMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
                     int step = 5 * 60 * 1000;
                     int offset = 0;
 
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
-
-                        l.add(new GPSData(midnight + start + offset, p.lat, p.lon));
+                        String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
+                        latLongMap.put(latLon, new GPSData(midnight + start + offset, p.lat, p.lon, 1));
                         offset += step;
                     }
 
-                    map.put(id, l);
+                    gpsMap.put(id,latLongMap);
                 }
             }
         }
@@ -362,13 +363,13 @@ public class GraphicReport {
         g.setColor(ACCENT);
         yoff = 4 * SCALE;
 
-        for (String id : map.keySet()) {
-            List<GPSData> list = map.get(id);
+        for (String id : gpsMap.keySet()) {
+            Map<String, GPSData> latLonMap = gpsMap.get(id);
             TripReportData td = tdMap.get(id);
             if (td == null) continue;
 
-            for (GPSData p : list) {
-                int dayMillis = Time.getDayOffsetMillis(p.millis);
+            for (String latLon : latLonMap.keySet()) {
+                int dayMillis = Time.getDayOffsetMillis(latLonMap.get(latLon).millis);
                 int x = getDayFraction(bw, dayMillis);
 
                 g.drawLine(start + x, td.y + yoff, start + x, td.y + td.height - yoff);
@@ -430,8 +431,6 @@ public class GraphicReport {
 
             g.translate(x + inset, y + inset);
             drawMap(g, td, length);
-
-
             g.setTransform(t);
         }
 
@@ -443,7 +442,7 @@ public class GraphicReport {
 
         Area area = new Area();
 
-        List<GPSData> gpsl = map.get(td.id);
+        Map<String, GPSData> latLonMap = gpsMap.get(td.id);
         //Debug.log("- gpsl.size(): " + gpsl.size());
 
         Trip trip = tripCollection.get(td.id);
@@ -457,8 +456,8 @@ public class GraphicReport {
             area.update(sp);
         }
 
-        for (GPSData d : gpsl) {
-            area.update(d.lat, d.lon);
+        for (String latLon : latLonMap.keySet()) {
+            area.update(latLonMap.get(latLon).lat, latLonMap.get(latLon).lon);
         }
 
         //g.setClip(0, 0, length, length);
@@ -483,16 +482,17 @@ public class GraphicReport {
         }
 
         g.draw(path);
-
-
         g.setStroke(savedStroke);
         g.setColor(ACCENT);
 
         // Draw vehicle location ---
-        for (int i=0; i<gpsl.size(); i++) {
-            GPSData d = gpsl.get(i);
-            Point p = latLongToScreenXY(area, d.lat, d.lon, length, length);
+        for (String latLon : latLonMap.keySet()) {
+            Point p = latLongToScreenXY(area, latLonMap.get(latLon).lat, latLonMap.get(latLon).lon, length, length);
 
+            Integer count = latLonMap.get(latLon).count;
+            float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);
+            dot.width = scaledDotSize;
+            dot.height = scaledDotSize;
             //g.fillOval(p.x - 1, p.y - 1, 2, 2);
             dot.x = p.x - dot.width / 2;
             dot.y = p.y - dot.width / 2;

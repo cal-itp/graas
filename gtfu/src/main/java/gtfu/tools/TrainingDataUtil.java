@@ -50,16 +50,16 @@ public class TrainingDataUtil {
 
         DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
         List<TripReportData> tdList = dls.getTripReportDataList();
-        Map<String, List<GPSData>> map = dls.getMap();
+        Map<String, Map<String, GPSData>> gpsMap = dls.getMap();
         int tileIndex = 0;
 
         for (TripReportData td : tdList) {
-            List<GPSData> list = map.get(td.id);
+            Map<String, GPSData> latLonMap = gpsMap.get(td.id);
 
-            String folderName = makeFolder(outputDir, list.get(0).millis, agencyID);
+            String folderName = makeFolder(outputDir, latLonMap.get(latLonMap.keySet().stream().findFirst()).millis, agencyID);
             Debug.log("- folderName: " + folderName);
 
-            writePositionsToFile(folderName + "/updates.txt", list);
+            writePositionsToFile(folderName + "/updates.txt", latLonMap);
             writeStringToFile(folderName + "/metadata.txt", td.id);
 
             Trip trip = tripCollection.get(td.id);
@@ -79,13 +79,13 @@ public class TrainingDataUtil {
         }
     }
 
-    private static void writePositionsToFile(String path, List<GPSData> list) throws Exception {
+    private static void writePositionsToFile(String path, Map<String,GPSData> latLonMap) throws Exception {
         try (
             FileOutputStream fos = new FileOutputStream(path);
             PrintWriter out = new PrintWriter(fos)
         ) {
-            for (GPSData gps : list) {
-                out.println(gps.toCSVLine());
+            for (String latLon : latLonMap.keySet()) {
+                out.println(latLonMap.get(latLon).toCSVLine());
             }
         }
     }
