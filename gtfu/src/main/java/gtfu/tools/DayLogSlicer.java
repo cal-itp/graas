@@ -13,6 +13,7 @@ import gtfu.RouteCollection;
 import gtfu.Route;
 import gtfu.TripReportData;
 import gtfu.Debug;
+import gtfu.Util;
 
 public class DayLogSlicer {
     private Map<String, Map<String, GPSData>> gpsMap;
@@ -23,7 +24,7 @@ public class DayLogSlicer {
     private Map<String, TripReportData> tdMap;
     private int startSecond;
 
-  public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
+    public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
         gpsMap = new HashMap();
         uuidMap = new HashMap();
         agentMap = new HashMap();
@@ -85,12 +86,12 @@ public class DayLogSlicer {
             String name = trip.getHeadsign();
 
             // Use routeName if Headsign is null
-            if (name == null || name == "") {
+            if (Util.isEmpty(name)) {
                 String route_id = trip.getRouteID();
                 Route route = routeCollection.get(route_id);
                 name = route.getName();
                 // Use tripID if routeName is null
-                if (name == null || name == "") {
+                if (Util.isEmpty(name)) {
                     name = id;
                 }
             }

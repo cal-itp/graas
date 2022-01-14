@@ -12,7 +12,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Path2D;
-
 import javax.imageio.ImageIO;
 
 import java.io.ByteArrayOutputStream;
