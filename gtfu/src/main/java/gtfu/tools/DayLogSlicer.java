@@ -59,18 +59,18 @@ public class DayLogSlicer {
             agentMap.put(tripID,agent);
 
             String latLon = String.valueOf(lat) + String.valueOf(lon);
+            // If there is no LatLonMap for this trip, add it.
             if(gpsMap.get(tripID) == null){
-                Map<String, GPSData> latLongMap = new HashMap();
-                latLongMap.put(latLon, new GPSData(seconds * 1000l, lat, lon, 1));
-                gpsMap.put(tripID,latLongMap);
+                Map<String, GPSData> latLonMap = new HashMap();
+                gpsMap.put(tripID,latLonMap);
             }
-            else {
-                if (gpsMap.get(tripID).get(latLon) == null) {
-                    gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, lat, lon, 1));
-                }
-                else{
-                    gpsMap.get(tripID).get(latLon).increment();
-                }
+            // If there is no existing GPSData for this latLon value, add it
+            if (gpsMap.get(tripID).get(latLon) == null) {
+                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, lat, lon));
+            }
+            // If there is already a GPSData for this latLon value, increment the count
+            else{
+                gpsMap.get(tripID).get(latLon).increment();
             }
         }
 

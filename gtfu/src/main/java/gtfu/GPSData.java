@@ -6,11 +6,11 @@ public class GPSData {
     public float lon;
     public int count;
 
-    public GPSData(long millis, float lat, float lon, int count) {
+    public GPSData(long millis, float lat, float lon) {
         this.millis = millis;
         this.lat = lat;
         this.lon = lon;
-        this.count = count;
+        this.count = 1;
     }
 
     public String toString() {

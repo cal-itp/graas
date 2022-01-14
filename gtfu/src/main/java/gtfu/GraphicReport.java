@@ -55,7 +55,7 @@ public class GraphicReport {
     };
     private static final int SCALE = 2;
     private static final float DOT_SIZE = 1.75f * SCALE;
-    private static final int DOT_SIZE_MULTIPLIER = 5;
+    private static final int DOT_SIZE_MULTIPLIER = 8;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 300 * SCALE;
     private static final int MIN_HEIGHT = 40 * SCALE;
@@ -261,7 +261,7 @@ public class GraphicReport {
                     tdList.add(td);
                     tdMap.put(id, td);
 
-                    Map<String, GPSData> latLongMap = new HashMap();
+                    Map<String, GPSData> latLonMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
                     int step = 5 * 60 * 1000;
                     int offset = 0;
@@ -269,11 +269,11 @@ public class GraphicReport {
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
                         String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
-                        latLongMap.put(latLon, new GPSData(midnight + start + offset, p.lat, p.lon, 1));
+                        latLonMap.put(latLon, new GPSData(midnight + start + offset, p.lat, p.lon));
                         offset += step;
                     }
 
-                    gpsMap.put(id,latLongMap);
+                    gpsMap.put(id,latLonMap);
                 }
             }
         }
@@ -427,7 +427,6 @@ public class GraphicReport {
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             AffineTransform t = g.getTransform();
-
             g.translate(x + inset, y + inset);
             drawMap(g, td, length);
             g.setTransform(t);
