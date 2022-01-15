@@ -81,7 +81,6 @@ public class TripScheduleCollection implements Serializable {
                 schedule = new TripSchedule(trip);
                 schedule.add(stop, 0, 0, daySeconds);
                 trip.setSchedule(schedule);
-
             }
 
             lastTripID = tripID;

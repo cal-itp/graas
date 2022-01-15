@@ -1,2 +1,0 @@
-feed_publisher_name,feed_publisher_url,feed_contact_email,feed_contact_url,feed_lang,feed_start_date,feed_end_date,feed_version
-Transnnovation,http://www.mjcaction.com/,marcy@mjcaction.com,https://www.mecatran.com/,en,20210102,20220228,2021-12-03T12:31:24Z
