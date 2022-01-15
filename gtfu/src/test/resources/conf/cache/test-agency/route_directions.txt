@@ -1,0 +1,5 @@
+route_id,direction_id,route_direction_name
+ROUTEA,0,Eastbound
+ROUTEA,1,Westbound
+ROUTEB,0,Grand Ave
+ROUTEB,1,Sagunto and Meadowvale

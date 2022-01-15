@@ -19,10 +19,10 @@ import gtfu.tools.AgencyYML;
 public class LoadAgencyDataTest {
 
     public LoadAgencyDataTest(String cacheDir, String agencyID) throws Exception {
-        new LoadAgencyDataTest(cacheDir, agencyID, false);
+        new LoadAgencyDataTest(cacheDir, agencyID, true);
     }
 
-    public LoadAgencyDataTest(String cacheDir, String agencyID, boolean skipCacheUpdate) throws Exception {
+    public LoadAgencyDataTest(String cacheDir, String agencyID, boolean updateCache) throws Exception {
         Debug.log("LoadAgencyDataTest.LoadAgencyDataTest()");
         Debug.log("- cacheDir: " + cacheDir);
         Debug.log("- agencyID: " + agencyID);
@@ -33,7 +33,7 @@ public class LoadAgencyDataTest {
 
         ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
 
-        if (!skipCacheUpdate){
+        if (updateCache){
             Util.updateCacheIfNeeded(cacheDir, agencyID, gtfsUrl, progressObserver);
         }
 

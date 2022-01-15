@@ -11,6 +11,10 @@ public class TripScheduleCollection implements Serializable {
     private Map<String, TripSchedule> map;
 
     public TripScheduleCollection(String path, TripCollection tripCollection, StopCollection stopCollection, ProgressObserver observer) {
+        this(path, tripCollection, stopCollection, observer, false);
+    }
+
+    public TripScheduleCollection(String path, TripCollection tripCollection, StopCollection stopCollection, ProgressObserver observer, boolean skipErrors) {
         this();
 
         TextFile stf = new TextFile(path + "/stop_times.txt");
@@ -35,6 +39,18 @@ public class TripScheduleCollection implements Serializable {
 
 
             if (Util.isEmpty(arrivalTime)) continue;
+            if (trip == null) {
+                // This error message is so common noisy that we'll need better formatting in order launch it
+                // TODO: launch stop_time failure messages
+                // Util.fail(
+                //     String.format(
+                //         "fatal error, stop_times.txt references trip ID '%s', which is either absent from trips.txt or omitted due to upstream issue",
+                //         tripID
+                //     ),
+                //     !skipErrors
+                // );
+                continue;
+            }
             int daySeconds = Time.getMillisForTime(arrivalTime) / 1000;
 
             stop = stopCollection.get(stopID);
@@ -65,6 +81,7 @@ public class TripScheduleCollection implements Serializable {
                 schedule = new TripSchedule(trip);
                 schedule.add(stop, 0, 0, daySeconds);
                 trip.setSchedule(schedule);
+
             }
 
             lastTripID = tripID;
