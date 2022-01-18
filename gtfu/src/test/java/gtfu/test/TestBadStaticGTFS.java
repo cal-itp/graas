@@ -19,7 +19,7 @@ class TestBadGTFS {
         Util.setReporter(reporter);
 
         int expectedFailures = 30;
-        String cachePath = "src/test/resources/test-gtfs/bad-static-gtfs";
+        String cachePath = "src/test/resources/test-gtfs/";
         String agencyID = "bad-static-gtfs";
 
         try {
