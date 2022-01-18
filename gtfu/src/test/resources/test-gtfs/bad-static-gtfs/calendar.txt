@@ -1,0 +1,2 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date,service_name
+11219341,1,1,1,1,1,1,0,20210102,20220228,mon-sat
