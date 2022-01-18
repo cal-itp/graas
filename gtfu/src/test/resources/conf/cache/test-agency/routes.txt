@@ -1,2 +1,0 @@
-route_id,agency_id,route_short_name,tts_route_short_name,route_long_name,tts_route_long_name,route_desc,route_type,route_url,route_color,route_text_color,route_sort_order,direction0_name,direction1_name
-ROUTEA,11214031,,,Express,,,3,https://www.syvt.com/364/Schedule,AE589B,FFFFFF,,Eastbound,Westbound
