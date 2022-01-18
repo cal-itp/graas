@@ -32,6 +32,7 @@ public class DayLogSlicer {
         tdList = new ArrayList();
         tdMap = new HashMap();
         startSecond = -1;
+        int previousUpdateSeconds = 999999999;
 
         for (String line : lines) {
             String[] arg = line.split(",");
@@ -42,6 +43,7 @@ public class DayLogSlicer {
             String tripID = arg[4];
             String uuid = arg[6];
             String agent = null;
+
             //If agent is array of strings, extract the string value
             //There may be unexpected behavior if multiple strings in array
             //TODO: consider updating graas.js to send string rather than array of strings
@@ -64,9 +66,10 @@ public class DayLogSlicer {
                 Map<String, GPSData> latLonMap = new HashMap();
                 gpsMap.put(tripID,latLonMap);
             }
-            // If there is no existing GPSData for this latLon value, add it
+            // If there is no existing GPSData for this latLon value, add it and update previousUpdateSeconds
             if (gpsMap.get(tripID).get(latLon) == null) {
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, lat, lon));
+                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, seconds - previousUpdateSeconds, lat, lon));
+                previousUpdateSeconds = seconds;
             }
             // If there is already a GPSData for this latLon value, increment the count
             else{
@@ -107,10 +110,9 @@ public class DayLogSlicer {
             // Debug.log("++   end: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   duration: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   durationMins: " + durationMins);
-
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(tripID)));
                 tdList.add(td);
                 tdMap.put(id, td);
             }

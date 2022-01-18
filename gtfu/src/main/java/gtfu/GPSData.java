@@ -2,12 +2,14 @@ package gtfu;
 
 public class GPSData {
     public long millis;
+    public int secsSinceLastUpdate;
     public float lat;
     public float lon;
     public int count;
 
-    public GPSData(long millis, float lat, float lon) {
+    public GPSData(long millis, int secsSinceLastUpdate, float lat, float lon) {
         this.millis = millis;
+        this.secsSinceLastUpdate = secsSinceLastUpdate;
         this.lat = lat;
         this.lon = lon;
         this.count = 1;

@@ -31,6 +31,7 @@ import gtfu.tools.DB;
 import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
+import gtfu.tools.Stats;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -257,9 +258,7 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId");
-                    tdList.add(td);
-                    tdMap.put(id, td);
+
 
                     Map<String, GPSData> latLonMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
@@ -269,12 +268,15 @@ public class GraphicReport {
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
                         String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
-                        latLonMap.put(latLon, new GPSData(midnight + start + offset, p.lat, p.lon));
+                        latLonMap.put(latLon, new GPSData(midnight + start + offset, start, p.lat, p.lon));
                         offset += step;
                     }
 
                     gpsMap.put(id,latLonMap);
                 }
+                TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId", new Stats(gpsMap.get(tripID)));
+                tdList.add(td);
+                tdMap.put(id, td);
             }
         }
     }
