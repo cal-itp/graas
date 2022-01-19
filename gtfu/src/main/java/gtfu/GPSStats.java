@@ -15,14 +15,14 @@ public class GPSStats {
 
     public GPSStats(Map<String, GPSData> latLonMap) {
         int runningTotalUpdates = 0;
-        int runningTimeSinceUpdateSum = 0;
+        int runningTotalTimeSinceUpdate = 0;
         int secsSinceLastUpdate = 0;
 
         for (String latLon : latLonMap.keySet()) {
             secsSinceLastUpdate = latLonMap.get(latLon).secsSinceLastUpdate;
             if(secsSinceLastUpdate >= 0) {
                 runningTotalUpdates += 1;
-                runningTimeSinceUpdateSum += latLonMap.get(latLon).secsSinceLastUpdate;
+                runningTotalTimeSinceUpdate += latLonMap.get(latLon).secsSinceLastUpdate;
                 if (secsSinceLastUpdate > maxUpdateTime) {
                         maxUpdateTime = secsSinceLastUpdate;
                     }
@@ -31,7 +31,7 @@ public class GPSStats {
                 }
            }
         }
-        avgUpdateTime = (float) runningTimeSinceUpdateSum / (float) runningTotalUpdates;
+        avgUpdateTime = (float) runningTotalTimeSinceUpdate / (float) runningTotalUpdates;
     }
 
     public String getAverageUpdateTimeStr() {

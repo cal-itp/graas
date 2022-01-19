@@ -59,7 +59,7 @@ public class GraphicReport {
     private static final int SCALE = 2;
     private static final float DOT_SIZE = 1.75f * SCALE;
     private static final int DOT_SIZE_MULTIPLIER = 8;
-    private static final double OPACITY_MULTIPLIER = 0.98f;
+    private static final double OPACITY_MULTIPLIER = 0.98;
     private static final double ALPHA_MIN = 0.4;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 300 * SCALE;
@@ -255,19 +255,17 @@ public class GraphicReport {
         for (Trip t : tripCollection) {
             if (Math.random() < prob) {
                 String id = t.getID();
-                int start, t1, t2, duration = 0;
-                int step = 5 * 60 * 1000;
-                int offset = 0;
 
                 if (gpsMap.get(id) == null) {
-                    start = t.getStartTime() * 1000;
-                    t1 = t.getTimeAt(0);
-                    t2 = t.getTimeAt(t.getStopSize() - 1);
-                    duration = t2 - t1;
+                    int start = t.getStartTime() * 1000;
+                    int t1 = t.getTimeAt(0);
+                    int t2 = t.getTimeAt(t.getStopSize() - 1);
+                    int duration = t2 - t1;
 
                     Map<String, GPSData> latLonMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
-
+                    int step = 5 * 60 * 1000;
+                    int offset = 0;
 
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);

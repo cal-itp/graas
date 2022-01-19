@@ -35,7 +35,6 @@ public class DayLogSlicer {
         tdMap = new HashMap();
         previousUpdateMap = new HashMap();
         startSecond = -1;
-        Integer previousUpdateSeconds = null;
 
         for (String line : lines) {
             String[] arg = line.split(",");
@@ -71,12 +70,11 @@ public class DayLogSlicer {
                 gpsMap.put(tripID,latLonMap);
             }
 
-            // If there is no existing GPSData for this latLon value, add it and update previousUpdateSeconds for that trip
+            // If there is no existing GPSData for this latLon value, add it and update previousUpdate for that trip
             if (gpsMap.get(tripID).get(latLon) == null) {
                 // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
                 // it relies on the list being sorted by timestmap, which it is.
-                previousUpdateSeconds = previousUpdateMap.get(tripID);
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, ((previousUpdateSeconds != null) ? seconds - previousUpdateSeconds : -1), lat, lon));
+                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, ((previousUpdateMap.get(tripID) != null) ? seconds - previousUpdateMap.get(tripID) : -1), lat, lon));
                 previousUpdateMap.put(tripID,seconds);
             }
 
