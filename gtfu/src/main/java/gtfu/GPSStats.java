@@ -46,9 +46,3 @@ public class GPSStats {
         return String.valueOf(maxUpdateTime);
     }
 }
-
-
-
-
-
-

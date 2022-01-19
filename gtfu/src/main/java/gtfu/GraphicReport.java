@@ -15,8 +15,6 @@ import java.awt.geom.Path2D;
 import java.awt.AlphaComposite;
 import javax.imageio.ImageIO;
 
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
