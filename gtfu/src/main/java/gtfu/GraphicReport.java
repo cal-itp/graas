@@ -12,7 +12,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Path2D;
+import java.awt.AlphaComposite;
 import javax.imageio.ImageIO;
+
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -31,7 +34,6 @@ import gtfu.tools.DB;
 import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
-import gtfu.tools.Stats;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -57,6 +59,8 @@ public class GraphicReport {
     private static final int SCALE = 2;
     private static final float DOT_SIZE = 1.75f * SCALE;
     private static final int DOT_SIZE_MULTIPLIER = 8;
+    private static final double OPACITY_MULTIPLIER = 0.98f;
+    private static final double ALPHA_MIN = 0.4;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 300 * SCALE;
     private static final int MIN_HEIGHT = 40 * SCALE;
@@ -251,32 +255,32 @@ public class GraphicReport {
         for (Trip t : tripCollection) {
             if (Math.random() < prob) {
                 String id = t.getID();
+                int start, t1, t2, duration = 0;
+                int step = 5 * 60 * 1000;
+                int offset = 0;
 
                 if (gpsMap.get(id) == null) {
-                    int start = t.getStartTime() * 1000;
-                    int t1 = t.getTimeAt(0);
-                    int t2 = t.getTimeAt(t.getStopSize() - 1);
-                    int duration = t2 - t1;
-
-
+                    start = t.getStartTime() * 1000;
+                    t1 = t.getTimeAt(0);
+                    t2 = t.getTimeAt(t.getStopSize() - 1);
+                    duration = t2 - t1;
 
                     Map<String, GPSData> latLonMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
-                    int step = 5 * 60 * 1000;
-                    int offset = 0;
+
 
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
                         String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
-                        latLonMap.put(latLon, new GPSData(midnight + start + offset, start, p.lat, p.lon));
+                        latLonMap.put(latLon, new GPSData(midnight + start + offset, 3, p.lat, p.lon));
                         offset += step;
                     }
 
                     gpsMap.put(id,latLonMap);
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId", new GPSStats(gpsMap.get(id)));
+                    tdList.add(td);
+                    tdMap.put(id, td);
                 }
-                TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId", new Stats(gpsMap.get(tripID)));
-                tdList.add(td);
-                tdMap.put(id, td);
             }
         }
     }
@@ -399,7 +403,7 @@ public class GraphicReport {
 
         int lineHeight = (int)(font.getSize() * 1.33);
         int inset = TILE_SIZE / 10;
-        int length = TILE_SIZE - lineHeight * 4 - inset;
+        int length = TILE_SIZE - lineHeight * 5 - inset;
 
         for (int i=0; i<tdList.size(); i++) {
 
@@ -418,12 +422,17 @@ public class GraphicReport {
 
 
             g.setColor(FONT_COLOR);
-            s = "a: " + td.getAgent() + " o: " + td.getOs();
+            s = "a: " + td.getAgent() + ", o: " + td.getOs();
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
-            s =  "d: " + td.getDevice() + " v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            s =  "d: " + td.getDevice() + ", v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            sw = fm.stringWidth(s);
+            y = y + lineHeight;
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
+
+            s =  "avg: " + td.gpsStats.getAverageUpdateTimeStr() + ", min: " + td.gpsStats.getMinUpdateTimeStr() + ", max: " + td.gpsStats.getMaxUpdateTimeStr() + "";
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
@@ -491,11 +500,16 @@ public class GraphicReport {
 
             Integer count = latLonMap.get(latLon).count;
             float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);
+            double alpha = Math.pow(OPACITY_MULTIPLIER, (double) (count - 1) );
+            float alphaFinal = (float) ((alpha >= ALPHA_MIN) ? alpha : ALPHA_MIN);
             dot.width = scaledDotSize;
             dot.height = scaledDotSize;
+
             //g.fillOval(p.x - 1, p.y - 1, 2, 2);
             dot.x = p.x - dot.width / 2;
             dot.y = p.y - dot.width / 2;
+            AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER,alphaFinal);
+            g.setComposite(ac);
             g.fill(dot);
         }
 

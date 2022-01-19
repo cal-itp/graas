@@ -14,9 +14,11 @@ import gtfu.Route;
 import gtfu.TripReportData;
 import gtfu.Debug;
 import gtfu.Util;
+import gtfu.GPSStats;
 
 public class DayLogSlicer {
     private Map<String, Map<String, GPSData>> gpsMap;
+    private Map<String, Integer> previousUpdateMap;
     private Map<String, String> uuidMap;
     private Map<String, String> agentMap;
     private Map<String, String> vehicleIdMap;
@@ -31,8 +33,9 @@ public class DayLogSlicer {
         vehicleIdMap = new HashMap();
         tdList = new ArrayList();
         tdMap = new HashMap();
+        previousUpdateMap = new HashMap();
         startSecond = -1;
-        int previousUpdateSeconds = 999999999;
+        Integer previousUpdateSeconds = null;
 
         for (String line : lines) {
             String[] arg = line.split(",");
@@ -61,16 +64,22 @@ public class DayLogSlicer {
             agentMap.put(tripID,agent);
 
             String latLon = String.valueOf(lat) + String.valueOf(lon);
+
             // If there is no LatLonMap for this trip, add it.
             if(gpsMap.get(tripID) == null){
                 Map<String, GPSData> latLonMap = new HashMap();
                 gpsMap.put(tripID,latLonMap);
             }
-            // If there is no existing GPSData for this latLon value, add it and update previousUpdateSeconds
+
+            // If there is no existing GPSData for this latLon value, add it and update previousUpdateSeconds for that trip
             if (gpsMap.get(tripID).get(latLon) == null) {
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, seconds - previousUpdateSeconds, lat, lon));
-                previousUpdateSeconds = seconds;
+                // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
+                // it relies on the list being sorted by timestmap, which it is.
+                previousUpdateSeconds = previousUpdateMap.get(tripID);
+                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, ((previousUpdateSeconds != null) ? seconds - previousUpdateSeconds : -1), lat, lon));
+                previousUpdateMap.put(tripID,seconds);
             }
+
             // If there is already a GPSData for this latLon value, increment the count
             else{
                 gpsMap.get(tripID).get(latLon).increment();
@@ -112,7 +121,7 @@ public class DayLogSlicer {
             // Debug.log("++   durationMins: " + durationMins);
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(tripID)));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new GPSStats(gpsMap.get(id)));
                 tdList.add(td);
                 tdMap.put(id, td);
             }

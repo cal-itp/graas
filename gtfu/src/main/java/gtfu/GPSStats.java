@@ -1,5 +1,4 @@
-package gtfu.tools;
-import gtfu.*;
+package gtfu;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,21 +6,21 @@ import java.util.Map;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-public class Stats {
+public class GPSStats {
 
     private static final DecimalFormat df = new DecimalFormat("0.00");
     public int maxUpdateTime = 0;
     public int minUpdateTime = 999999;
     public float avgUpdateTime = 0;
 
-    public Stats(Map<String, GPSData> latLonMap) {
+    public GPSStats(Map<String, GPSData> latLonMap) {
         int runningTotalUpdates = 0;
         int runningTimeSinceUpdateSum = 0;
         int secsSinceLastUpdate = 0;
 
         for (String latLon : latLonMap.keySet()) {
             secsSinceLastUpdate = latLonMap.get(latLon).secsSinceLastUpdate;
-            if(secsSinceLastUpdate > 0) {
+            if(secsSinceLastUpdate >= 0) {
                 runningTotalUpdates += 1;
                 runningTimeSinceUpdateSum += latLonMap.get(latLon).secsSinceLastUpdate;
                 if (secsSinceLastUpdate > maxUpdateTime) {
@@ -35,15 +34,15 @@ public class Stats {
         avgUpdateTime = (float) runningTimeSinceUpdateSum / (float) runningTotalUpdates;
     }
 
-    public String getAverageUpdateTime() {
+    public String getAverageUpdateTimeStr() {
         return String.valueOf(df.format(avgUpdateTime));
     }
 
-    public String getMinUpdateTime() {
+    public String getMinUpdateTimeStr() {
         return String.valueOf(minUpdateTime);
     }
 
-    public String getMaxUpdateTime() {
+    public String getMaxUpdateTimeStr() {
         return String.valueOf(maxUpdateTime);
     }
 }

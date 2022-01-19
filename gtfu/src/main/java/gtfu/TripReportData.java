@@ -16,8 +16,9 @@ public class TripReportData implements Comparable<TripReportData> {
     String vehicleId;
     Client deviceClient;
     Parser uaParser = new Parser();
+    public GPSStats gpsStats;
 
-    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId) {
+    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId, GPSStats gpsStats) {
         this.id = id;
         this.name = name;
         this.start = start;
@@ -27,6 +28,7 @@ public class TripReportData implements Comparable<TripReportData> {
         this.vehicleId = vehicleId;
         // TODO: Create new file for getting deviceClient info
         this.deviceClient = uaParser.parse(agent);
+        this.gpsStats = gpsStats;
     }
 
     public int compareTo(TripReportData o) {
