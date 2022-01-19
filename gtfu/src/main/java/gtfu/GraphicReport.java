@@ -162,7 +162,7 @@ public class GraphicReport {
             // Debug.log("- name: " + name);
             // Debug.log("- date: " + date);
 
-            //addRandomTestData(1);
+            // addRandomTestData(1);
             // Debug.log("- tdList.size(): " + tdList.size());
 
             Graphics2D g = createCanvas(name, date);
@@ -269,13 +269,14 @@ public class GraphicReport {
 
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
+                        if (p == null) continue;
                         String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
                         latLonMap.put(latLon, new GPSData(midnight + start + offset, 3, p.lat, p.lon));
                         offset += step;
                     }
 
                     gpsMap.put(id,latLonMap);
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId", new GPSStats(gpsMap.get(id)));
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new GPSStats(gpsMap.get(id)));
                     tdList.add(td);
                     tdMap.put(id, td);
                 }

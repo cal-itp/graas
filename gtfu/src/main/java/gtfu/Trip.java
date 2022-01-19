@@ -234,6 +234,8 @@ public class Trip implements Serializable {
     }
 
     // input: offset time since trip start in milliseconds
+    // getLocation(0) sometimes returns null in GraphicReport (addRandomTestData).
+    // TODO: Look into underlying issue, possibly related to agency static GTFS gaps
     public ShapePoint getLocation(int millis) {
         if (millis < 0) millis = 0;
 
