@@ -1,5 +1,6 @@
 import sys
 import json
+from datetime import datetime
 
 # a small tool to filter server logs. Intended usage is 'gcloud app logs tail | python log-filter.py'
 # this approach to filtering is brittle as is depends on server debug output string format
@@ -14,7 +15,9 @@ def main(args):
         if  index > 0:
             str = line[index + len(KEY):]
             obj = json.loads(str)
-            print(f'{obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["lat"]} {obj["long"]}')
+            ts = int(obj["timestamp"])
+            hms = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+            print(f'{hms} {obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["lat"]} {obj["long"]}')
             sys.stdout.flush()
 
 if __name__ == '__main__':
