@@ -1,5 +1,7 @@
 # Babyshark Open-source Hardware Documentation:
 
+*NOTE*: the code to run on the hardware is kept [here](https://github.com/cal-itp/graas-hardware.git)
+
 ## Bill of Materials
 
 Below are the materials used by the Cal-ITP team to construct the original Baby Shark. These materials are not requirements, rather they are suggestions. So long as the end product meets the product goals and is completed at a low cost, modifications are allowed and encouraged.
@@ -167,21 +169,21 @@ Once you are done with these steps you should have something that looks like thi
 ```
 mkdir projects
 cd projects
-git clone https://github.com/cal-itp/graas.git
-cd graas/hardware
+git clone https://github.com/cal-itp/graas-hardware.git
+cd graas-hardware
 mkdir ~/tmp
-cp setup.cfg ~/tmp
+cp setup-graas.cfg ~/tmp
 ```
-* Edit `~/tmp/setup.cfg` to populate unset values. *Note*: setting `ngrok` values is optional *Note*: check [here](https://github.com/cal-itp/graas/blob/main/server/agency-config/keys/key-generation.txt) for how to generate an ECDSA 256 signing key  
+* Edit `~/tmp/setup-graas.cfg` to populate unset values. *Note*: setting `ngrok` values is optional *Note*: check [here](https://github.com/cal-itp/graas/blob/main/server/agency-config/keys/key-generation.txt) for how to generate an ECDSA 256 signing key  
 * In the opened terminal window type:
 ```
-./setup.sh ~/tmp/setup.cfg
+./setup.sh ~/tmp/setup-graas.cfg
 ```
 * After pi reboots, log in with the password you set, open a terminal window and type `tf`. After you hit enter, you should see messages about sending GPS updates to the server if everything is set up right  
 
 ## Final Assembly
 
-A 3D printed case was used to house the hardware. You can find a 3D .stl CAD model [here](https://github.com/cal-itp/graas/tree/main/hardware/3d-print).
+A 3D printed case was used to house the hardware. You can find a 3D .stl CAD model [here](https://github.com/cal-itp/graas/tree/main/hardware).
 
 Using the above case is not a requirement. However, the final product needs to be housed in a safe protective casing that does not pose a health or safety issue by exposing the internal components or by affecting the utility of the product.
 
