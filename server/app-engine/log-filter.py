@@ -14,7 +14,11 @@ def main(args):
         if  index > 0:
             str = line[index + len(KEY):]
             obj = json.loads(str)
-            print(f'{obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} trip_id={obj["trip-id"]} {obj["lat"]} {obj["long"]}')
+            print(f'{obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["lat"]} {obj["long"]}')
+            sys.stdout.flush()
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
