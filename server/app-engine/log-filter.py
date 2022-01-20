@@ -13,12 +13,16 @@ def main(args):
         index = line.find(KEY)
 
         if  index > 0:
-            str = line[index + len(KEY):]
-            obj = json.loads(str)
-            ts = int(obj["timestamp"])
-            hms = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-            print(f'{hms} {obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["lat"]} {obj["long"]}')
-            sys.stdout.flush()
+            try:
+                str = line[index + len(KEY):]
+                obj = json.loads(str)
+                ts = int(obj["timestamp"])
+                hms = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+                print(f'{hms} {obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["lat"]} {obj["long"]}')
+                sys.stdout.flush()
+            except Exception as e:
+                print(f'* exception: {e}')
+                print(f'* input was: {line}')
 
 if __name__ == '__main__':
     try:
