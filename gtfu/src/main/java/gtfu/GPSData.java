@@ -4,11 +4,13 @@ public class GPSData {
     public long millis;
     public float lat;
     public float lon;
+    public int count;
 
     public GPSData(long millis, float lat, float lon) {
         this.millis = millis;
         this.lat = lat;
         this.lon = lon;
+        this.count = 1;
     }
 
     public String toString() {
@@ -17,5 +19,9 @@ public class GPSData {
 
     public String toCSVLine() {
         return String.format("%d,%f,%f", millis / 1000, lat, lon);
+    }
+
+    public void increment() {
+        count++;
     }
 }

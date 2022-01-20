@@ -1,29 +1,71 @@
 package gtfu;
+import ua_parser.Parser;
+import ua_parser.Client;
 
 public class TripReportData implements Comparable<TripReportData> {
     public String id;
-    String routeName;
+    String name;
     int start;
     int duration;
     int x;
     int y;
     int width;
     int height;
+    String uuid;
+    String agent;
+    String vehicleId;
+    Client deviceClient;
+    Parser uaParser = new Parser();
 
-    public TripReportData(String id, String routeName, int start, int duration) {
+    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId) {
         this.id = id;
-        this.routeName = routeName;
+        this.name = name;
         this.start = start;
         this.duration = duration;
+        this.uuid = uuid;
+        this.agent = agent;
+        this.vehicleId = vehicleId;
+        // TODO: Create new file for getting deviceClient info
+        this.deviceClient = uaParser.parse(agent);
     }
 
     public int compareTo(TripReportData o) {
         return start - o.start;
     }
 
-    // Combining route name with start time creates a trip name
+    // Combining name with start time creates a trip name
     public String getTripName() {
-        return getCleanRouteName() + " @ " + Time.getHMForMillis(start);
+        return getCleanName() + " @ " + Time.getHMForMillis(start);
+    }
+
+    public String getUuidTail() {
+        return uuid.substring(uuid.length() - 4, uuid.length());
+    }
+
+    public String getAgent() {
+        String userAgentFamily = deviceClient.userAgent.family;
+        String userAgentMajor = deviceClient.userAgent.major;
+        String userAgentMinor = deviceClient.userAgent.minor;
+
+        return userAgentFamily + ((userAgentMajor == null) ? "" :
+                    ((userAgentMinor == null) ? "." + userAgentMajor :  "." + userAgentMajor + "." + userAgentMinor));
+    }
+
+    public String getOs() {
+        String osFamily = deviceClient.os.family;
+        String osMajor = deviceClient.os.major;
+        String osMinor = deviceClient.os.minor;
+
+        return osFamily + ((osMajor == null) ? "" :
+                    ((osMinor == null) ? "." + osMajor :  "." + osMajor + "." + osMinor));
+    }
+
+    public String getDevice() {
+        return deviceClient.device.family;
+    }
+
+    public String getVehicleId() {
+        return vehicleId;
     }
 
     public boolean overlaps(TripReportData td) {
@@ -33,8 +75,8 @@ public class TripReportData implements Comparable<TripReportData> {
 
     // This logic performs cleanup on use cases that may or may not still be present.
     // TODO: Consider removing
-    private String getCleanRouteName() {
-        String s = new String(routeName);
+    private String getCleanName() {
+        String s = new String(name);
         int i = s.length();
 
         int i1 = s.indexOf('(');

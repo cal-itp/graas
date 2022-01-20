@@ -29,6 +29,7 @@ public class TrainingDataUtil {
     private static void processGraphicReportOutput(String dataFile, String mapFile, String cacheDir, String outputDir) throws Exception {
         List<String> lines = Util.getFileContentsAsStrings(dataFile);
         TripCollection tripCollection;
+        RouteCollection routeCollection;
         ShapeCollection shapeCollection;
         List<BufferedImage> tileList = getCroppedTiles(mapFile);
 
@@ -44,6 +45,7 @@ public class TrainingDataUtil {
         try {
             Map<String, Object> collections = Util.loadCollections(cacheDir, agencyID, progressObserver);
             tripCollection = (TripCollection)collections.get("trips");
+            routeCollection = (RouteCollection)collections.get("routes");
             shapeCollection = (ShapeCollection)collections.get("shapes");
         } catch(Exception e) {
             Debug.error("* can't load agency data for: " + agencyID);
@@ -51,18 +53,18 @@ public class TrainingDataUtil {
             return;
         }
 
-        DayLogSlicer dls = new DayLogSlicer(tripCollection, lines);
+        DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
         List<TripReportData> tdList = dls.getTripReportDataList();
-        Map<String, List<GPSData>> map = dls.getMap();
+        Map<String, Map<String, GPSData>> gpsMap = dls.getMap();
         int tileIndex = 0;
 
         for (TripReportData td : tdList) {
-            List<GPSData> list = map.get(td.id);
+            Map<String, GPSData> latLonMap = gpsMap.get(td.id);
 
-            String folderName = makeFolder(outputDir, list.get(0).millis, agencyID);
+            String folderName = makeFolder(outputDir, latLonMap.get(latLonMap.keySet().stream().findFirst()).millis, agencyID);
             Debug.log("- folderName: " + folderName);
 
-            writePositionsToFile(folderName + "/updates.txt", list);
+            writePositionsToFile(folderName + "/updates.txt", latLonMap);
 
             StringBuilder metadata = new StringBuilder();
 
@@ -89,13 +91,13 @@ public class TrainingDataUtil {
         }
     }
 
-    private static void writePositionsToFile(String path, List<GPSData> list) throws Exception {
+    private static void writePositionsToFile(String path, Map<String,GPSData> latLonMap) throws Exception {
         try (
             FileOutputStream fos = new FileOutputStream(path);
             PrintWriter out = new PrintWriter(fos)
         ) {
-            for (GPSData gps : list) {
-                out.println(gps.toCSVLine());
+            for (String latLon : latLonMap.keySet()) {
+                out.println(latLonMap.get(latLon).toCSVLine());
             }
         }
     }
