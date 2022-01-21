@@ -14,7 +14,7 @@ import gtfu.Route;
 import gtfu.TripReportData;
 import gtfu.Debug;
 import gtfu.Util;
-import gtfu.GPSStats;
+import gtfu.Stats;
 
 public class DayLogSlicer {
     private Map<String, Map<String, GPSData>> gpsMap;
@@ -74,7 +74,11 @@ public class DayLogSlicer {
             if (gpsMap.get(tripID).get(latLon) == null) {
                 // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
                 // it relies on the list being sorted by timestmap, which it is.
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, ((previousUpdateMap.get(tripID) != null) ? seconds - previousUpdateMap.get(tripID) : -1), lat, lon));
+                int secsSinceLastUpdate = -1;
+                if (previousUpdateMap.get(tripID) != null) {
+                    secsSinceLastUpdate = seconds - previousUpdateMap.get(tripID);
+                }
+                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, secsSinceLastUpdate, lat, lon));
                 previousUpdateMap.put(tripID,seconds);
             }
 
@@ -119,7 +123,7 @@ public class DayLogSlicer {
             // Debug.log("++   durationMins: " + durationMins);
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new GPSStats(gpsMap.get(id)));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id)));
                 tdList.add(td);
                 tdMap.put(id, td);
             }

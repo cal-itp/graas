@@ -38,7 +38,7 @@ public class DB {
         list.add(sb.toString());
 
         Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-
+        // Note that at least one dependency (DayLogslicer.java) requires that this query be ordered by timestamp
         Query<Entity> query = Query.newEntityQueryBuilder()
                                     .setKind(kind)
                                     .setFilter(

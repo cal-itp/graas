@@ -274,7 +274,7 @@ public class GraphicReport {
                     }
 
                     gpsMap.put(id,latLonMap);
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new GPSStats(gpsMap.get(id)));
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id)));
                     tdList.add(td);
                     tdMap.put(id, td);
                 }
@@ -400,7 +400,7 @@ public class GraphicReport {
 
         int lineHeight = (int)(font.getSize() * 1.33);
         int inset = TILE_SIZE / 10;
-        int length = TILE_SIZE - lineHeight * 5 - inset;
+        int length = TILE_SIZE - lineHeight * 4 - inset;
 
         for (int i=0; i<tdList.size(); i++) {
 
@@ -429,7 +429,7 @@ public class GraphicReport {
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
-            s =  "avg: " + td.gpsStats.getAverageUpdateTimeStr() + ", min: " + td.gpsStats.getMinUpdateTimeStr() + ", max: " + td.gpsStats.getMaxUpdateTimeStr() + "";
+            s =  "avg: " + td.stats.getAverageUpdateTimeStr() + ", min: " + td.stats.getMinUpdateTimeStr() + ", max: " + td.stats.getMaxUpdateTimeStr() + "";
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
@@ -498,7 +498,7 @@ public class GraphicReport {
             Integer count = latLonMap.get(latLon).count;
             float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);
             double alpha = Math.pow(OPACITY_MULTIPLIER, (double) (count - 1) );
-            float alphaFinal = (float) ((alpha >= ALPHA_MIN) ? alpha : ALPHA_MIN);
+            float alphaFinal = (float) Math.max(alpha, ALPHA_MIN);
             dot.width = scaledDotSize;
             dot.height = scaledDotSize;
 

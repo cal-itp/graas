@@ -6,14 +6,14 @@ import java.util.Map;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-public class GPSStats {
+public class Stats {
 
     private static final DecimalFormat df = new DecimalFormat("0.00");
     public int maxUpdateTime = 0;
     public int minUpdateTime = 999999;
     public float avgUpdateTime = 0;
 
-    public GPSStats(Map<String, GPSData> latLonMap) {
+    public Stats(Map<String, GPSData> latLonMap) {
         int runningTotalUpdates = 0;
         int runningTotalTimeSinceUpdate = 0;
         int secsSinceLastUpdate = 0;
@@ -21,7 +21,7 @@ public class GPSStats {
         for (String latLon : latLonMap.keySet()) {
             secsSinceLastUpdate = latLonMap.get(latLon).secsSinceLastUpdate;
             if(secsSinceLastUpdate >= 0) {
-                runningTotalUpdates += 1;
+                runningTotalUpdates++;
                 runningTotalTimeSinceUpdate += latLonMap.get(latLon).secsSinceLastUpdate;
                 if (secsSinceLastUpdate > maxUpdateTime) {
                         maxUpdateTime = secsSinceLastUpdate;
