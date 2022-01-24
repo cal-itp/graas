@@ -14,9 +14,12 @@ import gtfu.Route;
 import gtfu.TripReportData;
 import gtfu.Debug;
 import gtfu.Util;
+import gtfu.Stats;
 
 public class DayLogSlicer {
     private Map<String, Map<String, GPSData>> gpsMap;
+    private Map<String, GPSData> latLonMap;
+    private Map<String, Integer> previousUpdateMap;
     private Map<String, String> uuidMap;
     private Map<String, String> agentMap;
     private Map<String, String> vehicleIdMap;
@@ -31,6 +34,7 @@ public class DayLogSlicer {
         vehicleIdMap = new HashMap();
         tdList = new ArrayList();
         tdMap = new HashMap();
+        previousUpdateMap = new HashMap();
         startSecond = -1;
 
         for (String line : lines) {
@@ -42,6 +46,7 @@ public class DayLogSlicer {
             String tripID = arg[4];
             String uuid = arg[6];
             String agent = null;
+
             //If agent is array of strings, extract the string value
             //There may be unexpected behavior if multiple strings in array
             //TODO: consider updating graas.js to send string rather than array of strings
@@ -59,18 +64,28 @@ public class DayLogSlicer {
             agentMap.put(tripID,agent);
 
             String latLon = String.valueOf(lat) + String.valueOf(lon);
+            latLonMap = gpsMap.get(tripID);
             // If there is no LatLonMap for this trip, add it.
-            if(gpsMap.get(tripID) == null){
-                Map<String, GPSData> latLonMap = new HashMap();
-                gpsMap.put(tripID,latLonMap);
+            if(latLonMap == null){
+                latLonMap = new HashMap();
+                gpsMap.put(tripID, latLonMap);
             }
-            // If there is no existing GPSData for this latLon value, add it
-            if (gpsMap.get(tripID).get(latLon) == null) {
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, lat, lon));
+
+            // If there is no existing GPSData for this latLon value, add it and update previousUpdate for that trip
+            if (latLonMap.get(latLon) == null) {
+                // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
+                // it relies on the list being sorted by timestmap, which it is.
+                int secsSinceLastUpdate = -1;
+                if (previousUpdateMap.get(tripID) != null) {
+                    secsSinceLastUpdate = seconds - previousUpdateMap.get(tripID);
+                }
+                latLonMap.put(latLon, new GPSData(seconds * 1000l, secsSinceLastUpdate, lat, lon));
+                previousUpdateMap.put(tripID, seconds);
             }
+
             // If there is already a GPSData for this latLon value, increment the count
             else{
-                gpsMap.get(tripID).get(latLon).increment();
+                latLonMap.get(latLon).increment();
             }
         }
 
@@ -107,10 +122,9 @@ public class DayLogSlicer {
             // Debug.log("++   end: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   duration: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   durationMins: " + durationMins);
-
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id).values()));
                 tdList.add(td);
                 tdMap.put(id, td);
             }

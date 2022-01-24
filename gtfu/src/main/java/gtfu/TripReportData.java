@@ -18,8 +18,9 @@ public class TripReportData implements Comparable<TripReportData> {
     String vehicleId;
     Client deviceClient;
     Parser uaParser = new Parser();
+    public Stats stats;
 
-    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId) {
+    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId, Stats stats) {
         this.id = id;
         this.name = name;
         this.start = start;
@@ -29,6 +30,7 @@ public class TripReportData implements Comparable<TripReportData> {
         this.vehicleId = vehicleId;
         // TODO: Create new file for getting deviceClient info
         this.deviceClient = uaParser.parse(agent);
+        this.stats = stats;
     }
 
     public int compareTo(TripReportData o) {
@@ -94,6 +96,19 @@ public class TripReportData implements Comparable<TripReportData> {
 
     public String getVehicleId() {
         return vehicleId;
+    }
+
+    public String getAvgUpdateInterval() {
+        return String.format("%.2f",stats.getAvg());
+    }
+
+    public String getMaxUpdateInterval() {
+        return String.format("%.0f",stats.getMax());
+    }
+
+    public String getMinUpdateInterval() {
+        return String.format("%.0f",stats.getMin());
+
     }
 
     public boolean overlaps(TripReportData td) {

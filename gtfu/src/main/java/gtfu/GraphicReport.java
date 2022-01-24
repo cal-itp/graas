@@ -12,6 +12,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Path2D;
+import java.awt.AlphaComposite;
 import javax.imageio.ImageIO;
 
 import java.io.ByteArrayOutputStream;
@@ -56,6 +57,8 @@ public class GraphicReport {
     private static final int SCALE = 2;
     private static final float DOT_SIZE = 1.75f * SCALE;
     private static final int DOT_SIZE_MULTIPLIER = 8;
+    private static final double OPACITY_MULTIPLIER = 0.98;
+    private static final double ALPHA_MIN = 0.4;
     private static final int CANVAS_WIDTH = 1200 * SCALE;
     private static final int TILE_SIZE = 300 * SCALE;
     private static final int MIN_HEIGHT = 40 * SCALE;
@@ -157,7 +160,7 @@ public class GraphicReport {
             // Debug.log("- name: " + name);
             // Debug.log("- date: " + date);
 
-            //addRandomTestData(1);
+            // addRandomTestData(1);
             // Debug.log("- tdList.size(): " + tdList.size());
 
             Graphics2D g = createCanvas(name, date);
@@ -257,10 +260,6 @@ public class GraphicReport {
                     int t2 = t.getTimeAt(t.getStopSize() - 1);
                     int duration = t2 - t1;
 
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "testUuid", "testAgent", "testVehicleId");
-                    tdList.add(td);
-                    tdMap.put(id, td);
-
                     Map<String, GPSData> latLonMap = new HashMap();
                     long midnight = Time.getMidnightTimestamp();
                     int step = 5 * 60 * 1000;
@@ -268,12 +267,16 @@ public class GraphicReport {
 
                     while (offset < duration) {
                         ShapePoint p = t.getLocation(offset);
+                        if (p == null) continue;
                         String latLon = String.valueOf(p.lat) + String.valueOf(p.lon);
-                        latLonMap.put(latLon, new GPSData(midnight + start + offset, p.lat, p.lon));
+                        latLonMap.put(latLon, new GPSData(midnight + start + offset, 3, p.lat, p.lon));
                         offset += step;
                     }
 
                     gpsMap.put(id,latLonMap);
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id).values()));
+                    tdList.add(td);
+                    tdMap.put(id, td);
                 }
             }
         }
@@ -416,12 +419,17 @@ public class GraphicReport {
 
 
             g.setColor(FONT_COLOR);
-            s = "a: " + td.getAgent() + " o: " + td.getOs();
+            s = "a: " + td.getAgent() + ", o: " + td.getOs();
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
-            s =  "d: " + td.getDevice() + " v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            s =  "d: " + td.getDevice() + ", v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
+            sw = fm.stringWidth(s);
+            y = y + lineHeight;
+            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
+
+            s =  "avg: " + td.getAvgUpdateInterval() + ", min: " + td.getMinUpdateInterval() + ", max: " + td.getMaxUpdateInterval() + "";
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
@@ -489,11 +497,16 @@ public class GraphicReport {
 
             Integer count = latLonMap.get(latLon).count;
             float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);
+            double alpha = Math.pow(OPACITY_MULTIPLIER, (double) (count - 1) );
+            float alphaFinal = (float) Math.max(alpha, ALPHA_MIN);
             dot.width = scaledDotSize;
             dot.height = scaledDotSize;
+
             //g.fillOval(p.x - 1, p.y - 1, 2, 2);
             dot.x = p.x - dot.width / 2;
             dot.y = p.y - dot.width / 2;
+            AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER,alphaFinal);
+            g.setComposite(ac);
             g.fill(dot);
         }
 

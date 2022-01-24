@@ -47,7 +47,8 @@ class BBSAgentTest {
                 0,
                 "",
                 agent,
-                ""
+                "",
+                null
             );
 
             assertEquals(td.getAgent(), EXPECTED[3 * i + 0]);
