@@ -18,6 +18,7 @@ import gtfu.Stats;
 
 public class DayLogSlicer {
     private Map<String, Map<String, GPSData>> gpsMap;
+    private Map<String, GPSData> latLonMap;
     private Map<String, Integer> previousUpdateMap;
     private Map<String, String> uuidMap;
     private Map<String, String> agentMap;
@@ -63,28 +64,28 @@ public class DayLogSlicer {
             agentMap.put(tripID,agent);
 
             String latLon = String.valueOf(lat) + String.valueOf(lon);
-
+            latLonMap = gpsMap.get(tripID);
             // If there is no LatLonMap for this trip, add it.
-            if(gpsMap.get(tripID) == null){
-                Map<String, GPSData> latLonMap = new HashMap();
-                gpsMap.put(tripID,latLonMap);
+            if(latLonMap == null){
+                latLonMap = new HashMap();
+                gpsMap.put(tripID, latLonMap);
             }
 
             // If there is no existing GPSData for this latLon value, add it and update previousUpdate for that trip
-            if (gpsMap.get(tripID).get(latLon) == null) {
+            if (latLonMap.get(latLon) == null) {
                 // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
                 // it relies on the list being sorted by timestmap, which it is.
                 int secsSinceLastUpdate = -1;
                 if (previousUpdateMap.get(tripID) != null) {
                     secsSinceLastUpdate = seconds - previousUpdateMap.get(tripID);
                 }
-                gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, secsSinceLastUpdate, lat, lon));
+                latLonMap.put(latLon, new GPSData(seconds * 1000l, secsSinceLastUpdate, lat, lon));
                 previousUpdateMap.put(tripID, seconds);
             }
 
             // If there is already a GPSData for this latLon value, increment the count
             else{
-                gpsMap.get(tripID).get(latLon).increment();
+                latLonMap.get(latLon).increment();
             }
         }
 

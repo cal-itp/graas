@@ -29,8 +29,7 @@ public class Stats {
                 max = value;
             }
         }
-
-        avg = total / count;
+        if (count > 0) avg = total / count;
     }
 
     public double getAvg() {
