@@ -1,0 +1,11 @@
+from_stop_id,to_stop_id,transfer_type,min_transfer_time
+LO_16,exp_09,1,
+LO_19,LO_19,1,
+LO_16,LO_16,1,
+exp_02,exp_02,1,
+LO_15,LO_15,1,
+LO_1,LO_19,1,
+exp_09,LO_16,1,
+LO_1,LO_1,1,
+LO_19,LO_1,1,
+exp_01,exp_01,1,
