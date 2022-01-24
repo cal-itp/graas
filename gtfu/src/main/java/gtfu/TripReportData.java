@@ -3,6 +3,8 @@ import ua_parser.Parser;
 import ua_parser.Client;
 
 public class TripReportData implements Comparable<TripReportData> {
+    public static final String RASPBERRY_KEY = "raspberry ";
+
     public String id;
     String name;
     int start;
@@ -45,6 +47,17 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getAgent() {
+        if (agent.startsWith(RASPBERRY_KEY)) {
+            String s = agent.substring(RASPBERRY_KEY.length());
+            int index = s.indexOf(' ');
+
+            if (index > 0) {
+                return s.substring(index + 1);
+            } else {
+                return "";
+            }
+        }
+
         String userAgentFamily = deviceClient.userAgent.family;
         String userAgentMajor = deviceClient.userAgent.major;
         String userAgentMinor = deviceClient.userAgent.minor;
@@ -54,6 +67,10 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getOs() {
+        if (agent.startsWith(RASPBERRY_KEY)) {
+            return "Raspberry Pi OS";
+        }
+
         String osFamily = deviceClient.os.family;
         String osMajor = deviceClient.os.major;
         String osMinor = deviceClient.os.minor;
@@ -63,6 +80,17 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getDevice() {
+        if (agent.startsWith(RASPBERRY_KEY)) {
+            String s = agent.substring(RASPBERRY_KEY.length());
+            int index = s.indexOf(' ');
+
+            if (index > 0) {
+                return RASPBERRY_KEY + s.substring(0, index);
+            } else {
+                return agent;
+            }
+        }
+
         return deviceClient.device.family;
     }
 
