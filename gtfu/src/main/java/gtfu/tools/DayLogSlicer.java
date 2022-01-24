@@ -79,7 +79,7 @@ public class DayLogSlicer {
                     secsSinceLastUpdate = seconds - previousUpdateMap.get(tripID);
                 }
                 gpsMap.get(tripID).put(latLon, new GPSData(seconds * 1000l, secsSinceLastUpdate, lat, lon));
-                previousUpdateMap.put(tripID,seconds);
+                previousUpdateMap.put(tripID, seconds);
             }
 
             // If there is already a GPSData for this latLon value, increment the count
@@ -123,7 +123,7 @@ public class DayLogSlicer {
             // Debug.log("++   durationMins: " + durationMins);
             // Filter out trips shorter than 15 min
             if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id)));
+                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id).values()));
                 tdList.add(td);
                 tdMap.put(id, td);
             }

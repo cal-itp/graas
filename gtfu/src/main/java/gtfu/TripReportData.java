@@ -70,6 +70,19 @@ public class TripReportData implements Comparable<TripReportData> {
         return vehicleId;
     }
 
+    public String getAvgUpdateInterval() {
+        return String.format("%.2f",stats.getAvg());
+    }
+
+    public String getMaxUpdateInterval() {
+        return String.format("%.0f",stats.getMax());
+    }
+
+    public String getMinUpdateInterval() {
+        return String.format("%.0f",stats.getMin());
+
+    }
+
     public boolean overlaps(TripReportData td) {
         return (td.start >= start && td.start < start + duration)
             || (start >= td.start && start < td.start + td.duration);

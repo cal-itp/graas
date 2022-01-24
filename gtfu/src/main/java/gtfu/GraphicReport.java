@@ -274,7 +274,7 @@ public class GraphicReport {
                     }
 
                     gpsMap.put(id,latLonMap);
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id)));
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id).values()));
                     tdList.add(td);
                     tdMap.put(id, td);
                 }
@@ -429,7 +429,7 @@ public class GraphicReport {
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
-            s =  "avg: " + td.stats.getAverageUpdateTimeStr() + ", min: " + td.stats.getMinUpdateTimeStr() + ", max: " + td.stats.getMaxUpdateTimeStr() + "";
+            s =  "avg: " + td.getAvgUpdateInterval() + ", min: " + td.getMinUpdateInterval() + ", max: " + td.getMaxUpdateInterval() + "";
             sw = fm.stringWidth(s);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2, y);

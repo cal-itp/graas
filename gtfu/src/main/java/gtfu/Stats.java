@@ -2,47 +2,50 @@ package gtfu;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
+import java.util.Collection;
 
 public class Stats {
 
-    private static final DecimalFormat df = new DecimalFormat("0.00");
-    public int maxUpdateTime = 0;
-    public int minUpdateTime = 999999;
-    public float avgUpdateTime = 0;
+    private double avg;
+    private double min = Double.MAX_VALUE;
+    private double max = Double.MIN_VALUE;
 
-    public Stats(Map<String, GPSData> latLonMap) {
-        int runningTotalUpdates = 0;
-        int runningTotalTimeSinceUpdate = 0;
-        int secsSinceLastUpdate = 0;
 
-        for (String latLon : latLonMap.keySet()) {
-            secsSinceLastUpdate = latLonMap.get(latLon).secsSinceLastUpdate;
-            if(secsSinceLastUpdate >= 0) {
-                runningTotalUpdates++;
-                runningTotalTimeSinceUpdate += latLonMap.get(latLon).secsSinceLastUpdate;
-                if (secsSinceLastUpdate > maxUpdateTime) {
-                        maxUpdateTime = secsSinceLastUpdate;
-                    }
-                if (secsSinceLastUpdate < minUpdateTime) {
-                    minUpdateTime = secsSinceLastUpdate;
-                }
-           }
+    public Stats(Collection<? extends StatValue> c) {
+        double total = 0;
+        int count = 0;
+
+        for (StatValue v : c) {
+            Double value = v.getValue();
+            if (value == null) continue;
+            count++;
+            total += value;
+
+            if (value < min) {
+                min = value;
+            }
+
+            if (value > max) {
+                max = value;
+            }
         }
-        avgUpdateTime = (float) runningTotalTimeSinceUpdate / (float) runningTotalUpdates;
+
+        avg = total / count;
     }
 
-    public String getAverageUpdateTimeStr() {
-        return String.valueOf(df.format(avgUpdateTime));
+    public double getAvg() {
+        return avg;
     }
 
-    public String getMinUpdateTimeStr() {
-        return String.valueOf(minUpdateTime);
+    public double getMin() {
+        return min;
     }
 
-    public String getMaxUpdateTimeStr() {
-        return String.valueOf(maxUpdateTime);
+    public double getMax() {
+        return max;
     }
+}
+
+interface StatValue {
+    public Double getValue();
 }
