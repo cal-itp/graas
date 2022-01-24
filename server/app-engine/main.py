@@ -85,6 +85,7 @@ import gtfsrt
 import util
 
 MAX_IP_CACHE_MILLIS = 20 * 60 * 1000 # 20 minutes in milliseconds
+INVALID_GPS = 9999
 warnings.filterwarnings("ignore", "Your application has authenticated using end user credentials")
 
 app = Flask(__name__)
@@ -145,7 +146,7 @@ def test():
 @app.route('/bus.png')
 def bus():
     fn = 'static/bus.png'
-    content = get_file(fn, 'rb')
+    content = util.get_file(fn, 'rb')
     return Response(content, mimetype='image/png')
 
 @app.route('/hello', methods=['POST'])
@@ -241,13 +242,21 @@ def new_pos_sig():
     if str(remote_ip) != '127.0.0.1' and str(remote_ip) != 'localhost':
         verified_map[remote_ip] = util.get_current_time_millis()
 
-    gtfsrt.handle_pos_update(
-        util.datastore_client,
-        timestamp_map,
-        agency_map,
-        position_lock,
-        data
-    )
+    lat = data.get('lat', None)
+
+    # lat/long values of 9999 indicate client inability to
+    # retrieve actual position. Keep such updates out of
+    # DB and and Vehicle Position streams
+    if lat == INVALID_GPS:
+        print('+ ignoring missing GPS update')
+    else:
+        gtfsrt.handle_pos_update(
+            util.datastore_client,
+            timestamp_map,
+            agency_map,
+            position_lock,
+            data
+        )
 
     return Response('{"command": "new-pos", "status": "ok"}', mimetype='application/json')
 
