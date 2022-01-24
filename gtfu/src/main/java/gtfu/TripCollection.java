@@ -80,6 +80,9 @@ public class TripCollection implements Iterable<Trip>, Serializable {
                 if (Util.isEmpty(time)) continue;
 
                 trip = map.get(tripID);
+
+                if (trip == null) continue;
+
                 Stop stop = stopCollection.get(stopID);
 
                 if (!tripID.equals(lastTripID)) {

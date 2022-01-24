@@ -14,5 +14,9 @@ public abstract class FailureReporter {
         lines.add(s);
     }
 
+    public int getFailCount() {
+        return lines.size();
+    }
+
     public abstract void send();
 }

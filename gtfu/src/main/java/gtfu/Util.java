@@ -828,7 +828,7 @@ public class Util {
         t.dumpLap();
 
         t = new Timer("schedules");
-        TripScheduleCollection scheduleCollection = new TripScheduleCollection(path, tripCollection, stopCollection, po);
+        TripScheduleCollection scheduleCollection = new TripScheduleCollection(path, tripCollection, stopCollection, po, skipErrors);
         collections.put("schedules", scheduleCollection);
         t.dumpLap();
         //Debug.log("- scheduleCollection.getSize(): " + scheduleCollection.getSize());
