@@ -1088,6 +1088,7 @@ function populateList(id, str, list) {
 
  function populateRouteList() {
     var p = document.getElementById('route-select');
+    p.hidden = true;
     clearSelectOptions(p);
     addSelectOption(p, "Select Route", true);
 
@@ -1095,6 +1096,7 @@ function populateList(id, str, list) {
         addSelectOption(p, key, !value);
     }
 
+    p.hidden = false;
     setupListHeader(p);
 }
 
