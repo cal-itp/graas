@@ -53,6 +53,14 @@ const CONFIG_ROUTE_NAMES = "route names";
 const CONFIG_VEHICLE_IDS = "vehicle IDs";
 const CONFIG_DRIVER_NAMES = "driver names";
 const CONFIG_FILTER_PARAMS = "filter params";
+const START_STOP_BUTTON = "start-stop";
+const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
+const ROUTE_SELECT_DROPDOWN = "route-select";
+const ROUTE_SELECT_DROPDOWN_TEXT = "Select Route";
+const BUS_SELECT_DROPDOWN = "bus-select";
+const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
+const DRIVER_SELECT_DROPDOWN = "driver-select";
+const DRIVER_SELECT_DROPDOWN_TEXT = "Select Driver";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
@@ -351,11 +359,11 @@ function handleRefreshOkay() {
 function handleStartStop() {
     util.log("handleStartStop()");
 
-    var p = document.getElementById('start-stop');
+    var p = document.getElementById(START_STOP_BUTTON);
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
-    if (text == "Load trips") {
+    if (text == START_STOP_BUTTON_LOAD_TEXT {
         var millis = Date.now();
         loadRoutes();
         util.log("- millis     : " + millis);
@@ -366,7 +374,7 @@ function handleStartStop() {
             handleModal("staleModal");
             return;
         }
-        var p = document.getElementById('start-stop');
+        var p = document.getElementById(START_STOP_BUTTON);
         p.style.background = "#cccccc";
 
         var p = document.getElementById('config');
@@ -382,21 +390,21 @@ function handleStartStop() {
 
         running = false;
 
-        p = document.getElementById('route-select');
+        p = document.getElementById(ROUTE_SELECT_DROPDOWN);
         p.value = 'disabled';
 
-        p = document.getElementById('bus-select');
+        p = document.getElementById(BUS_SELECT_DROPDOWN);
         p.value = 'disabled';
 
-        p = document.getElementById('driver-select');
+        p = document.getElementById(DRIVER_SELECT_DROPDOWN);
         p.value = 'disabled';
 
         p = document.getElementById('okay');
         p.disabled = 'true';
         p.style.background = "#cccccc";
 
-        p = document.getElementById('start-stop');
-        p.textContent = 'Load trips';
+        p = document.getElementById(START_STOP_BUTTON);
+        p.textContent = START_STOP_BUTTON_LOAD_TEXT;
 
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
             fetch('/graas-stop').then(function(response) {
@@ -447,13 +455,13 @@ function handleOkay() {
             util.log('+ requested graas start');
         });
     }
-    var p = document.getElementById('start-stop');
+    var p = document.getElementById(START_STOP_BUTTON);
     p.style.background = "green";
-    var p = document.getElementById('bus-select');
+    var p = document.getElementById(BUS_SELECT_DROPDOWN);
     vehicleID = p.value
     util.log("- vehicleID: " + vehicleID);
 
-    p = document.getElementById('route-select');
+    p = document.getElementById(ROUTE_SELECT_DROPDOWN);
     var entry = tripIDLookup[p.value];
 
     if (isObject(entry)) {
@@ -465,7 +473,7 @@ function handleOkay() {
     util.log("- tripID: " + tripID);
 
     if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
-        p = document.getElementById('driver-select');
+        p = document.getElementById(DRIVER_SELECT_DROPDOWN);
         driverName = p.value;
         util.log("- driverName: " + driverName);
     }
@@ -479,7 +487,7 @@ function handleOkay() {
     var p = document.getElementById('stats');
     p.style.display = "block";
 
-    var p = document.getElementById('start-stop');
+    var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = "Stop";
 
     running = true;
@@ -639,7 +647,7 @@ function getRewriteArgs() {
 function scanQRCode() {
     util.log("scanQRCode()");
 
-    var button = document.getElementById('start-stop');
+    var button = document.getElementById(START_STOP_BUTTON);
     button.style.display = 'none';
 
     var lastResult, countResults = 0;
@@ -750,7 +758,7 @@ function positionCallback() {
     util.log("- startMillis: " + startMillis);
 
     if (isPhone()) {
-        var list = ["start-stop", "route-select", "bus-select", "driver-select", "okay"];
+        var list = [START_STOP_BUTTON, ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
         list.forEach(l => resizeElement(document.getElementById(l)));
 
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
@@ -973,12 +981,12 @@ function gotConfigData(data, agencyID, arg) {
         loadRoutes();
     } else if (name == CONFIG_VEHICLE_IDS) {
         vehicleList = data;
-        populateList('bus-select', 'Select Bus No.', vehicleList);
+        populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
     } else if (name == CONFIG_DRIVER_NAMES) {
         driverList = data;
         if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
-            populateList('driver-select', 'Select Driver', driverList);
-            var p = document.getElementById('driver-select');
+            populateList(DRIVER_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN_TEXT, driverList);
+            var p = document.getElementById(DRIVER_SELECT_DROPDOWN);
             p.style.display = 'block';
         }
 
@@ -1092,9 +1100,9 @@ function populateList(id, str, list) {
 }
 
  function populateRouteList() {
-    var p = document.getElementById('route-select');
+    var p = document.getElementById(ROUTE_SELECT_DROPDOWN);
     clearSelectOptions(p);
-    addSelectOption(p, "Select Route", true);
+    addSelectOption(p, ROUTE_SELECT_DROPDOWN_TEXT, true);
 
     for (const [key, value] of Object.entries(tripIDLookup)) {
         addSelectOption(p, key, !value);
