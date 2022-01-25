@@ -1,0 +1,8 @@
+{
+"production-server": false,
+"agency-count": 4,
+"vehicle-count": 10,
+"interval-time": 3,
+"interval-variation": 1,
+"num-repeats": 1
+}

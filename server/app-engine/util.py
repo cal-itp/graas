@@ -29,6 +29,7 @@ def read_public_keys():
 
     return key_map
 
+# TODO: Consider moving this call to read_public_keys(). Currently it runs whenever util.py is loaded
 key_map = read_public_keys()
 
 def verify_signature(agency_id, data, signature):
