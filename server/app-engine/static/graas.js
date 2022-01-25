@@ -38,6 +38,7 @@ var testLat = null;
 var testLong = null;
 var testHour = null;
 var testMin = null;
+var testDow = null;
 var version = null;
 
 const UUID_NAME = 'lat_long_id';
@@ -60,9 +61,11 @@ function isObject(obj) {
     return typeof obj === 'object' && obj !== null
 }
 
-// return 0 for Monday, ... and 6 for Sunday
+// returns 0 for Monday...and 6 for Sunday
 function getDayOfWeek() {
-    return ((new Date()).getDay() + 6) % 7;
+    if (testDow) {
+        return testDow;
+    } else return ((new Date()).getDay() + 6) % 7;
 }
 
 // 's' is assumed to be a time string like '8:23 am'
@@ -627,6 +630,8 @@ function getRewriteArgs() {
             testHour = value;
         } else if (key === 'testmin') {
             testMin = value;
+        } else if (key === 'testdow') {
+            testDow = value;
         }
     }
 }
