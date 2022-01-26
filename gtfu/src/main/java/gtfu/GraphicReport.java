@@ -104,6 +104,7 @@ public class GraphicReport {
         AgencyYML a = new AgencyYML();
 
         for (String key : logs.keySet()) {
+            Debug.log("key: " + key);
             // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>
             String agencyID = key.substring(0, key.length() - 15);
 
@@ -579,19 +580,6 @@ public class GraphicReport {
         }
 
         if (cacheDir == null) usage();
-
-        // If date hasn't been manually set, use today's date (PT)
-        if (date == null) {
-            DateTimeFormatter dtFormat = DateTimeFormatter.ofPattern("MM/dd/yy");
-            Clock cl = Clock.systemUTC();
-            LocalDateTime now = LocalDateTime.now(cl);
-            ZonedDateTime nowUTC = now.atZone(ZoneId.of("UTC"));
-            ZonedDateTime nowCal = nowUTC.withZoneSameInstant(ZoneId.of("America/Los_Angeles"));
-            date = dtFormat.format(nowCal);
-            Debug.log("-- now: " + now);
-            Debug.log("-- nowCal: " + nowCal);
-            Debug.log("-- date: " + date);
-        }
 
         new GraphicReport(cacheDir, date, savePath, downloadReport);
     }
