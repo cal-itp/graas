@@ -34,6 +34,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final String SEGMENT_HEADER = "segment: ";
     private static final String CURRENT_HEADER = "current location: ";
     private static final String UPDATE_HEADER = "segment update:";
+    private static final String CANDIDATE_HEADER = "candidate update:";
     private static final int RADIUS = 2;
 
     private static final Color[] ACCENT_COLORS = {
@@ -67,12 +68,9 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final int PLAYING = 0;
     private static final int PAUSED = 1;
 
-
     private Image buf;
     private int subdivisions;
-    //private ShapePoint p;
     private Map<Integer, Segment> segmentTable;
-    //private List<Score> scoreList;
     private List<TripEvent> eventList;
     private List<ShapePoint> tripPoints;
     private int eventIndex;
@@ -295,9 +293,31 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                         }
 
                         if (line.startsWith(UPDATE_HEADER)) {
-                            //Debug.log(">> got score");
-
                             int id = getIntProperty(line, "id");
+                            //Debug.log("- id: " + id);
+                            String name = Util.base64Decode(getProperty(line, "trip-name"));
+                            //Debug.log("- name: " + name);
+                            float score = getFloatProperty(line, "score");
+                            //Debug.log("- score: " + score);
+                            float closestLat = getFloatProperty(line, "closest-lat");
+                            //Debug.log("- closestLat: " + closestLat);
+                            float closestLon = getFloatProperty(line, "closest-lon");
+                            //Debug.log("- closestLon: " + closestLon);
+
+                            Score so = new Score(score, name, "" + id, new ShapePoint(closestLat, closestLon));
+
+                            synchronized (TripInferenceVisualizer.this) {
+                                Segment segment = segmentTable.get(id);
+                                segment.setClosestPoint(new ShapePoint(closestLat, closestLon));
+
+                                TripEvent e = eventList.get(eventList.size() - 1);
+                                e.addSegmentScore(so);
+                            }
+                        }
+
+                        // util.debug(f'candidate update: id={trip_id} trip-name={util.to_b64(name)} score={score}')
+                        if (line.startsWith(CANDIDATE_HEADER)) {
+                            String id = getProperty(line, "id");
                             //Debug.log("- id: " + id);
                             String name = Util.base64Decode(getProperty(line, "trip-name"));
                             //Debug.log("- name: " + name);
@@ -308,7 +328,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
                             synchronized (TripInferenceVisualizer.this) {
                                 TripEvent e = eventList.get(eventList.size() - 1);
-                                e.add(so);
+                                e.addCandidateScore(so);
                             }
                         }
                     }
@@ -335,16 +355,18 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                             synchronized (TripInferenceVisualizer.this) {
                                 for (Segment segment : segmentTable.values()) {
                                     segment.active = false;
+                                    segment.setClosestPoint(null);
                                 }
 
                                 TripEvent e = eventList.get(eventIndex);
-                                List<Score> scoreList = e.getScoreList();
+                                List<Score> scoreList = e.getSegmentScoreList();
 
                                 for (Score score : scoreList) {
                                     Segment s = segmentTable.get(score.id);
 
                                     if (s != null) {
                                         s.active = true;
+                                        s.setClosestPoint(score.p);
                                     }
                                 }
                             }
@@ -582,7 +604,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         int y;
 
         g.setColor(Color.black);
-        g.drawRect(0, 0, getWidth(), getHeight());
+        g.fillRect(0, 0, getWidth(), getHeight());
 
         ((Graphics2D)g).setRenderingHint(
             RenderingHints.KEY_ANTIALIASING,
@@ -634,6 +656,16 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                 voff + a.topLeft.screenY,
                 a.bottomRight.screenX - a.topLeft.screenX,
                 a.bottomRight.screenY - a.topLeft.screenY
+            );
+
+            latLongToScreenXY(gridWidth, gridHeight, segment.p);
+            int radius = 2;
+
+            g.fillOval(
+                hoff + segment.p.screenX - radius,
+                voff + segment.p.screenY - radius,
+                2 * radius,
+                2 * radius
             );
         }
 
@@ -704,7 +736,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         y = voff + 6;
         int step = g.getFontMetrics().getHeight() + 1;
-        List<Score> scoreList = e.getScoreList();
+        List<Score> scoreList = e.getSegmentScoreList();
 
         for (int i=0; i<scoreList.size(); i++) {
             g.setColor(ACCENT_COLORS[i]);
@@ -714,6 +746,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
             y += step;
         }
+
+        // ### TODO: also draw candidate scores
 
         g.setColor(ACCENT_COLORS[0]);
         int seconds = e.getDaySeconds();
@@ -725,7 +759,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         GraphicsUtil.drawString(g, hhmmss, 5, 5);
         GraphicsUtil.drawString(g, frameString, 80, 5);
-        GraphicsUtil.drawString(g, declaredTripID, 5, 30);
+        GraphicsUtil.drawString(g, declaredTripID, 5, 20);
     }
 
     private static void usage() {
@@ -752,12 +786,18 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 class Score implements Comparable<Score> {
     float score;
     String name;
-    int id;
+    String id;
+    ShapePoint p;
 
-    Score(float score, String name, int id) {
+    Score(float score, String name, String id) {
+        this(score, name, id, null);
+    }
+
+    Score(float score, String name, String id, ShapePoint p) {
         this.score = score;
         this.name = name;
         this.id = id;
+        this.p = p;
     }
 
     public int compareTo(Score s) {
@@ -768,30 +808,47 @@ class Score implements Comparable<Score> {
 class TripEvent {
     ShapePoint position;
     private int daySeconds;
-    private List<Score> scoreList;
+    private List<Score> segmentScoreList;
+    private List<Score> candidateScoreList;
     boolean sorted;
 
     TripEvent(ShapePoint position, int daySeconds) {
         this.position = position;
         this.daySeconds = daySeconds;
-        scoreList = new ArrayList();
+        segmentScoreList = new ArrayList();
+        candidateScoreList = new ArrayList();
     }
 
     public int getDaySeconds() {
         return daySeconds;
     }
 
-    void add(Score score) {
-        scoreList.add(score);
+    void addSegmentScore(Score score) {
+        segmentScoreList.add(score);
     }
 
-    List<Score> getScoreList() {
+    void addCandidateScore(Score score) {
+        candidateScoreList.add(score);
+    }
+
+    List<Score> getSegmentScoreList() {
         if (!sorted) {
-            Collections.sort(scoreList);
+            Collections.sort(segmentScoreList);
+            Collections.sort(candidateScoreList);
             sorted = true;
         }
 
-        return scoreList;
+        return segmentScoreList;
+    }
+
+    List<Score> getCandidateScoreList() {
+        if (!sorted) {
+            Collections.sort(segmentScoreList);
+            Collections.sort(candidateScoreList);
+            sorted = true;
+        }
+
+        return candidateScoreList;
     }
 }
 
@@ -800,6 +857,7 @@ class Segment {
     Area area;
     String startTime;
     String endTime;
+    ShapePoint p;
     boolean active;
 
     Segment(int id, Area area, String startTime, String endTime) {
@@ -807,5 +865,9 @@ class Segment {
         this.area = area;
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    void setClosestPoint(ShapePoint p) {
+        this.p = p;
     }
 }
