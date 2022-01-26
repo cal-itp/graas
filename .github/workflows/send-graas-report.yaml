@@ -1,8 +1,8 @@
 name: Send GRaaS Report
 # ~9:18PM pacific time, daily:
-on: [push]
- # schedule:
- #    - cron: '0 5 * * *'
+on:
+ schedule:
+    - cron: '0 5 * * *'
 jobs:
   Send-email:
     runs-on: ubuntu-latest
@@ -17,9 +17,10 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/auth@v0
         with:
+          # Google recommends using a Workload Identify Federation instead of using the service account key json file
+          # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
           service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
           credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
-          # export_default_credentials: true
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       - name: Build with Gradle
