@@ -1,5 +1,5 @@
 name: Send GRaaS Report
-# ~9:18PM pacific time, daily:
+#~9:18PM pacific time, daily:
 on: [push]
  # schedule:
  #    - cron: '0 5 * * *'
