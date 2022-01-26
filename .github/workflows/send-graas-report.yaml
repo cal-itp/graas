@@ -17,9 +17,9 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
         with:
-          service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
+          service_account_email: 'lat-long-prototype@appspot.gserviceaccount.com'
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          # credentials_json: {{ secrets.GCP_SA_KEY_JSON) }}
+          # service_account_key: {{ secrets.GCP_SA_KEY_JSON) }}
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       - name: Build with Gradle
