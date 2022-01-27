@@ -104,7 +104,6 @@ public class GraphicReport {
         AgencyYML a = new AgencyYML();
 
         for (String key : logs.keySet()) {
-            Debug.log("key: " + key);
             // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>
             String agencyID = key.substring(0, key.length() - 15);
 
