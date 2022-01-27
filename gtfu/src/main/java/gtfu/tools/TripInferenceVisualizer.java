@@ -704,6 +704,31 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             g.drawLine(hoff + i * hslice, voff, hoff + i * hslice, voff + gridHeight);
         }
 
+        if (areaStack.size() > 0) {
+            Area a = areaStack.peek();
+            g.setColor(Color.gray);
+
+            int x = hoff;
+            int ll = 5;
+            y = voff + gridHeight + 15;
+
+            g.drawLine(hoff, y, hoff + gridWidth / 2 - 50, y);
+            g.drawLine(hoff, y, hoff + ll, y - ll);
+            g.drawLine(hoff, y, hoff + ll, y + ll);
+
+
+            g.drawLine(hoff + gridWidth / 2 + 50, y, hoff + gridWidth, y);
+            g.drawLine(hoff + gridWidth, y, hoff + gridWidth - ll, y - ll);
+            g.drawLine(hoff + gridWidth, y, hoff + gridWidth - ll, y +ll);
+
+            String s = Util.getDisplayDistance(a.getWidthInFeet());
+
+            FontMetrics fm = g.getFontMetrics();
+            int sw = fm.stringWidth(s);
+            int hh = fm.getHeight();
+            GraphicsUtil.drawString(g, s, hoff + gridWidth / 2 - sw / 2, y - hh / 2);
+        }
+
         g.setColor(INACTIVE_SEGMENT_COLOR);
 
         for (Segment segment : segmentTable.values()) {

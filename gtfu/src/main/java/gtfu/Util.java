@@ -41,6 +41,7 @@ public class Util {
     public static final String CACHE_ROOT = System.getProperty("java.io.tmpdir") + "/gtfu-cache";
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss 'GMT'";
 
+    private static final int FEET_PER_MILE = 5280;
     private final static int EARTH_RADIUS_IN_FEET = 20902231;
     private static final String WHITESPACE = " \t\r\n";
 
@@ -66,6 +67,16 @@ public class Util {
 
     public static void implementMe() {
         throw new Fail("Implement me!");
+    }
+
+    public static String getDisplayDistance(int feet) {
+        if (feet < FEET_PER_MILE) {
+            return String.format("%d FEET", feet);
+        } else if (feet < 10 * FEET_PER_MILE) {
+            return String.format("%3.1f MILES", (float)feet / FEET_PER_MILE);
+        } else {
+            return String.format("%d MILES", feet / FEET_PER_MILE);
+        }
     }
 
     public static void setReporter(FailureReporter reporter) {
