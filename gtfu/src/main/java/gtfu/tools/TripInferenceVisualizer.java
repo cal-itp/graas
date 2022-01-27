@@ -33,8 +33,9 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final String GRID_HEADER = "grid: ";
     private static final String SEGMENT_HEADER = "segment: ";
     private static final String CURRENT_HEADER = "current location: ";
-    private static final String UPDATE_HEADER = "segment update:";
-    private static final String CANDIDATE_HEADER = "candidate update:";
+    private static final String UPDATE_HEADER = "segment update: ";
+    private static final String CANDIDATE_HEADER = "candidate update: ";
+    private static final String ZOOM_HEADER = "zoom: ";
     private static final int RADIUS = 2;
 
     private static final Color[] ACCENT_COLORS = {
@@ -73,6 +74,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private Map<Integer, Segment> segmentTable;
     private List<TripEvent> eventList;
     private List<ShapePoint> tripPoints;
+    private List<String> commands;
     private Thread runner;
     private int eventIndex;
     private Deque<Area> areaStack;
@@ -156,7 +158,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         return f;
     }
 
-    public TripInferenceVisualizer(String dataDir) throws Exception {
+    public TripInferenceVisualizer(String dataDir, String cmd) throws Exception {
         this.dataDir = dataDir;
         tripPoints = new ArrayList<ShapePoint>();
 
@@ -178,9 +180,14 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         frameString = "";
         zoomFactor = 1;
 
+        commands = new ArrayList();
         segmentTable = new HashMap();
         font = new Font("Consolas", Font.PLAIN, 11);
         segmentFilterValue = "*";
+
+        if (cmd != null) {
+            commands.add(cmd);
+        }
 
         playState = PLAYING;
         rewState = 0;
@@ -210,24 +217,6 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         areaStack.clear();
         areaStack.push(area);
 
-        if (Math.random() < 0) {
-            // ### TODO for now, hardcoded zoom to TCRTA's D2A_T14 trip.
-            // Instead, pass in as command line arg
-            ShapePoint tl = new ShapePoint();
-            tl.screenX = 78;
-            tl.screenY = 33;
-
-            screenXYToLatLong(gridWidth, gridHeight, tl);
-
-            ShapePoint br = new ShapePoint();
-            br.screenX = 136;
-            br.screenY = 81;
-
-            screenXYToLatLong(gridWidth, gridHeight, br);
-
-            areaStack.push(new Area(tl, br));
-        }
-
         subdivisions = getIntProperty(line, "subdivisions");
         //Debug.log("- subdivisions: " + subdivisions);
 
@@ -252,6 +241,27 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         f.setVisible(true);
 
         repaint();
+    }
+
+    private void handleCommand(String line) {
+        if (line.startsWith(ZOOM_HEADER)) {
+            ShapePoint tl = new ShapePoint();
+            tl.screenX = getIntProperty(line, "x1");
+            tl.screenY = getIntProperty(line, "y1");
+
+            screenXYToLatLong(gridWidth, gridHeight, tl);
+
+            ShapePoint br = new ShapePoint();
+            br.screenX = getIntProperty(line, "x2");
+            br.screenY = getIntProperty(line, "y2");
+
+            screenXYToLatLong(gridWidth, gridHeight, br);
+
+            areaStack.push(new Area(tl, br));
+            return;
+        }
+
+        Debug.log("* ignoring unknown command: " + line);
     }
 
     private Thread getRunner() {
@@ -369,6 +379,11 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                     //Debug.log("- segmentTable: " + segmentTable);
 
                     for (;;) {
+                        if (commands.size() > 0) {
+                            String line = commands.remove(0);
+                            handleCommand(line);
+                        }
+
                         repaint();
                         Util.sleep(sleepMillis);
 
@@ -833,23 +848,29 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     }
 
     private static void usage() {
-        System.err.println("usage: TripInferenceVisualizer -D|--data-dir <data-dir>");
+        System.err.println("usage: TripInferenceVisualizer -D|--data-dir <data-dir> -c|--command <command>");
         System.exit(1);
     }
 
     public static void main(String[] arg) throws Exception {
         String dataDir = null;
+        String cmd = null;
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-D") || arg[i].equals("--data-dir")) && i < arg.length - 1) {
                 dataDir = arg[++i];
                 continue;
             }
+
+            if ((arg[i].equals("-c") || arg[i].equals("--command")) && i < arg.length - 1) {
+                cmd = arg[++i];
+                continue;
+            }
         }
 
         if (dataDir == null) usage();
 
-        new TripInferenceVisualizer(dataDir);
+        new TripInferenceVisualizer(dataDir, cmd);
     }
 }
 
