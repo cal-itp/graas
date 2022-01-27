@@ -139,13 +139,13 @@ def main(argv):
 	domain = LOCAL_SERVER_URL
 
 	if argc != 2:
-		print('* usage: python stress-test.py <path-to-config-json>')
+		print('* usage: python stress-test.py <path-to-config-json-file>')
 		exit(1)
 
 	jsonInput = sys.argv[1]
 
 	if '.json' not in jsonInput:
-		print('* usage: python stress-test.py <path-to-config-json>')
+		print('* error: input must be a JSON file')
 		exit(1)
 
 	f = open(jsonInput)
