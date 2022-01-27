@@ -73,11 +73,14 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private Map<Integer, Segment> segmentTable;
     private List<TripEvent> eventList;
     private List<ShapePoint> tripPoints;
+    private Thread runner;
     private int eventIndex;
     private Deque<Area> areaStack;
     private String frameString;
     private String dataDir;
     private String declaredTripID;
+    private String segmentFilterKey;
+    private String segmentFilterValue;
     private Font font;
     private Button playButton;
     private Button fwdButton;
@@ -90,6 +93,12 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private int mouseDownY;
     private int mouseX;
     private int mouseY;
+    private int hslice;
+    private int vslice;
+    private int gridWidth;
+    private int gridHeight;
+    private int hoff;
+    private int voff;
     private float zoomFactor;
 
     private static String getProperty(String line, String name, char separator) {
@@ -171,6 +180,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         segmentTable = new HashMap();
         font = new Font("Consolas", Font.PLAIN, 11);
+        segmentFilterValue = "*";
 
         playState = PLAYING;
         rewState = 0;
@@ -182,10 +192,70 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         addMouseMotionListener(this);
         addKeyListener(TripInferenceVisualizer.this);
 
-        declaredTripID = "declared trip ID: " + getPropertyFromFile(dataDir + "/metadata.txt", "trip-id");
+        declaredTripID = getPropertyFromFile(dataDir + "/metadata.txt", "trip-id");
         Debug.log(declaredTripID);
 
-        Thread t = new Thread(new Runnable() {
+        String line = getPropertyFromFile(dataDir + "/metadata.txt", "grid");
+
+        float[] topLeft = getFloatTupleProperty(line, "top_left");
+        //Debug.log("- topLeft: (" + topLeft[0] + ", " + topLeft[1] + ")");
+        float[] bottomRight = getFloatTupleProperty(line, "bottom_right");
+        //Debug.log("- bottomRight: (" + bottomRight[0] + ", " + bottomRight[1] + ")");
+
+        Area area = new Area(
+            new ShapePoint(topLeft[0], topLeft[1]),
+            new ShapePoint(bottomRight[0], bottomRight[1])
+        );
+
+        areaStack.clear();
+        areaStack.push(area);
+
+        if (Math.random() < 0) {
+            // ### TODO for now, hardcoded zoom to TCRTA's D2A_T14 trip.
+            // Instead, pass in as command line arg
+            ShapePoint tl = new ShapePoint();
+            tl.screenX = 78;
+            tl.screenY = 33;
+
+            screenXYToLatLong(gridWidth, gridHeight, tl);
+
+            ShapePoint br = new ShapePoint();
+            br.screenX = 136;
+            br.screenY = 81;
+
+            screenXYToLatLong(gridWidth, gridHeight, br);
+
+            areaStack.push(new Area(tl, br));
+        }
+
+        subdivisions = getIntProperty(line, "subdivisions");
+        //Debug.log("- subdivisions: " + subdivisions);
+
+        Frame f = new Frame("Trip Inference");
+
+        int width = 0;
+        int height = 0;
+        float aspectRatio = area.getAspectRatio();
+
+        if (aspectRatio > 1) {
+            width = PANEL_SIZE;
+            height = (int)(PANEL_SIZE / aspectRatio);
+        } else {
+            width = (int)(PANEL_SIZE / aspectRatio);
+            height = PANEL_SIZE;
+        }
+
+        setPreferredSize(new Dimension(width + 3 * PADDING + PANEL_SIZE / 2, height + 2 * PADDING));
+
+        f.add(this);
+        f.pack();
+        f.setVisible(true);
+
+        repaint();
+    }
+
+    private Thread getRunner() {
+        return new Thread(new Runnable() {
             public void run() {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -202,53 +272,13 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                         if (matcher.matches()) {
                             line = line.substring(9);
                         }
-
-                        if (line.startsWith(GRID_HEADER)) {
-                            //Debug.log(">> got grid");
-
-                            float[] topLeft = getFloatTupleProperty(line, "top_left");
-                            //Debug.log("- topLeft: (" + topLeft[0] + ", " + topLeft[1] + ")");
-                            float[] bottomRight = getFloatTupleProperty(line, "bottom_right");
-                            //Debug.log("- bottomRight: (" + bottomRight[0] + ", " + bottomRight[1] + ")");
-
-                            Area area = new Area(
-                                new ShapePoint(topLeft[0], topLeft[1]),
-                                new ShapePoint(bottomRight[0], bottomRight[1])
-                            );
-
-                            areaStack.clear();
-                            areaStack.push(area);
-
-                            subdivisions = getIntProperty(line, "subdivisions");
-                            //Debug.log("- subdivisions: " + subdivisions);
-
-                            Frame f = new Frame("Trip Inference");
-
-                            int width = 0;
-                            int height = 0;
-                            float aspectRatio = area.getAspectRatio();
-
-                            if (aspectRatio > 1) {
-                                width = PANEL_SIZE;
-                                height = (int)(PANEL_SIZE / aspectRatio);
-                            } else {
-                                width = (int)(PANEL_SIZE / aspectRatio);
-                                height = PANEL_SIZE;
-                            }
-
-                            TripInferenceVisualizer that = TripInferenceVisualizer.this;
-                            that.setPreferredSize(new Dimension(width + 3 * PADDING + PANEL_SIZE / 2, height + 2 * PADDING));
-
-                            f.add(that);
-                            f.pack();
-                            f.setVisible(true);
-                        }
-
                         if (line.startsWith(SEGMENT_HEADER)) {
                             //Debug.log(">> got segment");
 
                             int id = getIntProperty(line, "id");
                             //Debug.log("- id: " + id);
+                            String tripID = getProperty(line, "trip_id");
+                            //Debug.log("- trip_id: " + trip_id);
                             float[] topLeft = getFloatTupleProperty(line, "top_left");
                             //Debug.log("- topLeft: (" + topLeft[0] + ", " + topLeft[1] + ")");
                             float[] bottomRight = getFloatTupleProperty(line, "bottom_right");
@@ -260,6 +290,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
                             Segment segment = new Segment(
                                 id,
+                                tripID,
                                 new Area(
                                     new ShapePoint(topLeft[0], topLeft[1]),
                                     new ShapePoint(bottomRight[0], bottomRight[1])
@@ -335,6 +366,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
                     repaint();
 
+                    //Debug.log("- segmentTable: " + segmentTable);
+
                     for (;;) {
                         repaint();
                         Util.sleep(sleepMillis);
@@ -381,8 +414,6 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                 }
             }
         });
-
-        t.start();
     }
 
     private String getPropertyFromFile(String path, String name) throws Exception {
@@ -459,6 +490,17 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                 repaint();
             }
         }
+
+        if (c == 't') {
+            if (segmentFilterValue.equals("*")) {
+                segmentFilterKey = "trip_id";
+                segmentFilterValue = declaredTripID;
+            } else {
+                segmentFilterKey = null;
+                segmentFilterValue = "*";
+            }
+            repaint();
+        }
     }
 
     public void keyReleased(KeyEvent e) {
@@ -518,14 +560,12 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     public synchronized void mouseReleased(MouseEvent e) {
         //Debug.log("mouseReleased()");
 
-        if (areaStack.size() < 2) {
-            int hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
-            int vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
-            int gridWidth = hslice * subdivisions;
-            int gridHeight = vslice * subdivisions;
-            int hoff = PADDING;
-            int voff = (getHeight() - gridHeight) / 2;
+        if (Math.abs(mouseDownX - mouseX) < 10 || Math.abs(mouseDownY - mouseY) < 10) {
+            Debug.log("zoom area too small, ignoring...");
+            return;
+        }
 
+        if (areaStack.size() < 2) {
             int x = Math.min(mouseDownX, mouseX);
             int y = Math.min(mouseDownY, mouseY);
             int w = Math.abs(mouseDownX - mouseX);
@@ -550,6 +590,11 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             bottomRight.screenY = y - voff + h;
 
             screenXYToLatLong(gridWidth, gridHeight, bottomRight);
+
+            Debug.log("- topLeft.screenX    : " + topLeft.screenX);
+            Debug.log("- topLeft.screenY    : " + topLeft.screenY);
+            Debug.log("- bottomRight.screenX: " + bottomRight.screenX);
+            Debug.log("- bottomRight.screenY: " + bottomRight.screenY);
 
             Area area = new Area(topLeft, bottomRight);
             areaStack.push(area);
@@ -576,6 +621,28 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     }
 
     public void update(Graphics g) {
+        Debug.log("update()");
+
+        if (gridWidth == 0) {
+            hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
+            Debug.log("- hslice: " + hslice);
+            vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
+            Debug.log("- vslice: " + vslice);
+            gridWidth = hslice * subdivisions;
+            Debug.log("- gridWidth: " + gridWidth);
+            gridHeight = vslice * subdivisions;
+            Debug.log("- gridHeight: " + gridHeight);
+            hoff = PADDING;
+            Debug.log("- hoff: " + hoff);
+            voff = (getHeight() - gridHeight) / 2;
+            Debug.log("- voff: " + voff);
+        }
+
+        if (runner == null) {
+            runner = getRunner();
+            runner.start();
+        }
+
         if (buf == null) {
             buf = createImage(getWidth(), getHeight());
         }
@@ -595,13 +662,11 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     }
 
     public synchronized void paint(Graphics g) {
-        int hslice = (int)((getWidth() - PANEL_SIZE / 2 - 3 * PADDING) / subdivisions);
-        int vslice = (int)((getHeight() - 2 * PADDING) / subdivisions);
-        int gridWidth = hslice * subdivisions;
-        int gridHeight = vslice * subdivisions;
-        int hoff = PADDING;
-        int voff = (getHeight() - gridHeight) / 2;
         int y;
+
+        if (gridWidth == 0) return;
+
+        Debug.log("paint()");
 
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -626,7 +691,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         g.setColor(INACTIVE_SEGMENT_COLOR);
 
         for (Segment segment : segmentTable.values()) {
-            if (segment.active) continue;
+            if (segment.active || !segment.matches(segmentFilterKey, segmentFilterValue)) continue;
 
             Area a = segment.area;
 
@@ -644,12 +709,17 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         g.setColor(ACTIVE_SEGMENT_COLOR);
 
         for (Segment segment : segmentTable.values()) {
-            if (!segment.active) continue;
+            if (!segment.active || !segment.matches(segmentFilterKey, segmentFilterValue)) continue;
 
             Area a = segment.area;
 
             latLongToScreenXY(gridWidth, gridHeight, a.topLeft);
             latLongToScreenXY(gridWidth, gridHeight, a.bottomRight);
+
+            /*if (segmentFilterKey != null) {
+                Debug.log("-- a.topLeft.screenX: " + a.topLeft.screenX);
+                Debug.log("-- a.topLeft.screenY: " + a.topLeft.screenY);
+            }*/
 
             g.drawRect(
                 hoff + a.topLeft.screenX,
@@ -670,10 +740,10 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         }
 
         int buttonHeight = 20;
-        hoff = (int)(2.2 * PADDING) + gridWidth;
+        int hroff = (int)(2.2 * PADDING) + gridWidth;
         int panelHeight = gridHeight - buttonHeight - 10;
         g.setColor(BORDER_COLOR);
-        g.drawRect(hoff, voff, PANEL_SIZE / 2, panelHeight);
+        g.drawRect(hroff, voff, PANEL_SIZE / 2, panelHeight);
 
         g.setFont(font);
 
@@ -682,7 +752,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             Color c = ACCENT_COLORS[0].darker().darker();
             g.setColor(c);
 
-            int xx = hoff;
+            int xx = hroff;
             int w = PANEL_SIZE / 2 / 3;
 
             rewButton = new Button("", c, xx, y, w - 10, buttonHeight);
@@ -742,7 +812,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             g.setColor(ACCENT_COLORS[i]);
             Score so = scoreList.get(i);
             String s = so.name + ": " + so.score;
-            GraphicsUtil.drawString(g, s, hoff + 8, y);
+            GraphicsUtil.drawString(g, s, hroff + 8, y);
 
             y += step;
         }
@@ -759,7 +829,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         GraphicsUtil.drawString(g, hhmmss, 5, 5);
         GraphicsUtil.drawString(g, frameString, 80, 5);
-        GraphicsUtil.drawString(g, declaredTripID, 5, 20);
+        GraphicsUtil.drawString(g, "declared trip ID: " + declaredTripID, 5, 20);
     }
 
     private static void usage() {
@@ -854,20 +924,36 @@ class TripEvent {
 
 class Segment {
     int id;
+    String tripID;
     Area area;
     String startTime;
     String endTime;
     ShapePoint p;
     boolean active;
 
-    Segment(int id, Area area, String startTime, String endTime) {
+    Segment(int id, String tripID, Area area, String startTime, String endTime) {
         this.id = id;
+        this.tripID = tripID;
         this.area = area;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
+    public boolean matches(String name, String value) {
+        if (name == null || value.equals("*")) return true;
+
+        if (name.equals("trip_id") && tripID.startsWith("D2A_")) {
+            return tripID.equals(value);
+        }
+
+        return false;
+    }
+
     void setClosestPoint(ShapePoint p) {
         this.p = p;
+    }
+
+    public String toString() {
+        return "segment: id=" + id + ". tripID=" + tripID;
     }
 }
