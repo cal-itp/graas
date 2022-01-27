@@ -56,7 +56,8 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
     private static final int PANEL_SIZE = 700;
     private static final int PADDING = 30;
     private static final Color GRID_COLOR = new Color(16, 16, 64);
-    private static final Color INACTIVE_SEGMENT_COLOR = new Color(10, 40, 10);
+    //private static final Color INACTIVE_SEGMENT_COLOR = new Color(10, 40, 10);
+    private static final Color INACTIVE_SEGMENT_COLOR = new Color(15, 60, 15);
     private static final Color ACTIVE_SEGMENT_COLOR = ACCENT_COLORS[10];
     private static final Color BORDER_COLOR = new Color(32, 32, 32);
     private static final Color ACTIVE_LOCATION = new Color(255, 0, 255);
@@ -376,7 +377,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
                     repaint();
 
-                    //Debug.log("- segmentTable: " + segmentTable);
+                    Debug.log("- segmentTable: " + segmentTable);
 
                     for (;;) {
                         if (commands.size() > 0) {
@@ -410,7 +411,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
                                 List<Score> scoreList = e.getSegmentScoreList();
 
                                 for (Score score : scoreList) {
-                                    Segment s = segmentTable.get(score.id);
+                                    Segment s = segmentTable.get(Integer.parseInt(score.id));
 
                                     if (s != null) {
                                         s.active = true;
@@ -667,12 +668,12 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         g.drawImage(buf, 0, 0, null);
     }
 
-    private void drawPoint(Graphics g, int x, int y) {
+    private void drawPoint(Graphics g, int x, int y, int radius) {
         g.fillOval(
-            x - RADIUS,
-            y - RADIUS,
-            2 * RADIUS,
-            2 * RADIUS
+            x - radius,
+            y - radius,
+            2 * radius,
+            2 * radius
         );
     }
 
@@ -795,7 +796,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         for (ShapePoint p : tripPoints) {
             latLongToScreenXY(gridWidth, gridHeight, p);
-            drawPoint(g, PADDING + p.screenX, voff + p.screenY);
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY, RADIUS * 2);
         }
 
         ShapePoint p;
@@ -806,7 +807,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             p = e.position;
             latLongToScreenXY(gridWidth, gridHeight, p);
 
-            drawPoint(g, PADDING + p.screenX, voff + p.screenY);
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY, RADIUS);
         }
 
         if (eventList.size() == 0) return;
@@ -817,7 +818,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         p = e.position;
         latLongToScreenXY(gridWidth, gridHeight, p);
 
-        drawPoint(g, PADDING + p.screenX, voff + p.screenY);
+        drawPoint(g, PADDING + p.screenX, voff + p.screenY, RADIUS);
 
         y = voff + 6;
         int step = g.getFontMetrics().getHeight() + 1;
@@ -963,7 +964,7 @@ class Segment {
     public boolean matches(String name, String value) {
         if (name == null || value.equals("*")) return true;
 
-        if (name.equals("trip_id") && tripID.startsWith("D2A_")) {
+        if (name.equals("trip_id") && tripID.equals(value)) {
             return tripID.equals(value);
         }
 

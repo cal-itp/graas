@@ -53,6 +53,12 @@ public class TrainingDataUtil {
             return;
         }
 
+        Area area = new Area();
+
+        for (Shape s : shapeCollection) {
+            area.extend(s.getArea());
+        }
+
         DayLogSlicer dls = new DayLogSlicer(tripCollection, routeCollection, lines);
         List<TripReportData> tdList = dls.getTripReportDataList();
         Map<String, Map<String, GPSData>> gpsMap = dls.getMap();
@@ -70,6 +76,19 @@ public class TrainingDataUtil {
 
             metadata.append("trip-id: ");
             metadata.append(td.id);
+            metadata.append('\n');
+
+            // 19:05:43 grid: top_left=(36.609672, -119.487061) bottom_right=(35.761387, -118.776532) subdivisions=15
+            metadata.append("grid: ");
+            metadata.append("top_left=(");
+            metadata.append(area.topLeft.lat);
+            metadata.append(", ");
+            metadata.append(area.topLeft.lon);
+            metadata.append(") bottom_right=(");
+            metadata.append(area.bottomRight.lat);
+            metadata.append(", ");
+            metadata.append(area.bottomRight.lon);
+            metadata.append(") subdivisions=15");
             metadata.append('\n');
 
             writeStringToFile(folderName + "/metadata.txt", metadata.toString());
