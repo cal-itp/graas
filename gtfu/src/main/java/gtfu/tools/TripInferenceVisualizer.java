@@ -745,9 +745,9 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
             );
 
             latLongToScreenXY(gridWidth, gridHeight, segment.p);
-            int radius = 2;
+            int radius = 7;
 
-            g.fillOval(
+            g.drawOval(
                 hoff + segment.p.screenX - radius,
                 voff + segment.p.screenY - radius,
                 2 * radius,
@@ -796,7 +796,7 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
 
         for (ShapePoint p : tripPoints) {
             latLongToScreenXY(gridWidth, gridHeight, p);
-            drawPoint(g, PADDING + p.screenX, voff + p.screenY, RADIUS * 2);
+            drawPoint(g, PADDING + p.screenX, voff + p.screenY, (int)(RADIUS * 2));
         }
 
         ShapePoint p;
@@ -823,17 +823,33 @@ public class TripInferenceVisualizer extends Panel implements KeyListener, Mouse
         y = voff + 6;
         int step = g.getFontMetrics().getHeight() + 1;
         List<Score> scoreList = e.getSegmentScoreList();
+        g.setColor(Color.lightGray);
+        GraphicsUtil.drawString(g, "segment scores:", hroff + 8, y);
+        y += step;
 
         for (int i=0; i<scoreList.size(); i++) {
-            g.setColor(ACCENT_COLORS[i]);
+            g.setColor(ACCENT_COLORS[i % ACCENT_COLORS.length]);
             Score so = scoreList.get(i);
-            String s = so.name + ": " + so.score;
+            String s = "- " + so.name + ": " + so.score;
             GraphicsUtil.drawString(g, s, hroff + 8, y);
 
             y += step;
         }
 
-        // ### TODO: also draw candidate scores
+        y = voff + gridHeight / 2;
+        scoreList = e.getCandidateScoreList();
+        g.setColor(Color.lightGray);
+        GraphicsUtil.drawString(g, "candidate scores:", hroff + 8, y);
+        y += step;
+
+        for (int i=0; i<scoreList.size(); i++) {
+            g.setColor(ACCENT_COLORS[i % ACCENT_COLORS.length]);
+            Score so = scoreList.get(i);
+            String s = "- " + so.name + ": " + so.score;
+            GraphicsUtil.drawString(g, s, hroff + 8, y);
+
+            y += step;
+        }
 
         g.setColor(ACCENT_COLORS[0]);
         int seconds = e.getDaySeconds();
