@@ -31,11 +31,12 @@ jobs:
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/auth@v0
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+          # Google recommends using a Workload Identify Federation instead of using the service account key json file
+          # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
+          service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
+          credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
       - name: Run Python unit tests
         uses: actions/setup-python@v2
         with:
