@@ -17,6 +17,8 @@ from google.cloud import ndb
 import util
 import keygen
 
+LOCAL_SERVER_URL = 'https://127.0.0.1:8080/'
+
 class agency(ndb.Model):
     agencyid = ndb.StringProperty('agency-id')
     publickey = ndb.StringProperty('public-key')
@@ -133,40 +135,41 @@ def main(argv):
 	intervalVariation = 1
 	# How many updates per agency
 	numRepeats = 1
-	domain = None
+	domain = LOCAL_SERVER_URL
 
-	for i in range(argc):
-	    arg = sys.argv[i]
-
-	    if arg == '-l':
-	        domain = 'https://127.0.0.1:8080/'
-
-	    if arg == '-p':
-	        domain = 'https://lat-long-prototype.wl.r.appspot.com/'
-
-	    if arg == '-ac' and i < argc - 1:
-	        i += 1
-	        agencyCount = int(sys.argv[i])
-
-	    if arg == '-vc' and i < argc - 1:
-	        i += 1
-	        vehicleCount = int(sys.argv[i])
-
-	    if arg == '-i' and i < argc - 1:
-	        i += 1
-	        intervalTime = int(sys.argv[i])
-
-	    if arg == '-iv' and i < argc - 1:
-	        i += 1
-	        intervalVariation = int(sys.argv[i])
-
-	    if arg == '-r' and i < argc - 1:
-	        i += 1
-	        numRepeats = int(sys.argv[i])
-
-	if domain == None:
-		print('* usage: use -l for local server or -p for production server')
+	if argc != 2:
+		print('* usage: python stress-test.py <path-to-config-json-file>')
 		exit(1)
+
+	jsonInput = sys.argv[1]
+
+	if '.json' not in jsonInput:
+		print('* error: input must be a JSON file')
+		exit(1)
+
+	f = open(jsonInput)
+	data = json.load(f)
+	f.close()
+
+	if data.get('use-production-server', False):
+		productionServerURL = data.get('production-server-url', None)
+
+		if productionServerURL != None:
+			domain = productionServerURL
+
+		else:
+			print('* error: no production URL provided')
+			exit(1)
+
+	else:
+		domain = LOCAL_SERVER_URL
+
+	# Load attributes from json. If absent, use default values defined above
+	agencyCount = data.get('agency-count', agencyCount)
+	vehicleCount = data.get('vehicle-count', vehicleCount)
+	intervalTime = data.get('interval-time', intervalTime)
+	intervalVariation = data.get('interval-variation', intervalVariation)
+	numRepeats = data.get('num-repeats', numRepeats)
 
 	print(f'- domain: {domain}')
 	print(f'- agencyCount: {agencyCount}')
