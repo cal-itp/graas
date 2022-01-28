@@ -13,7 +13,7 @@ import java.nio.file.*;
 public class GTFSValidator {
 
     private static void usage() {
-        System.err.println("usage: java -cp build/libs/gtfu.jar gtfu.tools.GTFSValidator <agency-id>");
+        System.err.println("usage: java -cp build/libs/gtfu.jar gtfu.tools.GTFSValidator <static-gtfs-url>");
         System.exit(0);
     }
 
