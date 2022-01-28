@@ -55,6 +55,7 @@ const CONFIG_DRIVER_NAMES = "driver names";
 const CONFIG_FILTER_PARAMS = "filter params";
 const START_STOP_BUTTON = "start-stop";
 const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
+const START_STOP_BUTTON_STOP_TEXT = "Stop"
 const ROUTE_SELECT_DROPDOWN = "route-select";
 const ROUTE_SELECT_DROPDOWN_TEXT = "Select Route";
 const BUS_SELECT_DROPDOWN = "bus-select";
@@ -363,7 +364,7 @@ function handleStartStop() {
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
-    if (text == START_STOP_BUTTON_LOAD_TEXT {
+    if (text == START_STOP_BUTTON_LOAD_TEXT) {
         var millis = Date.now();
         loadRoutes();
         util.log("- millis     : " + millis);
@@ -488,7 +489,7 @@ function handleOkay() {
     p.style.display = "block";
 
     var p = document.getElementById(START_STOP_BUTTON);
-    p.textContent = "Stop";
+    p.textContent = START_STOP_BUTTON_STOP_TEXT;
 
     running = true;
     setWakeLock();
