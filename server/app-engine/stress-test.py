@@ -18,7 +18,6 @@ import util
 import keygen
 
 LOCAL_SERVER_URL = 'https://127.0.0.1:8080/'
-PRODUCTION_SERVER_URL = 'https://lat-long-prototype.wl.r.appspot.com/'
 
 class agency(ndb.Model):
     agencyid = ndb.StringProperty('agency-id')
@@ -152,8 +151,16 @@ def main(argv):
 	data = json.load(f)
 	f.close()
 
-	if data.get('production-server', False):
-		domain = PRODUCTION_SERVER_URL
+	if data.get('use-production-server', False):
+		productionServerURL = data.get('production-server-url', None)
+
+		if productionServerURL != None:
+			domain = productionServerURL
+
+		else:
+			print('* error: no production URL provided')
+			exit(1)
+
 	else:
 		domain = LOCAL_SERVER_URL
 
