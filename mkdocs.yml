@@ -2,9 +2,11 @@ site_name: GRaaS Documentation
 theme:
   name: material
 nav:
-  - Introduction: "README.md"
-  - General Transit Feed Utilities: "gtfu/README.md"
-  - Runbook: "server/onboarding-runbook.md"
-  - Server: "server/README.md"
-  - Hardware: "hardware/README.md"
-  - Attribution: "attribution.md"
+  - About:
+    - Intro to GRaaS: "README.md"
+    - Attribution: "attribution.md"
+  - Developer setup:
+    - Setting up a new instance of GRaaS: "new-instance-setup.md"
+    - Agency Onboarding Runbook: "server/onboarding-runbook.md"
+  - GRaaS hardware intro and assembly: "hardware/README.md"
+
