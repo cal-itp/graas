@@ -1,6 +1,6 @@
 package gtfu;
 
-public class GPSData implements StatValue {
+public class GPSData {
     public long millis;
     public int secsSinceLastUpdate;
     public float lat;
@@ -25,13 +25,5 @@ public class GPSData implements StatValue {
 
     public void increment() {
         count++;
-    }
-
-    // For use as a StatValue:
-    public Double getValue() {
-        if(secsSinceLastUpdate > 0) {
-            Double secsSinceLastUpdateDouble = Double.valueOf(secsSinceLastUpdate);
-            return secsSinceLastUpdateDouble;
-        } else return null;
     }
 }

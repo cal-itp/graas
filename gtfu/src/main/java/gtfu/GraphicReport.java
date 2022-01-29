@@ -274,7 +274,18 @@ public class GraphicReport {
                     }
 
                     gpsMap.put(id,latLonMap);
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id).values()));
+
+                    List<Double> updateFreqList = new ArrayList<>();
+                    List<Double> updateTimeList = new ArrayList<>();
+
+                    for (GPSData gpsData : gpsMap.get(id).values()) {
+                        if(gpsData.secsSinceLastUpdate > 0) {
+                            Double secsSinceLastUpdateDouble = Double.valueOf(gpsData.secsSinceLastUpdate);
+                            updateFreqList.add(secsSinceLastUpdateDouble);
+                        }
+                        updateTimeList.add(Double.valueOf(gpsData.millis));
+                    }
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(updateFreqList), new Stats(updateTimeList));
                     tdList.add(td);
                     tdMap.put(id, td);
                 }

@@ -122,9 +122,25 @@ public class DayLogSlicer {
             // Debug.log("++   end: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   duration: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   durationMins: " + durationMins);
-            // Filter out trips shorter than 15 min
-            if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id).values()));
+
+
+            List<Double> updateFreqList = new ArrayList<>();
+            List<Double> updateTimeList = new ArrayList<>();
+
+            for (GPSData gpsData : gpsMap.get(id).values()) {
+
+                if(gpsData.secsSinceLastUpdate > 0) {
+                    Double secsSinceLastUpdateDouble = Double.valueOf(gpsData.secsSinceLastUpdate);
+                    updateFreqList.add(secsSinceLastUpdateDouble);
+                }
+
+                updateTimeList.add(Double.valueOf(gpsData.millis));
+            }
+
+            TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(updateFreqList), new Stats(updateTimeList));
+
+            // Filter out trips that last less than 10 minutes
+            if (td.getDurationMins() >= 10) {
                 tdList.add(td);
                 tdMap.put(id, td);
             }
