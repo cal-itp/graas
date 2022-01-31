@@ -28,6 +28,7 @@ var startLat = null;
 var startLon = null;
 var trips = [];
 var mode = 'vanilla';
+var sessionID = null;
 
 // Default filter parameters, used when agency doesn't have a filter-config.json file
 var maxMinsFromStart = 60;
@@ -354,6 +355,7 @@ function handleStartStop() {
 
     if (text == "Load trips") {
         var millis = Date.now();
+        sessionID = createUUID();
         loadRoutes();
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
@@ -826,6 +828,7 @@ function handleGPSUpdate(position) {
     data['trip-id'] = tripID;
     data['agency-id'] = agencyID;
     data['vehicle-id'] = vehicleID;
+    data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
 
     if (driverName) {
