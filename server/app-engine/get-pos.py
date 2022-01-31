@@ -33,13 +33,12 @@ def main(argv):
     cutoff = int(round(time.time())) - 60 * 60 * 2
     print_time = False
     print_timestamp = False
-    print_trip_id = False
     print_driver = False
-    print_vehicle_id = False
+    print_session_id = False
     print_id = False
 
     try:
-        opts, args = getopt.getopt(argv,"u:a:n:c:tTid:Cxyz",["uuid=", "agency-id=", "agent-string=","cutoff=", "timestamp","friendly-timestamp","tripid","date=","currentday","print_driver","print_vehicle","print_id"])
+        opts, args = getopt.getopt(argv,"u:a:n:c:tTd:Csxz",["uuid=", "agency-id=", "agent-string=","cutoff=", "timestamp","friendly-timestamp","date=","currentday","print_session_id","print_driver","print_id"])
     except getopt.GetoptError:
         print('get-pos.py -u <uuid>')
         sys.exit(2)
@@ -56,16 +55,14 @@ def main(argv):
             print_timestamp = True
         if opt in ("-T", "--friendly-timestamp"):
             print_time = True
-        if opt in ("-i", "--tripid"):
-            print_trip_id = True
         if opt in ("-d", "--date"):
             cutoff = midnight_seconds(arg)
         if opt in ("-C", "--currentday"):
             cutoff = midnight_seconds()
+        if opt in ("-s", "--print-session_id"):
+            print_session_id = True
         if opt in ("-x", "--print-driver"):
             print_driver = True
-        if opt in ("-y", "--print-vehicle"):
-            print_vehicle_id = True
         if opt in ("-z", "--print-id"):
             print_id = True
 
@@ -96,17 +93,13 @@ def main(argv):
     if print_timestamp:
         header = header + 'timestamp,'
 
-
     if print_time:
         header = header + 'time-string,'
 
-    header = header + 'lat,long,'
+    header = header + 'lat,long,trip-id,vehicle-id,'
 
-    if print_trip_id:
-        header = header + 'trip-id,'
-
-    if print_vehicle_id:
-        header = header + 'vehicle-id,'
+    if print_session_id:
+        header = header + 'session-id,'
 
     if len(agent_string) > 0:
         header = header + 'agent,'
