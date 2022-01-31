@@ -355,7 +355,6 @@ function handleStartStop() {
 
     if (text == "Load trips") {
         var millis = Date.now();
-        sessionID = createUUID();
         loadRoutes();
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
@@ -439,6 +438,10 @@ function handleBusChoice() {
 
 function handleOkay() {
     util.log("handleOkay()");
+
+    sessionID = createUUID();
+    var p = document.getElementById("session-id");
+    p.innerHTML = "Session ID: " + sessionID;
 
     if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
         fetch('/graas-start').then(function(response) {
@@ -1142,7 +1145,6 @@ function configComplete() {
 
     if (navigator && navigator.geolocation) {
         var uuid = getUUID();
-
         var p = document.getElementById("uuid");
         p.innerHTML = "UUID: " + uuid;
 
