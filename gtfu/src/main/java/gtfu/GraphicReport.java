@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import gtfu.tools.DayLogSlicer;
 import gtfu.tools.DB;
@@ -274,7 +275,20 @@ public class GraphicReport {
                     }
 
                     gpsMap.put(id,latLonMap);
-                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(gpsMap.get(id).values()));
+                    // Create lists as input to Stats
+                    List<Double> updateFreqList = new ArrayList<>();
+                    List<Double> updateMillisList = new ArrayList<>();
+
+                    for (GPSData gpsData : gpsMap.get(id).values()) {
+                        Double secsSinceLastUpdateDouble = gpsData.getSecsSinceLastUpdateAsDouble();
+
+                        if(secsSinceLastUpdateDouble > 0) {
+                            updateFreqList.add(secsSinceLastUpdateDouble);
+                        }
+                        updateMillisList.add(gpsData.getMillisAsDouble());
+                    }
+
+                    TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(updateFreqList), new Stats(updateMillisList));
                     tdList.add(td);
                     tdMap.put(id, td);
                 }

@@ -3,6 +3,8 @@ package gtfu;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Stats {
 
@@ -11,22 +13,20 @@ public class Stats {
     private double max = Double.MIN_VALUE;
 
 
-    public Stats(Collection<? extends StatValue> c) {
+    public Stats(List<Double> l) {
         double total = 0;
         int count = 0;
 
-        for (StatValue v : c) {
-            Double value = v.getValue();
-            if (value == null) continue;
+        for (Double d : l) {
             count++;
-            total += value;
+            total += d;
 
-            if (value < min) {
-                min = value;
+            if (d < min) {
+                min = d;
             }
 
-            if (value > max) {
-                max = value;
+            if (d > max) {
+                max = d;
             }
         }
         if (count > 0) avg = total / count;
@@ -43,8 +43,4 @@ public class Stats {
     public double getMax() {
         return max;
     }
-}
-
-interface StatValue {
-    public Double getValue();
 }
