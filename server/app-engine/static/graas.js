@@ -28,6 +28,7 @@ var startLat = null;
 var startLon = null;
 var trips = [];
 var mode = 'vanilla';
+var sessionID = null;
 
 // Default filter parameters, used when agency doesn't have a filter-config.json file
 var maxMinsFromStart = 60;
@@ -438,6 +439,10 @@ function handleBusChoice() {
 function handleOkay() {
     util.log("handleOkay()");
 
+    sessionID = createUUID();
+    var p = document.getElementById("session-id");
+    p.innerHTML = "Session ID: " + sessionID;
+
     if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
         fetch('/graas-start').then(function(response) {
             util.log('- response.status: ' + response.status);
@@ -826,6 +831,7 @@ function handleGPSUpdate(position) {
     data['trip-id'] = tripID;
     data['agency-id'] = agencyID;
     data['vehicle-id'] = vehicleID;
+    data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
 
     if (driverName) {
@@ -1139,7 +1145,6 @@ function configComplete() {
 
     if (navigator && navigator.geolocation) {
         var uuid = getUUID();
-
         var p = document.getElementById("uuid");
         p.innerHTML = "UUID: " + uuid;
 
