@@ -1,6 +1,7 @@
 package gtfu.tools;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import gtfu.Util;
 import gtfu.Stats;
 
 public class DayLogSlicer {
+    public static final int MIN_REPORT_DURATION_MINS = 1;
     private Map<String, Map<String, GPSData>> gpsMap;
     private Map<String, GPSData> latLonMap;
     private Map<String, Integer> previousUpdateMap;
@@ -123,27 +125,18 @@ public class DayLogSlicer {
             // Debug.log("++   duration: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   durationMins: " + durationMins);
 
+            // Create lists as input to Stats
+            List<Double> updateFreqList = gpsMap.get(id).values().stream().map(GPSData::getSecsSinceLastUpdateDouble).filter(secs -> secs > 0).collect(Collectors.toList());
+            List<Double> updateMillisList = gpsMap.get(id).values().stream().map(GPSData::getMillisDouble).collect(Collectors.toList());
 
-            List<Double> updateFreqList = new ArrayList<>();
-            List<Double> updateTimeList = new ArrayList<>();
+            TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(updateFreqList), new Stats(updateMillisList));
+            int tripDuration = td.getDurationMins();
 
-            for (GPSData gpsData : gpsMap.get(id).values()) {
-
-                if(gpsData.secsSinceLastUpdate > 0) {
-                    Double secsSinceLastUpdateDouble = Double.valueOf(gpsData.secsSinceLastUpdate);
-                    updateFreqList.add(secsSinceLastUpdateDouble);
-                }
-
-                updateTimeList.add(Double.valueOf(gpsData.millis));
-            }
-
-            TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(updateFreqList), new Stats(updateTimeList));
-
-            // Filter out trips that last less than 10 minutes
-            if (td.getDurationMins() >= 10) {
+            // Filter out trips shorter than minimum duration
+            if (tripDuration >= MIN_REPORT_DURATION_MINS) {
                 tdList.add(td);
                 tdMap.put(id, td);
-            }
+            } else Debug.log(" - skipping trip " + id + " because duration was less than " + MIN_REPORT_DURATION_MINS + " mins");
         }
 
         Collections.sort(tdList);

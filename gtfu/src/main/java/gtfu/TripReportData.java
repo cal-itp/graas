@@ -112,12 +112,12 @@ public class TripReportData implements Comparable<TripReportData> {
         return String.format("%.0f",updateFreqStats.getMin());
     }
 
-    public double getDurationSecs() {
-        return updateTimeStats.getMax() - updateTimeStats.getMin();
+    public double getDurationMillis() {
+        return (updateTimeStats.getMax() - updateTimeStats.getMin());
     }
 
     public int getDurationMins() {
-        return (int) getDurationSecs()/60;
+        return (int) getDurationMillis() / 60 / 1000;
     }
 
     public boolean overlaps(TripReportData td) {

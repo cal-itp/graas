@@ -26,4 +26,12 @@ public class GPSData {
     public void increment() {
         count++;
     }
+
+    public Double getSecsSinceLastUpdateDouble() {
+        return Double.valueOf(secsSinceLastUpdate);
+    }
+
+    public Double getMillisDouble() {
+        return Double.valueOf(millis);
+    }
 }
