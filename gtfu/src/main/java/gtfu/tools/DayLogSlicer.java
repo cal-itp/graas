@@ -126,8 +126,8 @@ public class DayLogSlicer {
             // Debug.log("++   durationMins: " + durationMins);
 
             // Create lists as input to Stats
-            List<Double> updateFreqList = gpsMap.get(id).values().stream().map(GPSData::getSecsSinceLastUpdateDouble).filter(secs -> secs > 0).collect(Collectors.toList());
-            List<Double> updateMillisList = gpsMap.get(id).values().stream().map(GPSData::getMillisDouble).collect(Collectors.toList());
+            List<Double> updateFreqList = gpsMap.get(id).values().stream().map(GPSData::getSecsSinceLastUpdateAsDouble).filter(secs -> secs > 0).collect(Collectors.toList());
+            List<Double> updateMillisList = gpsMap.get(id).values().stream().map(GPSData::getMillisAsDouble).collect(Collectors.toList());
 
             TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(updateFreqList), new Stats(updateMillisList));
             int tripDuration = td.getDurationMins();

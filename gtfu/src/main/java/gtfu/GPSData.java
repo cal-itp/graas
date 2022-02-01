@@ -27,11 +27,11 @@ public class GPSData {
         count++;
     }
 
-    public Double getSecsSinceLastUpdateDouble() {
+    public Double getSecsSinceLastUpdateAsDouble() {
         return Double.valueOf(secsSinceLastUpdate);
     }
 
-    public Double getMillisDouble() {
+    public Double getMillisAsDouble() {
         return Double.valueOf(millis);
     }
 }

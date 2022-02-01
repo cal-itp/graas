@@ -276,8 +276,8 @@ public class GraphicReport {
 
                     gpsMap.put(id,latLonMap);
                     // Create lists as input to Stats
-                    List<Double> updateFreqList = gpsMap.get(id).values().stream().map(GPSData::getSecsSinceLastUpdateDouble).filter(secs -> secs > 0).collect(Collectors.toList());
-                    List<Double> updateMillisList = gpsMap.get(id).values().stream().map(GPSData::getMillisDouble).collect(Collectors.toList());
+                    List<Double> updateFreqList = gpsMap.get(id).values().stream().map(GPSData::getSecsSinceLastUpdateAsDouble).filter(secs -> secs > 0).collect(Collectors.toList());
+                    List<Double> updateMillisList = gpsMap.get(id).values().stream().map(GPSData::getMillisAsDouble).collect(Collectors.toList());
 
                     TripReportData td = new TripReportData(id, t.getHeadsign(), start, duration, "test", "test", "test", new Stats(updateFreqList), new Stats(updateMillisList));
                     tdList.add(td);
