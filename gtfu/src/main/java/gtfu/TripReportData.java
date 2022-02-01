@@ -113,11 +113,11 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public double getDurationMillis() {
-        return (updateTimeStats.getMax() - updateTimeStats.getMin());
+        return updateTimeStats.getMax() - updateTimeStats.getMin();
     }
 
     public int getDurationMins() {
-        return (int) getDurationMillis() / 60 / 1000;
+        return (int) getDurationMillis() / Time.MILLIS_PER_MINUTE;
     }
 
     public boolean overlaps(TripReportData td) {
