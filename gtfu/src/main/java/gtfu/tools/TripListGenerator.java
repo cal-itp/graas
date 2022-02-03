@@ -31,6 +31,7 @@ public class TripListGenerator {
         System.err.println("    -r route_short_name from routes.txt");
         System.err.println("    -R route_long_name from routes.txt");
         System.err.println("    -h trip_headsign from trips.txt");
+        System.err.println("    -s shape_id from trips.txt");
         System.exit(0);
     }
 
@@ -46,6 +47,7 @@ public class TripListGenerator {
         String gtfsAgency = null;
         String nameField = null;
         boolean filterable = true;
+        boolean useDirection = false;
         PrintStream out = System.out;
 
         for (int i=0; i<arg.length; i++) {
@@ -83,6 +85,14 @@ public class TripListGenerator {
 
             if (arg[i].equals("-h") || arg[i].equals("--headsign")) {
                 nameField = "headsign";
+            }
+
+            if (arg[i].equals("-s") || arg[i].equals("--shape-id")) {
+                nameField = "shape_id";
+            }
+
+            if (arg[i].equals("-d") || arg[i].equals("--direction")) {
+                useDirection = true;
             }
 
             if (arg[i].equals("-oa") || arg[i].equals("--output-agency-dir")) {
@@ -207,12 +217,32 @@ public class TripListGenerator {
             String headsign = r.get("trip_headsign");
             String serviceID = r.get("service_id");
             String routeID = r.get("route_id");
+            String shapeID = r.get("shape_id");
+            String directionID = r.get("direction_id");
 
-            tmap.put(id, new TripData(headsign, serviceID, routeID));
+            tmap.put(id, new TripData(headsign, serviceID, routeID, shapeID, directionID));
         }
 
         tf.dispose();
         // Debug.log("- tmap: " + tmap);
+
+
+        tf = new TextFile(rootFolder + "/" + agencyID + "/directions.txt");
+        header = new CSVHeader(tf.getNextLine());
+        Map<String, String> dmap = new HashMap<String, String>();
+
+        for (;;) {
+            String line = tf.getNextLine();
+            if (line == null) break;
+            CSVRecord r = new CSVRecord(header, line);
+            String id = r.get("direction_id");
+            String routeID = r.get("route_id");
+            String direction = r.get("direction");
+            dmap.put(routeID + id, direction);
+        }
+        // Debug.log("dmap: " + dmap);
+
+        tf.dispose();
 
         tf = new TextFile(rootFolder + "/" + agencyID + "/stop_times.txt");
         header = new CSVHeader(tf.getNextLine());
@@ -231,8 +261,11 @@ public class TripListGenerator {
             if (!id.equals(lastID)) {
                 int departureTime = Time.getMillisForTime(hms);
                 TripData tdata = tmap.get(id);
-                RouteData rdata = rmap.get(tdata.routeID);
-                list.add(new TripListEntry(tdata, rdata, stopID, id, departureTime, nameField));
+                String routeID = tdata.routeID;
+                String directionID = tdata.directionID;
+                RouteData rdata = rmap.get(routeID);
+                String direction = dmap.get(routeID + directionID);
+                list.add(new TripListEntry(tdata, rdata, stopID, id, departureTime, direction, nameField, useDirection));
             }
 
             lastID = id;
@@ -299,11 +332,15 @@ class TripData {
     String headSign;
     String serviceID;
     String routeID;
+    String shapeID;
+    String directionID;
 
-    public TripData(String headSign, String serviceID, String routeID) {
+    public TripData(String headSign, String serviceID, String routeID, String shapeID, String directionID) {
         this.headSign = headSign;
         this.serviceID = serviceID;
         this.routeID = routeID;
+        this.shapeID = shapeID;
+        this.directionID = directionID;
     }
 }
 
@@ -327,25 +364,33 @@ class TripListEntry implements Comparable<TripListEntry> {
     String routeLongName;
     String firstStopID;
     String tripID;
+    String shapeID;
     String name;
     int departureTime;
 
-    public TripListEntry(TripData data, RouteData rdata, String firstStopID, String tripID, int departureTime, String nameField) {
+    public TripListEntry(TripData data, RouteData rdata, String firstStopID, String tripID, int departureTime, String direction, String nameField, boolean useDirection) {
         headSign = data.headSign;
         serviceID = data.serviceID;
         routeID = data.routeID;
         routeShortName = rdata.routeShortName;
         routeLongName = rdata.routeLongName;
+        shapeID = data.shapeID;
 
+        // name = shapeID;
         if (nameField == "headsign"){
             name = headSign;
         } else if (nameField == "route_short_name") {
             name = routeShortName;
         } else if (nameField == "route_long_name") {
             name = routeLongName;
+        } else if (nameField == "shape_id") {
+            name = shapeID;
         }
         if (name == null || name == "") {
             System.err.println("** selected name field " + nameField + " is null/blank for trip "+ tripID);
+        }
+        if (useDirection) {
+            name = name + " - " + direction;
         }
 
         this.firstStopID = firstStopID;
