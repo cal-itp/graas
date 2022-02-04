@@ -53,6 +53,8 @@ Create service data for agency
 ```
 - Confirm that none of the calendar arrays are null. If they are, those routes will be hidden by default, and you should ask the agency to update the GTFS feed
 - From `graas-staging/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux;tab=objects?project=lat-long-prototype&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) to confirm that your updates went through. You can run this command whenever you update either file.
+- Update the file `live-agencies.txt`, which lives on the GRaaS storage bucket, to include the agency-id
+[TODO](https://github.com/cal-itp/graas/issues/86): Automatically perform this update
 
 Create keys for agency
 ----------------------
