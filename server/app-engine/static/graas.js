@@ -28,6 +28,7 @@ var startLat = null;
 var startLon = null;
 var trips = [];
 var mode = 'vanilla';
+var sessionID = null;
 
 // Default filter parameters, used when agency doesn't have a filter-config.json file
 var maxMinsFromStart = 60;
@@ -352,12 +353,18 @@ function handleStartStop() {
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
+    // Driver taps "Load trips", dropdown options appear
     if (text == "Load trips") {
         var millis = Date.now();
-        loadRoutes();
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
+
+        // Load routes, if trips array has already been populated
+        util.log("triplength: " + trips.length);
+        if (trips.length > 0) {
+            loadRoutes();
+        }
 
         if (millis - startMillis >= MAX_LIFE) {
             handleModal("staleModal");
@@ -372,21 +379,15 @@ function handleStartStop() {
         configMatrix.setSelected(CONFIG_ROUTE_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
         configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
-    } else {
+    }
+    // Driver taps "stop", sends app to blank screen with only "Load trips" button
+    else { //
         clearWakeLock();
         var p = document.getElementById('stats');
         p.style.display = 'none';
 
         running = false;
-
-        p = document.getElementById('route-select');
-        p.value = 'disabled';
-
-        p = document.getElementById('bus-select');
-        p.value = 'disabled';
-
-        p = document.getElementById('driver-select');
-        p.value = 'disabled';
+        disableElements('route-select', 'bus-select', 'driver-select');
 
         p = document.getElementById('okay');
         p.disabled = 'true';
@@ -435,8 +436,13 @@ function handleBusChoice() {
     checkForConfigCompletion();
 }
 
+// Driver taps "Go" to start a ride
 function handleOkay() {
     util.log("handleOkay()");
+
+    sessionID = createUUID();
+    var p = document.getElementById("session-id");
+    p.innerHTML = "Session ID: " + sessionID;
 
     if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
         fetch('/graas-start').then(function(response) {
@@ -710,7 +716,8 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
-
+    var dropdowns = ['route-select', 'bus-select', 'driver-select'];
+    disableElements(dropdowns);
     getRewriteArgs();
 
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -826,6 +833,7 @@ function handleGPSUpdate(position) {
     data['trip-id'] = tripID;
     data['agency-id'] = agencyID;
     data['vehicle-id'] = vehicleID;
+    data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
 
     if (driverName) {
@@ -984,6 +992,8 @@ function gotConfigData(data, agencyID, arg) {
         configComplete();
     } else getURLContent(agencyID, arg);
 }
+
+// Load & filter trips, and then populate dropdown
 function loadRoutes() {
     util.log("- loading routes");
     tripIDLookup = {};
@@ -1041,7 +1051,7 @@ function loadRoutes() {
             }
         }
     }
-    populateRouteList();
+    setTimeout(populateRouteList,5000);
 }
 function gpsInterval(millis) {
     if (navigator.onLine && running) {
@@ -1086,9 +1096,17 @@ function populateList(id, str, list) {
     setupListHeader(p);
 }
 
+function disableElement(id) {
+    var p = document.getElementById(id);
+    p.value = 'disabled'
+}
+
+function disableElements(list) {
+    list.forEach(el => disableElement(el));
+}
+
  function populateRouteList() {
     var p = document.getElementById('route-select');
-    p.hidden = true;
     clearSelectOptions(p);
     addSelectOption(p, "Select Route", true);
 
@@ -1096,7 +1114,6 @@ function populateList(id, str, list) {
         addSelectOption(p, key, !value);
     }
 
-    p.hidden = false;
     setupListHeader(p);
 }
 
@@ -1141,7 +1158,6 @@ function configComplete() {
 
     if (navigator && navigator.geolocation) {
         var uuid = getUUID();
-
         var p = document.getElementById("uuid");
         p.innerHTML = "UUID: " + uuid;
 
