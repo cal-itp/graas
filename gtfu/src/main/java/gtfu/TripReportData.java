@@ -18,9 +18,10 @@ public class TripReportData implements Comparable<TripReportData> {
     String vehicleId;
     Client deviceClient;
     Parser uaParser = new Parser();
-    public Stats stats;
+    public Stats updateFreqStats;
+    public Stats updateTimeStats;
 
-    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId, Stats stats) {
+    public TripReportData(String id, String name, int start, int duration, String uuid, String agent, String vehicleId, Stats updateFreqStats, Stats updateTimeStats) {
         this.id = id;
         this.name = name;
         this.start = start;
@@ -30,7 +31,8 @@ public class TripReportData implements Comparable<TripReportData> {
         this.vehicleId = vehicleId;
         // TODO: Create new file for getting deviceClient info
         this.deviceClient = uaParser.parse(agent);
-        this.stats = stats;
+        this.updateFreqStats = updateFreqStats;
+        this.updateTimeStats = updateTimeStats;
     }
 
     public int compareTo(TripReportData o) {
@@ -99,16 +101,23 @@ public class TripReportData implements Comparable<TripReportData> {
     }
 
     public String getAvgUpdateInterval() {
-        return String.format("%.2f",stats.getAvg());
+        return String.format("%.2f",updateFreqStats.getAvg());
     }
 
     public String getMaxUpdateInterval() {
-        return String.format("%.0f",stats.getMax());
+        return String.format("%.0f",updateFreqStats.getMax());
     }
 
     public String getMinUpdateInterval() {
-        return String.format("%.0f",stats.getMin());
+        return String.format("%.0f",updateFreqStats.getMin());
+    }
 
+    public double getDurationMillis() {
+        return updateTimeStats.getMax() - updateTimeStats.getMin();
+    }
+
+    public int getDurationMins() {
+        return (int) getDurationMillis() / Time.MILLIS_PER_MINUTE;
     }
 
     public boolean overlaps(TripReportData td) {

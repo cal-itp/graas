@@ -36,10 +36,11 @@ def main(argv):
     print_trip_id = False
     print_driver = False
     print_vehicle_id = False
+    print_session_id = False
     print_id = False
 
     try:
-        opts, args = getopt.getopt(argv,"u:a:n:c:tTid:Cxyz",["uuid=", "agency-id=", "agent-string=","cutoff=", "timestamp","friendly-timestamp","tripid","date=","currentday","print_driver","print_vehicle","print_id"])
+        opts, args = getopt.getopt(argv,"u:a:n:c:tTid:Csxyz",["uuid=", "agency-id=", "agent-string=","cutoff=", "timestamp","friendly-timestamp","tripid","date=","currentday","print-session-id","print-driver","print-vehicle","print-id"])
     except getopt.GetoptError:
         print('get-pos.py -u <uuid>')
         sys.exit(2)
@@ -62,6 +63,8 @@ def main(argv):
             cutoff = midnight_seconds(arg)
         if opt in ("-C", "--currentday"):
             cutoff = midnight_seconds()
+        if opt in ("-s", "--print-session-id"):
+            print_session_id = True
         if opt in ("-x", "--print-driver"):
             print_driver = True
         if opt in ("-y", "--print-vehicle"):
@@ -107,6 +110,9 @@ def main(argv):
 
     if print_vehicle_id:
         header = header + 'vehicle-id,'
+
+    if print_session_id:
+        header = header + 'session-id,'
 
     if len(agent_string) > 0:
         header = header + 'agent,'

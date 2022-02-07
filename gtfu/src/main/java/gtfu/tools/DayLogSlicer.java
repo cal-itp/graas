@@ -1,6 +1,7 @@
 package gtfu.tools;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import gtfu.Util;
 import gtfu.Stats;
 
 public class DayLogSlicer {
+    public static final int MIN_REPORT_DURATION_MINS = 1;
     private Map<String, Map<String, GPSData>> gpsMap;
     private Map<String, GPSData> latLonMap;
     private Map<String, Integer> previousUpdateMap;
@@ -122,12 +124,28 @@ public class DayLogSlicer {
             // Debug.log("++   end: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   duration: " + Time.getHMForMillis(start + duration));
             // Debug.log("++   durationMins: " + durationMins);
-            // Filter out trips shorter than 15 min
-            if (durationMins >= 15) {
-                TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(gpsMap.get(id).values()));
+
+            // Create lists as input to Stats
+            List<Double> updateFreqList = new ArrayList<>();
+            List<Double> updateMillisList = new ArrayList<>();
+
+            for (GPSData gpsData : gpsMap.get(id).values()) {
+                Double secsSinceLastUpdateDouble = gpsData.getSecsSinceLastUpdateAsDouble();
+
+                if(secsSinceLastUpdateDouble > 0) {
+                    updateFreqList.add(secsSinceLastUpdateDouble);
+                }
+                updateMillisList.add(gpsData.getMillisAsDouble());
+            }
+
+            TripReportData td = new TripReportData(id, name, start, duration, uuidMap.get(id), agentMap.get(id), vehicleIdMap.get(id), new Stats(updateFreqList), new Stats(updateMillisList));
+            int tripDuration = td.getDurationMins();
+
+            // Filter out trips shorter than minimum duration
+            if (tripDuration >= MIN_REPORT_DURATION_MINS) {
                 tdList.add(td);
                 tdMap.put(id, td);
-            }
+            } else Debug.log(" - skipping trip " + id + " because duration was less than " + MIN_REPORT_DURATION_MINS + " mins");
         }
 
         Collections.sort(tdList);
