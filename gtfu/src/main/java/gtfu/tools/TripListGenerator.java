@@ -31,6 +31,7 @@ public class TripListGenerator {
         System.err.println("    -r route_short_name from routes.txt");
         System.err.println("    -R route_long_name from routes.txt");
         System.err.println("    -h trip_headsign from trips.txt");
+        System.err.println("    -s shape_id from trips.txt");
         System.exit(0);
     }
 
@@ -84,6 +85,11 @@ public class TripListGenerator {
             if (arg[i].equals("-h") || arg[i].equals("--headsign")) {
                 nameField = "headsign";
             }
+
+            if (arg[i].equals("-s") || arg[i].equals("--shape-id")) {
+                nameField = "shape_id";
+            }
+
 
             if (arg[i].equals("-oa") || arg[i].equals("--output-agency-dir")) {
                 if(agencyID == null) {
@@ -207,8 +213,9 @@ public class TripListGenerator {
             String headsign = r.get("trip_headsign");
             String serviceID = r.get("service_id");
             String routeID = r.get("route_id");
+            String shapeID = r.get("shape_id");
 
-            tmap.put(id, new TripData(headsign, serviceID, routeID));
+            tmap.put(id, new TripData(headsign, serviceID, routeID, shapeID));
         }
 
         tf.dispose();
@@ -299,11 +306,13 @@ class TripData {
     String headSign;
     String serviceID;
     String routeID;
+    String shapeID;
 
-    public TripData(String headSign, String serviceID, String routeID) {
+    public TripData(String headSign, String serviceID, String routeID, String shapeID) {
         this.headSign = headSign;
         this.serviceID = serviceID;
         this.routeID = routeID;
+        this.shapeID = shapeID;
     }
 }
 
@@ -327,6 +336,7 @@ class TripListEntry implements Comparable<TripListEntry> {
     String routeLongName;
     String firstStopID;
     String tripID;
+    String shapeID;
     String name;
     int departureTime;
 
@@ -336,13 +346,16 @@ class TripListEntry implements Comparable<TripListEntry> {
         routeID = data.routeID;
         routeShortName = rdata.routeShortName;
         routeLongName = rdata.routeLongName;
+        shapeID = data.shapeID;
 
-        if (nameField == "headsign"){
+        if (nameField.equals("headsign")){
             name = headSign;
-        } else if (nameField == "route_short_name") {
+        } else if (nameField.equals("route_short_name")) {
             name = routeShortName;
-        } else if (nameField == "route_long_name") {
+        } else if (nameField.equals("route_long_name")) {
             name = routeLongName;
+        } else if (nameField.equals("shape_id")) {
+            name = shapeID;
         }
         if (name == null || name == "") {
             System.err.println("** selected name field " + nameField + " is null/blank for trip "+ tripID);

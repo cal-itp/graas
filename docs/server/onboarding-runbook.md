@@ -9,7 +9,7 @@ Onboarder prerequisites
   - `git`
   - `gcloud`
   - `gsutil`
-- clone two git repos: graas-staging & graas-agency-keys.
+- clone two git repos: graas & graas-agency-keys.
 
 __TODO__: dockerize onboarding
 
@@ -25,7 +25,7 @@ Agency prerequisites
 Create service data for agency
 ------------------------------
 - Go to [agencies.yml](https://github.com/cal-itp/data-infra/blob/main/airflow/data/agencies.yml), a Cal-ITP source-of-truth, in order to determine the agency-id for this agency.
-- From `graas-staging/server/agency-config/gtfs`, run the command `./setup-agency-templates.sh <id>`. This will create a directory for the agency at `graas-staging/server/agency-config/gtfs/gtfs-aux/<agency-id>`, containing 3 files:
+- From `graas/server/agency-config/gtfs`, run the command `./setup-agency-templates.sh <id>`. This will create a directory for the agency at `graas/server/agency-config/gtfs/gtfs-aux/<agency-id>`, containing 3 files:
     - filter-params.json
     - route-names.json
     - vehicle-ids.json
@@ -52,19 +52,19 @@ Create service data for agency
 
 ```
 - Confirm that none of the calendar arrays are null. If they are, those routes will be hidden by default, and you should ask the agency to update the GTFS feed
-- From `graas-staging/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux;tab=objects?project=lat-long-prototype&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) to confirm that your updates went through. You can run this command whenever you update either file.
+- From `graas/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux;tab=objects?project=[YOUR_GOOGLE_CLOUD_PROJECTID]&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) to confirm that your updates went through. You can run this command whenever you update either file.
 - Update the file `live-agencies.txt`, which lives on the GRaaS storage bucket, to include the agency-id
 [TODO](https://github.com/cal-itp/graas/issues/86): Automatically perform this update
 
 Create keys for agency
 ----------------------
-From `graas-staging/server/app-engine`, run `python keygen.py -a <agency-id>`. This uploads the public key to Google Cloud and generates a folder called `<agency-id>` with two files inside it:
+From `graas/server/app-engine`, run `python keygen.py -a <agency-id>`. This uploads the public key to Google Cloud and generates a folder called `<agency-id>` with two files inside it:
 - __id_ecdsa__: private key. This is __PRIVILEGED INFORMATION__ and needs to be kept confidential.
 - __id_ecdsa.pub__: public key
 
 - Move this new agency key folder to the graas-agency-keys repo (or elsewhere if you prefer). This is privleged information and shouldn't live on the open-source repo.
 
-- Create a unique agency QR code, which encodes the private key, to be read by the GRaaS app. Generate the code by going to the `graas-staging/server/qr-gen` directory and running `./run.sh ../../../graas-agency-keys/<agency-id>/id_ecdsa "<nickname for agency>"`. This will save a file called "qr.png" to the qr-gen folder - you'll want to paste this into the onboarding docs provided to the agency.
+- Create a unique agency QR code, which encodes the private key, to be read by the GRaaS app. Generate the code by going to the `graas/server/qr-gen` directory and running `./run.sh ../../../graas-agency-keys/<agency-id>/id_ecdsa "<nickname for agency>"`. This will save a file called "qr.png" to the qr-gen folder - you'll want to paste this into the onboarding docs provided to the agency. __Since this QR code contains the private key, it should handled, shared and deleted carefully__.
 - You can visit [this page](https://console.cloud.google.com/datastore/entities;kind=agency;ns=__$DEFAULT$__;sortCol=agency-id;sortDir=ASCENDING/query/kind?project=lat-long-prototype) to confirm the key was added to Google datastore
 
 Device Setup
