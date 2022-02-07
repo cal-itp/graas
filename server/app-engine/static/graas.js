@@ -387,7 +387,8 @@ function handleStartStop() {
         p.style.display = 'none';
 
         running = false;
-        disableElements('route-select', 'bus-select', 'driver-select');
+        var dropdowns = ["route-select", "bus-select", "driver-select"];
+        disableElements(dropdowns);
 
         p = document.getElementById('okay');
         p.disabled = 'true';
@@ -973,7 +974,7 @@ function gotConfigData(data, agencyID, arg) {
     }
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
-        loadRoutes();
+        setTimeout(loadRoutes,1000);
     } else if (name == CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList('bus-select', 'Select Bus No.', vehicleList);
@@ -1051,7 +1052,7 @@ function loadRoutes() {
             }
         }
     }
-    setTimeout(populateRouteList,5000);
+    setTimeout(populateRouteList,500);
 }
 function gpsInterval(millis) {
     if (navigator.onLine && running) {
