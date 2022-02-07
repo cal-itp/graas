@@ -364,7 +364,7 @@ function handleStartStop() {
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
-    if (text == START_STOP_BUTTON_LOAD_TEXT) {
+    if (text === START_STOP_BUTTON_LOAD_TEXT) {
         var millis = Date.now();
         loadRoutes();
         util.log("- millis     : " + millis);
@@ -980,10 +980,10 @@ function gotConfigData(data, agencyID, arg) {
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
         loadRoutes();
-    } else if (name == CONFIG_VEHICLE_IDS) {
+    } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
-    } else if (name == CONFIG_DRIVER_NAMES) {
+    } else if (name === CONFIG_DRIVER_NAMES) {
         driverList = data;
         if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
             populateList(DRIVER_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN_TEXT, driverList);
