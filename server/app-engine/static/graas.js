@@ -19,6 +19,7 @@ var quickTouchCount = 0;
 var lastWakeLockOp = null;
 var lastWakeLockMillis = 0;
 var startMillis = 0;
+var lastTripLoadMillis = 0;
 var configMatrix = null;
 var countFiles = null;
 var countGetURLCallbacks = 0;
@@ -63,9 +64,13 @@ const BUS_SELECT_DROPDOWN = "bus-select";
 const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
 const DRIVER_SELECT_DROPDOWN_TEXT = "Select Driver";
+const ALL_DROPDOWNS = "config";
+const LOADING_TEXT_ELEMENT = "loading";
+const TRIP_STATS_ELEMENT = "stats";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
+const MILLIS_PER_MINUTE = 1000 * 60;
 
 function isObject(obj) {
     return typeof obj === 'object' && obj !== null
@@ -372,10 +377,14 @@ function handleStartStop() {
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
 
-        // Load routes, if trips array has already been populated
-        util.log("triplength: " + trips.length);
-        if (trips.length > 0) {
-            loadRoutes();
+        hideAShowB(ALL_DROPDOWNS, LOADING_TEXT_ELEMENT);
+        var millisSinceLoadTrips = millis - lastTripLoadMillis;
+
+        // Only load trips if they were last loaded more than a minute ago
+        if ((millisSinceLoadTrips) < MILLIS_PER_MINUTE * 1) {
+            populateAndShowRouteList();
+        } else {
+            loadTrips(populateAndShowRouteList);
         }
 
         if (millis - startMillis >= MAX_LIFE) {
@@ -385,9 +394,6 @@ function handleStartStop() {
         var p = document.getElementById(START_STOP_BUTTON);
         p.style.background = "#cccccc";
 
-        var p = document.getElementById('config');
-        p.style.display = 'block';
-
         configMatrix.setSelected(CONFIG_ROUTE_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
         configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
@@ -395,11 +401,10 @@ function handleStartStop() {
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
     else { //
         clearWakeLock();
-        var p = document.getElementById('stats');
-        p.style.display = 'none';
+        hideElement(TRIP_STATS_ELEMENT);
 
         running = false;
-        var dropdowns = ["ROUTE_SELECT_DROPDOWN", "BUS_SELECT_DROPDOWN", "DRIVER_SELECT_DROPDOWN"];
+        var dropdowns = [ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
         disableElements(dropdowns);
 
         p = document.getElementById('okay');
@@ -421,7 +426,6 @@ function handleStartStop() {
 function checkForConfigCompletion() {
     if (configMatrix.isComplete()) {
         var p = document.getElementById('okay');
-
         p.disabled = false;
         p.style.background = "blue";
         p.addEventListener('click', handleOkay);
@@ -489,11 +493,7 @@ function handleOkay() {
     var p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
-    var p = document.getElementById('config');
-    p.style.display = "none";
-
-    var p = document.getElementById('stats');
-    p.style.display = "block";
+    hideAShowB(ALL_DROPDOWNS, TRIP_STATS_ELEMENT);
 
     var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = START_STOP_BUTTON_STOP_TEXT;
@@ -731,8 +731,9 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
-    var dropdowns = ['route-select', 'bus-select', 'driver-select'];
+    var dropdowns = [ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
     disableElements(dropdowns);
+    hideElement(ALL_DROPDOWNS);
     getRewriteArgs();
 
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -988,7 +989,7 @@ function gotConfigData(data, agencyID, arg) {
     }
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
-        setTimeout(loadRoutes,1000);
+        loadTrips(function(){});
     } else if (name == CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
@@ -996,8 +997,7 @@ function gotConfigData(data, agencyID, arg) {
         driverList = data;
         if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
             populateList(DRIVER_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN_TEXT, driverList);
-            var p = document.getElementById(DRIVER_SELECT_DROPDOWN);
-            p.style.display = 'block';
+            showElement(DRIVER_SELECT_DROPDOWN);
         }
     }
 
@@ -1008,8 +1008,8 @@ function gotConfigData(data, agencyID, arg) {
 }
 
 // Load & filter trips, and then populate dropdown
-function loadRoutes() {
-    util.log("- loading routes");
+function loadTrips(callback) {
+    util.log("- loading trips");
     tripIDLookup = {};
 
     if (testLat && testLong) {
@@ -1065,8 +1065,10 @@ function loadRoutes() {
             }
         }
     }
-    setTimeout(populateRouteList,500);
+    lastTripLoadMillis = Date.now();
+    callback();
 }
+
 function gpsInterval(millis) {
     if (navigator.onLine && running) {
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
@@ -1119,7 +1121,25 @@ function disableElements(list) {
     list.forEach(el => disableElement(el));
 }
 
- function populateRouteList() {
+function hideElement(id) {
+    changeDisplay(id,"none");
+}
+
+function showElement(id) {
+    changeDisplay(id,"block");
+}
+
+function changeDisplay(id,display) {
+    var p = document.getElementById(id);
+    p.style.display = display;
+}
+
+function hideAShowB(a, b){
+    hideElement(a);
+    showElement(b);
+}
+
+function populateAndShowRouteList() {
     var p = document.getElementById(ROUTE_SELECT_DROPDOWN);
     clearSelectOptions(p);
     addSelectOption(p, ROUTE_SELECT_DROPDOWN_TEXT, true);
@@ -1129,6 +1149,7 @@ function disableElements(list) {
     }
 
     setupListHeader(p);
+    hideAShowB(LOADING_TEXT_ELEMENT, ALL_DROPDOWNS);
 }
 
 function setupListHeader(p) {
