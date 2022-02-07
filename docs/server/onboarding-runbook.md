@@ -52,7 +52,7 @@ Create service data for agency
 
 ```
 - Confirm that none of the calendar arrays are null. If they are, those routes will be hidden by default, and you should ask the agency to update the GTFS feed
-- From `graas/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux;tab=objects?project=lat-long-prototype&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) to confirm that your updates went through. You can run this command whenever you update either file.
+- From `graas/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux;tab=objects?project=[YOUR_GOOGLE_CLOUD_PROJECTID]&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) to confirm that your updates went through. You can run this command whenever you update either file.
 
 Create keys for agency
 ----------------------
@@ -62,7 +62,7 @@ From `graas/server/app-engine`, run `python keygen.py -a <agency-id>`. This uplo
 
 - Move this new agency key folder to the graas-agency-keys repo (or elsewhere if you prefer). This is privleged information and shouldn't live on the open-source repo.
 
-- Create a unique agency QR code, which encodes the private key, to be read by the GRaaS app. Generate the code by going to the `graas/server/qr-gen` directory and running `./run.sh ../../../graas-agency-keys/<agency-id>/id_ecdsa "<nickname for agency>"`. This will save a file called "qr.png" to the qr-gen folder - you'll want to paste this into the onboarding docs provided to the agency.
+- Create a unique agency QR code, which encodes the private key, to be read by the GRaaS app. Generate the code by going to the `graas/server/qr-gen` directory and running `./run.sh ../../../graas-agency-keys/<agency-id>/id_ecdsa "<nickname for agency>"`. This will save a file called "qr.png" to the qr-gen folder - you'll want to paste this into the onboarding docs provided to the agency. __Since this QR code contains the private key, it should handled, shared and deleted carefully__.
 - You can visit [this page](https://console.cloud.google.com/datastore/entities;kind=agency;ns=__$DEFAULT$__;sortCol=agency-id;sortDir=ASCENDING/query/kind?project=lat-long-prototype) to confirm the key was added to Google datastore
 
 Device Setup

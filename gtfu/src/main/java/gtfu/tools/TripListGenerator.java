@@ -348,14 +348,13 @@ class TripListEntry implements Comparable<TripListEntry> {
         routeLongName = rdata.routeLongName;
         shapeID = data.shapeID;
 
-        // name = shapeID;
-        if (nameField == "headsign"){
+        if (nameField.equals("headsign")){
             name = headSign;
-        } else if (nameField == "route_short_name") {
+        } else if (nameField.equals("route_short_name")) {
             name = routeShortName;
-        } else if (nameField == "route_long_name") {
+        } else if (nameField.equals("route_long_name")) {
             name = routeLongName;
-        } else if (nameField == "shape_id") {
+        } else if (nameField.equals("shape_id")) {
             name = shapeID;
         }
         if (name == null || name == "") {
