@@ -731,8 +731,6 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
-    var dropdowns = [ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
-    disableElements(dropdowns);
     hideElement(ALL_DROPDOWNS);
     getRewriteArgs();
 
