@@ -654,6 +654,7 @@ function getRewriteArgs() {
 
 function scanQRCode() {
     util.log("scanQRCode()");
+
     var button = document.getElementById(START_STOP_BUTTON);
     button.style.display = 'none';
 
