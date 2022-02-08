@@ -935,6 +935,7 @@ function initializeCallback(agencyData) {
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
+    showElement(LOADING_TEXT_ELEMENT)
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -1156,8 +1157,8 @@ function setupListHeader(p) {
 
 function configComplete() {
     util.log("configComplete()");
-    showElement(START_STOP_BUTTON);
     hideElement(LOADING_TEXT_ELEMENT);
+    showElement(START_STOP_BUTTON);
     setInterval(function() {
         if (!running) {
             util.log("checking for updated version..");
