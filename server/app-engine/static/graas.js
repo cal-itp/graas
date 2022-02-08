@@ -379,11 +379,9 @@ function handleStartStop() {
         hideElement(ALL_DROPDOWNS);
         showElement(LOADING_TEXT_ELEMENT);
         var millisSinceLoadTrips = millis - lastTripLoadMillis;
-        util.log("millisSinceLoadTrips: " + millisSinceLoadTrips)
 
         // Only load trips again if they were last loaded more than a minute ago
         if ((millisSinceLoadTrips) < MILLIS_PER_MINUTE * 1) {
-            util.log("tripIDLookup: " + tripIDLookup)
             populateTripList();
         } else {
             populateTripList(loadTrips())
