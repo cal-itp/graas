@@ -18,7 +18,7 @@ var lastTouch = 0;
 var quickTouchCount = 0;
 var lastWakeLockOp = null;
 var lastWakeLockMillis = 0;
-var startMillis = 0;
+var startMillis = Date.now();
 var lastTripLoadMillis = 0;
 var configMatrix = null;
 var countFiles = null;
@@ -58,8 +58,8 @@ const CONFIG_FILTER_PARAMS = "filter params";
 const START_STOP_BUTTON = "start-stop";
 const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
 const START_STOP_BUTTON_STOP_TEXT = "Stop"
-const ROUTE_SELECT_DROPDOWN = "route-select";
-const ROUTE_SELECT_DROPDOWN_TEXT = "Select Route";
+const TRIP_SELECT_DROPDOWN = "route-select";
+const TRIP_SELECT_DROPDOWN_TEXT = "Select Route";
 const BUS_SELECT_DROPDOWN = "bus-select";
 const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
@@ -376,17 +376,18 @@ function handleStartStop() {
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
-
-        hideAShowB(ALL_DROPDOWNS, LOADING_TEXT_ELEMENT);
+        hideElement(ALL_DROPDOWNS);
+        showElement(LOADING_TEXT_ELEMENT);
         var millisSinceLoadTrips = millis - lastTripLoadMillis;
+        util.log("millisSinceLoadTrips: " + millisSinceLoadTrips)
 
-        // Only load trips if they were last loaded more than a minute ago
+        // Only load trips again if they were last loaded more than a minute ago
         if ((millisSinceLoadTrips) < MILLIS_PER_MINUTE * 1) {
-            populateAndShowRouteList();
+            util.log("tripIDLookup: " + tripIDLookup)
+            populateTripList();
         } else {
-            loadTrips(populateAndShowRouteList);
+            populateTripList(loadTrips())
         }
-
         if (millis - startMillis >= MAX_LIFE) {
             handleModal("staleModal");
             return;
@@ -404,7 +405,7 @@ function handleStartStop() {
         hideElement(TRIP_STATS_ELEMENT);
 
         running = false;
-        var dropdowns = [ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
+        var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
         disableElements(dropdowns);
 
         p = document.getElementById('okay');
@@ -473,7 +474,7 @@ function handleOkay() {
     vehicleID = p.value
     util.log("- vehicleID: " + vehicleID);
 
-    p = document.getElementById(ROUTE_SELECT_DROPDOWN);
+    p = document.getElementById(TRIP_SELECT_DROPDOWN);
     var entry = tripIDLookup[p.value];
 
     if (isObject(entry)) {
@@ -493,7 +494,8 @@ function handleOkay() {
     var p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
-    hideAShowB(ALL_DROPDOWNS, TRIP_STATS_ELEMENT);
+    hideElement(ALL_DROPDOWNS);
+    showElement(TRIP_STATS_ELEMENT);
 
     var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = START_STOP_BUTTON_STOP_TEXT;
@@ -731,6 +733,8 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
+    showElement(LOADING_TEXT_ELEMENT);
+    hideElement(START_STOP_BUTTON);
     hideElement(ALL_DROPDOWNS);
     getRewriteArgs();
 
@@ -766,7 +770,7 @@ function positionCallback() {
     util.log("- startMillis: " + startMillis);
 
     if (isPhone()) {
-        var list = [START_STOP_BUTTON, ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
+        var list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
         list.forEach(l => resizeElement(document.getElementById(l)));
 
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
@@ -987,7 +991,7 @@ function gotConfigData(data, agencyID, arg) {
     }
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
-        loadTrips(function(){});
+        loadTrips();
     } else if (name == CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
@@ -1006,7 +1010,7 @@ function gotConfigData(data, agencyID, arg) {
 }
 
 // Load & filter trips, and then populate dropdown
-function loadTrips(callback) {
+function loadTrips() {
     util.log("- loading trips");
     tripIDLookup = {};
 
@@ -1063,8 +1067,8 @@ function loadTrips(callback) {
             }
         }
     }
-    lastTripLoadMillis = Date.now();
-    callback();
+    lastTripLoadMillis = Date.now()
+    return tripIDLookup;
 }
 
 function gpsInterval(millis) {
@@ -1132,22 +1136,19 @@ function changeDisplay(id,display) {
     p.style.display = display;
 }
 
-function hideAShowB(a, b){
-    hideElement(a);
-    showElement(b);
-}
-
-function populateAndShowRouteList() {
-    var p = document.getElementById(ROUTE_SELECT_DROPDOWN);
+function populateTripList(tripIDMap = tripIDLookup) {
+    util.log("populateTripList()");
+    var p = document.getElementById(TRIP_SELECT_DROPDOWN);
     clearSelectOptions(p);
-    addSelectOption(p, ROUTE_SELECT_DROPDOWN_TEXT, true);
+    addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
 
-    for (const [key, value] of Object.entries(tripIDLookup)) {
+    for (const [key, value] of Object.entries(tripIDMap)) {
         addSelectOption(p, key, !value);
     }
 
     setupListHeader(p);
-    hideAShowB(LOADING_TEXT_ELEMENT, ALL_DROPDOWNS);
+    hideElement(LOADING_TEXT_ELEMENT);
+    showElement(ALL_DROPDOWNS);
 }
 
 function setupListHeader(p) {
@@ -1158,7 +1159,8 @@ function setupListHeader(p) {
 
 function configComplete() {
     util.log("configComplete()");
-
+    showElement(START_STOP_BUTTON);
+    hideElement(LOADING_TEXT_ELEMENT);
     setInterval(function() {
         if (!running) {
             util.log("checking for updated version..");
@@ -1215,10 +1217,10 @@ if (!Object.entries) {
 configMatrix = new ConfigMatrix();
 
 // The below files will be processed in the order they appear here. It's important that filter-params goes before route-names
-configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
-configMatrix.addRow(CONFIG_ROUTE_NAMES, "route-names.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_VEHICLE_IDS, "vehicle-ids.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_DRIVER_NAMES, "driver-names.json", ConfigMatrix.UNKNOWN);
+configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
+configMatrix.addRow(CONFIG_ROUTE_NAMES, "route-names.json", ConfigMatrix.PRESENT);
 countFiles = configMatrix.countRows();
 
 initialize();
