@@ -654,7 +654,6 @@ function getRewriteArgs() {
 
 function scanQRCode() {
     util.log("scanQRCode()");
-
     var button = document.getElementById(START_STOP_BUTTON);
     button.style.display = 'none';
 
@@ -731,9 +730,6 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
-    showElement(LOADING_TEXT_ELEMENT);
-    hideElement(START_STOP_BUTTON);
-    hideElement(ALL_DROPDOWNS);
     getRewriteArgs();
 
     navigator.geolocation.getCurrentPosition(function(position) {
