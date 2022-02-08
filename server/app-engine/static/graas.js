@@ -376,12 +376,12 @@ function handleStartStop() {
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
+
         hideElement(ALL_DROPDOWNS);
         showElement(LOADING_TEXT_ELEMENT);
-        var millisSinceLoadTrips = millis - lastTripLoadMillis;
 
         // Only load trips again if they were last loaded more than a minute ago
-        if ((millisSinceLoadTrips) < MILLIS_PER_MINUTE * 1) {
+        if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
             populateTripList();
         } else {
             populateTripList(loadTrips())
@@ -990,7 +990,7 @@ function gotConfigData(data, agencyID, arg) {
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
         loadTrips();
-    } else if (name == CONFIG_VEHICLE_IDS) {
+    } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
     } else if (name === CONFIG_DRIVER_NAMES) {
@@ -1134,6 +1134,7 @@ function changeDisplay(id,display) {
     p.style.display = display;
 }
 
+// Populates dropdown, and then shows all dropdowns
 function populateTripList(tripIDMap = tripIDLookup) {
     util.log("populateTripList()");
     var p = document.getElementById(TRIP_SELECT_DROPDOWN);
@@ -1145,6 +1146,7 @@ function populateTripList(tripIDMap = tripIDLookup) {
     }
 
     setupListHeader(p);
+
     hideElement(LOADING_TEXT_ELEMENT);
     showElement(ALL_DROPDOWNS);
 }
