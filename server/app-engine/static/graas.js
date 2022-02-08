@@ -18,7 +18,8 @@ var lastTouch = 0;
 var quickTouchCount = 0;
 var lastWakeLockOp = null;
 var lastWakeLockMillis = 0;
-var startMillis = 0;
+var startMillis = Date.now();
+var lastTripLoadMillis = 0;
 var configMatrix = null;
 var countFiles = null;
 var countGetURLCallbacks = 0;
@@ -57,15 +58,19 @@ const CONFIG_FILTER_PARAMS = "filter params";
 const START_STOP_BUTTON = "start-stop";
 const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
 const START_STOP_BUTTON_STOP_TEXT = "Stop"
-const ROUTE_SELECT_DROPDOWN = "route-select";
-const ROUTE_SELECT_DROPDOWN_TEXT = "Select Route";
+const TRIP_SELECT_DROPDOWN = "route-select";
+const TRIP_SELECT_DROPDOWN_TEXT = "Select Route";
 const BUS_SELECT_DROPDOWN = "bus-select";
 const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
 const DRIVER_SELECT_DROPDOWN_TEXT = "Select Driver";
+const ALL_DROPDOWNS = "config";
+const LOADING_TEXT_ELEMENT = "loading";
+const TRIP_STATS_ELEMENT = "stats";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
+const MILLIS_PER_MINUTE = 1000 * 60;
 
 function isObject(obj) {
     return typeof obj === 'object' && obj !== null
@@ -365,13 +370,22 @@ function handleStartStop() {
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
+    // Driver taps "Load trips", dropdown options appear
     if (text === START_STOP_BUTTON_LOAD_TEXT) {
         var millis = Date.now();
-        loadRoutes();
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
 
+        hideElement(ALL_DROPDOWNS);
+        showElement(LOADING_TEXT_ELEMENT);
+
+        // Only load trips again if they were last loaded more than a minute ago
+        if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
+            populateTripList();
+        } else {
+            populateTripList(loadTrips())
+        }
         if (millis - startMillis >= MAX_LIFE) {
             handleModal("staleModal");
             return;
@@ -379,27 +393,18 @@ function handleStartStop() {
         var p = document.getElementById(START_STOP_BUTTON);
         p.style.background = "#cccccc";
 
-        var p = document.getElementById('config');
-        p.style.display = 'block';
-
         configMatrix.setSelected(CONFIG_ROUTE_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
         configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
-    } else {
+    }
+    // Driver taps "stop", sends app to blank screen with only "Load trips" button
+    else { //
         clearWakeLock();
-        var p = document.getElementById('stats');
-        p.style.display = 'none';
+        hideElement(TRIP_STATS_ELEMENT);
 
         running = false;
-
-        p = document.getElementById(ROUTE_SELECT_DROPDOWN);
-        p.value = 'disabled';
-
-        p = document.getElementById(BUS_SELECT_DROPDOWN);
-        p.value = 'disabled';
-
-        p = document.getElementById(DRIVER_SELECT_DROPDOWN);
-        p.value = 'disabled';
+        var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
+        disableElements(dropdowns);
 
         p = document.getElementById('okay');
         p.disabled = 'true';
@@ -420,7 +425,6 @@ function handleStartStop() {
 function checkForConfigCompletion() {
     if (configMatrix.isComplete()) {
         var p = document.getElementById('okay');
-
         p.disabled = false;
         p.style.background = "blue";
         p.addEventListener('click', handleOkay);
@@ -448,6 +452,7 @@ function handleBusChoice() {
     checkForConfigCompletion();
 }
 
+// Driver taps "Go" to start a ride
 function handleOkay() {
     util.log("handleOkay()");
 
@@ -467,7 +472,7 @@ function handleOkay() {
     vehicleID = p.value
     util.log("- vehicleID: " + vehicleID);
 
-    p = document.getElementById(ROUTE_SELECT_DROPDOWN);
+    p = document.getElementById(TRIP_SELECT_DROPDOWN);
     var entry = tripIDLookup[p.value];
 
     if (isObject(entry)) {
@@ -487,11 +492,8 @@ function handleOkay() {
     var p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
-    var p = document.getElementById('config');
-    p.style.display = "none";
-
-    var p = document.getElementById('stats');
-    p.style.display = "block";
+    hideElement(ALL_DROPDOWNS);
+    showElement(TRIP_STATS_ELEMENT);
 
     var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = START_STOP_BUTTON_STOP_TEXT;
@@ -729,7 +731,6 @@ function initialize() {
         version = version.substring(i + 2)
     }
     util.log("- version: " + version);
-
     getRewriteArgs();
 
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -764,7 +765,7 @@ function positionCallback() {
     util.log("- startMillis: " + startMillis);
 
     if (isPhone()) {
-        var list = [START_STOP_BUTTON, ROUTE_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
+        var list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
         list.forEach(l => resizeElement(document.getElementById(l)));
 
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
@@ -934,6 +935,7 @@ function initializeCallback(agencyData) {
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
+    showElement(LOADING_TEXT_ELEMENT)
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -985,7 +987,7 @@ function gotConfigData(data, agencyID, arg) {
     }
     else if (name === CONFIG_ROUTE_NAMES) {
         trips = data;
-        loadRoutes();
+        loadTrips();
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
@@ -993,10 +995,8 @@ function gotConfigData(data, agencyID, arg) {
         driverList = data;
         if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
             populateList(DRIVER_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN_TEXT, driverList);
-            var p = document.getElementById(DRIVER_SELECT_DROPDOWN);
-            p.style.display = 'block';
+            showElement(DRIVER_SELECT_DROPDOWN);
         }
-
     }
 
     configMatrix.setLoaded(name, true);
@@ -1004,8 +1004,10 @@ function gotConfigData(data, agencyID, arg) {
         configComplete();
     } else getURLContent(agencyID, arg);
 }
-function loadRoutes() {
-    util.log("- loading routes");
+
+// Load & filter trips, and then populate dropdown
+function loadTrips() {
+    util.log("- loading trips");
     tripIDLookup = {};
 
     if (testLat && testLong) {
@@ -1061,8 +1063,10 @@ function loadRoutes() {
             }
         }
     }
-    populateRouteList();
+    lastTripLoadMillis = Date.now()
+    return tripIDLookup;
 }
+
 function gpsInterval(millis) {
     if (navigator.onLine && running) {
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
@@ -1106,16 +1110,43 @@ function populateList(id, str, list) {
     setupListHeader(p);
 }
 
- function populateRouteList() {
-    var p = document.getElementById(ROUTE_SELECT_DROPDOWN);
-    clearSelectOptions(p);
-    addSelectOption(p, ROUTE_SELECT_DROPDOWN_TEXT, true);
+function disableElement(id) {
+    var p = document.getElementById(id);
+    p.value = 'disabled'
+}
 
-    for (const [key, value] of Object.entries(tripIDLookup)) {
+function disableElements(list) {
+    list.forEach(el => disableElement(el));
+}
+
+function hideElement(id) {
+    changeDisplay(id,"none");
+}
+
+function showElement(id) {
+    changeDisplay(id,"block");
+}
+
+function changeDisplay(id,display) {
+    var p = document.getElementById(id);
+    p.style.display = display;
+}
+
+// Populates dropdown, and then shows all dropdowns
+function populateTripList(tripIDMap = tripIDLookup) {
+    util.log("populateTripList()");
+    var p = document.getElementById(TRIP_SELECT_DROPDOWN);
+    clearSelectOptions(p);
+    addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
+
+    for (const [key, value] of Object.entries(tripIDMap)) {
         addSelectOption(p, key, !value);
     }
 
     setupListHeader(p);
+
+    hideElement(LOADING_TEXT_ELEMENT);
+    showElement(ALL_DROPDOWNS);
 }
 
 function setupListHeader(p) {
@@ -1126,7 +1157,8 @@ function setupListHeader(p) {
 
 function configComplete() {
     util.log("configComplete()");
-
+    hideElement(LOADING_TEXT_ELEMENT);
+    showElement(START_STOP_BUTTON);
     setInterval(function() {
         if (!running) {
             util.log("checking for updated version..");
@@ -1183,10 +1215,10 @@ if (!Object.entries) {
 configMatrix = new ConfigMatrix();
 
 // The below files will be processed in the order they appear here. It's important that filter-params goes before route-names
-configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
-configMatrix.addRow(CONFIG_ROUTE_NAMES, "route-names.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_VEHICLE_IDS, "vehicle-ids.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_DRIVER_NAMES, "driver-names.json", ConfigMatrix.UNKNOWN);
+configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
+configMatrix.addRow(CONFIG_ROUTE_NAMES, "route-names.json", ConfigMatrix.PRESENT);
 countFiles = configMatrix.countRows();
 
 initialize();
