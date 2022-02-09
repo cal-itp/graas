@@ -1,5 +1,5 @@
 /*
-This is a quick and dirty refactoring of web app untility code to also be usable by tests.
+This is a quick and dirty refactoring of web app utility code to also be usable by tests.
 
 The module has references to the DOM 'document' attribute, which is bypassed under node, but
 should really not be in here at all. For log(), a callback function could be set with an
@@ -39,9 +39,9 @@ if (!fetch) {
     };
 
     exports.sign = function(msg, signatureKey) {
-        this.log("sign()");
-        this.log("- msg: " + msg);
-        this.log("- signatureKey: " + signatureKey);
+        // this.log("sign()");
+        // this.log("- msg: " + msg);
+        // this.log("- signatureKey: " + signatureKey);
 
         var keyType = 'unknown';
 
@@ -86,8 +86,8 @@ if (!fetch) {
     };
 
     exports.timedFetch = function(url, opts, window) {
-        this.log('timedFetch()');
-        this.log('- url: ' + url);
+        // this.log('timedFetch()');
+        // this.log('- url: ' + url);
 
         if (window && window.AbortController) {
             const controller = new AbortController();
@@ -99,10 +99,10 @@ if (!fetch) {
     };
 
     exports.apiCall = function(data, url, callback, document) {
-        this.log("apiCall()");
+        // this.log("apiCall()");
 
         var body = JSON.stringify(data);
-        this.log("- body: " + body);
+        // this.log("- body: " + body);
 
         this.timedFetch(url, {
             method: 'POST',

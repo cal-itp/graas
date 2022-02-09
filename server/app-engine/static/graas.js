@@ -105,7 +105,7 @@ function getTimeFromString(s) {
 
     var date = new Date();
     date.setHours(hour, min);
-    util.log(" - date: " + date);
+    // util.log(" - date: " + date);
     return date;
 }
 
@@ -138,12 +138,12 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 function isMobile() {
-    util.log("isMobile()");
-    util.log("- navigator.userAgent: " + navigator.userAgent);
-    util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
+    // util.log("isMobile()");
+    // util.log("- navigator.userAgent: " + navigator.userAgent);
+    // util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
 
     if (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) {
-        util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
+        // util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
         return true;
     }
 
@@ -154,26 +154,26 @@ function isMobile() {
      || navigator.userAgent.match(/iPod/i)
      || navigator.userAgent.match(/BlackBerry/i)
      || navigator.userAgent.match(/Windows Phone/i);
-    util.log("- result: " + result);
+    // util.log("- result: " + result);
 
     return result;
 }
 
 function isPhone() {
-    util.log("isPhone()");
-    util.log("- navigator.userAgent: " + navigator.userAgent);
-    util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
+    // util.log("isPhone()");
+    // util.log("- navigator.userAgent: " + navigator.userAgent);
+    // util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
 
     var result = navigator.userAgent.match(/Android/i)
      || navigator.userAgent.match(/iPhone/i);
-    util.log("- result: " + result);
+    // util.log("- result: " + result);
 
     return result;
 }
 
 function resizeElement(e) {
-    util.log("resizeElement()");
-    util.log("- e: " + e);
+    // util.log("resizeElement()");
+    // util.log("- e: " + e);
 
     if (e) {
         e.style.width = "97%";
@@ -183,8 +183,8 @@ function resizeElement(e) {
 }
 
 function resizeElementFont(e) {
-    util.log("resizeElementFont()");
-    util.log("- e: " + e);
+    // util.log("resizeElementFont()");
+    // util.log("- e: " + e);
 
     if (e) {
         e.style.fontSize = "64px";
@@ -192,14 +192,14 @@ function resizeElementFont(e) {
 }
 
 function handleResumeButton() {
-    util.log("handleResumeButton()");
+    // util.log("handleResumeButton()");
     dismissModal();
     setWakeLock();
 }
 
 function setWakeLock() {
-    util.log("setWakeLock()");
-    util.log("- running: " + running);
+    // util.log("setWakeLock()");
+    // util.log("- running: " + running);
 
     if (window.hasOwnProperty("graasShimVersion")) {
         util.log("+ running in shim, not setting web wake lock");
@@ -225,11 +225,11 @@ function setWakeLock() {
 }
 
 function clearWakeLock() {
-    util.log("clearWakeLock()");
-    util.log("- running: " + running);
+    // util.log("clearWakeLock()");
+    // util.log("- running: " + running);
 
     if (window.hasOwnProperty("graasShimVersion")) {
-        util.log("+ running in shim, not clearing web wake lock");
+        // util.log("+ running in shim, not clearing web wake lock");
         return;
     }
 
@@ -275,12 +275,12 @@ function handleTouch() {
 }
 
 function handleOnBlur() {
-    util.log("handleOnBlur()");
+    // util.log("handleOnBlur()");
     clearWakeLock();
 }
 
 function handleOnFocus() {
-    util.log("handleOnFocus()");
+    // util.log("handleOnFocus()");
 
     if (running) {
         handleModal("resumeModal");
@@ -288,16 +288,16 @@ function handleOnFocus() {
 }
 
 function handleModal(name) {
-    util.log("handleModal()");
-    util.log("- name: " + name);
+    // util.log("handleModal()");
+    // util.log("- name: " + name);
 
     currentModal = document.getElementById(name);
     currentModal.style.display = "block";
 }
 
 function dismissModal() {
-    util.log("dismissModal()");
-    util.log("- currentModal: " + currentModal);
+    // util.log("dismissModal()");
+    // util.log("- currentModal: " + currentModal);
 
     if (currentModal) {
         currentModal.style.display = "none";
@@ -306,19 +306,19 @@ function dismissModal() {
 }
 
 function handleKey() {
-    util.log("handleKey()");
+    // util.log("handleKey()");
     handleModal("keyEntryModal");
 }
 
 function parseAgencyData(str) {
-    util.log("parseAgencyData()");
-    util.log("- str: " + str);
+    // util.log("parseAgencyData()");
+    // util.log("- str: " + str);
 
     var id = null;
     var pem = null;
 
     var i1 = str.indexOf(PEM_HEADER);
-    util.log("- i1: " + i1);
+    // util.log("- i1: " + i1);
 
     if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
         id = str.substring(0, i1).trim();
@@ -334,17 +334,17 @@ function parseAgencyData(str) {
 }
 
 function handleKeyOkay() {
-    util.log("handleKeyOkay()");
+    // util.log("handleKeyOkay()");
 
     var p = document.getElementById('keyTextArea');
     var value = p.value.replace(/\n/g, "");
-    util.log("- value: " + value);
+    // util.log("- value: " + value);
 
     var i1 = value.indexOf(PEM_HEADER);
-    util.log("- i1: " + i1);
+    // util.log("- i1: " + i1);
 
     var i2 = value.indexOf(PEM_FOOTER);
-    util.log("- i2: " + i2);
+    // util.log("- i2: " + i2);
 
     if (i1 < 0 || i2 < 0) {
         alert("not a valid key");
@@ -359,23 +359,23 @@ function handleKeyOkay() {
 }
 
 function handleRefreshOkay() {
-    util.log("handleRefreshOkay()");
+    // util.log("handleRefreshOkay()");
     window.location.reload();
 }
 
 function handleStartStop() {
-    util.log("handleStartStop()");
+    // util.log("handleStartStop()");
 
     var p = document.getElementById(START_STOP_BUTTON);
     var text = p.textContent || p.innerText;
-    util.log("- text: " + text);
+    // util.log("- text: " + text);
 
     // Driver taps "Load trips", dropdown options appear
     if (text === START_STOP_BUTTON_LOAD_TEXT) {
         var millis = Date.now();
-        util.log("- millis     : " + millis);
-        util.log("- startMillis: " + startMillis);
-        util.log("+ delta: " + (millis - startMillis));
+        // util.log("- millis     : " + millis);
+        // util.log("- startMillis: " + startMillis);
+        // util.log("+ delta: " + (millis - startMillis));
 
         hideElement(ALL_DROPDOWNS);
         showElement(LOADING_TEXT_ELEMENT);
@@ -384,6 +384,7 @@ function handleStartStop() {
         if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
             populateTripList();
         } else {
+            util.log("- trip list is stale. Reloading...")
             populateTripList(loadTrips())
         }
         if (millis - startMillis >= MAX_LIFE) {
@@ -401,7 +402,7 @@ function handleStartStop() {
     else { //
         clearWakeLock();
         hideElement(TRIP_STATS_ELEMENT);
-
+        util.log('- stopping position updates');
         running = false;
         var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
         disableElements(dropdowns);
@@ -432,21 +433,21 @@ function checkForConfigCompletion() {
 }
 
 function handleDriverChoice() {
-    util.log("handleDriverChoice()");
+    // util.log("handleDriverChoice()");
 
     configMatrix.setSelected(CONFIG_DRIVER_NAMES, true);
     checkForConfigCompletion();
 }
 
 function handleRouteChoice() {
-    util.log("handleRouteChoice()");
+    // util.log("handleRouteChoice()");
 
     configMatrix.setSelected(CONFIG_ROUTE_NAMES, true);
     checkForConfigCompletion();
 }
 
 function handleBusChoice() {
-    util.log("handleBusChoice()");
+    // util.log("handleBusChoice()");
 
     configMatrix.setSelected(CONFIG_VEHICLE_IDS, true);
     checkForConfigCompletion();
@@ -454,7 +455,7 @@ function handleBusChoice() {
 
 // Driver taps "Go" to start a ride
 function handleOkay() {
-    util.log("handleOkay()");
+    // util.log("handleOkay()");
 
     sessionID = createUUID();
     var p = document.getElementById("session-id");
@@ -462,15 +463,15 @@ function handleOkay() {
 
     if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
         fetch('/graas-start').then(function(response) {
-            util.log('- response.status: ' + response.status);
-            util.log('+ requested graas start');
+            // util.log('- response.status: ' + response.status);
+            // util.log('+ requested graas start');
         });
     }
     var p = document.getElementById(START_STOP_BUTTON);
     p.style.background = "green";
     var p = document.getElementById(BUS_SELECT_DROPDOWN);
     vehicleID = p.value
-    util.log("- vehicleID: " + vehicleID);
+    // util.log("- vehicleID: " + vehicleID);
 
     p = document.getElementById(TRIP_SELECT_DROPDOWN);
     var entry = tripIDLookup[p.value];
@@ -481,12 +482,12 @@ function handleOkay() {
         tripID = entry;
     }
 
-    util.log("- tripID: " + tripID);
+    // util.log("- tripID: " + tripID);
 
     if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
         p = document.getElementById(DRIVER_SELECT_DROPDOWN);
         driverName = p.value;
-        util.log("- driverName: " + driverName);
+        // util.log("- driverName: " + driverName);
     }
 
     var p = document.getElementById('vehicle-id');
@@ -497,7 +498,7 @@ function handleOkay() {
 
     var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = START_STOP_BUTTON_STOP_TEXT;
-
+    util.log('- starting position updates');
     running = true;
     setWakeLock();
 }
@@ -566,7 +567,7 @@ function pad(n) {
 // Get URL content for one file, send it to gotConfigData.
 // gotConfigData will call this function again, to load the next file until they are all loaded.
 function getURLContent(agencyID, arg) {
-    util.log('getURLContent()');
+    // util.log('getURLContent()');
     countGetURLCallbacks++;
     if (countGetURLCallbacks > countFiles) {
         util.log("* Error: too many callbacks");
@@ -582,9 +583,9 @@ function getURLContent(agencyID, arg) {
         mode: 'no-cors'*/
     })
     .then(function(response) {
-        util.log('- response.status: ' + response.status);
-        util.log('- response.statusText: ' + response.statusText);
-        //util.log('- response.json(): ' + response.json());
+        // util.log('- response.status: ' + response.status);
+        // util.log('- response.statusText: ' + response.statusText);
+        // util.log('- response.json(): ' + response.json());
 
         if (response.status == 404) {
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT);
@@ -611,7 +612,7 @@ function addSelectOption(sel, text, disabled) {
 
 function clearSelectOptions(sel) {
     var l = sel.options.length - 1;
-    util.log('- l: ' + l);
+    // util.log('- l: ' + l);
 
     for(var i = l; i >= 0; i--) {
         sel.remove(i);
@@ -619,7 +620,7 @@ function clearSelectOptions(sel) {
 }
 
 function handleEvent(e) {
-    util.log('- event.type: ' + event.type);
+    // util.log('- event.type: ' + event.type);
 }
 
 function getRewriteArgs() {
@@ -633,11 +634,11 @@ function getRewriteArgs() {
         const key = t[0];
         const value = t[1];
 
-        util.log(`- ${key}: ${value}`);
+        // util.log(`- ${key}: ${value}`);
 
         if (key === 'mode') {
             mode = value;
-            util.log(`- mode: ${mode}`);
+            // util.log(`- mode: ${mode}`);
         } else if (key === 'testlat') {
             testLat = value;
         } else if (key === 'testlong') {
@@ -653,7 +654,7 @@ function getRewriteArgs() {
 }
 
 function scanQRCode() {
-    util.log("scanQRCode()");
+    // util.log("scanQRCode()");
 
     var button = document.getElementById(START_STOP_BUTTON);
     button.style.display = 'none';
@@ -662,7 +663,7 @@ function scanQRCode() {
 
     var elem = document.getElementById('qr-reader');
     var qw = elem.clientWidth;
-    util.log(`- qw: ${qw}`);
+    // util.log(`- qw: ${qw}`);
 
     var html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader", { fps: 10, qrbox: Math.round(qw * .83), videoConstraints: {facingMode: isMobile() ? "environment" : "user"}});
@@ -672,16 +673,16 @@ function scanQRCode() {
             ++countResults;
             lastResult = qrCodeMessage;
             //resultContainer.innerHTML += `<div>[${countResults}] - ${qrCodeMessage}</div>`;
-            util.log(`- qrCodeMessage: '${qrCodeMessage}'`);
+            // util.log(`- qrCodeMessage: '${qrCodeMessage}'`);
 
             var value = qrCodeMessage.replace(/\n/g, "");
-            util.log("- value: " + value);
+            // util.log("- value: " + value);
 
             var i1 = value.indexOf(PEM_HEADER);
-            util.log("- i1: " + i1);
+            // util.log("- i1: " + i1);
 
             var i2 = value.indexOf(PEM_FOOTER);
-            util.log("- i2: " + i2);
+            // util.log("- i2: " + i2);
 
             if (i1 < 0 || i2 < 0) {
                 alert("not a valid key");
@@ -714,7 +715,7 @@ function scanQRCode() {
     }
 
     html5QrcodeScanner.render(onScanSuccess, onScanError);
-    util.log("+ called html5QrcodeScanner.render()");
+    // util.log("+ called html5QrcodeScanner.render()");
 }
 
 function initialize() {
@@ -734,7 +735,7 @@ function initialize() {
     getRewriteArgs();
 
     navigator.geolocation.getCurrentPosition(function(position) {
-        util.log("getCurrentPosition() callback");
+        // util.log("getCurrentPosition() callback");
         startLat = position.coords.latitude;
         startLon = position.coords.longitude;
 
@@ -750,19 +751,7 @@ function initialize() {
 }
 
 function positionCallback() {
-    util.log("+ got start position");
-
-    var dow = getDayOfWeek();
-    util.log(`- dow: ${dow}`);
-
-    var delta = getTimeDelta('5:00 pm');
-    util.log(`- delta: ${delta}`);
-
-    var feet = getHaversineDistance(38.545697227762936, -121.71125700874212, 38.54566366317534, -121.70840313850653);
-    util.log(`- feet: ${feet}`);
-
-    startMillis = Date.now();
-    util.log("- startMillis: " + startMillis);
+    // util.log("+ got start position");
 
     if (isPhone()) {
         var list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
@@ -787,7 +776,7 @@ function positionCallback() {
 }
 
 function handleGPSUpdate(position) {
-    util.log('handleGPSUpdate()');
+    // util.log('handleGPSUpdate()');
     var lat, long, accuracy, posTimestamp, speed, heading;
     var uuid = getUUID();
 
@@ -863,14 +852,14 @@ function initializeCallback(agencyData) {
     var pem = agencyData.pem;
 
     var i1 = pem.indexOf(PEM_HEADER);
-    util.log("- i1: " + i1);
+    // util.log("- i1: " + i1);
 
     var i2 = pem.indexOf(PEM_FOOTER);
-    util.log("- i2: " + i2);
+    // util.log("- i2: " + i2);
 
     var b64 = pem.substring(i1 + PEM_HEADER.length, i2);
-    util.log("- b64: " + b64);
-    util.log("- b64.length: " + b64.length);
+    // util.log("- b64: " + b64);
+    // util.log("- b64.length: " + b64.length);
 
     if (b64.length < 256) {
         keyType = "ECDSA";
@@ -883,11 +872,11 @@ function initializeCallback(agencyData) {
         return;
     }
 
-    util.log("- keyType: " + keyType);
-    util.log("- keyLength: " + keyLength);
+    // util.log("- keyType: " + keyType);
+    // util.log("- keyLength: " + keyLength);
 
     var key = atob(b64);
-    util.log("- key.length: " + key.length);
+    // util.log("- key.length: " + key.length);
 
     const binaryDer = util.str2ab(key);
 
@@ -908,7 +897,7 @@ function initializeCallback(agencyData) {
         false,
         ["sign"]
     ).then(function(key) {
-        util.log("- key.type: " + key.type);
+        // util.log("- key.type: " + key.type);
         signatureKey = key;
 
         var str = 'hello ' + Math.floor(Date.now() / 1000);
@@ -925,7 +914,7 @@ function initializeCallback(agencyData) {
                 hello.id = agencyData.id;
             }
 
-            util.log("- hello: " + JSON.stringify(hello));
+            // util.log("- hello: " + JSON.stringify(hello));
 
             util.apiCall(hello, '/hello', agencyIDCallback);
         });
@@ -934,7 +923,7 @@ function initializeCallback(agencyData) {
 
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
-    util.log("- agencyID: " + agencyID);
+    // util.log("- agencyID: " + agencyID);
     showElement(LOADING_TEXT_ELEMENT)
 
     if (agencyID === 'not found') {
@@ -942,7 +931,7 @@ function agencyIDCallback(response) {
     } else {
         // ### TODO: write agency ID to local storage if not already present
         var arg = Math.round(Math.random() * 100000)
-        util.log("- arg: " + arg);
+        // util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
     }
 }
@@ -951,7 +940,7 @@ function getTimeFromName(s) {
     // s looks something like: "Route 10 @ 5:58 am"
     // Returns the text that is to the right of the last '@', which solves for the situation where the route name contains an '@'
 
-    util.log("- s: " + s)
+    // util.log("- s: " + s)
     // if there is no '@', return null
     if (s.indexOf('@') < 0)
     {
@@ -959,30 +948,30 @@ function getTimeFromName(s) {
         return null
     }
     let timeFromName = s.substring(s.lastIndexOf('@') + 2)
-    util.log("- timeFromName: " + timeFromName)
+    // util.log("- timeFromName: " + timeFromName)
     return timeFromName;
 }
 
 // Load json file content, one at a time, and perform filtering in some cases.
 // Call getURLContent until all files are loaded, call configComplete when done.
 function gotConfigData(data, agencyID, arg) {
-    util.log("gotConfigData()");
-    util.log("- agencyID: " + agencyID);
-    util.log("- arg: " + arg);
-    util.log("- data: ");
-    util.log(data);
+    // util.log("gotConfigData()");
+    // util.log("- agencyID: " + agencyID);
+    // util.log("- arg: " + arg);
+    // util.log("- data: ");
+    // util.log(data);
 
     name = configMatrix.getNextToLoad().name;
-    util.log("- name: " + name);
+    // util.log("- name: " + name);
     if (name === CONFIG_FILTER_PARAMS) {
         configMatrix.setSelected(CONFIG_FILTER_PARAMS, true);
         if (data != null) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
-            util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
-            util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
+            // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
+            // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
+            // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
     else if (name === CONFIG_ROUTE_NAMES) {
@@ -1011,16 +1000,16 @@ function loadTrips() {
     tripIDLookup = {};
 
     if (testLat && testLong) {
-        util.log(`- testLat: ${testLat}`);
-        util.log(`- testLong: ${testLong}`);
+        // util.log(`- testLat: ${testLat}`);
+        // util.log(`- testLong: ${testLong}`);
         startLat = testLat;
         startLon = testLong;
     }
 
     for (var i = 0; i < trips.length; i++) {
-        util.log(`- trips.length: ${trips.length}`);
+        // util.log(`- trips.length: ${trips.length}`);
         if (Array.isArray(trips)) {
-            util.log(`-- trips[i]: ${trips[i]}`);
+            // util.log(`-- trips[i]: ${trips[i]}`);
             const routeInfo = trips[i];
             //util.log(`-- value: ${value}`);
 
@@ -1030,20 +1019,20 @@ function loadTrips() {
                 const dow = getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
                 const lat = routeInfo.departure_pos.lat;
-                util.log(`- lat: ${lat}`);
+                // util.log(`- lat: ${lat}`);
                 const lon = routeInfo.departure_pos.long;
-                util.log(`- lon: ${lon}`);
+                // util.log(`- lon: ${lon}`);
 
                 const timeDelta = getTimeDelta(time);
-                util.log(`- timeDelta: ${timeDelta}`);
+                // util.log(`- timeDelta: ${timeDelta}`);
 
                 const distance = getHaversineDistance(lat, lon, startLat, startLon);
-                util.log(`- distance: ${distance}`);
+                // util.log(`- distance: ${distance}`);
                 var cal = 0;
                 if (routeInfo.calendar != null) {
                     cal = routeInfo.calendar[dow];
                 }
-                util.log(`- cal: ${cal}`);
+                // util.log(`- cal: ${cal}`);
                 // 3 conditions need to be met for inclusion...
                 if (
                     // 1. meets time parameters
@@ -1074,11 +1063,11 @@ function gpsInterval(millis) {
             //util.log('- graasShimVersion: ' + graasShimVersion);
 
             fetch('/graas-location').then(function(response) {
-                util.log('- response.status: ' + response.status);
+                // util.log('- response.status: ' + response.status);
 
                 response.json().then(function(data) {
-                    util.log('response.json() callback');
-                    util.log(JSON.stringify(data));
+                    // util.log('response.json() callback');
+                    // util.log(JSON.stringify(data));
 
                     handleGPSUpdate(data);
                 });
@@ -1100,8 +1089,8 @@ function gpsInterval(millis) {
 }
 
 function populateList(id, str, list) {
-    util.log("populateList()");
-    util.log("str: " + str);
+    // util.log("populateList()");
+    // util.log("str: " + str);
     var p = document.getElementById(id);
     addSelectOption(p, str, true);
 
@@ -1134,7 +1123,7 @@ function changeDisplay(id,display) {
 
 // Populates dropdown, and then shows all dropdowns
 function populateTripList(tripIDMap = tripIDLookup) {
-    util.log("populateTripList()");
+    // util.log("populateTripList()");
     var p = document.getElementById(TRIP_SELECT_DROPDOWN);
     clearSelectOptions(p);
     addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
@@ -1156,20 +1145,20 @@ function setupListHeader(p) {
 }
 
 function configComplete() {
-    util.log("configComplete()");
+    util.log("- config is complete");
     hideElement(LOADING_TEXT_ELEMENT);
     showElement(START_STOP_BUTTON);
     setInterval(function() {
         if (!running) {
-            util.log("checking for updated version..");
+            // util.log("checking for updated version..");
 
             util.timedFetch(window.location, {
                 method: 'HEAD',
             })
             .then(function(response) {
                 var lm = response.headers.get('Last-Modified');
-                util.log('- lastModified: ' + lastModified);
-                util.log('-           lm: ' + lm);
+                // util.log('- lastModified: ' + lastModified);
+                // util.log('-           lm: ' + lm);
 
                 if (!lastModified) {
                     lastModified = lm;
