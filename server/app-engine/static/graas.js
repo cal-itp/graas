@@ -378,7 +378,6 @@ function handleStartStop() {
         util.log("+ delta: " + (millis - startMillis));
 
         hideElement(ALL_DROPDOWNS);
-
         showElement(LOADING_TEXT_ELEMENT);
 
         // Only load trips again if they were last loaded more than a minute ago
