@@ -105,7 +105,7 @@ function getTimeFromString(s) {
 
     var date = new Date();
     date.setHours(hour, min);
-    util.log(" - date: " + date);
+    // util.log(" - date: " + date);
     return date;
 }
 
@@ -172,8 +172,8 @@ function isPhone() {
 }
 
 function resizeElement(e) {
-    util.log("resizeElement()");
-    util.log("- e: " + e);
+    // util.log("resizeElement()");
+    // util.log("- e: " + e);
 
     if (e) {
         e.style.width = "97%";
@@ -183,8 +183,8 @@ function resizeElement(e) {
 }
 
 function resizeElementFont(e) {
-    util.log("resizeElementFont()");
-    util.log("- e: " + e);
+    // util.log("resizeElementFont()");
+    // util.log("- e: " + e);
 
     if (e) {
         e.style.fontSize = "64px";
@@ -384,7 +384,8 @@ function handleStartStop() {
         if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
             populateTripList();
         } else {
-            populateTripList(loadTrips())
+            util.log("- trip list is stale. Reloading...");
+            populateTripList(loadTrips());
         }
         if (millis - startMillis >= MAX_LIFE) {
             handleModal("staleModal");
@@ -401,7 +402,7 @@ function handleStartStop() {
     else { //
         clearWakeLock();
         hideElement(TRIP_STATS_ELEMENT);
-
+        util.log('- stopping position updates');
         running = false;
         var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN];
         disableElements(dropdowns);
@@ -498,6 +499,7 @@ function handleOkay() {
     var p = document.getElementById(START_STOP_BUTTON);
     p.textContent = START_STOP_BUTTON_STOP_TEXT;
 
+    util.log('- starting position updates');
     running = true;
     setWakeLock();
 }
@@ -655,9 +657,6 @@ function getRewriteArgs() {
 function scanQRCode() {
     util.log("scanQRCode()");
 
-    var button = document.getElementById(START_STOP_BUTTON);
-    button.style.display = 'none';
-
     var lastResult, countResults = 0;
 
     var elem = document.getElementById('qr-reader');
@@ -672,16 +671,16 @@ function scanQRCode() {
             ++countResults;
             lastResult = qrCodeMessage;
             //resultContainer.innerHTML += `<div>[${countResults}] - ${qrCodeMessage}</div>`;
-            util.log(`- qrCodeMessage: '${qrCodeMessage}'`);
+            // util.log(`- qrCodeMessage: '${qrCodeMessage}'`);
 
             var value = qrCodeMessage.replace(/\n/g, "");
-            util.log("- value: " + value);
+            // util.log("- value: " + value);
 
             var i1 = value.indexOf(PEM_HEADER);
-            util.log("- i1: " + i1);
+            // util.log("- i1: " + i1);
 
             var i2 = value.indexOf(PEM_FOOTER);
-            util.log("- i2: " + i2);
+            // util.log("- i2: " + i2);
 
             if (i1 < 0 || i2 < 0) {
                 alert("not a valid key");
@@ -690,7 +689,6 @@ function scanQRCode() {
                 localStorage.setItem("lat-long-pem", value);
                 initializeCallback(parseAgencyData(value));
                 html5QrcodeScanner.clear();
-                button.style.display = 'block';
 
                 msg = 'Sucessfully scanned token';
 
@@ -751,18 +749,6 @@ function initialize() {
 
 function positionCallback() {
     util.log("+ got start position");
-
-    var dow = getDayOfWeek();
-    util.log(`- dow: ${dow}`);
-
-    var delta = getTimeDelta('5:00 pm');
-    util.log(`- delta: ${delta}`);
-
-    var feet = getHaversineDistance(38.545697227762936, -121.71125700874212, 38.54566366317534, -121.70840313850653);
-    util.log(`- feet: ${feet}`);
-
-    startMillis = Date.now();
-    util.log("- startMillis: " + startMillis);
 
     if (isPhone()) {
         var list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, DRIVER_SELECT_DROPDOWN, "okay"];
@@ -869,8 +855,8 @@ function initializeCallback(agencyData) {
     util.log("- i2: " + i2);
 
     var b64 = pem.substring(i1 + PEM_HEADER.length, i2);
-    util.log("- b64: " + b64);
-    util.log("- b64.length: " + b64.length);
+    // util.log("- b64: " + b64);
+    // util.log("- b64.length: " + b64.length);
 
     if (b64.length < 256) {
         keyType = "ECDSA";
@@ -884,10 +870,10 @@ function initializeCallback(agencyData) {
     }
 
     util.log("- keyType: " + keyType);
-    util.log("- keyLength: " + keyLength);
+    // util.log("- keyLength: " + keyLength);
 
     var key = atob(b64);
-    util.log("- key.length: " + key.length);
+    // util.log("- key.length: " + key.length);
 
     const binaryDer = util.str2ab(key);
 
@@ -935,6 +921,7 @@ function initializeCallback(agencyData) {
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
+
     showElement(LOADING_TEXT_ELEMENT)
 
     if (agencyID === 'not found') {
@@ -951,7 +938,7 @@ function getTimeFromName(s) {
     // s looks something like: "Route 10 @ 5:58 am"
     // Returns the text that is to the right of the last '@', which solves for the situation where the route name contains an '@'
 
-    util.log("- s: " + s)
+    // util.log("- s: " + s)
     // if there is no '@', return null
     if (s.indexOf('@') < 0)
     {
@@ -959,7 +946,7 @@ function getTimeFromName(s) {
         return null
     }
     let timeFromName = s.substring(s.lastIndexOf('@') + 2)
-    util.log("- timeFromName: " + timeFromName)
+    // util.log("- timeFromName: " + timeFromName)
     return timeFromName;
 }
 
@@ -980,9 +967,9 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
-            util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
-            util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
+            // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
+            // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
+            // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
     else if (name === CONFIG_ROUTE_NAMES) {
@@ -1018,9 +1005,9 @@ function loadTrips() {
     }
 
     for (var i = 0; i < trips.length; i++) {
-        util.log(`- trips.length: ${trips.length}`);
+        // util.log(`- trips.length: ${trips.length}`);
         if (Array.isArray(trips)) {
-            util.log(`-- trips[i]: ${trips[i]}`);
+            // util.log(`-- trips[i]: ${trips[i]}`);
             const routeInfo = trips[i];
             //util.log(`-- value: ${value}`);
 
@@ -1030,20 +1017,20 @@ function loadTrips() {
                 const dow = getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
                 const lat = routeInfo.departure_pos.lat;
-                util.log(`- lat: ${lat}`);
+                // util.log(`- lat: ${lat}`);
                 const lon = routeInfo.departure_pos.long;
-                util.log(`- lon: ${lon}`);
+                // util.log(`- lon: ${lon}`);
 
                 const timeDelta = getTimeDelta(time);
-                util.log(`- timeDelta: ${timeDelta}`);
+                // util.log(`- timeDelta: ${timeDelta}`);
 
                 const distance = getHaversineDistance(lat, lon, startLat, startLon);
-                util.log(`- distance: ${distance}`);
+                // util.log(`- distance: ${distance}`);
                 var cal = 0;
                 if (routeInfo.calendar != null) {
                     cal = routeInfo.calendar[dow];
                 }
-                util.log(`- cal: ${cal}`);
+                // util.log(`- cal: ${cal}`);
                 // 3 conditions need to be met for inclusion...
                 if (
                     // 1. meets time parameters
@@ -1101,7 +1088,7 @@ function gpsInterval(millis) {
 
 function populateList(id, str, list) {
     util.log("populateList()");
-    util.log("str: " + str);
+    // util.log("str: " + str);
     var p = document.getElementById(id);
     addSelectOption(p, str, true);
 
