@@ -102,7 +102,7 @@ if (!fetch) {
         this.log("apiCall()");
 
         var body = JSON.stringify(data);
-        this.log("- body: " + body);
+        // this.log("- body: " + body);
 
         this.timedFetch(url, {
             method: 'POST',
@@ -134,21 +134,21 @@ if (!fetch) {
     exports.signAndPost = function(data, signatureKey, url, document) {
         this.log("util.signAndPost()");
         var data_str = JSON.stringify(data);
-        this.log('- data_str: ' + data_str);
-        this.log('- document: ' + document);
+        // this.log('- data_str: ' + data_str);
+        // this.log('- document: ' + document);
 
         var that = this;
 
         this.sign(data_str, signatureKey).then(function(buf) {
             var sig = btoa(that.ab2str(buf));
-            that.log('- sig: ' + sig);
+            // that.log('- sig: ' + sig);
 
             var msg = {
                 data: data,
                 sig: sig
             };
 
-            that.log('- msg: ' + msg);
+            // that.log('- msg: ' + msg);
 
             that.apiCall(msg, url, function(response) {
                 if (document) {
