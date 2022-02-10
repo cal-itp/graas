@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Base64;
-import java.util.Collection;
 import gtfu.Debug;
 import gtfu.HTTPUtil;
 import gtfu.HTTPClient;
