@@ -28,7 +28,7 @@ if (!fetch) {
     exports.log = function(s) {
         console.log(s);
 
-        if (document) {
+        if (typeof document !== 'undefined') {
             try {
                 var p = document.getElementById('console');
                 p.innerHTML += s + "<br/>";
@@ -172,7 +172,7 @@ if (!fetch) {
                     }
                 }
 
-                //that.log('server response: ok');
+                that.log('server response: ok');
             });
         });
     };
