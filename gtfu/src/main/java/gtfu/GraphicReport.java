@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 import gtfu.tools.DayLogSlicer;
@@ -33,6 +34,7 @@ import gtfu.tools.DB;
 import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
+import gtfu.tools.GCloudBucket;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -77,11 +79,15 @@ public class GraphicReport {
     private Font font;
     private Font smallFont;
     private int timeRowCount;
+    private GCloudBucket gcb = new GCloudBucket();
 
-    public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean downloadReport) throws Exception {
+    public GraphicReport(String cacheDir, String selectedDate, boolean downloadReport, String savePath, boolean sendEmail) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
         Debug.log("- cacheDir: " + cacheDir);
         Debug.log("- selectedDate: " + selectedDate);
+        Debug.log("- downloadReport: " + downloadReport);
+        Debug.log("- savePath: " + savePath);
+        Debug.log("- sendEmail: " + sendEmail);
 
         DB db = new DB();
         long queryStartTime = 0;
@@ -97,7 +103,7 @@ public class GraphicReport {
         List<String> results = db.fetch(queryStartTime, queryEndTime, "position", PROPERTY_NAMES);
         GPSLogSlicer slicer = new GPSLogSlicer(results, "");
         Map<String, List<String>> logs = slicer.getLogs();
-        List<byte[]> blobs = new ArrayList<byte[]>();
+        Map<String, byte[]> blobMap = new HashMap();
 
         font = new Font("Arial", Font.PLAIN, 10 * SCALE);
         smallFont = new Font("Arial", Font.PLAIN, 9 * SCALE);
@@ -140,7 +146,7 @@ public class GraphicReport {
             tdMap = dls.getTripReportDataMap();
             int startSecond = dls.getStartSecond();
 
-            if (savePath != null) {
+            if (downloadReport) {
                 String path = savePath + "/" + key;
                 Debug.log("- path: " + path);
 
@@ -171,21 +177,26 @@ public class GraphicReport {
 
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
-                blobs.add(imageToBlob(img));
+                // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
+                blobMap.put(key.substring(0, key.length() - 4), imageToBlob(img));
             }
         }
-        if (downloadReport) {
-            for (int i=0; i<blobs.size(); i++) {
-                byte[] buf = blobs.get(i);
-                String fn = "/tmp/report-" + i + ".png";
-                Debug.log("writing " + fn + "...");
 
+        for (String key : blobMap.keySet()) {
+
+            byte[] buf = blobMap.get(key);
+            uploadToGCloud(key, buf);
+
+            if (downloadReport) {
+                String fn = savePath + "/" + key + ".png";
+                Debug.log("writing " + fn + "...");
                 try (FileOutputStream fos = new FileOutputStream(fn)) {
                     fos.write(buf, 0, buf.length);
                 }
             }
-        } else {
-            sendEmail(blobs);
+        }
+        if (sendEmail) {
+            sendEmail(blobMap);
         }
     }
 
@@ -195,15 +206,22 @@ public class GraphicReport {
         return out.toByteArray();
     }
 
-    private void sendEmail(List<byte[]> blobs) throws IOException {
+    private void sendEmail(Map<String, byte[]> blobMap) throws IOException {
         Debug.log("GraphicReport.sendEmail()");
         // Debug.log("- blobs: " + blobs);
 
         Recipients r = new Recipients();
         String[] recipients = r.get("graas_report");
 
-        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobs);
+        SendGrid grid = new SendGrid(recipients, "Automated GRaaS Report", "Attached", blobMap);
         int responseCode = grid.send();
+    }
+
+    private void uploadToGCloud(String key, byte[] image) throws IOException {
+        // converts <agency-id>-yyyy-mm-dd to <agency-id>
+        String agencyID = key.substring(0, key.length() - 11);
+        String path = "graas-report-archive/" + agencyID;
+        gcb.uploadObject("graas-resources", path, key, image);
     }
 
     // Creates one report per agency per day
@@ -556,17 +574,20 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-D|--download]");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-D|--download] [-ne|--no-email]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
-        System.err.println("    <save-path> (if given) is the path to a folder where to save intermediate position data");
+        System.err.println("    <save-path> (if given) is the path to a folder where to save position logs & reports");
+        System.err.println("    Using -D saves logs & reports to a default location, unless a save-path is also given");
+        System.err.println("    Using -ne prevents an email report from being sent");
         System.exit(1);
     }
 
     public static void main(String[] arg) throws Exception {
         String cacheDir = null;
         String date = null;
-        String savePath = null;
+        String savePath = "/tmp";
         boolean downloadReport = false;
+        boolean sendEmail = true;
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
@@ -576,6 +597,7 @@ public class GraphicReport {
 
             if ((arg[i].equals("-s") || arg[i].equals("--save-path")) && i < arg.length - 1) {
                 savePath = arg[++i];
+                downloadReport = true;
                 continue;
             }
 
@@ -589,11 +611,16 @@ public class GraphicReport {
                 continue;
             }
 
+            if (arg[i].equals("-ne") || arg[i].equals("--no-email")) {
+                sendEmail = false;
+                continue;
+            }
+
             usage();
         }
 
         if (cacheDir == null) usage();
 
-        new GraphicReport(cacheDir, date, savePath, downloadReport);
+        new GraphicReport(cacheDir, date, downloadReport, savePath, sendEmail);
     }
 }
