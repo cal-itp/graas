@@ -16,6 +16,7 @@ dependencies {
     compile "com.google.cloud:google-cloud-datastore:1.2.1"
     compile "org.apache.httpcomponents.client5:httpclient5:5.1"
     compile "com.googlecode.json-simple:json-simple:1.1.1"
+    compile "com.google.cloud:google-cloud-storage:2.4.1"
     compile "com.github.ua-parser:uap-java:1.5.2"
     testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
 }

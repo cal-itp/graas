@@ -12,13 +12,13 @@ public class SendGrid {
     private String[] tos;
     private String subject;
     private String body;
-    private List<byte[]> blobs;
+    private Map<String, byte[]> blobMap;
 
-    public SendGrid(String[] recipients, String emailSubject, String body, List<byte[]> images) {
+    public SendGrid(String[] recipients, String emailSubject, String body, Map<String, byte[]> images) {
         this.tos = recipients;
         this.subject = emailSubject;
         this.body = escape(body);
-        this.blobs = images;
+        this.blobMap = images;
     }
 
     private String escape(String s) {
@@ -54,8 +54,8 @@ public class SendGrid {
     private String makeAttachments() {
         StringBuffer sb = new StringBuffer();
 
-        for (int i=0; i< blobs.size(); i++) {
-            byte[] buf = blobs.get(i);
+        for (String key : blobMap.keySet()) {
+            byte[] buf = blobMap.get(key);
 
             if (sb.length() > 0) {
                 sb.append(',');
@@ -63,8 +63,8 @@ public class SendGrid {
 
             String b64 = Base64.getEncoder().encodeToString(buf);
 
-            sb.append("{\"type\": \"image/png\", \"filename\": \"report-");
-            sb.append(i);
+            sb.append("{\"type\": \"image/png\", \"filename\": \"");
+            sb.append(key);
             sb.append(".png\", \"content\": \"");
             sb.append(b64);
             sb.append("\"}");
@@ -75,8 +75,10 @@ public class SendGrid {
     public int send() {
         String attach = "";
 
-        if (blobs != null) {
+        if (blobMap.size() > 0) {
             attach = String.format(",\"attachments\": [%s]", makeAttachments());
+        } else{
+            body = "There are no files in today's GRaaS report";
         }
 
         String from = "calitp.gtfsrt@gmail.com";
