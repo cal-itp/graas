@@ -11,7 +11,7 @@
     <link type="text/css" rel="stylesheet" href="../static/style.css">
   </head>
 
-  <body style="background-color: var(--main-bg-color)" onblur="handleOnBlur()" onfocus="handleOnFocus()">
+  <body style="background-color: var(--main-bg-color)" onblur="handleOnBlur()" onfocus="handleOnFocus()" onmouseup="handleTouch()" ontouchstart="handleTouch()">
     <div id="qr-reader" style="width: 100%"></div>
     <div align="left" style="width: 100%">
         <button onclick="handleStartStop()" id="start-stop" style="display: none; background-color: green">Load trips</button>

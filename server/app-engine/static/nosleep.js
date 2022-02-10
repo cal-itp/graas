@@ -145,6 +145,17 @@ var NoSleep = function () {
       this._addSourceToVideo(this.noSleepVideo, "webm", webm);
       this._addSourceToVideo(this.noSleepVideo, "mp4", mp4);
 
+      // see https://github.com/richtr/NoSleep.js/issues/135
+      const hideCss = {
+        position: 'absolute',
+        left: '-100%',
+        top: '-100%'
+      }
+      Object.assign(this.noSleepVideo.style, hideCss);
+
+      document.querySelector('body').append(this.noSleepVideo);
+      console.log("+ appended nosleep video");
+
       this.noSleepVideo.addEventListener("loadedmetadata", function () {
         if (_this.noSleepVideo.duration <= 1) {
           // webm source
