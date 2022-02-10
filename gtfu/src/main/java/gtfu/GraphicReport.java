@@ -220,7 +220,7 @@ public class GraphicReport {
         String agencyID = key.substring(0, key.length() - 11);
         String path = "graas-report-archive/" + agencyID;
         String fileName = key + ".png";
-        gcs.uploadObject("graas-resources", path, fileName, image);
+        gcs.uploadObject("graas-resources", path, fileName, image, "image/png");
     }
 
     // Creates one report per agency per day
