@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collection;
 import java.util.stream.Collectors;
 
 import gtfu.tools.DayLogSlicer;
@@ -34,7 +33,7 @@ import gtfu.tools.DB;
 import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
-import gtfu.tools.GCloudBucket;
+import gtfu.tools.GCloudStorage;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -79,7 +78,7 @@ public class GraphicReport {
     private Font font;
     private Font smallFont;
     private int timeRowCount;
-    private GCloudBucket gcb = new GCloudBucket();
+    private GCloudStorage gcs = new GCloudStorage();
 
     public GraphicReport(String cacheDir, String selectedDate, boolean downloadReport, String savePath, boolean sendEmail) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
@@ -221,7 +220,7 @@ public class GraphicReport {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = key.substring(0, key.length() - 11);
         String path = "graas-report-archive/" + agencyID;
-        gcb.uploadObject("graas-resources", path, key, image);
+        gcs.uploadObject("graas-resources", path, key, image);
     }
 
     // Creates one report per agency per day

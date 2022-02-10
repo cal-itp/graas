@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 import gtfu.Debug;
 
-public class GCloudBucket {
+public class GCloudStorage {
   private static final String PROJECT_ID = System.getenv("GCP_PROJECT_ID");
 
   public static void uploadObject(String bucketName, String directory, String fileName, byte[] image) throws IOException {
