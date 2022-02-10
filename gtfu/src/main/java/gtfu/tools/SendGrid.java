@@ -12,13 +12,13 @@ public class SendGrid {
     private String[] tos;
     private String subject;
     private String body;
-    private Map<String, byte[]> blobMap;
+    private Map<String, byte[]> imageMap;
 
-    public SendGrid(String[] recipients, String emailSubject, String body, Map<String, byte[]> images) {
+    public SendGrid(String[] recipients, String emailSubject, String body, Map<String, byte[]> imageMap) {
         this.tos = recipients;
         this.subject = emailSubject;
         this.body = escape(body);
-        this.blobMap = images;
+        this.imageMap = imageMap;
     }
 
     private String escape(String s) {
@@ -54,8 +54,8 @@ public class SendGrid {
     private String makeAttachments() {
         StringBuffer sb = new StringBuffer();
 
-        for (String key : blobMap.keySet()) {
-            byte[] buf = blobMap.get(key);
+        for (String key : imageMap.keySet()) {
+            byte[] buf = imageMap.get(key);
 
             if (sb.length() > 0) {
                 sb.append(',');
@@ -74,11 +74,12 @@ public class SendGrid {
 
     public int send() {
         String attach = "";
-
-        if (blobMap.size() > 0) {
-            attach = String.format(",\"attachments\": [%s]", makeAttachments());
-        } else{
-            body = "There are no files in today's GRaaS report";
+        if(imageMap != null){
+            if (imageMap.size() > 0) {
+                attach = String.format(",\"attachments\": [%s]", makeAttachments());
+            } else{
+                body = "There are no images attached";
+            }
         }
 
         String from = "calitp.gtfsrt@gmail.com";
