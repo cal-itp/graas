@@ -22,7 +22,7 @@ public class GCloudStorage {
     String path = directory + "/" + fileName;
     Storage storage = StorageOptions.newBuilder().setProjectId(PROJECT_ID).build().getService();
     BlobId blobId = BlobId.of(bucketName, path);
-    BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(contentType)build();
+    BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(contentType).build();
     storage.create(blobInfo, file);
 
     Debug.log("File uploaded to bucket " + bucketName + " as " + path);
