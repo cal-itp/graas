@@ -80,11 +80,10 @@ public class GraphicReport {
     private int timeRowCount;
     private GCloudStorage gcs = new GCloudStorage();
 
-    public GraphicReport(String cacheDir, String selectedDate, boolean downloadReport, String savePath, boolean sendEmail) throws Exception {
+    public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
         Debug.log("- cacheDir: " + cacheDir);
         Debug.log("- selectedDate: " + selectedDate);
-        Debug.log("- downloadReport: " + downloadReport);
         Debug.log("- savePath: " + savePath);
         Debug.log("- sendEmail: " + sendEmail);
 
@@ -145,7 +144,7 @@ public class GraphicReport {
             tdMap = dls.getTripReportDataMap();
             int startSecond = dls.getStartSecond();
 
-            if (downloadReport) {
+            if (savePath != null) {
                 String path = savePath + "/" + key;
                 Debug.log("- path: " + path);
 
@@ -186,7 +185,7 @@ public class GraphicReport {
             byte[] buf = blobMap.get(key);
             uploadToGCloud(key, buf);
 
-            if (downloadReport) {
+            if (savePath != null) {
                 String fn = savePath + "/" + key + ".png";
                 Debug.log("writing " + fn + "...");
                 try (FileOutputStream fos = new FileOutputStream(fn)) {
@@ -220,7 +219,8 @@ public class GraphicReport {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = key.substring(0, key.length() - 11);
         String path = "graas-report-archive/" + agencyID;
-        gcs.uploadObject("graas-resources", path, key, image);
+        String fileName = key + ".png";
+        gcs.uploadObject("graas-resources", path, fileName, image);
     }
 
     // Creates one report per agency per day
@@ -573,10 +573,9 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-D|--download] [-ne|--no-email]");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
         System.err.println("    <save-path> (if given) is the path to a folder where to save position logs & reports");
-        System.err.println("    Using -D saves logs & reports to a default location, unless a save-path is also given");
         System.err.println("    Using -ne prevents an email report from being sent");
         System.exit(1);
     }
@@ -584,8 +583,7 @@ public class GraphicReport {
     public static void main(String[] arg) throws Exception {
         String cacheDir = null;
         String date = null;
-        String savePath = "/tmp";
-        boolean downloadReport = false;
+        String savePath = null;
         boolean sendEmail = true;
 
         for (int i=0; i<arg.length; i++) {
@@ -596,17 +594,11 @@ public class GraphicReport {
 
             if ((arg[i].equals("-s") || arg[i].equals("--save-path")) && i < arg.length - 1) {
                 savePath = arg[++i];
-                downloadReport = true;
                 continue;
             }
 
             if ((arg[i].equals("-d") || arg[i].equals("--date")) && i < arg.length - 1) {
                 date = arg[++i];
-                continue;
-            }
-
-            if (arg[i].equals("-D") || arg[i].equals("--download")) {
-                downloadReport = true;
                 continue;
             }
 
@@ -620,6 +612,6 @@ public class GraphicReport {
 
         if (cacheDir == null) usage();
 
-        new GraphicReport(cacheDir, date, downloadReport, savePath, sendEmail);
+        new GraphicReport(cacheDir, date, savePath, sendEmail);
     }
 }
