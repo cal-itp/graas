@@ -25,13 +25,13 @@ if (!fetch) {
 }
 
 (function(exports) {
-    exports.log = function(s, document) {
+    exports.log = function(s) {
         console.log(s);
 
         if (document) {
             try {
                 var p = document.getElementById('console');
-                p.innerHTML += msg + "<br/>";
+                p.innerHTML += s + "<br/>";
             } catch(e){
                 console.log(e.message)
             }
@@ -39,9 +39,9 @@ if (!fetch) {
     };
 
     exports.sign = function(msg, signatureKey) {
-        this.log("sign()");
-        this.log("- msg: " + msg);
-        this.log("- signatureKey: " + signatureKey);
+        //this.log("sign()");
+        //this.log("- msg: " + msg);
+        //this.log("- signatureKey: " + signatureKey);
 
         var keyType = 'unknown';
 
@@ -86,8 +86,8 @@ if (!fetch) {
     };
 
     exports.timedFetch = function(url, opts, window) {
-        this.log('timedFetch()');
-        this.log('- url: ' + url);
+        //this.log('timedFetch()');
+        //this.log('- url: ' + url);
 
         if (window && window.AbortController) {
             const controller = new AbortController();
@@ -99,7 +99,7 @@ if (!fetch) {
     };
 
     exports.apiCall = function(data, url, callback, document) {
-        this.log("apiCall()");
+        //this.log("apiCall()");
 
         var body = JSON.stringify(data);
         // this.log("- body: " + body);
@@ -148,7 +148,7 @@ if (!fetch) {
                 sig: sig
             };
 
-            // that.log('- msg: ' + msg);
+            that.log('- msg: ' + JSON.stringify(msg));
 
             that.apiCall(msg, url, function(response) {
                 if (document) {
@@ -172,7 +172,7 @@ if (!fetch) {
                     }
                 }
 
-                that.log('server response: ok');
+                //that.log('server response: ok');
             });
         });
     };
