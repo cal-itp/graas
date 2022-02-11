@@ -28,4 +28,42 @@ public class GCloudStorage {
     Debug.log("File uploaded to bucket " + bucketName + " as " + path);
 
   }
+
+  private static void usage() {
+      System.err.println("usage: GCloudStorage -b <bucket-name> -p <file-path> -n <file-name> [-t <file-type>]");
+      System.exit(0);
+  }
+
+  public static void main(String[] arg) throws Exception {
+    String bucketName = null;
+    String directory = null;
+    String filePath = null;
+    String fileName = null;
+    String fileType = null;
+
+    for (int i=0; i<arg.length; i++) {
+        if (arg[i].equals("-b") && i < arg.length - 1) {
+            bucketName = arg[i + 1];
+        }
+        if (arg[i].equals("-p") && i < arg.length - 1) {
+            filePath = arg[i + 1];
+        }
+        if (arg[i].equals("-d") && i < arg.length - 1) {
+            directory = arg[i + 1];
+        }
+        if (arg[i].equals("-n") && i < arg.length - 1) {
+            fileName = arg[i + 1];
+        }
+        if (arg[i].equals("-t") && i < arg.length - 1) {
+            fileType = arg[i + 1];
+        }
+    }
+    if ((bucketName == null) || (filePath == null) || (fileName == null)){
+      usage();
+    }
+    if (fileType != null){
+      uploadObject(bucketName, directory, fileName, Files.readAllBytes(Paths.get(filePath)),fileType);
+    }
+    else uploadObject(bucketName, directory, fileName, Files.readAllBytes(Paths.get(filePath)));
+  }
 }
