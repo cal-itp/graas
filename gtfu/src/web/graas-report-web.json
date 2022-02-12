@@ -1,27 +1,27 @@
 {
 "timeline-floor": 100,
 "trips": [{"trip-id":"trip1",
-          "boundaries":{"timeline_start_x": 10,
-                            "timeline_start_y": 10,
-                            "timeline_end_x": 20,
-                            "timeline_end_y": 20,
-                            "map_start_x": 10,
-                            "map_start_y": 10,
-                            "map_end_x": 20,
-                            "map_end_y": 20
+          "boundaries":{"timeline-start-x": 10,
+                            "timeline-start-y": 10,
+                            "timeline-end-x": 20,
+                            "timeline-end-y": 20,
+                            "map-start-x": 10,
+                            "map-start-y": 10,
+                            "map-end-x": 20,
+                            "map-end-y": 20
                             },
             "agent": "babyshark",
             "uuid": "12345"
         },
         {"trip-id":"trip2",
-          "boundaries":{"timeline_start_x": 10,
-                            "timeline_start_y": 10,
-                            "timeline_end_x": 20,
-                            "timeline_end_y": 20,
-                            "map_start_x": 10,
-                            "map_start_y": 10,
-                            "map_end_x": 20,
-                            "map_end_y": 20
+          "boundaries":{"timeline-start-x": 10,
+                            "timeline-start-y": 10,
+                            "timeline-end-x": 20,
+                            "timeline-end-y": 20,
+                            "map-start-x": 10,
+                            "map-start-y": 10,
+                            "map-end-x": 20,
+                            "map-end-y": 20
                             },
             "agent": "babyshark",
             "uuid": "12345"
