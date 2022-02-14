@@ -1,14 +1,14 @@
 {
 "timeline-floor": 100,
 "trips": [{"trip-id":"trip1",
-          "boundaries":{"timeline-start-x": 10,
-                            "timeline-start-y": 10,
-                            "timeline-end-x": 20,
-                            "timeline-end-y": 20,
-                            "map-start-x": 10,
-                            "map-start-y": 10,
-                            "map-end-x": 20,
-                            "map-end-y": 20
+          "boundaries":{"timeline-start-x": 642,
+                            "timeline-start-y": 145,
+                            "timeline-end-x": 687,
+                            "timeline-end-y": 160,
+                            "map-start-x": 0,
+                            "map-start-y": 260,
+                            "map-end-x": 600,
+                            "map-end-y": 860
                             },
             "agent": "babyshark",
             "uuid": "12345"
