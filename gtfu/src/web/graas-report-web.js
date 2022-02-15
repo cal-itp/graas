@@ -8,7 +8,7 @@ function drawMap(){
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     ctx.canvas.width  = window.innerWidth;
-    img.src = "./tcrta-2022-02-09.png";
+    img.src = "https://storage.googleapis.com/graas-resources/graas-report-archive/tcrta/tcrta-2022-02-14.png";
 
     img.onload = function() {
         scaleRatio = window.innerWidth / this.naturalWidth;
@@ -43,7 +43,8 @@ function drawMap(){
 }
 
 function loadJSON(){
-    fetch("https://storage.googleapis.com/graas-resources/web/graas-report-web-8.json")
+    // ?nocache= prevents annoying json caching...mostly for debugging purposes
+    fetch("https://storage.googleapis.com/graas-resources/graas-report-archive/tcrta/tcrta-2022-02-14.json?nocache="  + (new Date()).getTime());
     .then(response => {
        return response.json();
     })
@@ -51,24 +52,23 @@ function loadJSON(){
 }
 
 function processJSON(object){
+    console.log("object: " + object["trips"][0]["boundaries"]["timeline-x"]);
     if(scaleRatio == null) {
         setTimeout(function() {processJSON(object)}, 1000);
     }
     for (var i = 0; i < object.trips.length; i++) {
-        trips.set(object.trips[i]["trip-id"], {timeline_start_x: object["trips"][i]["boundaries"]["timeline-start-x"] * scaleRatio,
-                                                timeline_end_x: object["trips"][i]["boundaries"]["timeline-end-x"] * scaleRatio,
-                                                timeline_width: (object["trips"][i]["boundaries"]["timeline-end-x"] - object["trips"][i]["boundaries"]["timeline-start-x"]) * scaleRatio,
-                                                timeline_start_y: object["trips"][i]["boundaries"]["timeline-start-y"] * scaleRatio,
-                                                timeline_end_y: object["trips"][i]["boundaries"]["timeline-end-y"] * scaleRatio,
-                                                timeline_height: (object["trips"][i]["boundaries"]["timeline-end-y"] - object["trips"][i]["boundaries"]["timeline-start-y"]) * scaleRatio,
-                                                map_start_x: object["trips"][i]["boundaries"]["map-start-x"] * scaleRatio,
-                                                map_end_x: object["trips"][i]["boundaries"]["map-end-x"] * scaleRatio,
-                                                map_width: (object["trips"][i]["boundaries"]["map-end-x"] - object["trips"][i]["boundaries"]["map-start-x"]) * scaleRatio,
-                                                map_start_y: object["trips"][i]["boundaries"]["map-start-y"] * scaleRatio,
-                                                map_end_y: object["trips"][i]["boundaries"]["map-end-y"] * scaleRatio,
-                                                map_height: (object["trips"][i]["boundaries"]["map-end-y"] - object["trips"][i]["boundaries"]["map-start-y"]) * scaleRatio,
+        trips.set(object.trips[i]["trip-id"], {trip_name: object["trips"][i]["trip-name"],
+                                                timeline_x: object["trips"][i]["boundaries"]["timeline-x"] * scaleRatio,
+                                                timeline_y: object["trips"][i]["boundaries"]["timeline-y"] * scaleRatio,
+                                                timeline_width: object["trips"][i]["boundaries"]["timeline-width"] * scaleRatio,
+                                                timeline_height: object["trips"][i]["boundaries"]["timeline-height"] * scaleRatio,
+                                                map_x: object["trips"][i]["boundaries"]["map-x"] * scaleRatio,
+                                                map_y: object["trips"][i]["boundaries"]["map-y"] * scaleRatio,
+                                                map_width: object["trips"][i]["boundaries"]["map-width"] * scaleRatio,
+                                                map_height: object["trips"][i]["boundaries"]["map-height"] * scaleRatio,
                                                 })
     }
+    console.log(trips);
     return trips
 }
 
@@ -76,31 +76,32 @@ function mapTrip(trip){
     console.log("mapTrip()");
     console.log("trip to map:" + trip);
     ctx.beginPath();
-    ctx.lineWidth = "2";
+    ctx.lineWidth = "4";
     ctx.strokeStyle = "green";
-    ctx.rect(trip.map_start_x, trip.map_start_y, trip.map_width, trip.map_height);
-    ctx.rect(trip.timeline_start_x, trip.timeline_start_y, trip.timeline_width, trip.timeline_height);
+    ctx.rect(trip.map_x, trip.map_y, trip.map_width, trip.map_height);
+    ctx.rect(trip.timeline_x, trip.timeline_y, trip.timeline_width, trip.timeline_height);
     ctx.stroke();
 }
 
 function objectContainsPoint(object, x, y){
-    console.log("startx: " + object.map_start_x);
-    console.log("endx: " + object.map_end_x);
-    console.log("starty: " + object.map_start_y);
-    console.log("endy: " + object.map_end_y);
-    if(x >= object.map_start_x){
-        if(x <= object.map_end_x){
-            if(y >= object.map_start_y){
-                if(y <= object.map_end_y){
+    console.log("name: " + object.trip_name);
+    console.log("mapstartx: " + object.map_x);
+    console.log("mapstarty: " + object.map_y);
+    console.log("timelinestartx: " + object.map_x);
+    console.log("timelinestarty: " + object.map_y);
+    if(x >= object.map_x){
+        if(x <= object.map_x + object.map_width){
+            if(y >= object.map_y){
+                if(y <= object.map_y + object.map_height){
                     return true;
                 }
             }
         }
     }
-    if(x >= object.timeline_start_x){
-        if(x <= object.timeline_end_x){
-            if(y >= object.timeline_start_y){
-                if(y <= object.timeline_end_y){
+    if(x >= object.timeline_x){
+        if(x <= object.timeline_x + object.timeline_width){
+            if(y >= object.timeline_y){
+                if(y <= object.timeline_y + object.timeline_height){
                     return true;
                 }
             }

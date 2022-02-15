@@ -254,10 +254,10 @@ public class GraphicReport {
             boundaries.put("timeline-y", timelineRect.y);
             boundaries.put("timeline-width", timelineRect.width);
             boundaries.put("timeline-height", timelineRect.height);
-            boundaries.put("map-x", timelineRect.x);
-            boundaries.put("map-y", timelineRect.y);
-            boundaries.put("map-width", timelineRect.width);
-            boundaries.put("map-height", timelineRect.height);
+            boundaries.put("map-x", mapRect.x);
+            boundaries.put("map-y", mapRect.y);
+            boundaries.put("map-width", mapRect.width);
+            boundaries.put("map-height", mapRect.height);
 
             JSONObject trip = new JSONObject();
             trip.put("trip-id", td.id);
@@ -277,7 +277,7 @@ public class GraphicReport {
         JSONObject agencyReport = new JSONObject();
         agencyReport.put("trips", tripsInfo);
         agencyReport.put("timeline-floor", 100);
-
+        Debug.log(agencyReport.toString());
         return agencyReport;
     }
 
@@ -441,7 +441,7 @@ public class GraphicReport {
                 if (l.size() == 0 || !t.overlaps(l.get(l.size() - 1))) {
                     t.y = y + index * ROW_HEIGHT - offset;
                     g.fillRoundRect(t.x, t.y + 1, t.width, t.height - 1, 5, 5);
-                    timelineCoords.put(t.id, new Rectangle(t.x, t.y + 1, t.width, t.height - 1));
+                    timelineCoords.put(t.id, new Rectangle(t.x, t.y + 1 + MIN_HEIGHT, t.width, t.height - 1));
                     l.add(t);
                     break;
                 }
@@ -496,6 +496,8 @@ public class GraphicReport {
             TripReportData td = tdList.get(i);
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
+            mapCoords.put(td.id, new Rectangle(x, y + MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT, TILE_SIZE, TILE_SIZE));
+
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
@@ -525,7 +527,6 @@ public class GraphicReport {
 
             AffineTransform t = g.getTransform();
             g.translate(x + inset, y + inset);
-            mapCoords.put(td.id, new Rectangle(x, y, length, length));
             drawMap(g, td, length);
             g.setTransform(t);
         }
