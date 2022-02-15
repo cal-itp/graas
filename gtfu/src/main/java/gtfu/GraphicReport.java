@@ -11,6 +11,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.Rectangle;
 import java.awt.geom.Path2D;
 import java.awt.AlphaComposite;
 import javax.imageio.ImageIO;
@@ -42,6 +43,9 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.Clock;
 
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+
 public class GraphicReport {
     private static final Color BACKGROUND = new Color(0xffffff);
     private static final Color DARK       = new Color(0xe0e0e0);
@@ -72,6 +76,8 @@ public class GraphicReport {
     private Map<String, Map<String, GPSData>> gpsMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
+    private Map<String, Rectangle> timelineCoords;
+    private Map<String, Rectangle> mapCoords;
     private BufferedImage img;
     private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, DOT_SIZE, DOT_SIZE);
     private Rectangle2D clipRect = new Rectangle2D.Float();
@@ -102,6 +108,7 @@ public class GraphicReport {
         GPSLogSlicer slicer = new GPSLogSlicer(results, "");
         Map<String, List<String>> logs = slicer.getLogs();
         Map<String, byte[]> blobMap = new HashMap();
+
 
         font = new Font("Arial", Font.PLAIN, 10 * SCALE);
         smallFont = new Font("Arial", Font.PLAIN, 9 * SCALE);
@@ -142,6 +149,8 @@ public class GraphicReport {
             gpsMap = dls.getMap();
             tdList = dls.getTripReportDataList();
             tdMap = dls.getTripReportDataMap();
+            mapCoords = new HashMap();
+            timelineCoords = new HashMap();
             int startSecond = dls.getStartSecond();
 
             if (savePath != null) {
@@ -176,14 +185,16 @@ public class GraphicReport {
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
                 // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
-                blobMap.put(key.substring(0, key.length() - 4), imageToBlob(img));
+                String agencyDate = key.substring(0, key.length() - 4);
+                blobMap.put(agencyDate, imageToBlob(img));
+                uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json");
             }
         }
 
         for (String key : blobMap.keySet()) {
 
             byte[] buf = blobMap.get(key);
-            uploadToGCloud(key, buf);
+            uploadToGCloud(key, buf, "png");
 
             if (savePath != null) {
                 String fn = savePath + "/" + key + ".png";
@@ -215,12 +226,59 @@ public class GraphicReport {
         int responseCode = grid.send();
     }
 
-    private void uploadToGCloud(String key, byte[] image) throws IOException {
+    private void uploadToGCloud(String key, byte[] file, String fileType) throws IOException {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = key.substring(0, key.length() - 11);
         String path = "graas-report-archive/" + agencyID;
-        String fileName = key + ".png";
-        gcs.uploadObject("graas-resources", path, fileName, image, "image/png");
+        String fileSuffix = "";
+        String fileTypeName = "";
+        if(fileType.equals("png")){
+            fileSuffix = ".png";
+            fileTypeName = "image/png";
+        }
+        else if (fileType.equals("json")){
+            fileSuffix = ".json";
+            fileTypeName = "text/json";
+        }
+        String fileName = key + fileSuffix;
+        gcs.uploadObject("graas-resources", path, fileName, file, fileTypeName);
+    }
+
+    private JSONObject generateJsonFile() throws IOException {
+        JSONArray tripsInfo = new JSONArray();
+        for (TripReportData td : tdList) {
+            Rectangle timelineRect = timelineCoords.get(td.id);
+            Rectangle mapRect = mapCoords.get(td.id);
+            JSONObject boundaries = new JSONObject();
+            boundaries.put("timeline-x", timelineRect.x);
+            boundaries.put("timeline-y", timelineRect.y);
+            boundaries.put("timeline-width", timelineRect.width);
+            boundaries.put("timeline-height", timelineRect.height);
+            boundaries.put("map-x", timelineRect.x);
+            boundaries.put("map-y", timelineRect.y);
+            boundaries.put("map-width", timelineRect.width);
+            boundaries.put("map-height", timelineRect.height);
+
+            JSONObject trip = new JSONObject();
+            trip.put("trip-id", td.id);
+            trip.put("boundaries", boundaries);
+            trip.put("trip-name", td.getTripName());
+            trip.put("agent", td.getAgent());
+            trip.put("os", td.getOs());
+            trip.put("device", td.getDevice());
+            trip.put("vehicle-id", td.getVehicleId());
+            trip.put("uuid-tail", td.getUuidTail());
+            trip.put("avg-update-interval", td.getAvgUpdateInterval());
+            trip.put("min-update-interval", td.getMinUpdateInterval());
+            trip.put("max-update-interval", td.getMaxUpdateInterval());
+            tripsInfo.add(trip);
+        }
+
+        JSONObject agencyReport = new JSONObject();
+        agencyReport.put("trips", tripsInfo);
+        agencyReport.put("timeline-floor", 100);
+
+        return agencyReport;
     }
 
     // Creates one report per agency per day
@@ -383,7 +441,7 @@ public class GraphicReport {
                 if (l.size() == 0 || !t.overlaps(l.get(l.size() - 1))) {
                     t.y = y + index * ROW_HEIGHT - offset;
                     g.fillRoundRect(t.x, t.y + 1, t.width, t.height - 1, 5, 5);
-
+                    timelineCoords.put(t.id, new Rectangle(t.x, t.y + 1, t.width, t.height - 1));
                     l.add(t);
                     break;
                 }
@@ -467,6 +525,7 @@ public class GraphicReport {
 
             AffineTransform t = g.getTransform();
             g.translate(x + inset, y + inset);
+            mapCoords.put(td.id, new Rectangle(x, y, length, length));
             drawMap(g, td, length);
             g.setTransform(t);
         }

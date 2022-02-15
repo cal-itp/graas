@@ -76,7 +76,7 @@ function mapTrip(trip){
     console.log("mapTrip()");
     console.log("trip to map:" + trip);
     ctx.beginPath();
-    ctx.lineWidth = "6";
+    ctx.lineWidth = "2";
     ctx.strokeStyle = "green";
     ctx.rect(trip.map_start_x, trip.map_start_y, trip.map_width, trip.map_height);
     ctx.rect(trip.timeline_start_x, trip.timeline_start_y, trip.timeline_width, trip.timeline_height);
