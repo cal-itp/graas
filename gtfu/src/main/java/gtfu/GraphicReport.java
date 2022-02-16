@@ -84,6 +84,10 @@ public class GraphicReport {
     private Font font;
     private Font smallFont;
     private int timeRowCount;
+    private int tileRowCount;
+    private int tilesPerRow;
+    private int headerHeight;
+    private int bodyHeight;
     private GCloudStorage gcs = new GCloudStorage();
 
     public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail) throws Exception {
@@ -233,7 +237,8 @@ public class GraphicReport {
         String fileSuffix = "";
         String fileTypeName = "";
         if(fileType.equals("png")){
-            fileSuffix = ".png";
+            // "-dev" is temp! Remove for production
+            fileSuffix = "-dev.png";
             fileTypeName = "image/png";
         }
         else if (fileType.equals("json")){
@@ -276,8 +281,7 @@ public class GraphicReport {
 
         JSONObject agencyReport = new JSONObject();
         agencyReport.put("trips", tripsInfo);
-        agencyReport.put("timeline-floor", 100);
-        Debug.log(agencyReport.toString());
+        agencyReport.put("header-height", headerHeight);
         return agencyReport;
     }
 
@@ -287,14 +291,15 @@ public class GraphicReport {
         //Debug.log("- timeRowCount: " + timeRowCount);
 
         int width = CANVAS_WIDTH;
-        int tilesPerRow = width / TILE_SIZE;
+        tilesPerRow = width / TILE_SIZE;
         //Debug.log("- tilesPerRow: " + tilesPerRow);
-        int tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
+        tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
         //Debug.log("- tileRowCount: " + tileRowCount);
-
+        headerHeight = MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT;
+        bodyHeight = tileRowCount * TILE_SIZE;
         img = new BufferedImage(
             width,
-            MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT + tileRowCount * TILE_SIZE,
+            headerHeight + bodyHeight,
             BufferedImage.TYPE_INT_ARGB
         );
 
@@ -471,10 +476,6 @@ public class GraphicReport {
     }
 
     private void reportGPSCoverage(Graphics2D g) throws Exception {
-        int tilesPerRow = img.getWidth() / TILE_SIZE;
-        //Debug.log("- tilesPerRow: " + tilesPerRow);
-        int tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
-        //Debug.log("- tileRowCount: " + tileRowCount);
         int x, y;
 
         g.setColor(DARK);
@@ -496,7 +497,7 @@ public class GraphicReport {
             TripReportData td = tdList.get(i);
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
-            mapCoords.put(td.id, new Rectangle(x, y + MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT, TILE_SIZE, TILE_SIZE));
+            mapCoords.put(td.id, new Rectangle(x, y, TILE_SIZE, TILE_SIZE));
 
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
@@ -507,23 +508,6 @@ public class GraphicReport {
             g.setClip(clipRect);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
-
-
-            g.setColor(FONT_COLOR);
-            s = "a: " + td.getAgent() + ", o: " + td.getOs();
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
-
-            s =  "d: " + td.getDevice() + ", v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
-
-            s =  "avg: " + td.getAvgUpdateInterval() + ", min: " + td.getMinUpdateInterval() + ", max: " + td.getMaxUpdateInterval() + "";
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             AffineTransform t = g.getTransform();
             g.translate(x + inset, y + inset);
