@@ -4,9 +4,13 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import gtfu.Debug;
 
@@ -27,6 +31,24 @@ public class GCloudStorage {
 
     Debug.log("File uploaded to bucket " + bucketName + " as " + path);
 
+  }
+
+  public static List<String> getObjectList(String bucketName, String directoryPrefix) {
+    ArrayList <String> objectList = new ArrayList<>();
+    Storage storage = StorageOptions.newBuilder().setProjectId(PROJECT_ID).build().getService();
+    // Page<Blob> blobs = storage.list(bucketName);
+    Page<Blob> blobs =
+            storage.list(
+                bucketName,
+                Storage.BlobListOption.prefix(directoryPrefix),
+                Storage.BlobListOption.currentDirectory());
+
+
+    for (Blob blob : blobs.iterateAll()) {
+      objectList.add(blob.getName());
+    }
+
+    return objectList;
   }
 
   private static void usage() {

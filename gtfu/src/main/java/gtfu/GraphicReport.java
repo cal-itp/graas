@@ -35,6 +35,7 @@ import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
 import gtfu.tools.GCloudStorage;
+import gtfu.tools.AgencyListGenerator;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -89,6 +90,7 @@ public class GraphicReport {
     private int headerHeight;
     private int bodyHeight;
     private GCloudStorage gcs = new GCloudStorage();
+    private AgencyListGenerator alg = new AgencyListGenerator();
 
     public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
@@ -211,6 +213,7 @@ public class GraphicReport {
         if (sendEmail) {
             sendEmail(blobMap);
         }
+        alg.generateAgencyList();
     }
 
     private byte[] imageToBlob(BufferedImage img) throws IOException {
