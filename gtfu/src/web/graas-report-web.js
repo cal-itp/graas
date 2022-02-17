@@ -67,7 +67,7 @@ function load(){
 
         var scrollTop = document.documentElement.scrollTop;
         var foundTrip = false;
-        if(y >=  (scrollTop + timelineCanvasHeight)){
+        if(y >=  (scrollTop + timelineCanvasHeight + dropdownHeight)){
             for (const [key, value] of trips.entries()) {
                 if (mapContainsPoint(value, x, y - timelineCanvasHeight)){
                     selectTrip(value);
