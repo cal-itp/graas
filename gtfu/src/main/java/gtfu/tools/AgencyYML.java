@@ -21,7 +21,6 @@ public class AgencyYML {
     private Map<String,String> nameMap;
 
     public AgencyYML(){
-        Debug.log("-- AgencyYML()");
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Util.downloadURLContent(url, bos, null);
         this.ymlLines = (new String(bos.toByteArray())).split("\n");

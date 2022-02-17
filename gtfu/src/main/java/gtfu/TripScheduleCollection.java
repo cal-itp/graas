@@ -39,7 +39,7 @@ public class TripScheduleCollection implements Serializable {
 
 
             if (Util.isEmpty(arrivalTime)) continue;
-            if (trip == null) {
+            if (tripID == null) {
                 // This error is so common that it would create a lot of noise. We would need better formatting in order launch it
                 // TODO: launch stop_time failure messages
 
@@ -79,6 +79,8 @@ public class TripScheduleCollection implements Serializable {
                 }
 
                 trip = tripCollection.get(tripID);
+                if (trip == null) continue;
+
                 schedule = new TripSchedule(trip);
                 schedule.add(stop, 0, 0, daySeconds);
                 trip.setSchedule(schedule);

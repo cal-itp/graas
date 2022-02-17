@@ -247,6 +247,8 @@ public class Trip implements Serializable {
         TripScheduleElement e = null;
         TripScheduleElement pe = null;
 
+        if (schedule == null) return null;
+
         for (int i=0; i<schedule.getSize(); i++) {
             e = schedule.get(i);
             totalTime += e.time;

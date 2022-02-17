@@ -133,10 +133,10 @@ public class Util {
     public static void latLongToScreenXY(int displayWidth, int displayHeight, Area area, ShapePoint p) {
         float fractionLat = area.getLatFraction(p.lat);
         float fractionLong = area.getLongFraction(p.lon);
+        int size = Math.min(displayWidth, displayHeight);
 
-        float ratio = area.getAspectRatio();
-        p.screenX = (int)(displayHeight * ratio * fractionLong);
-        p.screenY = (int)(displayHeight * fractionLat);
+        p.screenX = (int)(size * fractionLong);
+        p.screenY = (int)(size * fractionLat);
     }
 
     // long == x, lat == y
@@ -824,14 +824,14 @@ public class Util {
         t = new Timer("trips");
         TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po, skipErrors);
         collections.put("trips", tripCollection);
-        //Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
+        Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
 
         t = new Timer("schedules");
         TripScheduleCollection scheduleCollection = new TripScheduleCollection(path, tripCollection, stopCollection, po, skipErrors);
         collections.put("schedules", scheduleCollection);
         t.dumpLap();
-        //Debug.log("- scheduleCollection.getSize(): " + scheduleCollection.getSize());
+        Debug.log("- scheduleCollection.getSize(): " + scheduleCollection.getSize());
 
         //Debug.log("routes:");
         t = new Timer("routes");

@@ -649,8 +649,9 @@ public class RealtimeVisualization implements CollectionOwner, Drawable, UIEvent
         float fractionLat = paddedArea.getLatFraction(lat);
         float fractionLong = paddedArea.getLongFraction(lon);
 
-        float x = display.getHeight() * paddedArea.getAspectRatio() * fractionLong;
-        float y = display.getHeight() * fractionLat;
+        int dsize = Math.min(display.getWidth(), display.getHeight());
+        float x = dsize * fractionLong;
+        float y = dsize * fractionLat;
         float radius = size / 2f;
 
         g.setColor(color);
