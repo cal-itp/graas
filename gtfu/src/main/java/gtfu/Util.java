@@ -135,8 +135,14 @@ public class Util {
         float fractionLong = area.getLongFraction(p.lon);
 
         float ratio = area.getAspectRatio();
-        p.screenX = (int)(displayHeight * ratio * fractionLong);
-        p.screenY = (int)(displayHeight * fractionLat);
+
+        if (ratio > 1) {
+            p.screenX = (int)(displayWidth * fractionLong);
+            p.screenY = (int)(displayHeight / 2 + displayHeight / ratio * fractionLat - displayHeight / ratio / 2);
+        } else {
+            p.screenX = (int)(displayWidth * ratio * fractionLong);
+            p.screenY = (int)(displayHeight * fractionLat);
+        }
     }
 
     // long == x, lat == y
