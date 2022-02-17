@@ -47,7 +47,6 @@ function load(){
     img.src = bucketURL + "graas-report-archive/" + selectedAgency + "/" + selectedAgency + "-" + selectedDate + "-dev.png?nocache=123";
 
     img.onload = function() {
-        console.log("trips.size: " + trips.size);
         imageWidth = this.naturalWidth
         imageHeight = this.naturalHeight;
         scaleRatio = window.innerWidth / imageWidth;
@@ -121,13 +120,17 @@ function loadTripJSON(){
 function processDropdownJSON(object){
 
     var p = document.getElementById("agency-select");
+    clearSelectOptions(p);
+    var opt = document.createElement('option');
+    opt.appendChild(document.createTextNode("Select agency-id..."));
+    p.appendChild(opt);
+
     for (var key in object) {
         agencies.set(key, object[key])
         var opt = document.createElement('option');
         opt.appendChild(document.createTextNode(key));
         p.appendChild(opt);
     }
-    handleAgencyChoice();
 }
 
 function handleAgencyChoice(){
@@ -136,8 +139,7 @@ function handleAgencyChoice(){
     var p = document.getElementById("date-select");
     clearSelectOptions(p);
 
-    for (var i =0; i < agencies.get(selectedAgency).length; i++) {
-        console.log(agencies.get(selectedAgency)[i])
+    for (var i = agencies.get(selectedAgency).length -1; i >= 0; i--) {
         var opt = document.createElement('option');
         opt.appendChild(document.createTextNode(agencies.get(selectedAgency)[i]));
         p.appendChild(opt);
@@ -206,8 +208,8 @@ function selectTrip(trip){
 function drawToolTip(trip){
     console.log("drawTooltip()");
 
-    var margin = 15;
-    font_size = 40;
+    var margin = 5;
+    font_size = 30;
 
     mapWidth = trip["map_width"] * scaleRatio;
     toolTipX = trip["map_x"] * scaleRatio + mapWidth;
@@ -259,7 +261,6 @@ function getMaxTextWidth(trip) {
 }
 
 function mapContainsPoint(object, x, y){
-    console.log("mapContainsPoint()");
     if(x >= object.map_x * scaleRatio){
         if(x <= (object.map_x + object.map_width) * scaleRatio){
             if(y >= object.map_y * scaleRatio ){
@@ -273,7 +274,6 @@ function mapContainsPoint(object, x, y){
 }
 
 function timelineContainsPoint(object, x, y){
-    console.log("timelineContainsPoint()");
     if(x >= object.timeline_x * scaleRatio){
         if(x <= (object.timeline_x + object.timeline_width) * scaleRatio){
             if(y >= object.timeline_y * scaleRatio){

@@ -1,7 +1,7 @@
 html, body {
   width: 100%;
   min-height: 100%;
-  margin: 0;
+  margin: 0px;
   scroll-behavior: smooth;
 }
 
@@ -11,5 +11,5 @@ html, body {
 }
 
 #dropdowns {
-  margin: 10;
+  padding: 10px;
 }
