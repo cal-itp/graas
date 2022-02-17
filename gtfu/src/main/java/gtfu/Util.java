@@ -824,14 +824,14 @@ public class Util {
         t = new Timer("trips");
         TripCollection tripCollection = new TripCollection(path, stopCollection, shapeCollection, po, skipErrors);
         collections.put("trips", tripCollection);
-        //Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
+        Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
 
         t = new Timer("schedules");
         TripScheduleCollection scheduleCollection = new TripScheduleCollection(path, tripCollection, stopCollection, po, skipErrors);
         collections.put("schedules", scheduleCollection);
         t.dumpLap();
-        //Debug.log("- scheduleCollection.getSize(): " + scheduleCollection.getSize());
+        Debug.log("- scheduleCollection.getSize(): " + scheduleCollection.getSize());
 
         //Debug.log("routes:");
         t = new Timer("routes");
