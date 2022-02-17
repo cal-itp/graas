@@ -133,16 +133,10 @@ public class Util {
     public static void latLongToScreenXY(int displayWidth, int displayHeight, Area area, ShapePoint p) {
         float fractionLat = area.getLatFraction(p.lat);
         float fractionLong = area.getLongFraction(p.lon);
+        int size = Math.min(displayWidth, displayHeight);
 
-        float ratio = area.getAspectRatio();
-
-        if (ratio > 1) {
-            p.screenX = (int)(displayWidth * fractionLong);
-            p.screenY = (int)(displayHeight / 2 + displayHeight / ratio * fractionLat - displayHeight / ratio / 2);
-        } else {
-            p.screenX = (int)(displayWidth * ratio * fractionLong);
-            p.screenY = (int)(displayHeight * fractionLat);
-        }
+        p.screenX = (int)(size * fractionLong);
+        p.screenY = (int)(size * fractionLat);
     }
 
     // long == x, lat == y

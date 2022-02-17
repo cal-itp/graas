@@ -86,7 +86,7 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
     }
 
     public void update(Graphics g) {
-        if (buf == null) {
+        if (buf == null || buf.getWidth(null) != getWidth() || buf.getHeight(null) != getHeight()) {
             buf = createImage(getWidth(), getHeight());
         }
 
@@ -110,8 +110,17 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
         );
 
         ((Graphics2D)g).setStroke(
-            new BasicStroke(3)
+            new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
         );
+
+        int xoff = 0;
+        int yoff = 0;
+
+        if (getWidth() > getHeight()) {
+            xoff = (getWidth() - getHeight()) / 2;
+        } else {
+            yoff = (getHeight() - getWidth()) / 2;
+        }
 
         for (int i=0; i<shapeList.size(); i++) {
             if (shapeIndex != -1 && shapeIndex != i) {
@@ -136,7 +145,12 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
                 ShapePoint p1 =plist.get(j);
                 ShapePoint p2 =plist.get(j + 1);
 
-                g.drawLine(p1.screenX, p1.screenY, p2.screenX, p2.screenY);
+                g.drawLine(
+                    xoff + p1.screenX,
+                    yoff + p1.screenY,
+                    xoff + p2.screenX,
+                    yoff + p2.screenY
+                );
             }
         }
     }
