@@ -12,4 +12,9 @@ html, body {
 
 #dropdowns {
   padding: 10px;
+  width:  100%;
+}
+
+#header {
+   background-color: #FFFFFF;
 }

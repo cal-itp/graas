@@ -15,8 +15,15 @@ var timelineCanvasHeight;
 var mapCanvasHeight;
 var selectedAgency;
 var selectedDate;
-var dropdownHeight
-var font_size
+var dropdownHeight;
+var headerHeight;
+var mapWindowHeight
+var scrollTop;
+var timelineScrollTop;
+var mapScrollTop;
+var mapScrollBottom;
+
+var font_size = 20;
 const bucketURL = "https://storage.googleapis.com/graas-resources/"
 const MIN_HEIGHT = 1000;
 const font = "Arial";
@@ -51,36 +58,48 @@ function load(){
         imageHeight = this.naturalHeight;
         scaleRatio = window.innerWidth / imageWidth;
         console.log("scaleRatio: " + scaleRatio);
-        timelineCanvasHeight = timelineHeight * scaleRatio;
-        mapCanvasHeight = (imageHeight - timelineHeight) * scaleRatio;
+
         canvasHeight = imageHeight * scaleRatio;
+
+        timelineCanvasHeight = timelineHeight * scaleRatio;
+        headerHeight = timelineCanvasHeight + dropdownHeight
+        timelineCtx.canvas.height = timelineCanvasHeight;
+
+        mapCanvasHeight = (imageHeight - timelineHeight) * scaleRatio;
         mapCtx.canvas.height = mapCanvasHeight;
+        mapWindowHeight = windowHeight - headerHeight;
+
         drawReport();
     };
 
     // Add event listener for `click` events.
     document.body.addEventListener('click', function(event) {
+        console.log(event);
         var x = event.pageX;
         var y = event.pageY;
         // console.log("x:" + x);
         // console.log("y:" + y);
 
-        var scrollTop = document.documentElement.scrollTop;
+        scrollTop = document.documentElement.scrollTop;
+        timelineScrollTop = scrollTop + dropdownHeight;
+        mapScrollTop = scrollTop + headerHeight;
+        mapScrollBottom = mapScrollTop + mapWindowHeight;
+
         var foundTrip = false;
-        if(y >=  (scrollTop + timelineCanvasHeight + dropdownHeight)){
+        if(y >= (mapScrollTop)){
             for (const [key, value] of trips.entries()) {
-                if (mapContainsPoint(value, x, y - timelineCanvasHeight)){
+                if (mapContainsPoint(value, x, y - headerHeight)){
                     selectTrip(value);
-                    drawToolTip(value);
+                    drawMetadata(value);
                     foundTrip = true;
                     break;
                 }
             }
         } else {
             for (const [key, value] of trips.entries()) {
-                if (timelineContainsPoint(value, x, y - scrollTop - dropdownHeight)){
+                if (timelineContainsPoint(value, x, y - timelineScrollTop)){
                     selectTrip(value);
-                    drawToolTip(value);
+                    drawMetadata(value);
                     foundTrip = true;
                     break;
                 }
@@ -121,9 +140,10 @@ function processDropdownJSON(object){
 
     var p = document.getElementById("agency-select");
     clearSelectOptions(p);
-    var opt = document.createElement('option');
-    opt.appendChild(document.createTextNode("Select agency-id..."));
-    p.appendChild(opt);
+    // uncomment for prod:
+    // var opt = document.createElement('option');
+    // opt.appendChild(document.createTextNode("Select agency-id..."));
+    // p.appendChild(opt);
 
     for (var key in object) {
         agencies.set(key, object[key])
@@ -131,6 +151,8 @@ function processDropdownJSON(object){
         opt.appendChild(document.createTextNode(key));
         p.appendChild(opt);
     }
+    // remove for prod:
+    handleAgencyChoice()
 }
 
 function handleAgencyChoice(){
@@ -185,16 +207,15 @@ function selectTrip(trip){
     mapCtx.beginPath();
     mapCtx.lineWidth = 4;
     mapCtx.strokeStyle = "green";
+
     var mapY = trip.map_y * scaleRatio;
     var mapHeight = trip.map_height * scaleRatio;
     mapCtx.rect(trip.map_x * scaleRatio, mapY, trip.map_width * scaleRatio, trip.map_height * scaleRatio);
     mapCtx.stroke();
 
-    var scrollTop = document.documentElement.scrollTop;
-    var scrollBottom = scrollTop + windowHeight;
-
-    if(mapY < scrollTop || mapY + mapHeight > scrollBottom){
-        scrollTop = Math.min((mapY - (windowHeight - mapHeight) / 2), mapCanvasHeight )
+    // Center the mapview if it's overlapping an edge
+    if(mapY < mapScrollTop || mapY + mapHeight > mapScrollBottom){
+        scrollTop = mapY  + mapHeight * 1/3 - headerHeight ;
         document.documentElement.scrollTop = scrollTop;
     }
 
@@ -205,27 +226,25 @@ function selectTrip(trip){
     timelineCtx.stroke();
 }
 
-function drawToolTip(trip){
+function drawMetadata(trip){
     console.log("drawTooltip()");
 
     var margin = 5;
-    font_size = 30;
 
     mapWidth = trip["map_width"] * scaleRatio;
-    toolTipX = trip["map_x"] * scaleRatio + mapWidth;
-    toolTipY = trip["map_y"] * scaleRatio;
+    metadataX = trip["map_x"] * scaleRatio + mapWidth;
+    metadataY = trip["map_y"] * scaleRatio;
     mapHeight = trip ["map_height"] * scaleRatio;
 
-    while (tooltipItems.length * (font_size + margin) >= mapHeight){
+    while ((tooltipItems.length * (font_size + margin) >= mapHeight)
+            || (getMaxTextWidth(trip) + margin * 2 >= mapWidth))  {
         console.log("reducing font size...");
         font_size -= 5;
     }
 
-    var toolTipWidth = getMaxTextWidth(trip) + margin * 2;
-
-    // Tooltip on right side unless it would go over edge
-    if((toolTipX + toolTipWidth) > canvasWidth){
-        toolTipX -= (mapWidth + toolTipWidth);
+    // Metadata on right side unless it would go over edge
+    if((metadataX + mapWidth) > canvasWidth){
+        metadataX -= (2 * mapWidth);
     }
 
     // Draw tooltip box outline
@@ -233,8 +252,8 @@ function drawToolTip(trip){
     mapCtx.lineWidth = 1
     mapCtx.strokeStyle = "black";
     mapCtx.fillStyle = "white";
-    mapCtx.fillRect(toolTipX, toolTipY, toolTipWidth, mapHeight);
-    mapCtx.rect(toolTipX, toolTipY, toolTipWidth, mapHeight);
+    mapCtx.fillRect(metadataX, metadataY, mapWidth, mapHeight);
+    mapCtx.rect(metadataX, metadataY, mapWidth, mapHeight);
 
     // Draw tooltip text
     mapCtx.stroke();
@@ -242,8 +261,8 @@ function drawToolTip(trip){
     mapCtx.font= font_size + "px " + font;
 
     for (var i = 0; i < tooltipItems.length; i++) {
-        toolTipY += (font_size + margin);
-        mapCtx.fillText(tooltipItems[i] + ": " + trip[tooltipItems[i]], toolTipX + margin , toolTipY);
+        metadataY += (font_size + margin);
+        mapCtx.fillText(tooltipItems[i] + ": " + trip[tooltipItems[i]], metadataX + margin , metadataY);
     }
 }
 
