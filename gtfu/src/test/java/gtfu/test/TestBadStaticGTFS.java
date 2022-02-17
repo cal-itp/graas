@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class TestBadGTFS {
+public class TestBadStaticGTFS {
 
     @Test
-    @DisplayName("TestBadGTFS")
+    @DisplayName("TestBadStaticGTFS")
 
-    void TestBadGTFS() {
+    void TestBadStaticGTFS() {
         FailureReporter reporter = new NullFailureReporter();
         Util.setReporter(reporter);
 
@@ -28,6 +28,6 @@ class TestBadGTFS {
             Debug.error("* test failed: " + e);
         }
 
-        assertEquals(reporter.getFailCount(), expectedFailures);
+        assertEquals(expectedFailures, reporter.getFailCount());
     }
 }

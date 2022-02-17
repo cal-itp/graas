@@ -79,6 +79,8 @@ public class TripScheduleCollection implements Serializable {
                 }
 
                 trip = tripCollection.get(tripID);
+                if (trip == null) continue;
+
                 schedule = new TripSchedule(trip);
                 schedule.add(stop, 0, 0, daySeconds);
                 trip.setSchedule(schedule);
