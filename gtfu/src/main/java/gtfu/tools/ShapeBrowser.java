@@ -13,6 +13,8 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import gtfu.*;
 
@@ -34,14 +36,13 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
         new Color(0x80c903)
     };
 
-    public ShapeBrowser(String agencyID, String cacheFolder, List<String> idList) {
+    public ShapeBrowser(String agencyID, String cacheFolder, Set<String> shapeIDs) {
         Debug.log("ShapeBrowser.ShapeBrowser()");
         Debug.log("- agencyID: " + agencyID);
         Debug.log("- cacheFolder: " + cacheFolder);
-        Debug.log("- idList: " + idList);
+        Debug.log("- shapeIDs: " + shapeIDs);
 
-        allIDs = idList.toString();
-
+        allIDs = "";
         shapeList = new ArrayList<Shape>();
         shapeIndex = -1;
         Frame f = new Frame("Shape Browser");
@@ -60,9 +61,16 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
         Area a = new Area();
         Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, new ConsoleProgressObserver(40));
         ShapeCollection shapes = (ShapeCollection)collections.get("shapes");
+        BlockCollection blocks = (BlockCollection)collections.get("blocks");
+
+        if (shapeIDs.isEmpty()) {
+            shapeIDs = shapes.getKeys();
+        }
 
         synchronized (this) {
-            for (String id : idList) {
+            allIDs = shapeIDs.toString();
+
+            for (String id : shapeIDs) {
                 Shape s = shapes.get(id);
                 shapeList.add(s);
 
@@ -200,7 +208,7 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
     }
 
     public static void main(String[] arg) throws Exception {
-        List<String> idList = new ArrayList<String>();
+        Set<String> shapeIDs = new HashSet<String>();
         String cacheFolder = null;
         String agencyID = null;
 
@@ -215,13 +223,13 @@ public class ShapeBrowser extends Panel implements KeyListener, Runnable {
                 continue;
             }
 
-            idList.add(arg[i]);
+            shapeIDs.add(arg[i]);
         }
 
-        if (agencyID == null || cacheFolder == null || idList.size() == 0) {
+        if (agencyID == null || cacheFolder == null) {
             usage();
         }
 
-        new ShapeBrowser(agencyID, cacheFolder, idList);
+        new ShapeBrowser(agencyID, cacheFolder, shapeIDs);
     }
 }

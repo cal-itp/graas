@@ -761,6 +761,22 @@ public class Util {
         }
     }
 
+    public static String objectToJSON(Object o) {
+        return objectToJSON(o, false);
+    }
+
+    public static String objectToJSON(Object o, boolean prettyPrint) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+            return prettyPrint
+                ? objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(o)
+                : objectMapper.writeValueAsString(o);
+        } catch (IOException e) {
+            throw new Fail(e);
+        }
+    }
+
     public static int getLineCount(String path) {
         Debug.log("Util.getLineCount()");
         // Debug.log("- path: " + path);
@@ -826,6 +842,10 @@ public class Util {
         collections.put("trips", tripCollection);
         Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
+
+        BlockCollection blockCollection = new BlockCollection(tripCollection);
+        collections.put("blocks", blockCollection);
+        Debug.log("- blockCollection.getSize(): " + blockCollection.getSize());
 
         t = new Timer("schedules");
         TripScheduleCollection scheduleCollection = new TripScheduleCollection(path, tripCollection, stopCollection, po, skipErrors);
