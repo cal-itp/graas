@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
@@ -61,6 +62,10 @@ public class ShapeCollection implements Iterable<Shape>, Serializable {
             s.check();
             //Debug.log(String.format("  - shape '%9s': %d points", id, s.getSize()));
         }
+    }
+
+    public Set<String> getKeys() {
+        return map.keySet();
     }
 
     private ShapeCollection() {

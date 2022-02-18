@@ -14,6 +14,7 @@ public class Trip implements Serializable {
     String routeID;
     String serviceID;
     String headsign;
+    String blockID;
     List<Stop> stopList;
     List<Integer> milliList;
     Map<String, Integer> stopMap;
@@ -122,6 +123,14 @@ public class Trip implements Serializable {
 
     public int getStartTime() {
         return startTime;
+    }
+
+    public void setBlockID(String blockID) {
+        this.blockID = blockID;
+    }
+
+    public String getBlockID() {
+        return blockID;
     }
 
     public void setSchedule(TripSchedule schedule) {
