@@ -58,8 +58,6 @@ function loadJSON(url, callback){
 function processDropdownJSON(object){
 
     var p = document.getElementById("agency-select");
-    // clearSelectOptions(p);
-
     var opt = document.createElement('option');
     opt.appendChild(document.createTextNode("Select agency-id..."));
     p.appendChild(opt);
@@ -81,7 +79,7 @@ function processDropdownJSON(object){
 
 function handleAgencyChoice(){
     console.log("handleAgencyChoice()");
-    console.log(`utmAgency: ${utmAgency}`);
+
     if(utmAgency == null){
         console.log("null utm agency");
         selectedAgency = document.getElementById("agency-select").value;
@@ -152,8 +150,7 @@ function load(){
 
     dropdownHeight = document.getElementById('dropdowns').offsetHeight;
 
-    // Remove "dev" for prod
-    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-dev.png`;
+    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png`;
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
@@ -191,6 +188,7 @@ function load(){
     };
 
     window.addEventListener('resize', function(event) {
+
         load();
     });
 
@@ -311,7 +309,7 @@ function scrollToTrip(trip){
     var mapY = trip.map.y;
     var tripMapHeight = trip.map.height;
 
-    // Center the mapview if it's overlapping an edge
+    // Center the mapview if it's overlapping top or bottom
     if(mapY < mapScrollTop || mapY + tripMapHeight + headerHeight > scrollBottom){
         document.documentElement.scrollTop = mapY  + tripMapHeight * 1/3 - headerHeight;
     }
