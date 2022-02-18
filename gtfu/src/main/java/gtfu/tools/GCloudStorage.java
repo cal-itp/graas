@@ -30,19 +30,15 @@ public class GCloudStorage {
     storage.create(blobInfo, file);
 
     Debug.log("File uploaded to bucket " + bucketName + " as " + path);
-
   }
 
   public static List<String> getObjectList(String bucketName, String directoryPrefix) {
     ArrayList <String> objectList = new ArrayList<>();
     Storage storage = StorageOptions.newBuilder().setProjectId(PROJECT_ID).build().getService();
-    // Page<Blob> blobs = storage.list(bucketName);
-    Page<Blob> blobs =
-            storage.list(
-                bucketName,
-                Storage.BlobListOption.prefix(directoryPrefix),
-                Storage.BlobListOption.currentDirectory());
-
+    Page<Blob> blobs = storage.list(bucketName,
+                                    Storage.BlobListOption.prefix(directoryPrefix),
+                                    Storage.BlobListOption.currentDirectory()
+                                  );
 
     for (Blob blob : blobs.iterateAll()) {
       objectList.add(blob.getName());
