@@ -2,9 +2,11 @@
 const trips = [];
 const agencies = new Map();
 
+var utmAgency;
 var selectedAgency;
 var selectedDate;
 
+var reportImageUrl;
 const img = new Image();
 var imageWidth;
 var imageHeight;
@@ -38,6 +40,12 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
                      "os", "uuid_tail", "avg_update_interval",
                      "max_update_interval", "min_update_interval"];
 
+function initialize(){
+    getRewriteArgs()
+    url = `${bucketURL}/web/graas-report-agency-dates.json`;
+    loadJSON(url, processDropdownJSON);
+}
+
 function loadJSON(url, callback){
     // ?nocache= prevents annoying json caching...mostly for debugging purposes
     fetch(url + "?nocache="  + (new Date()).getTime())
@@ -50,11 +58,11 @@ function loadJSON(url, callback){
 function processDropdownJSON(object){
 
     var p = document.getElementById("agency-select");
-    clearSelectOptions(p);
-    // uncomment for prod:
-    // var opt = document.createElement('option');
-    // opt.appendChild(document.createTextNode("Select agency-id..."));
-    // p.appendChild(opt);
+    // clearSelectOptions(p);
+
+    var opt = document.createElement('option');
+    opt.appendChild(document.createTextNode("Select agency-id..."));
+    p.appendChild(opt);
 
     for (var key in object) {
         agencies.set(key, object[key])
@@ -62,13 +70,22 @@ function processDropdownJSON(object){
         opt.appendChild(document.createTextNode(key));
         p.appendChild(opt);
     }
-    // remove for prod:
-    handleAgencyChoice()
+
+    if(utmAgency != null){
+        selectedAgency = utmAgency;
+        handleAgencyChoice();
+    } else{
+        p.style.display = "inline-block";
+    }
 }
 
 function handleAgencyChoice(){
     console.log("handleAgencyChoice()");
-    selectedAgency = document.getElementById("agency-select").value;
+    console.log(`utmAgency: ${utmAgency}`);
+    if(utmAgency == null){
+        console.log("null utm agency");
+        selectedAgency = document.getElementById("agency-select").value;
+    }
     var p = document.getElementById("date-select");
     clearSelectOptions(p);
 
@@ -86,10 +103,10 @@ function handleDateChoice(){
     selectedDate = document.getElementById("date-select").value;
     url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json`;
     loadJSON(url, processTripJSON);
-    load();
 }
 
 function processTripJSON(object){
+    trips.length = 0;
     for (var i = 0; i < object.trips.length; i++) {
         var map = {x: object["trips"][i]["boundaries"]["map-x"],
                    y: object["trips"][i]["boundaries"]["map-y"],
@@ -118,13 +135,10 @@ function processTripJSON(object){
                     })
     }
     timelineHeight = object["header-height"];
+    load();
 }
 
 function load(){
-    if(trips.length == 0) {
-        setTimeout(load, 500);
-    }
-
     canvasWidth = window.innerWidth;
     windowHeight = window.innerHeight;
 
@@ -138,7 +152,14 @@ function load(){
 
     dropdownHeight = document.getElementById('dropdowns').offsetHeight;
 
-    img.src = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-dev.png`;
+    // Remove "dev" for prod
+    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-dev.png`;
+    img.src = reportImageUrl;
+
+    p = document.getElementById('download');
+    p.href = reportImageUrl;
+    p.download = `${selectedAgency}-${selectedDate}.png`;
+    p.style.display = "inline-block";
 
     img.onload = function() {
         imageWidth = this.naturalWidth
@@ -154,9 +175,8 @@ function load(){
         mapCanvasHeight = mapHeight * scaleRatio;
         mapCtx.canvas.height = mapCanvasHeight;
 
-        // It would be nice to do this while loading JSON,
-        // but that occurs before image is loaded and scaleRatio is determined
-
+        // It would be nice to perform this multiplication while initially loading JSON,
+        // but that occurs before image is loaded and scaleRatio is determined by image size
         trips.forEach(function (item) {
             item.map.x *= scaleRatio;
             item.map.y *= scaleRatio;
@@ -169,6 +189,10 @@ function load(){
         });
         drawReport();
     };
+
+    window.addEventListener('resize', function(event) {
+        load();
+    });
 
     document.body.addEventListener('click', function(event) {
 
@@ -214,7 +238,6 @@ function objectContainsPoint(object, x, y){
             }
         }
     }
-    return false
 }
 
 function drawReport(){
@@ -284,22 +307,17 @@ function selectTrip(ctx, object){
     ctx.stroke();
 }
 
-// Currently not working when lower half of trip overhangs bottom of screen
 function scrollToTrip(trip){
     var mapY = trip.map.y;
     var tripMapHeight = trip.map.height;
 
-    console.log(`scrollBottom: ${scrollBottom}`)
-    console.log(`mapY + tripMapHeight: ${mapY + tripMapHeight}`)
-    console.log(`mapY: ${mapY}`)
-    console.log(`tripMapHeight: ${tripMapHeight}`)
     // Center the mapview if it's overlapping an edge
-    if(mapY < mapScrollTop || mapY + tripMapHeight > scrollBottom){
+    if(mapY < mapScrollTop || mapY + tripMapHeight + headerHeight > scrollBottom){
         document.documentElement.scrollTop = mapY  + tripMapHeight * 1/3 - headerHeight;
     }
 }
 
-// This is duplicate from graas.js
+// Below two functions are copied from graas.js
 // TODO: consolidate this type of html util functions into one file
 function clearSelectOptions(sel) {
     var l = sel.options.length - 1;
@@ -309,5 +327,19 @@ function clearSelectOptions(sel) {
     }
 }
 
-url = `${bucketURL}/web/graas-report-agency-dates.json`;
-loadJSON(url, processDropdownJSON);
+function getRewriteArgs() {
+    const s = window.location.search;
+    const arg = s.split(/[&\?]/);
+
+    for (var a of arg) {
+        if (!a) continue;
+
+        const t = a.split('=');
+        const key = t[0];
+        const value = t[1];
+
+        if (key === 'agency') {
+            utmAgency = value
+        }
+    }
+}

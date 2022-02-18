@@ -240,8 +240,7 @@ public class GraphicReport {
         String fileSuffix = "";
         String fileTypeName = "";
         if(fileType.equals("png")){
-            // "-dev" is temp! Remove for production
-            fileSuffix = "-dev.png";
+            fileSuffix = ".png";
             fileTypeName = "image/png";
         }
         else if (fileType.equals("json")){

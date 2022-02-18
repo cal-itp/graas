@@ -2,14 +2,17 @@
 <html>
     <head>
         <title> Interactive GRaaS Report </title>
-        <script src="./graas-report-web.js?nocache=12345"></script>
-        <link rel="stylesheet" href="style.css?nocache=123567">
+        <script src="./graas-report-web.js"></script>
+        <link rel="stylesheet" href="style.css">
     </head>
-    <body>
+    <body onload="initialize()">
         <div id="header">
             <div id="dropdowns">
                 <select id="agency-select" onchange="handleAgencyChoice()" ></select>
                 <select id="date-select" onchange="handleDateChoice()" ></select>
+                 <a id="download" target="_blank">
+                    <button type="button">Download</button>
+                 </a>
             </div>
             <canvas id="timeline" ></canvas>
         </div>
