@@ -11,6 +11,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.Rectangle;
 import java.awt.geom.Path2D;
 import java.awt.AlphaComposite;
 import javax.imageio.ImageIO;
@@ -34,6 +35,7 @@ import gtfu.tools.GPSLogSlicer;
 import gtfu.tools.SendGrid;
 import gtfu.tools.AgencyYML;
 import gtfu.tools.GCloudStorage;
+import gtfu.tools.AgencyListGenerator;
 
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +43,9 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.Clock;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
 public class GraphicReport {
     private static final Color BACKGROUND = new Color(0xffffff);
@@ -72,13 +77,20 @@ public class GraphicReport {
     private Map<String, Map<String, GPSData>> gpsMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
+    private Map<String, Rectangle> timelineCoords;
+    private Map<String, Rectangle> mapCoords;
     private BufferedImage img;
     private Ellipse2D.Float dot = new Ellipse2D.Float(0, 0, DOT_SIZE, DOT_SIZE);
     private Rectangle2D clipRect = new Rectangle2D.Float();
     private Font font;
     private Font smallFont;
     private int timeRowCount;
+    private int tileRowCount;
+    private int tilesPerRow;
+    private int headerHeight;
+    private int bodyHeight;
     private GCloudStorage gcs = new GCloudStorage();
+    private AgencyListGenerator alg = new AgencyListGenerator();
 
     public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
@@ -102,6 +114,7 @@ public class GraphicReport {
         GPSLogSlicer slicer = new GPSLogSlicer(results, "");
         Map<String, List<String>> logs = slicer.getLogs();
         Map<String, byte[]> blobMap = new HashMap();
+
 
         font = new Font("Arial", Font.PLAIN, 10 * SCALE);
         smallFont = new Font("Arial", Font.PLAIN, 9 * SCALE);
@@ -142,6 +155,8 @@ public class GraphicReport {
             gpsMap = dls.getMap();
             tdList = dls.getTripReportDataList();
             tdMap = dls.getTripReportDataMap();
+            mapCoords = new HashMap();
+            timelineCoords = new HashMap();
             int startSecond = dls.getStartSecond();
 
             if (savePath != null) {
@@ -176,14 +191,16 @@ public class GraphicReport {
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
                 // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
-                blobMap.put(key.substring(0, key.length() - 4), imageToBlob(img));
+                String agencyDate = key.substring(0, key.length() - 4);
+                blobMap.put(agencyDate, imageToBlob(img));
+                uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json");
             }
         }
 
         for (String key : blobMap.keySet()) {
 
             byte[] buf = blobMap.get(key);
-            uploadToGCloud(key, buf);
+            uploadToGCloud(key, buf, "png");
 
             if (savePath != null) {
                 String fn = savePath + "/" + key + ".png";
@@ -196,6 +213,7 @@ public class GraphicReport {
         if (sendEmail) {
             sendEmail(blobMap);
         }
+        alg.generateAgencyList();
     }
 
     private byte[] imageToBlob(BufferedImage img) throws IOException {
@@ -215,12 +233,58 @@ public class GraphicReport {
         int responseCode = grid.send();
     }
 
-    private void uploadToGCloud(String key, byte[] image) throws IOException {
+    private void uploadToGCloud(String key, byte[] file, String fileType) throws IOException {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = key.substring(0, key.length() - 11);
         String path = "graas-report-archive/" + agencyID;
-        String fileName = key + ".png";
-        gcs.uploadObject("graas-resources", path, fileName, image, "image/png");
+        String fileSuffix = "";
+        String fileTypeName = "";
+        if(fileType.equals("png")){
+            fileSuffix = ".png";
+            fileTypeName = "image/png";
+        }
+        else if (fileType.equals("json")){
+            fileSuffix = ".json";
+            fileTypeName = "text/json";
+        }
+        String fileName = key + fileSuffix;
+        gcs.uploadObject("graas-resources", path, fileName, file, fileTypeName);
+    }
+
+    private JSONObject generateJsonFile() throws IOException {
+        JSONArray tripsInfo = new JSONArray();
+        for (TripReportData td : tdList) {
+            Rectangle timelineRect = timelineCoords.get(td.id);
+            Rectangle mapRect = mapCoords.get(td.id);
+            JSONObject boundaries = new JSONObject();
+            boundaries.put("timeline-x", timelineRect.x);
+            boundaries.put("timeline-y", timelineRect.y);
+            boundaries.put("timeline-width", timelineRect.width);
+            boundaries.put("timeline-height", timelineRect.height);
+            boundaries.put("map-x", mapRect.x);
+            boundaries.put("map-y", mapRect.y);
+            boundaries.put("map-width", mapRect.width);
+            boundaries.put("map-height", mapRect.height);
+
+            JSONObject trip = new JSONObject();
+            trip.put("trip-id", td.id);
+            trip.put("boundaries", boundaries);
+            trip.put("trip-name", td.getTripName());
+            trip.put("agent", td.getAgent());
+            trip.put("os", td.getOs());
+            trip.put("device", td.getDevice());
+            trip.put("vehicle-id", td.getVehicleId());
+            trip.put("uuid-tail", td.getUuidTail());
+            trip.put("avg-update-interval", td.getAvgUpdateInterval());
+            trip.put("min-update-interval", td.getMinUpdateInterval());
+            trip.put("max-update-interval", td.getMaxUpdateInterval());
+            tripsInfo.add(trip);
+        }
+
+        JSONObject agencyReport = new JSONObject();
+        agencyReport.put("trips", tripsInfo);
+        agencyReport.put("header-height", headerHeight);
+        return agencyReport;
     }
 
     // Creates one report per agency per day
@@ -229,14 +293,15 @@ public class GraphicReport {
         //Debug.log("- timeRowCount: " + timeRowCount);
 
         int width = CANVAS_WIDTH;
-        int tilesPerRow = width / TILE_SIZE;
+        tilesPerRow = width / TILE_SIZE;
         //Debug.log("- tilesPerRow: " + tilesPerRow);
-        int tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
+        tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
         //Debug.log("- tileRowCount: " + tileRowCount);
-
+        headerHeight = MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT;
+        bodyHeight = tileRowCount * TILE_SIZE;
         img = new BufferedImage(
             width,
-            MIN_HEIGHT + Math.max(2, timeRowCount) * ROW_HEIGHT + tileRowCount * TILE_SIZE,
+            headerHeight + bodyHeight,
             BufferedImage.TYPE_INT_ARGB
         );
 
@@ -383,7 +448,7 @@ public class GraphicReport {
                 if (l.size() == 0 || !t.overlaps(l.get(l.size() - 1))) {
                     t.y = y + index * ROW_HEIGHT - offset;
                     g.fillRoundRect(t.x, t.y + 1, t.width, t.height - 1, 5, 5);
-
+                    timelineCoords.put(t.id, new Rectangle(t.x, t.y + 1 + MIN_HEIGHT, t.width, t.height - 1));
                     l.add(t);
                     break;
                 }
@@ -413,10 +478,6 @@ public class GraphicReport {
     }
 
     private void reportGPSCoverage(Graphics2D g) throws Exception {
-        int tilesPerRow = img.getWidth() / TILE_SIZE;
-        //Debug.log("- tilesPerRow: " + tilesPerRow);
-        int tileRowCount = (int)Math.ceil(tdList.size() / (float)tilesPerRow);
-        //Debug.log("- tileRowCount: " + tileRowCount);
         int x, y;
 
         g.setColor(DARK);
@@ -438,6 +499,8 @@ public class GraphicReport {
             TripReportData td = tdList.get(i);
             x = i % tilesPerRow * TILE_SIZE;
             y = i / tilesPerRow * TILE_SIZE;
+            mapCoords.put(td.id, new Rectangle(x, y, TILE_SIZE, TILE_SIZE));
+
             String s  = td.getTripName();
             FontMetrics fm = g.getFontMetrics();
             int sw = fm.stringWidth(s);
@@ -447,23 +510,6 @@ public class GraphicReport {
             g.setClip(clipRect);
             y = y + lineHeight;
             g.drawString(s, x + (TILE_SIZE - sw) / 2 , y);
-
-
-            g.setColor(FONT_COLOR);
-            s = "a: " + td.getAgent() + ", o: " + td.getOs();
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
-
-            s =  "d: " + td.getDevice() + ", v: " + td.getVehicleId() + ", u: " + td.getUuidTail();
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
-
-            s =  "avg: " + td.getAvgUpdateInterval() + ", min: " + td.getMinUpdateInterval() + ", max: " + td.getMaxUpdateInterval() + "";
-            sw = fm.stringWidth(s);
-            y = y + lineHeight;
-            g.drawString(s, x + (TILE_SIZE - sw) / 2, y);
 
             AffineTransform t = g.getTransform();
             g.translate(x + inset, y + inset);

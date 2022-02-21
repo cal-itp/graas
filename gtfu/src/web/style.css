@@ -1,0 +1,29 @@
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0px;
+  /*Safari does not recognize scroll-behavior, and so scrolling on Safari is currently choppy */
+  scroll-behavior: smooth;
+}
+
+#header {
+  position: sticky;
+  top: 0;
+}
+
+#dropdowns {
+  padding:  10px;
+}
+
+#agency-select {
+  display: none;
+}
+
+#header {
+   background-color: #FFFFFF;
+}
+
+#download {
+  display:  none;
+  float: right;
+}
