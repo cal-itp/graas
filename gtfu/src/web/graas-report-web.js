@@ -227,7 +227,7 @@ function load(){
 }
 
 function objectContainsPoint(object, x, y){
-    if(x >= object.x && x <= object.x + object.width && y >= object.y && object.y + object.height){
+    if(x >= object.x && x <= object.x + object.width && y >= object.y && y <= object.y + object.height){
         return true;
     }
     else return false;
