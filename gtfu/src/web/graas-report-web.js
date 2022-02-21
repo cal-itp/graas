@@ -81,7 +81,6 @@ function handleAgencyChoice(){
     console.log("handleAgencyChoice()");
 
     if(utmAgency == null){
-        console.log("null utm agency");
         selectedAgency = document.getElementById("agency-select").value;
     }
     var p = document.getElementById("date-select");
@@ -187,13 +186,7 @@ function load(){
         drawReport();
     };
 
-    window.addEventListener('resize', function(event) {
-
-        load();
-    });
-
     document.body.addEventListener('click', function(event) {
-
         drawReport();
 
         scrollTop = document.documentElement.scrollTop; // Top of current screen
@@ -240,9 +233,9 @@ function drawReport(){
 }
 
 function drawMetadata(trip){
-    console.log("drawTooltip()");
+    console.log("drawMetadata()");
 
-    // Font size would only get to 0 as a result of very buggy behavior. If that occurs, simply don't display the tooltip.
+    // Font size would only get to 0 as a result of very buggy behavior. If that occurs, simply don't display metadata.
     if (font_size <= 0) return;
 
     var margin = 5;
@@ -253,7 +246,6 @@ function drawMetadata(trip){
 
     while ((tooltipItems.length * (font_size + margin) >= metadataHeight)
             || (getMaxTextWidth(trip) + margin * 2 >= metadataWidth))  {
-        console.log("reducing font size...");
         font_size -= 5;
         if (font_size <= 0) return;
     }
