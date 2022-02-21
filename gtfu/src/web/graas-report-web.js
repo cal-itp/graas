@@ -227,15 +227,10 @@ function load(){
 }
 
 function objectContainsPoint(object, x, y){
-    if(x >= object.x){
-        if(x <= (object.x + object.width)){
-            if(y >= object.y ){
-                if(y <= (object.y + object.height)){
-                    return true;
-                }
-            }
-        }
+    if(x >= object.x && x <= object.x + object.width && y >= object.y && object.y + object.height){
+        return true;
     }
+    else return false;
 }
 
 function drawReport(){
@@ -247,8 +242,10 @@ function drawReport(){
 function drawMetadata(trip){
     console.log("drawTooltip()");
 
-    var margin = 5;
+    // Font size would only get to 0 as a result of very buggy behavior. If that occurs, simply don't display the tooltip.
+    if (font_size <= 0) return;
 
+    var margin = 5;
     metadataWidth = trip.map.width;
     metadataX = trip.map.x + metadataWidth;
     metadataY = trip.map.y;
@@ -258,6 +255,7 @@ function drawMetadata(trip){
             || (getMaxTextWidth(trip) + margin * 2 >= metadataWidth))  {
         console.log("reducing font size...");
         font_size -= 5;
+        if (font_size <= 0) return;
     }
 
     // Metadata on right side unless it would go over edge
