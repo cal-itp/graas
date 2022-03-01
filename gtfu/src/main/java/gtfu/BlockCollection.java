@@ -22,6 +22,10 @@ public class BlockCollection implements Iterable<Block> {
             String bid = trip.getBlockID();
             String tid = trip.getID();
 
+            if (Util.isEmpty(bid)) {
+                continue;
+            }
+
             Block block = map.get(bid);
 
             if (block == null) {
