@@ -5,8 +5,10 @@ import time
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
+MAX_ASSIGNMENT_MILLIS = 60 * 1000
 
 last_alert_purge = 0
+assignments = {}
 
 cause_map = {
     'Unknown Cause':     gtfs_realtime_pb2.Alert.Cause.UNKNOWN_CAUSE,
@@ -257,8 +259,57 @@ def add_position(datastore_client, pos):
     entity.update(pos)
     datastore_client.put(entity)
 
+def get_trip_id(datastore_client, agency_id, vehicle_id):
+    if agency_id is None or vehicle_id is None:
+        return None
+
+    now = util.get_current_time_millis()
+    if now - last_assignment_refresh >= MAX_ASSIGNMENT_MILLIS:
+        """
+        - get 'timestamp' kind with name 'last-assignment-update-' + <agency_id>
+        - check if newer than 'last_assignment_update' server attribute
+        - if so, reload cache
+
+        OR
+
+        - include 'updated' timestamp in all 'assignment' records
+        - add query filter for updated > last_assignment_update
+        """
+
+        query = datastore_client.query(kind="assignment")
+        query.add_filter("agency_id", "=", agency_id)
+
+        assignments = list(query.fetch())
+
+        for a in assignments:
+            vid = a.get('vehicle_id', None)
+            tid = a.get('trip_id', None)
+
+            if vid is None or tid is None:
+                continue
+
+            key = agency_id + '-' + vid
+            assigment_map[key] = tid
+
+        last_assignment_refresh = util.get_current_time_millis()
+
+    key = agency_id + '-' + vehicle_id
+    return assigment_map.get(key, None)
+
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
     data['rcv-timestamp'] = int(round(time.time()))
+
+    if data.get('trip_id', None) is None:
+        trip_id = get_trip_id(
+            datastore_client,
+            data.get('agency_id', None),
+            data.get('vehicle_id', None)
+        )
+
+        if trip_id is None:
+            return
+
+        data['trip_id'] = trip_id
 
     if data['uuid'] != 'replay':
         add_position(datastore_client, data)

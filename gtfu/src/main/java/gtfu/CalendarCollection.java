@@ -13,6 +13,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 public class CalendarCollection implements Iterable<Calendar>, Serializable {
+    private static final String DATE_FORMAT = "yyyyMMdd";
     private Map<String, Calendar> map;
     private List<Calendar> list;
 
@@ -29,6 +30,7 @@ public class CalendarCollection implements Iterable<Calendar>, Serializable {
 
             CSVRecord r = new CSVRecord(header, line);
             String id = r.get("service_id");
+
             Calendar cal = new Calendar(
                 id,
                 r.getInt("monday"),
@@ -37,7 +39,9 @@ public class CalendarCollection implements Iterable<Calendar>, Serializable {
                 r.getInt("thursday"),
                 r.getInt("friday"),
                 r.getInt("saturday"),
-                r.getInt("sunday")
+                r.getInt("sunday"),
+                Time.parseDateAsLong(DATE_FORMAT, r.get("start_date")),
+                Time.parseDateAsLong(DATE_FORMAT, r.get("end_date"))
             );
 
             map.put(id, cal);

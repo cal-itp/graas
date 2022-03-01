@@ -843,7 +843,7 @@ public class Util {
         Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
 
-        BlockCollection blockCollection = new BlockCollection(tripCollection);
+        BlockCollection blockCollection = new BlockCollection(calendarCollection, tripCollection);
         collections.put("blocks", blockCollection);
         Debug.log("- blockCollection.getSize(): " + blockCollection.getSize());
 
