@@ -1,4 +1,5 @@
 package gtfu.tools;
+
 import gtfu.ProgressObserver;
 import gtfu.ConsoleProgressObserver;
 import gtfu.Util;

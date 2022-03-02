@@ -56,7 +56,7 @@ public class GH {
         }
         if (commitCount == 0){
             System.err.println("** File " + fileName + " does not exist. exiting.");
-            System.exit(0);
+            System.exit(1);
         }
         return latestCommit.getTime();
     }

@@ -14,7 +14,6 @@ import gtfu.*;
 import java.nio.charset.StandardCharsets;
 
 import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 
 
@@ -234,6 +233,9 @@ public class TripListGenerator {
         tf.dispose();
         //Debug.log("- smap: " + smap);
 
+        // It's temping to replace the below manual JSON generation with JSONObject and JSONArray classes,
+        // but because they offer little control over formatting, this method is preferable for something
+        // needing to be read by humans.
         out.println("[");
 
         for (int i=0; i<list.size(); i++) {

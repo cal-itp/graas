@@ -26,8 +26,8 @@ Create service data for agency
 ------------------------------
 - Go to [agencies.yml](https://github.com/cal-itp/data-infra/blob/main/airflow/data/agencies.yml), a Cal-ITP source-of-truth, in order to determine the agency-id for this agency.
 - From `graas/server/agency-config/gtfs`, run the command `./setup-agency-templates.sh <id>`. This will create a directory for the agency at `graas/server/agency-config/gtfs/gtfs-aux/<agency-id>`, containing 3 files:
-    - filter-params.json
-    - route-names.json
+    - agency-params.json
+    - trip-names.json
     - vehicle-ids.json
 - Add the vehicle IDs provided by the agency to `vehicle-ids.json`. Assuming the agency has IDs `001`, `002` and `003` the the file should look like this:
 ```
@@ -37,7 +37,12 @@ Create service data for agency
     "003"
 ]
 ```
-- Within the gtfu directory, run the command `java -cp build/libs/gtfu.jar gtfu.tools.TripListGenerator -f -i <agency-id>`. Note that you'll need to add the -h, -r, or -R, to go into the "route name". Once the output is satisfactory, run the same command with the "-oa" flag to send the output directly to the agency's `route-names.json` file, which will look like this:
+- Update the values in agency-params.json to accomodate your agency. Options for `triplist-generator-namefield`:
+    - headsign
+    - route_short_name
+    - route_long_name
+    - shape_id
+- Within the gtfu directory, run the command `java -cp build/libs/gtfu.jar gtfu.tools.TripListGenerator -a <agency-id> -v`. You can try different values for `triplist-generator-namefield` and `triplist-generator-use-direction` until the output looks good. Once the output is satisfactory, run the same command with the "-l" flag to update the trip-names.json file directly. The file will look something like this.
 ```
 [
     {"route_name": "Valley West (Northbound) @ 1:59 pm", "trip_id": "t_1194609_b_26559_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 40.780441, "long": -124.188820}},
@@ -52,7 +57,7 @@ Create service data for agency
 
 ```
 - Confirm that none of the calendar arrays are null. If they are, those routes will be hidden by default, and you should ask the agency to update the GTFS feed
-- From `graas/server/agency-config/gtfs`, run `./copy-to-bucket.sh <agency-id>` to copy the new data files to the project storage bucket (this script will throw an error and cancel upload if json is misformatted). Check the [storage bucket source of truth](https://console.cloud.google.com/storage/browser/graas-resources/gtfs-aux) to confirm that your updates went through. You can run this command whenever you update either file.
+- Create a PR on the GRaaS repo containing these three new files. Since the web app refers to Github as a source of truth, merging this PR updates production.
 - Update the file `live-agencies.txt`, which lives on the GRaaS storage bucket, to include the agency-id
 [TODO](https://github.com/cal-itp/graas/issues/86): Automatically perform this update
 
@@ -80,5 +85,5 @@ All devices used for GPS data collection need to be rebooted once a week.
 General troubleshooting
 ------------------
 - To check whether an agency is publishing data, run the command `gcloud app logs tail`
-- If the agency isn't seeing seeing any route results from the dropdown, confirm that they are starting the app while physically near the first stop (1/4 mile) and within 30 minutes of the start time. If it still isnt working, edit the parameters in route-names.json (note that if they don't have parameters listed, the app defaults to some - you can see in app-engine/templates/staging.html line 1094).
+- If the agency isn't seeing seeing any route results from the dropdown, confirm that they are starting the app while physically near the first stop (1/4 mile) and within 30 minutes of the start time. If it still isnt working, edit the parameters in agency-params.json (note that if they don't have parameters listed, the app defaults to some - you can see in app-engine/templates/staging.html line 1094).
 - If you need to get the logs for a given day, run the following command from venv within the app-engine directory: `python get-pos.py -a <agency-id> -d MM/DD/YY -t > <agency-name>-MM-DD-YY.log`

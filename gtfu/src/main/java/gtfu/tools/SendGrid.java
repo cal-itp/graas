@@ -88,7 +88,7 @@ public class SendGrid {
         if (f != null) {
             from = f;
         }
-
+        // TODO update content type to HTML, to enable links in emails
         String urlData = String.format("{\"personalizations\": [{\"to\": [%s]}],\"from\": {\"email\": \"%s\"},\"subject\": \"%s\",\"content\": [{\"type\": \"text/plain\", \"value\": \"%s\"}]%s}", makeTos(), from, subject, body, attach);
 
         //Debug.log("- urlData: " + urlData);
