@@ -400,7 +400,7 @@ class TripListEntry implements Comparable<TripListEntry> {
 
     public String toString(Map<String, List<Integer>> cmap, Map<String, String>smap) {
         return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s}",
-            shortenString(name, 25),
+            name,
             Time.getHMForMillis(departureTime),
             tripID,
             cmap.get(serviceID),
