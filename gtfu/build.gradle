@@ -19,6 +19,7 @@ dependencies {
     compile "com.google.cloud:google-cloud-storage:2.4.1"
     compile "com.github.ua-parser:uap-java:1.5.2"
     testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
+    compile "org.kohsuke:github-api:1.300"
 }
 
 jar {
