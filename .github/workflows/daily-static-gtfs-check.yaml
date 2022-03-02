@@ -1,0 +1,29 @@
+name: Daily Static GTFS Check
+on:
+  # Daily at 9PM pacific
+  schedule:
+    - cron: '0 5 * * *'
+jobs:
+  Run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      - name: Build with Gradle
+        working-directory: gtfu
+        run: ./gradlew build
+      - name: Load agency data
+        working-directory: gtfu
+        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
+        env:
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
+      - name: Update Trip Names
+        working-directory: gtfu
+        run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u ${{ secrets.LIVE_AGENCIES_URL }}
