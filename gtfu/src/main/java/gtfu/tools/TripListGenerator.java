@@ -25,6 +25,58 @@ public class TripListGenerator {
     private static final String[] WEEKDAYS = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
     private static final String reportPath = "src/main/resources/conf/output";
 
+    // Keeping usage and main at the top, for the sake of the diff
+    private static void usage() {
+        System.err.println("usage: TripListGenerator [-t|--temp-folder <tmp-folder>] -a|--agency-id <agency-id> [-o|--output-file <output-path>] [-a|--gtfs-agency <gtfs-agency-id>] [-r|-R|-h]");
+        System.err.println("  <tmp-folder>: a folder where to cache static GTFS data for agencies (defaults to system tmp folder if not specified)");
+        System.err.println("  <agency-id>: a descriptive name for an agency (lower-case latters and hyphens only)");
+        System.err.println("  <gtfs-agency-id>: an agency ID as given in agency.txt");
+        System.err.println("  <output-path>: where to write the generated data (defaults to stdout)");
+        System.exit(0);
+    }
+
+    public static void main(String[] arg) throws Exception {
+        String cacheDir = null;
+        String agencyID = null;
+        PrintStream out = System.out;
+        boolean useValidator = false;
+
+        for (int i=0; i<arg.length; i++) {
+
+            if ((arg[i].equals("-a") || arg[i].equals("--agency-id")) && i < arg.length - 1) {
+                agencyID = arg[i + 1];
+            }
+
+            if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
+                cacheDir = arg[i + 1];
+            }
+
+            if ((arg[i].equals("-o") || arg[i].equals("--output-file")) && i < arg.length - 1) {
+                out = new PrintStream(new FileOutputStream(arg[i + 1]));
+            }
+
+            if (arg[i].equals("-l") || arg[i].equals("--update-local")) {
+                if(agencyID == null) {
+                    System.err.println("** -l flag must come after agency-id");
+                    System.exit(0);
+                }
+                String path = "../server/agency-config/gtfs/gtfs-aux/" + agencyID + "/trip-names.json";
+                out = new PrintStream(new FileOutputStream(path));
+                System.out.println("output will be saved to " + path );
+            }
+
+            if (arg[i].equals("-v") || arg[i].equals("--use-validator")) {
+                useValidator = true;
+            }
+        }
+
+        if (agencyID == null) {
+            usage();
+        }
+
+        generateTripList(agencyID, cacheDir, out, useValidator);
+    }
+
     public static void generateTripList(String agencyID, String cacheDir, PrintStream out) throws Exception {
         generateTripList(agencyID, cacheDir, out, false);
     }
@@ -156,10 +208,10 @@ public class TripListGenerator {
         tf.dispose();
         // Debug.log("- tmap: " + tmap);
 
-
         try {
             tf = new TextFile(cacheDir + "/" + agencyID + "/directions.txt");
-            // The above line will fail if directions.txt is not present.
+            // If directions.txt is not present, we'll exit the try{} and none of the below code will run.
+            // hasDirectionsTxt will remain false.
             hasDirectionsTxt = true;
             header = new CSVHeader(tf.getNextLine());
 
@@ -176,8 +228,7 @@ public class TripListGenerator {
 
             tf.dispose();
 
-        } catch(Exception e) {
-        }
+        } catch (Exception e) {}
 
         tf = new TextFile(cacheDir + "/" + agencyID + "/stop_times.txt");
         header = new CSVHeader(tf.getNextLine());
@@ -258,63 +309,13 @@ public class TripListGenerator {
         }
     }
 
-   // For agencies who don't include the optional directions.txt file, assume the following mapping:
+    // For agencies who don't include the optional directions.txt file, assume the following mapping.
+    // This is designed specifically around Unitrans
     private static Map<String, String> createDirectionMap() {
         Map<String,String> directionMap = new HashMap<String,String>();
         directionMap.put("0", "Outbound");
         directionMap.put("1", "Inbound");
         return directionMap;
-    }
-
-    private static void usage() {
-        System.err.println("usage: TripListGenerator [-t|--temp-folder <tmp-folder>] -a|--agency-id <agency-id> [-o|--output-file <output-path>] [-a|--gtfs-agency <gtfs-agency-id>] [-r|-R|-h]");
-        System.err.println("  <tmp-folder>: a folder where to cache static GTFS data for agencies (defaults to system tmp folder if not specified)");
-        System.err.println("  <agency-id>: a descriptive name for an agency (lower-case latters and hyphens only)");
-        System.err.println("  <gtfs-agency-id>: an agency ID as given in agency.txt");
-        System.err.println("  <output-path>: where to write the generated data (defaults to stdout)");
-        System.exit(0);
-    }
-
-    public static void main(String[] arg) throws Exception {
-        String cacheDir = null;
-        String agencyID = null;
-        PrintStream out = System.out;
-        boolean useValidator = false;
-
-        for (int i=0; i<arg.length; i++) {
-
-            if ((arg[i].equals("-a") || arg[i].equals("--agency-id")) && i < arg.length - 1) {
-                agencyID = arg[i + 1];
-            }
-
-            if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
-                cacheDir = arg[i + 1];
-            }
-
-            if ((arg[i].equals("-o") || arg[i].equals("--output-file")) && i < arg.length - 1) {
-                out = new PrintStream(new FileOutputStream(arg[i + 1]));
-            }
-
-            if (arg[i].equals("-l") || arg[i].equals("--update-local")) {
-                if(agencyID == null) {
-                    System.err.println("** -l flag must come after agency-id");
-                    System.exit(0);
-                }
-                String path = "../server/agency-config/gtfs/gtfs-aux/" + agencyID + "/trip-names.json";
-                out = new PrintStream(new FileOutputStream(path));
-                System.out.println("output will be saved to " + path );
-            }
-
-            if (arg[i].equals("-v") || arg[i].equals("--use-validator")) {
-                useValidator = true;
-            }
-        }
-
-        if (agencyID == null) {
-            usage();
-        }
-
-        generateTripList(agencyID, cacheDir, out, useValidator);
     }
 }
 
