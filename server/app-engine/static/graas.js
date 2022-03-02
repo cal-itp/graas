@@ -4,7 +4,7 @@ var tripID = null;
 var agencyID = null;
 var vehicleID = null;
 var running = false;
-var routeSelected = false;
+var tripSelected = false;
 var vehicleSelected = false;
 var noSleep = new NoSleep();
 var canvas = null;
@@ -51,15 +51,15 @@ const MAX_LIFE = 1000 * 60 * 60 * 24 * 7;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 
-const CONFIG_ROUTE_NAMES = "route names";
+const CONFIG_TRIP_NAMES = "trip names";
 const CONFIG_VEHICLE_IDS = "vehicle IDs";
 const CONFIG_DRIVER_NAMES = "driver names";
 const CONFIG_FILTER_PARAMS = "filter params";
 const START_STOP_BUTTON = "start-stop";
 const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
 const START_STOP_BUTTON_STOP_TEXT = "Stop"
-const TRIP_SELECT_DROPDOWN = "route-select";
-const TRIP_SELECT_DROPDOWN_TEXT = "Select Route";
+const TRIP_SELECT_DROPDOWN = "trip-select";
+const TRIP_SELECT_DROPDOWN_TEXT = "Select Trip";
 const BUS_SELECT_DROPDOWN = "bus-select";
 const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
@@ -115,8 +115,8 @@ function getTimeDelta(s) {
     if (testHour && testMin) {
         now.setHours(testHour, testMin);
     }
-    var routeTime = getTimeFromString(s);
-    return Math.abs((routeTime - now) / 60000);
+    var tripTime = getTimeFromString(s);
+    return Math.abs((tripTime - now) / 60000);
 }
 
 function toRadians(degrees) {
@@ -394,7 +394,7 @@ function handleStartStop() {
         var p = document.getElementById(START_STOP_BUTTON);
         p.style.background = "#cccccc";
 
-        configMatrix.setSelected(CONFIG_ROUTE_NAMES, false);
+        configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
         configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
     }
@@ -439,10 +439,10 @@ function handleDriverChoice() {
     checkForConfigCompletion();
 }
 
-function handleRouteChoice() {
-    util.log("handleRouteChoice()");
+function handleTripChoice() {
+    util.log("handleTripChoice()");
 
-    configMatrix.setSelected(CONFIG_ROUTE_NAMES, true);
+    configMatrix.setSelected(CONFIG_TRIP_NAMES, true);
     checkForConfigCompletion();
 }
 
@@ -577,8 +577,7 @@ function getURLContent(agencyID, arg) {
     locator = configMatrix.getNextToLoad().locator;
     name = configMatrix.getNextToLoad().name;
 
-    // For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name:
-    url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${locator}?foo=${arg}`
+    url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${locator}?foo=${arg}`
     util.timedFetch(url, {
         method: 'GET'/*,
         mode: 'no-cors'*/
@@ -935,14 +934,14 @@ function agencyIDCallback(response) {
 }
 
 function getTimeFromName(s) {
-    // s looks something like: "Route 10 @ 5:58 am"
-    // Returns the text that is to the right of the last '@', which solves for the situation where the route name contains an '@'
+    // s looks something like: "Trip 10 @ 5:58 am"
+    // Returns the text that is to the right of the last '@', which solves for the situation where the trip name contains an '@'
 
     // util.log("- s: " + s)
     // if there is no '@', return null
     if (s.indexOf('@') < 0)
     {
-        util.log("* Route name is missing an '@', will only show up on dropdown if max-mins-from-start < 0")
+        util.log("* Trip name is missing an '@', will only show up on dropdown if max-mins-from-start < 0")
         return null
     }
     let timeFromName = s.substring(s.lastIndexOf('@') + 2)
@@ -972,7 +971,7 @@ function gotConfigData(data, agencyID, arg) {
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
-    else if (name === CONFIG_ROUTE_NAMES) {
+    else if (name === CONFIG_TRIP_NAMES) {
         trips = data;
         loadTrips();
     } else if (name === CONFIG_VEHICLE_IDS) {
@@ -1008,17 +1007,17 @@ function loadTrips() {
         // util.log(`- trips.length: ${trips.length}`);
         if (Array.isArray(trips)) {
             // util.log(`-- trips[i]: ${trips[i]}`);
-            const routeInfo = trips[i];
+            const tripInfo = trips[i];
             //util.log(`-- value: ${value}`);
 
-            if (mode === 'vanilla' && isObject(routeInfo)) {
-                const time = getTimeFromName(routeInfo["route_name"]);
+            if (mode === 'vanilla' && isObject(tripInfo)) {
+                const time = getTimeFromName(tripInfo["trip_name"]);
                 //util.log(`- time: ${time}`);
                 const dow = getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
-                const lat = routeInfo.departure_pos.lat;
+                const lat = tripInfo.departure_pos.lat;
                 // util.log(`- lat: ${lat}`);
-                const lon = routeInfo.departure_pos.long;
+                const lon = tripInfo.departure_pos.long;
                 // util.log(`- lon: ${lon}`);
 
                 const timeDelta = getTimeDelta(time);
@@ -1027,8 +1026,8 @@ function loadTrips() {
                 const distance = getHaversineDistance(lat, lon, startLat, startLon);
                 // util.log(`- distance: ${distance}`);
                 var cal = 0;
-                if (routeInfo.calendar != null) {
-                    cal = routeInfo.calendar[dow];
+                if (tripInfo.calendar != null) {
+                    cal = tripInfo.calendar[dow];
                 }
                 // util.log(`- cal: ${cal}`);
                 // 3 conditions need to be met for inclusion...
@@ -1037,16 +1036,16 @@ function loadTrips() {
                     (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
                     &&
                     // 2. meets day-of-weel parameters:
-                    (!isFilterByDayOfWeek || (routeInfo.calendar != null && routeInfo.calendar[dow] === 1))
+                    (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
                     &&
                     // 3. meets distance parameters:
                     (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
                     ){
                     //util.log(`+ adding ${key}`);
-                    tripIDLookup[routeInfo["route_name"]] = routeInfo;
+                    tripIDLookup[tripInfo["trip_name"]] = tripInfo;
                 }
             } else {
-                tripIDLookup[routeInfo["route_name"]] = routeInfo;
+                tripIDLookup[tripInfo["trip_name"]] = tripInfo;
             }
         }
     }
@@ -1201,11 +1200,11 @@ if (!Object.entries) {
 
 configMatrix = new ConfigMatrix();
 
-// The below files will be processed in the order they appear here. It's important that filter-params goes before route-names
+// The below files will be processed in the order they appear here. It's important that filter-params goes before trip-names
 configMatrix.addRow(CONFIG_VEHICLE_IDS, "vehicle-ids.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_DRIVER_NAMES, "driver-names.json", ConfigMatrix.UNKNOWN);
 configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
-configMatrix.addRow(CONFIG_ROUTE_NAMES, "route-names.json", ConfigMatrix.PRESENT);
+configMatrix.addRow(CONFIG_TRIP_NAMES, "trip-names.json", ConfigMatrix.PRESENT);
 countFiles = configMatrix.countRows();
 
 initialize();
