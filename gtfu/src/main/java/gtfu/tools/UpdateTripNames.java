@@ -23,7 +23,7 @@ public class UpdateTripNames {
 
         for (String agencyID : agencyIDList) {
             Debug.log(agencyID);
-            String filePath = "server/agency-config/gtfs/gtfs-aux/" + agencyID +"/route-names.json";
+            String filePath = "server/agency-config/gtfs/gtfs-aux/" + agencyID +"/trip-names.json";
             long lastUpdatedTripList = gh.getLatestCommitMillis(filePath);
             Debug.log("- lastUpdatedTripList: " + lastUpdatedTripList);
 
