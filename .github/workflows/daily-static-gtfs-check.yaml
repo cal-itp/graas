@@ -27,3 +27,5 @@ jobs:
       - name: Update Trip Names
         working-directory: gtfu
         run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u ${{ secrets.LIVE_AGENCIES_URL }}
+        env:
+          GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}

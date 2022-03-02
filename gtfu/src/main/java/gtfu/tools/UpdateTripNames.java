@@ -30,6 +30,7 @@ public class UpdateTripNames {
             AgencyYML yml = new AgencyYML();
             String gtfsURL = yml.getURL(agencyID);
             long lastModifiedLRemote = Util.getLastModifiedRemote(gtfsURL);
+            Debug.log("- lastModifiedLRemote: " + lastModifiedLRemote);
 
             if(lastModifiedLRemote > lastUpdatedTripList){
                 Debug.log("Static GTFS has been updated since trip-names.json was last updated. Re-running TripListGenerator now to check whether this impacts trip-names.json");
@@ -48,15 +49,18 @@ public class UpdateTripNames {
                 if(!Arrays.equals(currentFile, newFile)){
                     Debug.log("Relevant changes detected. Creating a PR to update the file");
 
-                    String title = "Automated updates to " + agencyID + " triplist";
-                    String description = "Our daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
-                    String message = "Automated updates";
+                    String title = ":robot: updates to " + agencyID + " triplist";
+                    String description = ":robot: Automatically-generated PR :robot: Our daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
+                    String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
                     gh.createPR(title, description, filePath, newFile, message, branchName);
                 }
                 else{
                     Debug.log("No relevant changes detected.");
                 }
+            }
+            else{
+                Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
             }
         }
     }
