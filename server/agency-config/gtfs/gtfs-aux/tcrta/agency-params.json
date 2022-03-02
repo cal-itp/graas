@@ -1,0 +1,7 @@
+{
+"is-filter-by-day-of-week": true,
+"max-mins-from-start": 45,
+"max-feet-from-stop": 2640,
+"triplist-generator-namefield": "headsign",
+"triplist-generator-use-direction": false
+}

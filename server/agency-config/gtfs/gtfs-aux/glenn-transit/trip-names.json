@@ -1,0 +1,18 @@
+[
+    {"route_name": "Chico @ 6:30 am", "trip_id": "t_1310816_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 8:00 am", "trip_id": "t_1543970_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 8:45 am", "trip_id": "t_2008413_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 11:00 am", "trip_id": "t_1310817_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 12:00 pm", "trip_id": "t_1543971_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 1:00 pm", "trip_id": "t_1310818_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 4:00 pm", "trip_id": "t_1543972_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Chico @ 5:00 pm", "trip_id": "t_1310819_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.532181, "long": -122.192467}},
+    {"route_name": "Willows @ 8:25 am", "trip_id": "t_2008414_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 9:55 am", "trip_id": "t_1543973_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 10:55 am", "trip_id": "t_1310820_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 12:55 pm", "trip_id": "t_1310821_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 1:55 pm", "trip_id": "t_1543974_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 2:55 pm", "trip_id": "t_1310822_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 5:55 pm", "trip_id": "t_1543975_b_28693_tn_0", "calendar": [0, 0, 0, 0, 0, 1, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}},
+    {"route_name": "Willows @ 6:55 pm", "trip_id": "t_1310823_b_28693_tn_0", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 39.728905, "long": -121.842293}}
+]
