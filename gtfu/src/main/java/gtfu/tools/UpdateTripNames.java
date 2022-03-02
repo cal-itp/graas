@@ -50,7 +50,7 @@ public class UpdateTripNames {
                     Debug.log("Relevant changes detected. Creating a PR to update the file");
 
                     String title = ":robot: updates to " + agencyID + " triplist";
-                    String description = ":robot: Automatically-generated PR :robot: Our daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
+                    String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
                     String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
                     gh.createPR(title, description, filePath, newFile, message, branchName);
