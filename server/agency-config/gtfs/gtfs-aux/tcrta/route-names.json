@@ -1,3 +1,4 @@
+
 [
     {"route_name": "Dinuba Connection @ 7:05 am", "trip_id": "DCW_T01", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 36.541973, "long": -119.393250}},
     {"route_name": "Dinuba Connection @ 7:05 am", "trip_id": "DCS_T01", "calendar": [1, 1, 1, 1, 1, 0, 0], "departure_pos": {"lat": 36.541973, "long": -119.393250}},
