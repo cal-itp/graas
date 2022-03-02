@@ -1,0 +1,12 @@
+[
+    {"route_name": "Monday Marshall @ 6:10 am", "trip_id": "2WD2_0610", "calendar": [1, 0, 0, 0, 0, 0, 0], "departure_pos": {"lat": 37.838922, "long": -122.283450}},
+    {"route_name": "Monday SP @ 6:10 am", "trip_id": "2WD2_0610", "calendar": [1, 0, 0, 0, 0, 0, 0], "departure_pos": {"lat": 37.839064, "long": -122.282589}},
+    {"route_name": "Tuesday Marshall @ 6:55 am", "trip_id": "2WD2_0655", "calendar": [0, 1, 0, 0, 0, 0, 0], "departure_pos": {"lat": 37.838922, "long": -122.283450}},
+    {"route_name": "Tuesday Marshall @ 6:55 am", "trip_id": "2WD2_0655", "calendar": [0, 1, 0, 0, 0, 0, 0], "departure_pos": {"lat": 37.839064, "long": -122.282589}},
+    {"route_name": "Wednesday Marshall @ 3:36 pm", "trip_id": "2WD2_0750", "calendar": [0, 0, 1, 0, 0, 0, 0], "departure_pos": {"lat": 37.838922, "long": -122.283450}},
+    {"route_name": "Wednesday SP @ 3:36 pm", "trip_id": "2WD2_0750", "calendar": [0, 0, 1, 0, 0, 0, 0], "departure_pos": {"lat": 37.839064, "long": -122.282589}},
+    {"route_name": "Thursday Marshall @ 8:35 am", "trip_id": "2WD2_0835", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.838922, "long": -122.283450}},
+    {"route_name": "Thursday SP @ 8:35 am", "trip_id": "2WD2_0835", "calendar": [0, 0, 0, 1, 0, 0, 0], "departure_pos": {"lat": 37.839064, "long": -122.282589}},
+    {"route_name": "Friday Marshall @ 8:35 am", "trip_id": "2WD2_0835", "calendar": [0, 0, 0, 0, 1, 0, 0], "departure_pos": {"lat": 37.838922, "long": -122.283450}},
+    {"route_name": "Friday SP @ 8:35 am", "trip_id": "2WD2_0835", "calendar": [0, 0, 0, 0, 1, 0, 0], "departure_pos": {"lat": 37.839064, "long": -122.282589}}
+]
