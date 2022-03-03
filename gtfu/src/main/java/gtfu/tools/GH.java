@@ -21,20 +21,17 @@ import java.util.Date;
 
 public class GH {
     private static final String GH_ACCESS_TOKEN = System.getenv("GH_ACCESS_TOKEN");
-    private static final String GH_ORG_NAME = "Cal-ITP";
+    private static final String GH_ORG_NAME = "cal-itp";
+    private static final String PROJECT_NAME = "graas";
     private static final String MAIN_BRANCH_NAME = "main";
     private String mainBranchHash;
-    private String treeHash;
     private GHRepository repo;
 
     public GH() throws Exception {
         GitHub github = new GitHubBuilder().withOAuthToken(GH_ACCESS_TOKEN, GH_ORG_NAME).build();
-        repo = github.getRepository("cal-itp/graas");
-        GHBranch main =repo.getBranch("main");
+        repo = github.getRepository(GH_ORG_NAME + "/" + PROJECT_NAME);
+        GHBranch main =repo.getBranch(MAIN_BRANCH_NAME);
         mainBranchHash = main.getSHA1();
-        GHTree tree = repo.getTreeRecursive("main", 1);
-
-        treeHash = tree.getSha();
     }
 
     public long getLatestCommitMillis(String fileName) throws Exception {

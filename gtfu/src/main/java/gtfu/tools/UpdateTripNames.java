@@ -4,6 +4,9 @@ import gtfu.ProgressObserver;
 import gtfu.ConsoleProgressObserver;
 import gtfu.Util;
 import gtfu.Debug;
+import gtfu.EmailFailureReporter;
+import gtfu.FailureReporter;
+import gtfu.Recipients;
 
 import java.util.Date;
 import java.util.Arrays;
@@ -21,6 +24,14 @@ public class UpdateTripNames {
     public static void UpdateTripNames(String[] agencyIDList) throws Exception {
         GH gh = new GH();
 
+        Recipients r = new Recipients();
+        String[] recipients = r.get("error_report");
+
+        FailureReporter reporter = new EmailFailureReporter(recipients, "LoadAgencyDataTest Report");
+        Util.setReporter(reporter);
+
+        reporter.addLine("New PRs created for:");
+        int prCount = 0;
         for (String agencyID : agencyIDList) {
             Debug.log(agencyID);
             String filePath = "server/agency-config/gtfs/gtfs-aux/" + agencyID +"/trip-names.json";
@@ -49,11 +60,15 @@ public class UpdateTripNames {
                 if(!Arrays.equals(currentFile, newFile)){
                     Debug.log("Relevant changes detected. Creating a PR to update the file");
 
+                    // Consider linking the URL for the PR. This requires some updates to Sendgrid.java, to send HTML.
+                    reporter.addLine(agencyID);
+
                     String title = ":robot: updates to " + agencyID + " triplist";
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
                     String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
                     gh.createPR(title, description, filePath, newFile, message, branchName);
+                    prCount++;
                 }
                 else{
                     Debug.log("No relevant changes detected.");
@@ -63,6 +78,10 @@ public class UpdateTripNames {
                 Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
             }
         }
+        if (prCount == 0) {
+            reporter.addLine("...no agencies. Everything looks up to date.");
+        }
+        reporter.send();
     }
 
     private static void usage() {
