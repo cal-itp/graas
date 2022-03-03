@@ -1,18 +1,3 @@
-const BLOCK_LIST = [
-     '1',  '2',  '3',  '4',  '5',  '6',  '7',  '9', '21', '22', '23', '24',
-    '26', '27', '28', '29', '30', '31', '35', '37', '38', '39', '46', '57',
-    '58', '59', '64', '65', '66', '67', '68', '72'
-];
-
-const VEHICLE_LIST = [
-    '4079', '4080', '4081', '4082', '4083', '4084', '8185', '8186', '4087',
-    '4088', '4089', '4090', '4091', '4092', '4093', '4094', '4095', '4096',
-    '4097', '4098', '4099', '4000', '4001', '4002', '4003', '4004', '4005',
-    '4006', '4007', '4008', '4009', '4010', '4011', '4012', '8113', '8114',
-    '4017', '4018', '4019', '4020', '4021', '4022', '4023', '4024', '4025',
-    '4026', '4027'
-];
-
 const BLOCKS_VOFF = 65;
 const VEHICLES_VOFF = 425;
 const BLOCK_HEIGHT = 60;
@@ -38,6 +23,7 @@ var dragHeight = 0;
 var dragColor = '';
 var lastRefresh = 0;
 var items = [];
+var blockMap = {};
 var currentModal = null;
 var signatureKey = null;
 
@@ -81,31 +67,7 @@ function dismissModal() {
     }
 }
 
-function resizeCanvas() {
-    util.log('resizeCanvas()');
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * .9;
-
-    /*var bw = (window.innerWidth - (COLS + 1) * GAP) / COLS;
-    var xx = GAP;
-
-    for (var i=0; i<items.length; i++) {
-        var item = items[i];
-        item.w = bw;
-        item.x = xx;
-
-        xx += GAP + bw;
-
-        if (xx >= window.innerWidth) {
-            xx = GAP;
-        }
-    }*/
-
-    repaint();
-}
-
-function layout() {
+function layout(blockIDList, vehicleIDList) {
     items = [];
 
     var bw = (window.innerWidth - (COLS + 1) * GAP) / COLS;
@@ -113,14 +75,14 @@ function layout() {
     var xx = GAP;
     var yy = BLOCKS_VOFF;
 
-    for (var i=0; i<BLOCK_LIST.length; i++) {
+    for (var i=0; i<blockIDList.length; i++) {
         var item = {
             type: 'block',
             x: xx,
             y: yy,
             w: bw,
             h: bh,
-            label: BLOCK_LIST[i],
+            label: blockIDList[i],
             status: 'unassigned',
             vehicle: null
         };
@@ -139,14 +101,14 @@ function layout() {
     xx = GAP;
     yy = VEHICLES_VOFF;
 
-    for (var i=0; i<VEHICLE_LIST.length; i++) {
+    for (var i=0; i<vehicleIDList.length; i++) {
         var item = {
             type: 'vehicle',
             x: xx,
             y: yy,
             w: bw,
             h: bh,
-            label: VEHICLE_LIST[i],
+            label: vehicleIDList[i],
             status: Math.random() < .15 ? 'inactive' : 'active'
         };
 
@@ -159,16 +121,17 @@ function layout() {
             yy += GAP + bh;
         }
     }
+
+    repaint();
 }
 
 function initialize() {
-    window.addEventListener('resize', resizeCanvas, false);
+    //window.addEventListener('resize', resizeCanvas, false);
 
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight * .9;
 
-    layout();
-    resizeCanvas();
+    repaint();
 
     var date = util.getDate('03/02/22');
     util.log('- date: ' + date.toString());
@@ -243,16 +206,42 @@ function handleKey(id) {
 
         localStorage.setItem("app-data", value);
         completeInitialization(parseAgencyData(value));
-    } else if (id === 'key-deploy') {
+    } else if (id === 'key-deploy-tomorrow' || id == 'key-deploy-today') {
         var blockData = [];
 
-        /* ### TODO
-        - iterate over items
-        - for each assigned block
-          + get valid-from, valid-to and trips from block map
-          + add agency-id and id
-          + add to blockData
-        */
+        var fromDate = new Date();
+
+        if (id === 'key-deploy-tomorrow') {
+            fromDate = util.nextDay(fromDate);
+        }
+
+        fromDate = util.getMidnightDate(fromDate);
+        var toDate = util.nextDay(fromDate);
+
+        util.log('- fromDate: ' + fromDate);
+        util.log('- toDate  : ' + toDate);
+
+        for (var item of items) {
+            if (item.type === 'block' && item.status === 'assigned') {
+                var id = item.label;
+                util.log('-- id: ' + id);
+                var vid = item.vehicle;
+                util.log('-- vid: ' + vid);
+                var block = blockMap[id];
+                //util.log('-- block: ' + JSON.stringify(block));
+
+                var data = {};
+
+                data['id'] = id;
+                data['agency_id'] = agencyID;
+                data['vehicle_id'] = vid;
+                data['valid_from'] = util.millisToSeconds(fromDate.getTime());
+                data['valid_to'] = util.millisToSeconds(toDate.getTime());
+                data['trips'] = block.trips;
+
+                blockData.push(data);
+            }
+        }
 
         var data = {
             'agency-id': agencyID,
@@ -313,12 +302,15 @@ async function completeInitialization(agencyData) {
 
     for (var block of blocks) {
         bidList.push(block.id);
+        blockMap[block.id] = block;
     }
 
     util.log('- bidList: ' + bidList);
 
     var vidList = await getBucketData(agencyID, 'vehicle-ids.json');
     util.log('- vidList: ' + vidList);
+
+    layout(bidList, vidList);
 }
 
 function getBucketData(agencyID, filename) {

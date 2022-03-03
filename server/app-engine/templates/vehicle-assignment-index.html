@@ -6,7 +6,7 @@
         <link type="text/css" rel="stylesheet" href="../static/vehicle-assignment-style.css">
     </head>
     <!--body onkeydown="handleKey()" onmousedown="handleMouseDown(event)" onmouseup="handleMouseUp(event)" onmousemove="handleMouseMove(event)"-->
-    <body style="; background-color: #ccd">
+    <body style="background-color: #ccd">
         <div id="keyEntryModal" class="modal">
           <div class="modal-content">
             <p id="key-title" style="text-align: center">Enter Key</p>
@@ -16,14 +16,10 @@
         </div>
         <canvas id="canvas"></canvas>
         <div style="width: 100%; display: block">
-            <!--select onchange="handleKey(this.value)" style="width: auto; float: right; display: inline-block;" name="Date" id="target-date">
-                <option value="today">Today</option>
-                <option value="tomorrow">Tomorrow</option>
-            </select-->
-            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY</button>
-            <button id="key-test" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue; margin-right: 0" class="btn">TEST</button>
+            <button id="key-deploy-tomorrow" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY FOR TOMORROW</button>
+            <button id="key-deploy-today" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue; margin-right: 0" class="btn">DEPLOY FOR TODAY</button>
         </div>
-            <script src="../static/gtfs-rt-util.js"></script>
+        <script src="../static/gtfs-rt-util.js"></script>
         <script src="../static/vehicle-assignments.js"></script>
     </body>
 </html>
