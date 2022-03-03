@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Vehicle Assignments</title>
+        <link type="text/css" rel="stylesheet" href="../static/vehicle-assignment-style.css">
+    </head>
+    <!--body onkeydown="handleKey()" onmousedown="handleMouseDown(event)" onmouseup="handleMouseUp(event)" onmousemove="handleMouseMove(event)"-->
+    <body style="; background-color: #ccd">
+        <div id="keyEntryModal" class="modal">
+          <div class="modal-content">
+            <p id="key-title" style="text-align: center">Enter Key</p>
+            <textarea id="keyTextArea" rows="5"></textarea>
+            <button id="key-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="background-color: blue">Okay</button>
+          </div>
+        </div>
+        <canvas id="canvas"></canvas>
+        <div style="width: 100%; display: block">
+            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">Deploy</button>
+        </div>
+            <script src="../static/gtfs-rt-util.js"></script>
+        <script src="../static/vehicle-assignments.js"></script>
+    </body>
+</html>
+

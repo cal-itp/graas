@@ -31,7 +31,7 @@ if (!fetch) {
         if (typeof document !== 'undefined') {
             try {
                 var p = document.getElementById('console');
-                p.innerHTML += s + "<br/>";
+                if (p) p.innerHTML += s + "<br/>";
             } catch(e){
                 console.log(e.message)
             }
