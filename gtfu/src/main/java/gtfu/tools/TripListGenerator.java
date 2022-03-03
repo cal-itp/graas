@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import gtfu.*;
+
 import java.nio.charset.StandardCharsets;
 
 import org.json.simple.JSONObject;
