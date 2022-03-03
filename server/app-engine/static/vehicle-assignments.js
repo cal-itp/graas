@@ -170,6 +170,18 @@ function initialize() {
     layout();
     resizeCanvas();
 
+    var date = util.getDate('03/02/22');
+    util.log('- date: ' + date.toString());
+    var seconds = util.millisToSeconds(date.getTime());
+    util.log('- seconds: ' + seconds);
+
+    var today = new Date();
+    util.log('- today: ' + today);
+    var midnight = util.getMidnightDate(today);
+    util.log('- midnight: ' + midnight);
+    var tomorrow = util.nextDay(midnight);
+    util.log('- tomorrow: ' + tomorrow);
+
     var str = localStorage.getItem("app-data") || "";
 
     if (!str) {
@@ -254,7 +266,7 @@ function handleKey(id) {
     }
 }
 
-function completeInitialization(agencyData) {
+async function completeInitialization(agencyData) {
     agencyID = agencyData.id;
     util.log("- agencyID: " + agencyID);
 
@@ -277,7 +289,7 @@ function completeInitialization(agencyData) {
 
     const binaryDer = util.str2ab(key);
 
-    crypto.subtle.importKey(
+    signatureKey = await crypto.subtle.importKey(
         "pkcs8",
         binaryDer,
         {
@@ -286,14 +298,38 @@ function completeInitialization(agencyData) {
         },
         false,
         ["sign"]
-    ).then(function(key) {
-        util.log("- key.type: " + key.type);
-        signatureKey = key;
-    });
+    );
+
+    util.log("- signatureKey.type: " + signatureKey.type);
 
     document.body.addEventListener('mousedown', handleMouseDown);
     document.body.addEventListener('mouseup', handleMouseUp);
     document.body.addEventListener('mousemove', handleMouseMove);
+
+    var blocks = await getBucketData(agencyID, 'blocks.json');
+    //util.log("- blocks: " + JSON.stringify(blocks));
+
+    var bidList = [];
+
+    for (var block of blocks) {
+        bidList.push(block.id);
+    }
+
+    util.log('- bidList: ' + bidList);
+
+    var vidList = await getBucketData(agencyID, 'vehicle-ids.json');
+    util.log('- vidList: ' + vidList);
+}
+
+function getBucketData(agencyID, filename) {
+    //util.log('getBucketData()');
+
+    var arg = Math.round(Math.random() * 100000)
+    //util.log("- arg: " + arg);
+
+
+    var url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
+    return util.getJSONResponse(url);
 }
 
 function handleCloseButtonPress() {

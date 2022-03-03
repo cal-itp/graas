@@ -25,6 +25,8 @@ if (!fetch) {
 }
 
 (function(exports) {
+    exports.MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+
     exports.log = function(s) {
         console.log(s);
 
@@ -37,6 +39,38 @@ if (!fetch) {
             }
         }
     };
+
+    // returns a date object set to midnight of
+    // the date described by 's', which is expected
+    // to be of the form mm/dd/yy. yy is assumed to
+    // refer to years of the 21st century.
+    exports.getDate = function(s) {
+        var args = s.split('/');
+        if (args.length !== 3) return null;
+        var date = new Date();
+        date.setFullYear(2000 + parseInt(args[2]));
+        date.setMonth(parseInt(args[0]) - 1);
+        date.setDate(parseInt(args[1]));
+        date.setHours(0, 0, 0);
+        return date;
+    }
+
+    exports.getMidnightDate = function(date) {
+        var d = new Date();
+        d.setTime(date.getTime());
+        d.setHours(0, 0, 0);
+        return d;
+    }
+
+    exports.nextDay = function(date) {
+        var d = new Date();
+        d.setTime(date.getTime() + util.MILLIS_PER_DAY);
+        return d;
+    }
+
+    exports.millisToSeconds = function(millis) {
+        return Math.floor(millis / 1000);
+    }
 
     exports.sign = function(msg, signatureKey) {
         //this.log("sign()");
@@ -97,6 +131,21 @@ if (!fetch) {
 
         return fetch(url, opts);
     };
+
+    exports.getJSONResponse = async function(url, data) {
+        var args = {method: 'GET'};
+
+        if (data) {
+            args.method = 'POST';
+            args.headers = {'Content-Type': 'application/json'};
+            args.body = JSON.stringify(data);
+        }
+
+        var response = await this.timedFetch(url, args);
+        var json = await response.json();
+
+        return json;
+    }
 
     exports.apiCall = function(data, url, callback, document) {
         //this.log("apiCall()");

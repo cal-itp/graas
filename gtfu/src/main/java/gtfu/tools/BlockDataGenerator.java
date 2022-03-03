@@ -1,5 +1,7 @@
 package gtfu.tools;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -11,9 +13,10 @@ import gtfu.*;
 // more specifically to list all trips associated with a specific block.
 // Output is formatted as JSON
 public class BlockDataGenerator {
-    public BlockDataGenerator(String cacheFolder, String agencyID, Date date) throws Exception {
+    public BlockDataGenerator(String cacheFolder, String outputFile, String agencyID, Date date) throws Exception {
         Debug.log("BlockDataGenerator.BlockDataGenerator()");
         Debug.log("- cacheFolder: " + cacheFolder);
+        Debug.log("- outputFile: " + outputFile);
         Debug.log("- agencyID: " + agencyID);
         Debug.log("- date: " + date);
 
@@ -50,7 +53,10 @@ public class BlockDataGenerator {
             list.add(br);
         }
 
-        System.out.println(Util.objectToJSON(list, true));
+        try (FileOutputStream fos = new FileOutputStream(outputFile);
+            PrintStream out = new PrintStream(fos)) {
+            out.println(Util.objectToJSON(list, true));
+        }
     }
 
     private static void usage() {
@@ -64,11 +70,17 @@ public class BlockDataGenerator {
     public static void main(String[] arg) throws Exception {
         String cacheFolder = null;
         String agencyID = null;
+        String outputFile = System.getenv("HOME") + "/tmp/blocks.json";
         Date date = new Date();
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-folder")) && i < arg.length - 1) {
                 cacheFolder = arg[++i];
+                continue;
+            }
+
+            if ((arg[i].equals("-o") || arg[i].equals("--output-file")) && i < arg.length - 1) {
+                outputFile = arg[++i];
                 continue;
             }
 
@@ -87,7 +99,7 @@ public class BlockDataGenerator {
 
         if (agencyID == null || cacheFolder == null) usage();
 
-        new BlockDataGenerator(cacheFolder, agencyID, date);
+        new BlockDataGenerator(cacheFolder, outputFile, agencyID, date);
     }
 
     class TripRecord {

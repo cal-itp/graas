@@ -14,7 +14,7 @@ canvas {
 
 button {
   font-family: arial, sans-serif;
-  font-size: 32px;
+  font-size: 24px;
   border-radius: 4px;
   box-shadow: 1px 1px 3px #606060;
   color: white;
@@ -26,6 +26,11 @@ button {
   cursor: pointer;
   opacity: 0.8;
   margin: 15px;
+}
+
+select {
+  font-size: 24px;
+  border: none;
 }
 
 .modal {

@@ -16,7 +16,12 @@
         </div>
         <canvas id="canvas"></canvas>
         <div style="width: 100%; display: block">
-            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">Deploy</button>
+            <!--select onchange="handleKey(this.value)" style="width: auto; float: right; display: inline-block;" name="Date" id="target-date">
+                <option value="today">Today</option>
+                <option value="tomorrow">Tomorrow</option>
+            </select-->
+            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY</button>
+            <button id="key-test" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue; margin-right: 0" class="btn">TEST</button>
         </div>
             <script src="../static/gtfs-rt-util.js"></script>
         <script src="../static/vehicle-assignments.js"></script>
