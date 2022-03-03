@@ -17,6 +17,7 @@ import org.kohsuke.github.GHTreeBuilder;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 import org.kohsuke.github.GHContentBuilder;
+
 import java.util.Date;
 
 public class GH {
@@ -73,9 +74,13 @@ public class GH {
         GHRef branch = repo.createRef("refs/heads/" + branchName, commit.getSHA1());
     }
 
-    public void createPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
-        createCommit(branchName, message, path, file);
+    private void createPR(String title, String branchName, String description) throws Exception {
         GHPullRequest pr = repo.createPullRequest(title, branchName, MAIN_BRANCH_NAME, description);
+    }
+
+    public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
+        createCommit(branchName, message, path, file);
+        createPR(title, branchName, description);
     }
 
     public static void main(String[] arg) throws Exception {

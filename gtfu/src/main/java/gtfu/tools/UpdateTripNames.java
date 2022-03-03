@@ -23,6 +23,7 @@ public class UpdateTripNames {
 
     public static void UpdateTripNames(String[] agencyIDList) throws Exception {
         GH gh = new GH();
+        AgencyYML yml = new AgencyYML();
 
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
@@ -34,11 +35,11 @@ public class UpdateTripNames {
         int prCount = 0;
         for (String agencyID : agencyIDList) {
             Debug.log(agencyID);
+
             String filePath = "server/agency-config/gtfs/gtfs-aux/" + agencyID +"/trip-names.json";
             long lastUpdatedTripList = gh.getLatestCommitMillis(filePath);
             Debug.log("- lastUpdatedTripList: " + lastUpdatedTripList);
 
-            AgencyYML yml = new AgencyYML();
             String gtfsURL = yml.getURL(agencyID);
             long lastModifiedLRemote = Util.getLastModifiedRemote(gtfsURL);
             Debug.log("- lastModifiedLRemote: " + lastModifiedLRemote);
@@ -50,8 +51,8 @@ public class UpdateTripNames {
                 ProgressObserver po = new ConsoleProgressObserver(40);
                 byte[] currentFile = Util.getURLContentBytes(fileURL, po);
 
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                final String utf8 = StandardCharsets.UTF_8.name();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                String utf8 = StandardCharsets.UTF_8.name();
                 try (PrintStream ps = new PrintStream(baos, true, utf8)) {
                     TripListGenerator.generateTripList(agencyID, null, ps);
                 }
@@ -67,7 +68,7 @@ public class UpdateTripNames {
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
                     String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
-                    gh.createPR(title, description, filePath, newFile, message, branchName);
+                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
                     prCount++;
                 }
                 else{
@@ -117,5 +118,4 @@ public class UpdateTripNames {
             UpdateTripNames(agencyID);
         }
     }
-
 }

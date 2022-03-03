@@ -380,12 +380,6 @@ class TripListEntry implements Comparable<TripListEntry> {
         this.departureTime = departureTime;
     }
 
-    public int compareTo(TripListEntry o) {
-        int res = name.compareTo(o.name);
-        if (res == 0) res = departureTime - o.departureTime;
-        return res;
-    }
-
     private String shortenString(String s, int maxLength) {
         if (s.length() <= maxLength) return s;
 
