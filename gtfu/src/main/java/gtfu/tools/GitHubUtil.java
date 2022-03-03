@@ -20,7 +20,7 @@ import org.kohsuke.github.GHContentBuilder;
 
 import java.util.Date;
 
-public class GH {
+public class GitHubUtil {
     private static final String GH_ACCESS_TOKEN = System.getenv("GH_ACCESS_TOKEN");
     private static final String GH_ORG_NAME = "cal-itp";
     private static final String PROJECT_NAME = "graas";
@@ -28,7 +28,7 @@ public class GH {
     private String mainBranchHash;
     private GHRepository repo;
 
-    public GH() throws Exception {
+    public GitHubUtil() throws Exception {
         GitHub github = new GitHubBuilder().withOAuthToken(GH_ACCESS_TOKEN, GH_ORG_NAME).build();
         repo = github.getRepository(GH_ORG_NAME + "/" + PROJECT_NAME);
         GHBranch main =repo.getBranch(MAIN_BRANCH_NAME);
@@ -84,6 +84,6 @@ public class GH {
     }
 
     public static void main(String[] arg) throws Exception {
-        GH gh = new GH();
+        GitHubUtil gh = new GitHubUtil();
     }
 }

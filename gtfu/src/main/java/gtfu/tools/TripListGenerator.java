@@ -372,7 +372,7 @@ class TripListEntry implements Comparable<TripListEntry> {
         if (useDirection){
             name += " - " + direction;
         }
-        if (name == null || name == "") {
+        if (Util.isEmpty(name)) {
             System.err.println("** selected name field " + nameField + " is null/blank for trip "+ tripID);
         }
 
