@@ -16,3 +16,15 @@ indexes:
   - name: time_stamp
     direction: desc
 
+- kind: block-update
+  properties:
+  - name: agency_id
+  - name: timestamp
+
+- kind: block
+  properties:
+  - name: id
+  - name: valid_from
+  - name: valid_to
+
+

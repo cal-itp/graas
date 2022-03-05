@@ -244,14 +244,13 @@ function handleKey(id) {
         }
 
         var data = {
-            'agency-id': agencyID,
-            'block-data': blockData
+            'agency_id': agencyID,
+            'block_data': blockData
         };
-
         util.log('- data: ' + JSON.stringify(data));
-        util.log('### FIXME: actually send data');
 
-        //util.signAndPost(data, signatureKey, '/block-data-update', document);
+        var json = util.getJSONResponse('/block-data-update', data, signatureKey);
+        util.log('- json: ' + JSON.stringify(json));
     }
 }
 

@@ -1,7 +1,7 @@
 from google.cloud import datastore
 from google.transit import gtfs_realtime_pb2
+import json
 import time
-
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
@@ -295,6 +295,71 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
 
     key = agency_id + '-' + vehicle_id
     return assigment_map.get(key, None)
+
+def handle_block_update(datastore_client, data):
+    now = util.get_current_time_millis()
+    agency_id = data.get('agency_id', None)
+    blocks = data.get('block_data', None)
+
+    if agency_id is None or blocks is None:
+        print(f'block-update is missing \'agency_id\' or \'block_data\' field: {data}')
+        return
+
+    block_update = {
+        'agency_id': agency_id,
+        'data': data,
+        'timestamp': now
+    }
+
+    entity = datastore.Entity(key=datastore_client.key('block-update'))
+    entity.update(block_update)
+    datastore_client.put(entity)
+
+    query = datastore_client.query(kind="block-update")
+    query.add_filter("agency_id", "=", agency_id)
+    query.add_filter("timestamp", "<", now)
+
+    updates = list(query.fetch())
+    keys = []
+
+    for u in updates:
+        keys.append(u.key)
+
+    datastore_client.delete_multi(keys)
+
+    entities = []
+    keys = []
+
+    for b in blocks:
+        block = {
+            'id': b['id'],
+            'agency_id': agency_id,
+            # 'trips': json.dumps(b['trips'],separators=(',',':')),
+            'trips': b['trips'],
+            'vehicle_id': b['vehicle_id'],
+            'valid_from': b['valid_from'],
+            'valid_to': b['valid_to'],
+            'timestamp': now
+        }
+
+        # print(f'-- block: {block}')
+
+        entity = datastore.Entity(key=datastore_client.key('block'))
+        entity.update(block)
+        entities.append(entity)
+
+        query = datastore_client.query(kind="block")
+        query.add_filter("id", "=", b['id'])
+        query.add_filter("valid_from", "=", b['valid_from'])
+        query.add_filter("valid_to", "=", b['valid_to'])
+
+        blist = list(query.fetch())
+
+        for bb in blist:
+            keys.append(bb.key)
+
+    datastore_client.put_multi(entities)
+    datastore_client.delete_multi(keys)
 
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
     data['rcv-timestamp'] = int(round(time.time()))

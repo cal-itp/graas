@@ -132,8 +132,20 @@ if (!fetch) {
         return fetch(url, opts);
     };
 
-    exports.getJSONResponse = async function(url, data) {
+    exports.getJSONResponse = async function(url, data, key) {
         var args = {method: 'GET'};
+
+        if (key) {
+            var data_str = JSON.stringify(data);
+            var buf = await this.sign(data_str, key);
+            var sig = btoa(this.ab2str(buf));
+            this.log('- sig: ' + sig);
+
+            data = {
+                data: data,
+                sig: sig
+            };
+        }
 
         if (data) {
             args.method = 'POST';
@@ -142,7 +154,9 @@ if (!fetch) {
         }
 
         var response = await this.timedFetch(url, args);
+        this.log('- response: ' + JSON.stringify(response));
         var json = await response.json();
+        this.log('- json: ' + JSON.stringify(json));
 
         return json;
     }
