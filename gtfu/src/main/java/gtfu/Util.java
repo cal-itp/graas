@@ -335,10 +335,15 @@ public class Util {
         return value;
     }
 
-    public static String getURLContent(String url, ProgressObserver observer) {
+    public static byte[] getURLContentBytes(String url, ProgressObserver observer) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         downloadURLContent(url, bos, observer);
-        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+        return bos.toByteArray();
+    }
+
+    public static String getURLContent(String url, ProgressObserver observer) {
+        byte[] bytes = getURLContentBytes(url, observer);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public static void downloadURLContent(String url, OutputStream os, ProgressObserver observer) {
@@ -390,6 +395,18 @@ public class Util {
         }
     }
 
+    public static long getLastModifiedRemote(String gtfsURL) {
+        String remoteModified = getResponseHeader(gtfsURL, "Last-Modified");
+        Debug.log("- remoteModified: " + remoteModified);
+
+        if (remoteModified == null) {
+            Debug.log("* Last-Modified header not present in GTFS zip");
+            remoteModified = Time.formatDate(HTTP_DATE_FORMAT, new Date());
+        }
+
+        return Time.parseDateAsLong(HTTP_DATE_FORMAT, remoteModified);
+    }
+
     public static boolean updateCacheIfNeeded(String rootFolder, String agencyID, String gtfsURL, ProgressObserver progressObserver) {
         Debug.log("Util.updateCacheIfNeeded()");
         Debug.log("- agencyID: " + agencyID);
@@ -410,15 +427,7 @@ public class Util {
         }
 
         long lastModifiedLocal = getLastModified(name);
-        String remoteModified = Util.getResponseHeader(gtfsURL, "Last-Modified");
-        Debug.log("- remoteModified: " + remoteModified);
-
-        if (remoteModified == null) {
-            Debug.log("* Last-Modified header not present in GTFS zip, re-downloading");
-            remoteModified = Time.formatDate(HTTP_DATE_FORMAT, new Date());
-        }
-
-        long lastModifiedLRemote = Time.parseDateAsLong(HTTP_DATE_FORMAT, remoteModified);
+        long lastModifiedLRemote = getLastModifiedRemote(gtfsURL);
 
         if (lastModifiedLRemote <= lastModifiedLocal) {
             if (progressObserver != null) {
