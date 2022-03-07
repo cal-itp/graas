@@ -87,9 +87,9 @@ public class UpdateTripNames {
 
     private static void usage() {
         System.err.println("usage: UpdateTripNames -u|--url <live-agencies-url> -a|--agency-id <agency-id>");
-        System.err.println("    <url> is assumed to point to a plain text document that has an agency ID per line");
+        System.err.println("    <live-agencies-url> is assumed to point to a plain text document that has an agency ID per line");
         System.err.println("    <agency-id> is the id of the single agency you'd like to update");
-        System.err.println("    You must supply <url> or <agency-id>. If you supply both, <agency-id> will be ignored");
+        System.err.println("    You must supply <live-agencies-url> or <agency-id>. If you supply both, <agency-id> will be ignored");
         System.exit(1);
     }
 
