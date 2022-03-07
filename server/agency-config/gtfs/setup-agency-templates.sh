@@ -27,7 +27,7 @@ cat <<EOF >"$AGENCY_PATH/filter-params.json"
 }
 EOF
 
-cat <<EOF >"$AGENCY_PATH/route-names.json"
+cat <<EOF >"$AGENCY_PATH/trip-names.json"
 [
 
 ]
