@@ -14,9 +14,19 @@ import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import gtfu.Debug;
 import gtfu.Util;
 
+/**
+* Interacts with Google Cloud Datastore
+*/
 public class DB {
 
-    // ### remove github secret REPORT_FIRESTORE_ACCESS, replace with 4 individual sensitive fields from docker-auth.json
+    /**
+    * Fetches data from Google Cloud Datastore
+    * @param minTimestamp   Query start timestamp
+    * @param maxTimestamp   Query end timestamp
+    * @param kind           Query "kind"
+    * @param propertyNames  Array of propertyNames to include in query
+    * @return               List of strings, containing one DB entry row per string
+    */
     public List<String> fetch(long minTimestamp, long maxTimestamp, String kind, String[] propertyNames) throws Exception {
         StringBuffer sb = new StringBuffer();
 

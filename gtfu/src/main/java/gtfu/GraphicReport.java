@@ -157,7 +157,6 @@ public class GraphicReport {
             tdMap = dls.getTripReportDataMap();
             mapCoords = new HashMap();
             timelineCoords = new HashMap();
-            int startSecond = dls.getStartSecond();
 
             if (savePath != null) {
                 String path = savePath + "/" + key;
@@ -176,7 +175,6 @@ public class GraphicReport {
             SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d yyyy");
             String date = sdf.format(new Date(queryStartTime * 1000l));
 
-            // Debug.log("- startSecond: " + startSecond);
             // Debug.log("- name: " + name);
             // Debug.log("- date: " + date);
 
