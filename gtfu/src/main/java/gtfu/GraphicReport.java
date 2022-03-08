@@ -174,7 +174,7 @@ public class GraphicReport {
             }
 
             SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d yyyy");
-            String date = sdf.format(new Date(startSecond * 1000l));
+            String date = sdf.format(new Date(queryStartTime * 1000l));
 
             // Debug.log("- startSecond: " + startSecond);
             // Debug.log("- name: " + name);
