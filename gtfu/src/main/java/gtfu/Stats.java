@@ -37,12 +37,10 @@ public class Stats {
     }
 
     public double getMin() {
-        Debug.log("min: " + min);
         return min;
     }
 
     public double getMax() {
-        Debug.log("max: " + max);
         return max;
     }
 }

@@ -69,7 +69,6 @@ public class DayLogSlicer {
             latLonMap = gpsMap.get(tripID);
             // If there is no LatLonMap for this trip, add it.
             if(latLonMap == null){
-                Debug.log("creating new latlong map...");
                 latLonMap = new HashMap();
                 gpsMap.put(tripID, latLonMap);
             }
@@ -78,7 +77,6 @@ public class DayLogSlicer {
             if (latLonMap.get(latLon) == null) {
                 // previousUpdateMap stores the most recent GPS update timestamp (in seconds) for each trip_id.
                 // it relies on the list being sorted by timestmap, which it is.
-                Debug.log("Creating new gpsdata for trip " + tripID);
                 int secsSinceLastUpdate = -1;
                 if (previousUpdateMap.get(tripID) != null) {
                     secsSinceLastUpdate = seconds - previousUpdateMap.get(tripID);
@@ -89,7 +87,6 @@ public class DayLogSlicer {
 
             // If there is already a GPSData for this latLon value, increment the count
             else{
-                // Debug.log("incrementing gpsdata...");
                 latLonMap.get(latLon).increment();
             }
         }
