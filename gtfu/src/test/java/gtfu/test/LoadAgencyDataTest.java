@@ -64,7 +64,7 @@ public class LoadAgencyDataTest {
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
 
-        FailureReporter reporter = new EmailFailureReporter(recipients, "LoadAgencyDataTest Report");
+        FailureReporter reporter = new EmailFailureReporter(recipients, "Load Agency Data Report");
         Util.setReporter(reporter);
 
         for (int i=0; i<arg.length; i++) {
