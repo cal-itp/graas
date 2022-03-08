@@ -31,5 +31,3 @@ jobs:
         env:
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
         run: java -cp build/libs/gtfu.jar gtfu.GraphicReport  -c src/main/resources/conf/cache
-
-
