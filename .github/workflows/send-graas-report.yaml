@@ -1,8 +1,6 @@
 name: Send GRaaS Report
 # ~9:18PM pacific time, daily:
-on:
- schedule:
-    - cron: '0 5 * * *'
+on: [push]
 jobs:
   Send-email:
     runs-on: ubuntu-latest
