@@ -28,7 +28,7 @@ public class UpdateTripNames {
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
 
-        FailureReporter reporter = new EmailFailureReporter(recipients, "LoadAgencyDataTest Report");
+        FailureReporter reporter = new EmailFailureReporter(recipients, "Update Trip Names Report");
         Util.setReporter(reporter);
 
         reporter.addLine("New PRs created for:");
