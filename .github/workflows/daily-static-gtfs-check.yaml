@@ -1,8 +1,5 @@
 name: Daily Static GTFS Check
-on:
-  # Daily at 9PM pacific
-  schedule:
-    - cron: '0 5 * * *'
+on: [push]
 jobs:
   Run-tests:
     runs-on: ubuntu-latest
@@ -29,3 +26,4 @@ jobs:
         run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u ${{ secrets.LIVE_AGENCIES_URL }}
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
