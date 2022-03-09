@@ -13,7 +13,10 @@ To start running the client, press the `Start` button, then select `Route` and `
 
 Testing locally
 ------------
-Run the command `python main.py` to run the app on your local machine. You can access the app via localhost, and possibly use __ngrok__ (via the command `./ngrok http https://127.0.0.1:8080`) to test it from your mobile device.
+1. From `server/app-engine`, enter your virtual environment (by running something like `source venv/bin/activate `)
+2. Run the command `python main.py -c <path-to-cert.pem> -k <path-to-key.pem>` to run the app on your local machine.
+3. Visit `https://127.0.0.1:8080` from your web browser to test out your changes
+4. (Optional) After setting up [ngrok](https://ngrok.com/), use the command `./ngrok http https://127.0.0.1:8080` to test the app from your mobile device.
 
 Deployment
 ----------
