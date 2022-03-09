@@ -19,15 +19,17 @@ else
   mkdir $AGENCY_PATH
 fi
 
-cat <<EOF >"$AGENCY_PATH/filter-params.json"
+cat <<EOF >"$AGENCY_PATH/agency-params.json"
 {
 "is-filter-by-day-of-week": true,
 "max-mins-from-start": 720,
-"max-feet-from-stop": 4239840
+"max-feet-from-stop": 4239840,
+"triplist-generator-namefield": "headsign",
+"triplist-generator-use-direction": false
 }
 EOF
 
-cat <<EOF >"$AGENCY_PATH/route-names.json"
+cat <<EOF >"$AGENCY_PATH/trip-names.json"
 [
 
 ]
