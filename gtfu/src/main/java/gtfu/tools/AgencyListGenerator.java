@@ -7,8 +7,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import java.io.IOException;
 
+/**
+* Creates a JSON object which desribes, for each agency, which dates they have a GRaaS Report for.
+* This file is generated nighly, upon GraphicReport completion, in order to create the dropdown values on the GRaaS Report webview.
+*/
 public class AgencyListGenerator {
 
+    /**
+    * Generate the Agency List JSON object and upload it to GCloud
+    */
     public static void generateAgencyList() throws IOException {
 
         GCloudStorage gcs = new GCloudStorage();
@@ -49,6 +56,9 @@ public class AgencyListGenerator {
         System.err.println("usage: AgencyListGenerator");
     }
 
+    /**
+    * Generate the Agency List from the command line
+    */
     public static void main(String[] arg) throws Exception {
         generateAgencyList();
     }

@@ -11,8 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import gtfu.*;
 
-
-// Access data from agencies.yml, the Cal-ITP source of truth for agency attributes
+/**
+* Access agency data from agencies.yml, the Cal-ITP source-of-truth for agency attributes
+*/
 public class AgencyYML {
     private static final String url = "https://raw.githubusercontent.com/cal-itp/data-infra/main/airflow/data/agencies.yml";
 
@@ -20,6 +21,10 @@ public class AgencyYML {
     private Map<String,String> urlMap;
     private Map<String,String> nameMap;
 
+
+    /**
+    * Perform initial content download and variable setup, and then run the processYML function
+    */
     public AgencyYML(){
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Util.downloadURLContent(url, bos, null);
@@ -29,6 +34,10 @@ public class AgencyYML {
         processYML();
     }
 
+    /**
+    * Identify the agencyName and GTFS schedule URL for every agency represented in the file.
+    * It is straightforward to add additional fields to pull from the file.
+    */
     private void processYML(){
 
         for (int i=0; i<ymlLines.length; i++) {
@@ -64,6 +73,12 @@ public class AgencyYML {
         }
     }
 
+    /**
+    * Utility function which returns the value of a given fieldname, given that the fieldName is present in the line provided.
+    * @param  line      A single line from the file
+    * @param  fieldName The field name we are searching for
+    * @return           The field value, or null
+    */
     private String findValue(String line, String fieldName){
         String key = fieldName + ": ";
         int index = line.indexOf(key);
@@ -76,14 +91,30 @@ public class AgencyYML {
         return null;
     }
 
+    /**
+    * Returns the GTFS schedule URL for the provided agencyID
+    * @param  agencyID  The agencyID being searched
+    * @return           Static GTFS URL
+    */
     public String getURL(String agencyID){
         return urlMap.get(agencyID);
     }
 
+    /**
+    * Returns the name for the provided agencyID
+    * @param  agencyID  The agencyID being searched
+    * @return           Agency name
+    */
     public String getName(String agencyID){
         return nameMap.get(agencyID);
     }
 
+
+    /**
+    * Returns the name for the provided agencyID
+    * @param  index     The line index from the ymlLines file
+    * @return           The string value of the line at that index, with newlines removed
+    */
     private String getStrippedLine(int index) {
         // Debug.log("getStrippedLine()");
         return ymlLines[index].replace("\r", "");

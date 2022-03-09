@@ -17,6 +17,9 @@ import gtfu.Debug;
 import gtfu.Util;
 import gtfu.Stats;
 
+/**
+* Processes GPS updates from one agency by comparing with their trips and routes, to create several assets valuable to reporting.
+*/
 public class DayLogSlicer {
     public static final int MIN_REPORT_DURATION_MINS = 1;
     private Map<String, Map<String, GPSData>> gpsMap;
@@ -27,8 +30,15 @@ public class DayLogSlicer {
     private Map<String, String> vehicleIdMap;
     private List<TripReportData> tdList;
     private Map<String, TripReportData> tdMap;
-    private int startSecond;
 
+    /**
+    * Uses GPS updates, along with trip and route info, to create the following assets:
+    *  - a TripReportData instance for each trip
+    *  - gpsMap, a map containing GPS updates for each trip
+    * @param tripCollection     A collection of this agency's trips
+    * @param routeCollection    A collection of this agency's routes
+    * @param lines              One line per GPS update database entries for this agency
+    */
     public DayLogSlicer(TripCollection tripCollection, RouteCollection routeCollection, List<String> lines) {
         gpsMap = new HashMap();
         uuidMap = new HashMap();
@@ -37,7 +47,6 @@ public class DayLogSlicer {
         tdList = new ArrayList();
         tdMap = new HashMap();
         previousUpdateMap = new HashMap();
-        startSecond = -1;
 
         for (String line : lines) {
             String[] arg = line.split(",");
@@ -56,10 +65,6 @@ public class DayLogSlicer {
                 agent = arg[10];
                 agent = agent.substring(8,agent.length() - 3);
             } else agent = arg[7];
-
-            if (startSecond < 0) {
-                startSecond = seconds;
-            }
 
             vehicleIdMap.put(tripID,vehicleId);
             uuidMap.put(tripID,uuid);
@@ -151,19 +156,27 @@ public class DayLogSlicer {
         Collections.sort(tdList);
     }
 
+    /**
+    * Return the map of GPS updates
+    * @return gpsMap     A map containing GPS updates for each trip.
+    */
     public Map<String, Map<String, GPSData>> getMap() {
         return gpsMap;
     }
 
+    /**
+    * Return a list of trip report info
+    * @return tdList     A list containing one TripReportData instance per trip representated in the GPS updates
+    */
     public List<TripReportData> getTripReportDataList() {
         return tdList;
     }
 
+    /**
+    * Return a map of trip report info
+    * @return tdMap     A map containing one TripReportData instance per trip representated in the GPS updates
+    */
     public Map<String, TripReportData> getTripReportDataMap() {
         return tdMap;
-    }
-
-    public int getStartSecond() {
-        return startSecond;
     }
 }

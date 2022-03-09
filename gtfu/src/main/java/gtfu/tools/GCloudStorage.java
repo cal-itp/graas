@@ -16,15 +16,33 @@ import java.util.List;
 
 import gtfu.Debug;
 
+/**
+* Interacts with Google Cloud Storage
+*/
 public class GCloudStorage {
   private static final String PROJECT_ID = System.getenv("GCP_PROJECT_ID");
   private static Storage storage = StorageOptions.newBuilder().setProjectId(PROJECT_ID).build().getService();
 
-  // Upload without specifying content type will apply GCloud's default content type
+  /**
+   * Upload an object to Google Cloud storage
+   * When ContentType isn't included, it is automatically set to the GCloud default value: "application/octet-stream"
+   * @param bucketName  Name of bucket
+   * @param directory   Directory where file should be saved
+   * @param fileName    Name for file
+   * @param file        Byte array of file
+  */
   public static void uploadObject(String bucketName, String directory, String fileName, byte[] file) throws IOException {
     uploadObject(bucketName, directory, fileName, file, "application/octet-stream");
   }
 
+  /**
+   * Upload an object to Google Cloud storage
+   * @param bucketName  Name of bucket
+   * @param directory   Directory where file should be saved
+   * @param fileName    Name for file
+   * @param file        Byte array of file
+   * @param contentType Content type description, such as "text/json"
+  */
   public static void uploadObject(String bucketName, String directory, String fileName, byte[] file, String contentType) throws IOException {
     String path = directory + "/" + fileName;
     BlobId blobId = BlobId.of(bucketName, path);
@@ -34,6 +52,12 @@ public class GCloudStorage {
     Debug.log("File uploaded to bucket " + bucketName + " as " + path);
   }
 
+  /**
+   * Get a list of objects in the provided bucket and directory
+   * @param bucketName      Bucket to search within
+   * @param directoryPrefix Directory path to search
+   * @return                List of object filepaths
+  */
   public static List<String> getObjectList(String bucketName, String directoryPrefix) {
     ArrayList <String> objectList = new ArrayList<>();
     Page<Blob> blobs = storage.list(bucketName,
@@ -48,6 +72,12 @@ public class GCloudStorage {
     return objectList;
   }
 
+ /**
+   * Get an object
+   * @param bucketName Bucket to search within
+   * @param objectName Object filepath
+   * @return           Object byte array
+  */
   public static byte[] getObject(String bucketName, String objectName) {
 
     byte[] content = storage.readAllBytes(bucketName, objectName);
@@ -67,7 +97,10 @@ public class GCloudStorage {
       System.exit(0);
   }
 
-  // Upload an object from the command line
+  /**
+   * Upload an object from the command line
+   * See usage() for instructions
+  */
   public static void main(String[] arg) throws Exception {
     String bucketName = null;
     String directory = null;
