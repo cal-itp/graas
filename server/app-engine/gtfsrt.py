@@ -5,10 +5,11 @@ import time
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
-MAX_ASSIGNMENT_MILLIS = 60 * 1000
+MAX_BLOCK_STALE_MILLIS = 60 * 1000
+WEEK_SECONDS = 7 * 24 * 60 * 60
 
 last_alert_purge = 0
-assignments = {}
+block_map = {}
 
 cause_map = {
     'Unknown Cause':     gtfs_realtime_pb2.Alert.Cause.UNKNOWN_CAUSE,
@@ -259,22 +260,99 @@ def add_position(datastore_client, pos):
     entity.update(pos)
     datastore_client.put(entity)
 
+"""
+entities:
+- 'block-list':
+  + data (JSON string of list of blocks, each with a block ID, vehicle ID and list of trips, each with trip ID, start and end time)
+- 'block-metadata':
+  + written timestamp
+  + valid-from timestamp
+  + valid-to timestamp
+  + agency ID
+  + block_entity_key
+
+internal block assignment table:
+- map of agency ID to 'block-collection'
+- block-collection:
+  + valid-from timestamp
+  + valid-to timestamp
+  + refresh timestamp
+  + map of vehicle ID to 'block'
+- block:
+  + block id
+  + vehicle id
+  + list of 'trip' items
+- trip:
+  + trip ID
+  + start
+  + stop
+"""
+def load_block_collection(datastore_client, block_entity_key):
+    """
+    - load 'block-list' entity using metadata's 'block_entity_key' field
+    - create block_collection instance from 'block-list' data
+    - block_collection = {}
+    - set validity period and refresh timestamp (be sure timestamps are ints, not strings)
+    - block_collection['blocks'] = {}
+    - block_list = JSON.parse('block-list' data)
+    - for b in block_list:
+    -   block = {b.blockID, b.vehicleID, b.trips}
+    -   block_collection['blocks'][b.vehicleID] = block
+    - block_collection.last_refresh = int(time.time()))
+    - block_map['agency_id'] = block_collection
+    """
+
 def get_trip_id(datastore_client, agency_id, vehicle_id):
+    block_collection = block_map.get(agency_id, None)
+    timestamp = int(time.time())
+
+    if block_collection is None or timestamp < block_collection.valid_from or timestamp >= block_collection.valid_to:
+        """
+        - get most recent 'block-metadata' entry with agency ID 'agency_id' and todays validity period
+        - if no results, log an error and return
+        - load_block_collection(results[0].block_entity_key)
+        """
+        block_collection = block_map.get(agency_id, None)
+    else if timestamp - block_collection.last_refresh >= MAX_BLOCK_STALE_MILLIS:
+        """
+        - get list of 'block-metadata' entities with agency ID == agency_id and today's validity period, sorted descending by written timestamp
+        - if list is empty, log an error
+        - if timestamp of first entity in list is newer than block_collection.last_refresh:
+        -   load_block_collection(results[0].block_entity_key)
+        """
+        block_collection = block_map.get(agency_id, None)
+
+    if block_collection is None:
+        print(f'* no block collection found for agency {agency_id}')
+        return None
+
+    block = block_collection['blocks'].get(vehicle_id, None)
+    if block is None:
+        print(f'* no block data found for vehicle {vehicle_id}@{agency_id}')
+        return None
+
+    day_seconds = util.get_seconds_since_midnight()
+    for trip in block['trips']:
+        if day_seconds >= trip['start_time'] and day_seconds < trip['end_time']:
+            return trip['id']
+
+    return None
+
+"""
+def get_trip_id_bak(datastore_client, agency_id, vehicle_id):
     if agency_id is None or vehicle_id is None:
         return None
 
     now = util.get_current_time_millis()
-    if now - last_assignment_refresh >= MAX_ASSIGNMENT_MILLIS:
-        """
-        - get 'timestamp' kind with name 'last-assignment-update-' + <agency_id>
-        - check if newer than 'last_assignment_update' server attribute
-        - if so, reload cache
-
-        OR
-
-        - include 'updated' timestamp in all 'assignment' records
-        - add query filter for updated > last_assignment_update
-        """
+    if now - last_assignment_refresh >= MAX_BLOCK_STALE_MILLIS:
+        #- get 'timestamp' kind with name 'last-assignment-update-' + <agency_id>
+        #- check if newer than 'last_assignment_update' server attribute
+        #- if so, reload cache
+#
+        #OR
+#
+        #- include 'updated' timestamp in all 'assignment' records
+        #- add query filter for updated > last_assignment_update
 
         query = datastore_client.query(kind="assignment")
         query.add_filter("agency_id", "=", agency_id)
@@ -295,15 +373,60 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
 
     key = agency_id + '-' + vehicle_id
     return assigment_map.get(key, None)
+"""
 
+"""
+- agency_id
+- valid_from
+- valid_to
+- blocks
+  + id
+  + vehicle_id
+  + trips:
+    . id
+    .start_time
+    . end_time
+"""
 def handle_block_update(datastore_client, data):
     now = util.get_current_time_millis()
     agency_id = data.get('agency_id', None)
-    blocks = data.get('block_data', None)
+    valid_from = data.get('valid_from', None)
+    valid_to = data.get('valid_to', None)
+    blocks = data.get('blocks', None)
 
-    if agency_id is None or blocks is None:
-        print(f'block-update is missing \'agency_id\' or \'block_data\' field: {data}')
+    if agency_id is None:
+        print(f'* block collection is missing \'agency_id\' field')
         return
+
+    if valid_from is None:
+        print(f'* block collection is missing \'valid_from\' field')
+        return
+
+    if valid_to is None:
+        print(f'* block collection is missing \'valid_to\' field')
+        return
+
+    if blocks is None:
+        print(f'* block collection is missing \'blocks\' field')
+        return
+
+    """
+    ### TODO: update to match current concepts
+
+    - 'block-list':
+      + JSON string of list of blocks, each with a block ID, vehicle ID and list of trips, each with trip ID, start and end time
+    - 'block-metadata':
+      + written timestamp
+      + valid-from timestamp
+      + valid-to timestamp
+      + agency ID
+      + 'block' entity key
+
+    - write 'block-list' entity
+    - write 'block-metadata' entity with 'block' entity key
+    - query for 'block-metadata' entries older than a week
+    - delete each result and entity associated with 'block' entity key
+    """
 
     block_update = {
         'agency_id': agency_id,

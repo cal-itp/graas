@@ -6,6 +6,7 @@ from hashlib import sha256
 import ecdsa
 import os.path
 import sys
+from datetime import datetime
 import time
 from google.cloud import datastore
 from google.cloud import storage
@@ -94,6 +95,14 @@ def verify_signature(agency_id, data, signature):
 
 def get_current_time_millis():
     return int(round(time.time() * 1000))
+
+def get_seconds_since_midnight(seconds = None):
+    if seconds is None:
+        now = datetime.now()
+    else:
+        now = datetime.fromtimestamp(seconds)
+
+    return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 # For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
 def update_bucket_timestamp():

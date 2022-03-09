@@ -25,18 +25,11 @@ public class BlockDataGenerator {
         TripCollection trips = (TripCollection)collections.get("trips");
 
         List<BlockRecord> list = new ArrayList<BlockRecord>();
-        long validFrom = Time.getMidnightTimestamp(date.getTime()) / 1000;
-        Debug.log("- validFrom: " + new Date(validFrom * 1000));
-        long validTo = validFrom + Time.SECONDS_PER_DAY;
-        Debug.log("- validTo  : " + new Date(validTo * 1000));
 
         for (Block b : blocks) {
             BlockRecord br = new BlockRecord();
 
             br.id = b.id;
-            br.agencyId = agencyID;
-            br.validFrom = validFrom;
-            br.validTo = validTo;
             br.vehicleId = "";
 
             for (String tripID : b.tripIDs) {

@@ -207,7 +207,7 @@ function handleKey(id) {
         localStorage.setItem("app-data", value);
         completeInitialization(parseAgencyData(value));
     } else if (id === 'key-deploy-tomorrow' || id == 'key-deploy-today') {
-        var blockData = [];
+        var blockData = {};
 
         var fromDate = new Date();
 
@@ -233,10 +233,7 @@ function handleKey(id) {
                 var data = {};
 
                 data['id'] = id;
-                data['agency_id'] = agencyID;
                 data['vehicle_id'] = vid;
-                data['valid_from'] = util.millisToSeconds(fromDate.getTime());
-                data['valid_to'] = util.millisToSeconds(toDate.getTime());
                 data['trips'] = block.trips;
 
                 blockData.push(data);
@@ -245,7 +242,9 @@ function handleKey(id) {
 
         var data = {
             'agency_id': agencyID,
-            'block_data': blockData
+            'valid_from': fromDate,
+            'valid_to': toDate,
+            'blocks': blockData
         };
         util.log('- data: ' + JSON.stringify(data));
 
