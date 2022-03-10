@@ -10,6 +10,7 @@ import gtfu.HTTPClient;
 
 /**
  * Interact with Sendgrid
+ * @see <a href="http://sendgrid.com">http://sendgrid.com</a>
  */
 public class SendGrid {
     private String[] tos;
