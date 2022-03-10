@@ -14,13 +14,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Creates PR's to update each active agency's trip-names.json file, if needed.
+ */
 public class UpdateTripNames {
 
+    /**
+     * Runs UpdateTripNames for a single agency
+     * @param agencyID The agencyiD
+     */
     public static void UpdateTripNames(String agencyID) throws Exception {
         String[] agencyIDList = {agencyID};
         UpdateTripNames(agencyIDList);
     }
 
+    /**
+     * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, compares the new trip with the old one, and creates a PR if the new one differs.
+     * @param agencyIDList A list of agencyIDs
+     */
     public static void UpdateTripNames(String[] agencyIDList) throws Exception {
         GitHubUtil gh = new GitHubUtil();
         AgencyYML yml = new AgencyYML();
@@ -54,7 +65,7 @@ public class UpdateTripNames {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 String utf8 = StandardCharsets.UTF_8.name();
                 try (PrintStream ps = new PrintStream(baos, true, utf8)) {
-                    TripListGenerator.generateTripList(agencyID, null, ps);
+                    TripListGenerator.generateTripList(agencyID, null, ps, false);
                 }
                 byte[] newFile = baos.toByteArray();
 
@@ -93,6 +104,9 @@ public class UpdateTripNames {
         System.exit(1);
     }
 
+    /**
+     * Runs UpdateTripNames from the command line
+     */
     public static void main(String[] arg) throws Exception {
         String url = null;
         String agencyID = null;;
