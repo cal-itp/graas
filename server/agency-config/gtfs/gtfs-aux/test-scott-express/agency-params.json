@@ -4,5 +4,5 @@
 "max-feet-from-stop": 4239840,
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
-"use-patrol-mode": true
+"use-patrol-mode": false
 }
