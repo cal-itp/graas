@@ -8,17 +8,28 @@ import gtfu.Debug;
 import gtfu.HTTPUtil;
 import gtfu.HTTPClient;
 
+/**
+ * Interact with Sendgrid
+ * @see <a href="http://sendgrid.com">http://sendgrid.com</a>
+ */
 public class SendGrid {
     private String[] tos;
     private String subject;
     private String body;
-    private Map<String, byte[]> imageMap;
+    private Map<String, byte[]> fileMap;
 
-    public SendGrid(String[] recipients, String emailSubject, String body, Map<String, byte[]> imageMap) {
+    /**
+     * Initialize Sendgrid connection
+     * @param recipients    Array of recipient email addresses
+     * @param emailSubject  Email subject text
+     * @param body          Email body text
+     * @param fileMap       Map, mapping filenames to file byte arrays
+     */
+    public SendGrid(String[] recipients, String emailSubject, String body, Map<String, byte[]> fileMap) {
         this.tos = recipients;
         this.subject = emailSubject;
         this.body = escape(body);
-        this.imageMap = imageMap;
+        this.fileMap = fileMap;
     }
 
     private String escape(String s) {
@@ -54,8 +65,8 @@ public class SendGrid {
     private String makeAttachments() {
         StringBuffer sb = new StringBuffer();
 
-        for (String key : imageMap.keySet()) {
-            byte[] buf = imageMap.get(key);
+        for (String key : fileMap.keySet()) {
+            byte[] buf = fileMap.get(key);
 
             if (sb.length() > 0) {
                 sb.append(',');
@@ -72,10 +83,14 @@ public class SendGrid {
         return sb.toString();
     }
 
+    /**
+     * Send the email
+     * @return Sendgrid API response code
+     */
     public int send() {
         String attach = "";
-        if(imageMap != null){
-            if (imageMap.size() > 0) {
+        if(fileMap != null){
+            if (fileMap.size() > 0) {
                 attach = String.format(",\"attachments\": [%s]", makeAttachments());
             } else{
                 body = "There are no images attached";

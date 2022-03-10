@@ -9,7 +9,9 @@ import org.json.simple.*;
 import org.json.simple.parser.*;
 import java.nio.file.*;
 
-// Leverage MobilityData's gtfs-validator tool to detect issues in agency GTFS feeds
+/**
+* Leverage MobilityData's gtfs-validator tool to detect issues in agency GTFS feeds
+*/
 public class GTFSValidator {
 
     private static void usage() {
@@ -17,6 +19,9 @@ public class GTFSValidator {
         System.exit(0);
     }
 
+    /**
+    * Run the valdiator on a URL provided from the command line
+    */
     public static void main(String[] arg) throws Exception {
         if (arg.length != 1) {
             usage();
@@ -25,6 +30,12 @@ public class GTFSValidator {
         int errors = countErrors(gtfsURL, "src/main/resources/conf/output");
     }
 
+    /**
+    * Run the validator for the provided static GTFS url, and return the # of errors.
+    * @param gtfsURL    Agency's static GTFS url
+    * @param reportDir  Directory for summary report should be saved
+    * @return           Total # of errors
+    */
     public static int countErrors(String gtfsURL, String reportDir) throws Exception {
 
         String reportPath = reportDir + "/report.json";

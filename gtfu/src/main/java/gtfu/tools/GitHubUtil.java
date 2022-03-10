@@ -20,6 +20,9 @@ import org.kohsuke.github.GHContentBuilder;
 
 import java.util.Date;
 
+/**
+* Interact with Github
+*/
 public class GitHubUtil {
     private static final String GH_ACCESS_TOKEN = System.getenv("GH_ACCESS_TOKEN");
     private static final String GH_ORG_NAME = "cal-itp";
@@ -28,6 +31,9 @@ public class GitHubUtil {
     private String mainBranchHash;
     private GHRepository repo;
 
+    /**
+    * Initial setup
+    */
     public GitHubUtil() throws Exception {
         GitHub github = new GitHubBuilder().withOAuthToken(GH_ACCESS_TOKEN, GH_ORG_NAME).build();
         repo = github.getRepository(GH_ORG_NAME + "/" + PROJECT_NAME);
@@ -35,6 +41,11 @@ public class GitHubUtil {
         mainBranchHash = main.getSHA1();
     }
 
+    /**
+    * Return the latest commit timestamp in milliseconds for a provided file
+    * @param fileName   file name including full path
+    * @return           timestmap millis for the latest commit
+    */
     public long getLatestCommitMillis(String fileName) throws Exception {
 
         GHCommitQueryBuilder queryBuilder = repo.queryCommits().from(mainBranchHash).path(fileName);
@@ -78,12 +89,18 @@ public class GitHubUtil {
         GHPullRequest pr = repo.createPullRequest(title, branchName, MAIN_BRANCH_NAME, description);
     }
 
+    /**
+    * Create a commit and PR, with the provided file and paramaters
+    * Currently this function can only create/update a single file
+    * @param title          Title for the PR
+    * @param description    Description for the PR
+    * @param path           Path for the file to be updated/created.
+    * @param file           Byte array representation of file
+    * @param message        Commit message
+    * @param branchName     Name for new branch
+    */
     public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
         createCommit(branchName, message, path, file);
         createPR(title, branchName, description);
-    }
-
-    public static void main(String[] arg) throws Exception {
-        GitHubUtil gh = new GitHubUtil();
     }
 }

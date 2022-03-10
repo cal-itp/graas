@@ -10,13 +10,20 @@ import java.util.ArrayList;
 import java.util.List;
 import gtfu.*;
 
-// slice a log file by agency and days. Input is a log file that may have logs for multiple agencies and days.
-// The tool will generate a separate log file for each agency and day. Output files will be named <agency-id>-yyyy-mm-dd.txt
+/**
+* Slice a log file by agency and days. Input is a log file that may have logs for multiple agencies and days.
+* The tool will generate a separate log file for each agency and day. Output files will be named <agency-id>-yyyy-mm-dd.txt
+*/
 public class GPSLogSlicer {
     private static final String[] WEEKDAYS = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
 
     private Map<String, List<String>> logs;
 
+    /**
+     * Generate one log file per agency per day, stored in the map called "logs"
+     * @param input Input log file, continaing logs for multiple agencies and days
+     * @param path  Path where logfiles should be saved
+    */
     public GPSLogSlicer(List<String> input, String path) {
         logs = new HashMap<String, List<String>>();
 
@@ -70,6 +77,10 @@ public class GPSLogSlicer {
         }
     }
 
+    /**
+     * Returns the logs map
+     * @return logs object, mapping each agency/date combo to a logs file
+    */
     public Map<String, List<String>> getLogs() {
         return logs;
     }
@@ -79,7 +90,6 @@ public class GPSLogSlicer {
         return path + agencyID + "-" + sdf.format(new Date(millis)) + ".txt";
     }
 
-    //private static void writeLog(String path, String agencyID, int timestamp, List<String> lines) throws Exception {
     private static void writeLog(String filename, List<String> lines) throws Exception {
         if (lines.size() < 100) {
             //System.out.println("* day has very few entries for agency " + agencyID + ", ignoring...");
@@ -102,6 +112,9 @@ public class GPSLogSlicer {
         System.exit(0);
     }
 
+    /**
+     * Run GPSLogSlicer from the command line, passing the logs file as an argument
+    */
     public static void main(String[] arg) throws Exception {
         if (arg.length < 1) usage();
 
