@@ -1013,7 +1013,6 @@ function gotConfigData(data, agencyID, arg) {
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
-
     } else if (name === CONFIG_DRIVER_NAMES) {
         driverList = data;
         if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
