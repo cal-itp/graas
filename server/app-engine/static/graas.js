@@ -30,7 +30,7 @@ var startLon = null;
 var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
-var usePatrolMode = false;
+var useSimpleMode = false;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -50,7 +50,7 @@ var vehicleIDCookie = null;
 const MSG_NO = 'msg_no';
 const MAX_AGE_SECS = 10 * 60 * 60 * 24 * 365;
 const MAX_LIFE_MILLIS = 1000 * 60 * 60 * 24 * 7;
-const MAX_VEHICLE_ID_AGE_SECS = 60 * 60 * 8;
+const MAX_VEHICLE_ID_AGE_SECS = 60 * 60 * 4;
 
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
@@ -75,6 +75,8 @@ const TRIP_STATS_ELEMENT = "stats";
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
 const MILLIS_PER_MINUTE = 1000 * 60;
+
+const GRAY_HEX = "#cccccc";
 
 function isObject(obj) {
     return typeof obj === 'object' && obj !== null
@@ -386,6 +388,10 @@ function handleStartStop() {
         hideElement(ALL_DROPDOWNS);
         showElement(LOADING_TEXT_ELEMENT);
 
+        configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
+        configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
+        configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
+
         vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
 
         if(vehicleIDCookie){
@@ -394,7 +400,7 @@ function handleStartStop() {
             handleBusChoice();
         }
 
-        if(!usePatrolMode){
+        if(!useSimpleMode){
             // Only load trips again if they were last loaded more than a minute ago
             if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
                 populateTripList();
@@ -412,11 +418,7 @@ function handleStartStop() {
             return;
         }
         var p = document.getElementById(START_STOP_BUTTON);
-        p.style.background = "#cccccc";
-
-        configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
-        configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
-        configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
+        p.style.background = GRAY_HEX;
     }
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
     else {
@@ -429,7 +431,7 @@ function handleStartStop() {
 
         p = document.getElementById('okay');
         p.disabled = 'true';
-        p.style.background = "#cccccc";
+        p.style.background = GRAY_HEX;
 
         p = document.getElementById(START_STOP_BUTTON);
         p.textContent = START_STOP_BUTTON_LOAD_TEXT;
@@ -492,13 +494,10 @@ function handleOkay() {
     var p = document.getElementById(BUS_SELECT_DROPDOWN);
     vehicleID = p.value
 
-    // Save vehicleID as a cookie only if it is a newly selected one
-    if(!vehicleIDCookie){
-        document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
-    }
+    document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
     util.log("- vehicleID: " + vehicleID);
 
-    if(!usePatrolMode){
+    if(!useSimpleMode){
         p = document.getElementById(TRIP_SELECT_DROPDOWN);
         var entry = tripIDLookup[p.value];
 
@@ -860,7 +859,7 @@ function handleGPSUpdate(position) {
     data['vehicle-id'] = vehicleID;
     data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
-    data['use-patrol-mode'] = usePatrolMode;
+    data['use-simple-mode'] = useSimpleMode;
 
     if (driverName) {
         data['driver-name'] = driverName;
@@ -994,17 +993,17 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            if(data["use-patrol-mode"] != null){
-                usePatrolMode = data["use-patrol-mode"];
+            if(data["use-simple-mode"] != null){
+                useSimpleMode = data["use-simple-mode"];
             }
-            // util.log(`- usePatrolMode: ${usePatrolMode}`);
+            // util.log(`- useSimpleMode: ${useSimpleMode}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
-        if (usePatrolMode){
+        if (useSimpleMode){
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
             hideElement(TRIP_SELECT_DROPDOWN);
         } else {
