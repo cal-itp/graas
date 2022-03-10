@@ -31,7 +31,7 @@ var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
 
-// Default filter parameters, used when agency doesn't have a filter-config.json file
+// Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
 var isFilterByDayOfWeek = true;
 var maxFeetFromStop = 1320;
@@ -54,7 +54,7 @@ const PEM_FOOTER = "-----END TOKEN-----";
 const CONFIG_TRIP_NAMES = "trip names";
 const CONFIG_VEHICLE_IDS = "vehicle IDs";
 const CONFIG_DRIVER_NAMES = "driver names";
-const CONFIG_FILTER_PARAMS = "filter params";
+const CONFIG_AGENCY_PARAMS = "agency params";
 const START_STOP_BUTTON = "start-stop";
 const START_STOP_BUTTON_LOAD_TEXT = "Load trips"
 const START_STOP_BUTTON_STOP_TEXT = "Stop"
@@ -960,8 +960,8 @@ function gotConfigData(data, agencyID, arg) {
 
     name = configMatrix.getNextToLoad().name;
     util.log("- name: " + name);
-    if (name === CONFIG_FILTER_PARAMS) {
-        configMatrix.setSelected(CONFIG_FILTER_PARAMS, true);
+    if (name === CONFIG_AGENCY_PARAMS) {
+        configMatrix.setSelected(CONFIG_AGENCY_PARAMS, true);
         if (data != null) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
@@ -1203,7 +1203,7 @@ configMatrix = new ConfigMatrix();
 // The below files will be processed in the order they appear here. It's important that filter-params goes before trip-names
 configMatrix.addRow(CONFIG_VEHICLE_IDS, "vehicle-ids.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_DRIVER_NAMES, "driver-names.json", ConfigMatrix.UNKNOWN);
-configMatrix.addRow(CONFIG_FILTER_PARAMS, "filter-params.json", ConfigMatrix.UNKNOWN);
+configMatrix.addRow(CONFIG_AGENCY_PARAMS, "agency-params.json", ConfigMatrix.UNKNOWN);
 configMatrix.addRow(CONFIG_TRIP_NAMES, "trip-names.json", ConfigMatrix.PRESENT);
 countFiles = configMatrix.countRows();
 
