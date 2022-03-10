@@ -207,7 +207,7 @@ function handleKey(id) {
         localStorage.setItem("app-data", value);
         completeInitialization(parseAgencyData(value));
     } else if (id === 'key-deploy-tomorrow' || id == 'key-deploy-today') {
-        var blockData = {};
+        var blockData = [];
 
         var fromDate = new Date();
 
@@ -242,13 +242,13 @@ function handleKey(id) {
 
         var data = {
             'agency_id': agencyID,
-            'valid_from': fromDate,
-            'valid_to': toDate,
+            'valid_from': Math.floor(fromDate.getTime() / 1000),
+            'valid_to': Math.floor(toDate.getTime() / 1000),
             'blocks': blockData
         };
         util.log('- data: ' + JSON.stringify(data));
 
-        var json = util.getJSONResponse('/block-data-update', data, signatureKey);
+        var json = util.getJSONResponse('/block-collection', data, signatureKey);
         util.log('- json: ' + JSON.stringify(json));
     }
 }

@@ -209,7 +209,13 @@ public class Trip implements Serializable {
         return milliList.get(index);
     }
 
-    // return duration in seconds
+    public int getDurationInSeconds() {
+        int start = milliList.get(0).intValue() / 1000;
+        int end = milliList.get(milliList.size() - 1).intValue() / 1000;
+
+        return end - start;
+    }
+
     public int getDuration() {
         return (milliList.get(milliList.size() - 1).intValue() - milliList.get(0).intValue()) / 1000 / accelerator;
     }

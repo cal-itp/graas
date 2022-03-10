@@ -38,7 +38,7 @@ public class BlockDataGenerator {
 
                 tr.id = tripID;
                 tr.startTime = trip.getStartTime();
-                tr.endTime = tr.startTime + trip.getDuration();
+                tr.endTime = tr.startTime + trip.getDurationInSeconds();
 
                 br.add(tr);
             }

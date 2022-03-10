@@ -96,6 +96,13 @@ def verify_signature(agency_id, data, signature):
 def get_current_time_millis():
     return int(round(time.time() * 1000))
 
+def get_epoch_seconds():
+    return int(time.time())
+
+def get_midnight_seconds(epoch_seconds):
+    now = datetime.fromtimestamp(epoch_seconds)
+    return int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+
 def get_seconds_since_midnight(seconds = None):
     if seconds is None:
         now = datetime.now()

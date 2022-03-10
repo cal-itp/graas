@@ -272,22 +272,22 @@ def verify_request(request, cmd):
         'verified': True
     }
 
-@app.route('/block-data-update', methods=['POST'])
-def block_data_update():
+@app.route('/block-collection', methods=['POST'])
+def block_collection():
     print('/new-pos-sig')
 
-    result = verify_request(request, 'block-update')
+    result = verify_request(request, 'block-collection')
     if not result['verified']:
         return result['response']
 
     data = request.json['data']
 
-    gtfsrt.handle_block_update(
+    gtfsrt.handle_block_collection(
         util.datastore_client,
         data
     )
 
-    return Response('{"command": "block-update", "status": "ok"}', mimetype='application/json')
+    return Response('{"command": "block-collection", "status": "ok"}', mimetype='application/json')
 
 @app.route('/new-pos-sig', methods=['POST'])
 def new_pos_sig():

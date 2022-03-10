@@ -6,7 +6,8 @@ import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
 MAX_BLOCK_STALE_MILLIS = 60 * 1000
-WEEK_SECONDS = 7 * 24 * 60 * 60
+WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000
+DAY_SECONDS = 24 * 60 * 60
 
 last_alert_purge = 0
 block_map = {}
@@ -260,67 +261,95 @@ def add_position(datastore_client, pos):
     entity.update(pos)
     datastore_client.put(entity)
 
-"""
-entities:
-- 'block-list':
-  + data (JSON string of list of blocks, each with a block ID, vehicle ID and list of trips, each with trip ID, start and end time)
-- 'block-metadata':
-  + written timestamp
-  + valid-from timestamp
-  + valid-to timestamp
-  + agency ID
-  + block_entity_key
+def load_block_collection(datastore_client, block_metadata):
+    global block_map
 
-internal block assignment table:
-- map of agency ID to 'block-collection'
-- block-collection:
-  + valid-from timestamp
-  + valid-to timestamp
-  + refresh timestamp
-  + map of vehicle ID to 'block'
-- block:
-  + block id
-  + vehicle id
-  + list of 'trip' items
-- trip:
-  + trip ID
-  + start
-  + stop
-"""
-def load_block_collection(datastore_client, block_entity_key):
-    """
-    - load 'block-list' entity using metadata's 'block_entity_key' field
-    - create block_collection instance from 'block-list' data
-    - block_collection = {}
-    - set validity period and refresh timestamp (be sure timestamps are ints, not strings)
-    - block_collection['blocks'] = {}
-    - block_list = JSON.parse('block-list' data)
-    - for b in block_list:
-    -   block = {b.blockID, b.vehicleID, b.trips}
-    -   block_collection['blocks'][b.vehicleID] = block
-    - block_collection.last_refresh = int(time.time()))
-    - block_map['agency_id'] = block_collection
-    """
+    print(f'load_block_collection()')
+    print(f'- block_metadata: {block_metadata}')
+
+    if block_metadata is None:
+        print(f'* block meta data is \'None\'')
+        return
+
+    block_list = datastore_client.get(block_metadata['block_list_key'])
+    print(f'- block_list: {block_list}')
+    agency_id = block_metadata['agency_id']
+    print(f'- agency_id: {agency_id}')
+
+    if block_list is None:
+        print(f'* no block list for entity key \'{block_metadata["block_list_key"]}\'')
+        return
+
+    map = {}
+
+    block_collection = {
+        'agency_id': agency_id,
+        'valid_from': block_metadata['valid_from'],
+        'valid_to': block_metadata['valid_to'],
+        'last_refresh': util.get_current_time_millis(),
+        'blocks': map
+    }
+
+    blocks = json.loads(block_list['data'])
+    print(f'- blocks: {blocks}')
+
+    for b in blocks:
+        print(f'-- b: {b}')
+        map[b['vehicle_id']] = b
+
+    print(f'- block_collection: {block_collection}')
+
+    block_map[agency_id] = block_collection
+    print(f'- block_map: {block_map}')
+
+def load_block_metadata(datastore_client, agency_id):
+    print(f'load_block_metadata()')
+    print(f'- agency_id: {agency_id}')
+
+    midnight_from = util.get_midnight_seconds(util.get_epoch_seconds())
+    print(f'- midnight_from: {midnight_from}')
+    midnight_to = midnight_from + DAY_SECONDS
+    print(f'- midnight_to: {midnight_to}')
+
+    query = datastore_client.query(kind="block-metadata")
+    query.add_filter("agency_id", "=", agency_id)
+    query.add_filter("valid_from", "=", midnight_from)
+    query.add_filter("valid_to", "=", midnight_to)
+    query.order = ["-created"]
+
+    results = list(query.fetch(limit=1))
+    print(f'- results: {results}')
+
+    if len(results) == 0:
+        print(f'* no matching block metadata for agency \'{agency_id}\' valid from {midnight_from} to {midnight_to}')
+        return None
+
+    return results[0]
 
 def get_trip_id(datastore_client, agency_id, vehicle_id):
-    block_collection = block_map.get(agency_id, None)
-    timestamp = int(time.time())
+    print(f'get_trip_id()')
+    print(f'- agency_id: {agency_id}')
+    print(f'- vehicle_id: {vehicle_id}')
 
-    if block_collection is None or timestamp < block_collection.valid_from or timestamp >= block_collection.valid_to:
-        """
-        - get most recent 'block-metadata' entry with agency ID 'agency_id' and todays validity period
-        - if no results, log an error and return
-        - load_block_collection(results[0].block_entity_key)
-        """
+    block_collection = block_map.get(agency_id, None)
+    print(f'- block_collection: {block_collection}')
+    now = util.get_current_time_millis()
+    timestamp = util.get_epoch_seconds()
+
+    if block_collection is None or timestamp < block_collection['valid_from'] or timestamp >= block_collection['valid_to']:
+        print(f'+ block collection not found or mismatched validity period, reloading from DB')
+        block_metadata = load_block_metadata(datastore_client, agency_id)
+        load_block_collection(datastore_client, block_metadata)
         block_collection = block_map.get(agency_id, None)
-    else if timestamp - block_collection.last_refresh >= MAX_BLOCK_STALE_MILLIS:
-        """
-        - get list of 'block-metadata' entities with agency ID == agency_id and today's validity period, sorted descending by written timestamp
-        - if list is empty, log an error
-        - if timestamp of first entity in list is newer than block_collection.last_refresh:
-        -   load_block_collection(results[0].block_entity_key)
-        """
-        block_collection = block_map.get(agency_id, None)
+    elif block_collection is not None and now - block_collection['last_refresh'] >= MAX_BLOCK_STALE_MILLIS:
+        print(f'+ block collection may be stale, reloading block metadata from DB')
+        block_metadata = load_block_metadata(datastore_client, agency_id)
+        print(f'- block_metadata["created"]       : {block_metadata["created"]}')
+        print(f'- block_collection["last_refresh"]: {block_collection["last_refresh"]}')
+        if block_metadata['created'] > block_collection['last_refresh']:
+            print(f'+ block collection IS stale, reloading from DB')
+            load_block_collection(datastore_client, block_metadata)
+            block_collection = block_map.get(agency_id, None)
 
     if block_collection is None:
         print(f'* no block collection found for agency {agency_id}')
@@ -333,61 +362,19 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
 
     day_seconds = util.get_seconds_since_midnight()
     for trip in block['trips']:
+        print(f'++++++++++++++++++++++++++++')
+        print(f'++ secs : {day_seconds}')
+        print(f'++ start: {trip["start_time"]}')
+        print(f'++ end  : {trip["end_time"]}')
         if day_seconds >= trip['start_time'] and day_seconds < trip['end_time']:
             return trip['id']
 
     return None
 
-"""
-def get_trip_id_bak(datastore_client, agency_id, vehicle_id):
-    if agency_id is None or vehicle_id is None:
-        return None
+def handle_block_collection(datastore_client, data):
+    print(f'handle_block_collection()')
+    print(f'- data: {data}')
 
-    now = util.get_current_time_millis()
-    if now - last_assignment_refresh >= MAX_BLOCK_STALE_MILLIS:
-        #- get 'timestamp' kind with name 'last-assignment-update-' + <agency_id>
-        #- check if newer than 'last_assignment_update' server attribute
-        #- if so, reload cache
-#
-        #OR
-#
-        #- include 'updated' timestamp in all 'assignment' records
-        #- add query filter for updated > last_assignment_update
-
-        query = datastore_client.query(kind="assignment")
-        query.add_filter("agency_id", "=", agency_id)
-
-        assignments = list(query.fetch())
-
-        for a in assignments:
-            vid = a.get('vehicle_id', None)
-            tid = a.get('trip_id', None)
-
-            if vid is None or tid is None:
-                continue
-
-            key = agency_id + '-' + vid
-            assigment_map[key] = tid
-
-        last_assignment_refresh = util.get_current_time_millis()
-
-    key = agency_id + '-' + vehicle_id
-    return assigment_map.get(key, None)
-"""
-
-"""
-- agency_id
-- valid_from
-- valid_to
-- blocks
-  + id
-  + vehicle_id
-  + trips:
-    . id
-    .start_time
-    . end_time
-"""
-def handle_block_update(datastore_client, data):
     now = util.get_current_time_millis()
     agency_id = data.get('agency_id', None)
     valid_from = data.get('valid_from', None)
@@ -410,78 +397,39 @@ def handle_block_update(datastore_client, data):
         print(f'* block collection is missing \'blocks\' field')
         return
 
-    """
-    ### TODO: update to match current concepts
-
-    - 'block-list':
-      + JSON string of list of blocks, each with a block ID, vehicle ID and list of trips, each with trip ID, start and end time
-    - 'block-metadata':
-      + written timestamp
-      + valid-from timestamp
-      + valid-to timestamp
-      + agency ID
-      + 'block' entity key
-
-    - write 'block-list' entity
-    - write 'block-metadata' entity with 'block' entity key
-    - query for 'block-metadata' entries older than a week
-    - delete each result and entity associated with 'block' entity key
-    """
-
-    block_update = {
-        'agency_id': agency_id,
-        'data': data,
-        'timestamp': now
+    block_list = {
+        'data': json.dumps(blocks)
     }
+    print(f'- block_list: {block_list}')
 
-    entity = datastore.Entity(key=datastore_client.key('block-update'))
-    entity.update(block_update)
+    entity = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
+    entity.update(block_list)
     datastore_client.put(entity)
 
-    query = datastore_client.query(kind="block-update")
-    query.add_filter("agency_id", "=", agency_id)
-    query.add_filter("timestamp", "<", now)
+    block_metadata = {
+        'created': now,
+        'agency_id': agency_id,
+        'valid_from': valid_from,
+        'valid_to': valid_to,
+        'block_list_key': entity.key,
+    }
+    print(f'- block_metadata: {block_metadata}')
 
-    updates = list(query.fetch())
+    entity = datastore.Entity(key=datastore_client.key('block-metadata'))
+    entity.update(block_metadata)
+    datastore_client.put(entity)
+
+    query = datastore_client.query(kind="block-metadata")
+    query.add_filter("created", "<", now - WEEK_MILLIS)
+
+    results = list(query.fetch())
     keys = []
 
-    for u in updates:
-        keys.append(u.key)
+    for r in results:
+        keys.append(r.key)
+        keys.append(r['block_list_key'])
 
-    datastore_client.delete_multi(keys)
-
-    entities = []
-    keys = []
-
-    for b in blocks:
-        block = {
-            'id': b['id'],
-            'agency_id': agency_id,
-            # 'trips': json.dumps(b['trips'],separators=(',',':')),
-            'trips': b['trips'],
-            'vehicle_id': b['vehicle_id'],
-            'valid_from': b['valid_from'],
-            'valid_to': b['valid_to'],
-            'timestamp': now
-        }
-
-        # print(f'-- block: {block}')
-
-        entity = datastore.Entity(key=datastore_client.key('block'))
-        entity.update(block)
-        entities.append(entity)
-
-        query = datastore_client.query(kind="block")
-        query.add_filter("id", "=", b['id'])
-        query.add_filter("valid_from", "=", b['valid_from'])
-        query.add_filter("valid_to", "=", b['valid_to'])
-
-        blist = list(query.fetch())
-
-        for bb in blist:
-            keys.append(bb.key)
-
-    datastore_client.put_multi(entities)
+    print(f'- keys: {keys}')
     datastore_client.delete_multi(keys)
 
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
@@ -490,9 +438,10 @@ def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock
     if data.get('trip_id', None) is None:
         trip_id = get_trip_id(
             datastore_client,
-            data.get('agency_id', None),
-            data.get('vehicle_id', None)
+            data.get('agency-id', None),
+            data.get('vehicle-id', None)
         )
+        print(f'- trip_id: {trip_id}')
 
         if trip_id is None:
             return
