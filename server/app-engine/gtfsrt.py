@@ -476,6 +476,7 @@ def handle_block_collection(datastore_client, data):
     for r in results:
         keys.append(r.key)
         keys.append(r['block_list_key'])
+        keys.append(r['assignment_summary_key'])
 
     print(f'- keys: {keys}')
     datastore_client.delete_multi(keys)
