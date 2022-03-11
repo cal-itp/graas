@@ -30,7 +30,7 @@ var startLon = null;
 var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
-var useSimpleMode = false;
+var useBulkAssignmentMode = false;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -400,7 +400,7 @@ function handleStartStop() {
             handleBusChoice();
         }
 
-        if(!useSimpleMode){
+        if(!useBulkAssignmentMode){
             // Only load trips again if they were last loaded more than a minute ago
             if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
                 populateTripList();
@@ -497,7 +497,7 @@ function handleOkay() {
     document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
     util.log("- vehicleID: " + vehicleID);
 
-    if(!useSimpleMode){
+    if(!useBulkAssignmentMode){
         p = document.getElementById(TRIP_SELECT_DROPDOWN);
         var entry = tripIDLookup[p.value];
 
@@ -518,6 +518,10 @@ function handleOkay() {
 
     var p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
+
+    var p = document.getElementById('trip-assignment-mode');
+    var tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
+    p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
     hideElement(ALL_DROPDOWNS);
     showElement(TRIP_STATS_ELEMENT);
@@ -859,7 +863,7 @@ function handleGPSUpdate(position) {
     data['vehicle-id'] = vehicleID;
     data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
-    data['use-simple-mode'] = useSimpleMode;
+    data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
 
     if (driverName) {
         data['driver-name'] = driverName;
@@ -993,17 +997,17 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            if(data["use-simple-mode"] != null){
-                useSimpleMode = data["use-simple-mode"];
+            if(data["use-bulk-assignment-mode"] != null){
+                useBulkAssignmentMode = data["use-bulk-assignment-mode"];
             }
-            // util.log(`- useSimpleMode: ${useSimpleMode}`);
+            // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
-        if (useSimpleMode){
+        if (useBulkAssignmentMode){
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
             hideElement(TRIP_SELECT_DROPDOWN);
         } else {
