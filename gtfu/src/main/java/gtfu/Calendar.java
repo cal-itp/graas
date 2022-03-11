@@ -1,5 +1,7 @@
 package gtfu;
 
+import java.util.Date;
+
 public class Calendar {
     public static final int MONDAY    = java.util.Calendar.MONDAY;
     public static final int TUESDAY   = java.util.Calendar.TUESDAY;
@@ -13,9 +15,14 @@ public class Calendar {
 
     private String serviceID;
     private int days[];
+    private long startMillis;
+    private long endMillis;
 
-    public Calendar(String serviceID, int monday, int tuesday, int wednesday, int thursday, int friday, int saturday, int sunday) {
+    public Calendar(String serviceID, int monday, int tuesday, int wednesday, int thursday, int friday, int saturday, int sunday, long startMillis, long endMillis) {
         this.serviceID = serviceID;
+        this.startMillis = startMillis;
+        this.endMillis = endMillis;
+
         days = new int[8];
 
         days[MONDAY] = monday;
@@ -25,6 +32,19 @@ public class Calendar {
         days[FRIDAY] = friday;
         days[SATURDAY] = saturday;
         days[SUNDAY] = sunday;
+    }
+
+    boolean isActiveForDate(Date date) {
+        long millis = date.getTime();
+
+        if (millis < startMillis || millis >= endMillis) {
+            return false;
+        }
+
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(date);
+
+        return isActiveForDay(cal.get(cal.DAY_OF_WEEK));
     }
 
     boolean isActiveForDay(int dow) {

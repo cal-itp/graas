@@ -1,0 +1,504 @@
+[ {
+  "id" : "65",
+  "trips" : [ {
+    "id" : "G_20_outbound_0900",
+    "start_time" : 32400,
+    "end_time" : 33000
+  }, {
+    "id" : "G_20_outbound_1000",
+    "start_time" : 36000,
+    "end_time" : 36600
+  }, {
+    "id" : "G_20_outbound_1100",
+    "start_time" : 39600,
+    "end_time" : 40200
+  }, {
+    "id" : "G_20_outbound_1200",
+    "start_time" : 43200,
+    "end_time" : 43800
+  }, {
+    "id" : "G_20_outbound_1310",
+    "start_time" : 47400,
+    "end_time" : 48000
+  }, {
+    "id" : "G_20_outbound_1410",
+    "start_time" : 51000,
+    "end_time" : 51600
+  }, {
+    "id" : "G_20_outbound_1510",
+    "start_time" : 54600,
+    "end_time" : 55200
+  }, {
+    "id" : "G_20_outbound_1610",
+    "start_time" : 58200,
+    "end_time" : 58800
+  }, {
+    "id" : "G_20_outbound_1710",
+    "start_time" : 61800,
+    "end_time" : 62400
+  }, {
+    "id" : "G_20_outbound_1810",
+    "start_time" : 65400,
+    "end_time" : 66000
+  }, {
+    "id" : "G_20_inbound_0930",
+    "start_time" : 33000,
+    "end_time" : 34200
+  }, {
+    "id" : "G_20_inbound_1030",
+    "start_time" : 36600,
+    "end_time" : 37800
+  }, {
+    "id" : "G_20_inbound_1130",
+    "start_time" : 40200,
+    "end_time" : 41400
+  }, {
+    "id" : "G_20_inbound_1230",
+    "start_time" : 43800,
+    "end_time" : 45000
+  }, {
+    "id" : "G_20_inbound_1340",
+    "start_time" : 48000,
+    "end_time" : 49200
+  }, {
+    "id" : "G_20_inbound_1440",
+    "start_time" : 51600,
+    "end_time" : 52800
+  }, {
+    "id" : "G_20_inbound_1540",
+    "start_time" : 55200,
+    "end_time" : 56400
+  }, {
+    "id" : "G_20_inbound_1640",
+    "start_time" : 58800,
+    "end_time" : 60000
+  }, {
+    "id" : "G_20_inbound_1740",
+    "start_time" : 62400,
+    "end_time" : 63600
+  }, {
+    "id" : "G_20_inbound_1840",
+    "start_time" : 66000,
+    "end_time" : 67200
+  }, {
+    "id" : "V_20_outbound_0930",
+    "start_time" : 34200,
+    "end_time" : 34620
+  }, {
+    "id" : "V_20_outbound_1030",
+    "start_time" : 37800,
+    "end_time" : 38220
+  }, {
+    "id" : "V_20_outbound_1130",
+    "start_time" : 41400,
+    "end_time" : 41820
+  }, {
+    "id" : "V_20_outbound_1240",
+    "start_time" : 45600,
+    "end_time" : 46020
+  }, {
+    "id" : "V_20_outbound_1340",
+    "start_time" : 49200,
+    "end_time" : 49620
+  }, {
+    "id" : "V_20_outbound_1440",
+    "start_time" : 52800,
+    "end_time" : 53220
+  }, {
+    "id" : "V_20_outbound_1540",
+    "start_time" : 56400,
+    "end_time" : 56820
+  }, {
+    "id" : "V_20_outbound_1640",
+    "start_time" : 60000,
+    "end_time" : 60420
+  }, {
+    "id" : "V_20_outbound_1740",
+    "start_time" : 63600,
+    "end_time" : 64020
+  }, {
+    "id" : "V_20_outbound_1840",
+    "start_time" : 67200,
+    "end_time" : 67620
+  }, {
+    "id" : "V_20_inbound_0950",
+    "start_time" : 34620,
+    "end_time" : 35400
+  }, {
+    "id" : "V_20_inbound_1050",
+    "start_time" : 38220,
+    "end_time" : 39000
+  }, {
+    "id" : "V_20_inbound_1150",
+    "start_time" : 41820,
+    "end_time" : 42600
+  }, {
+    "id" : "V_20_inbound_1300",
+    "start_time" : 46020,
+    "end_time" : 46800
+  }, {
+    "id" : "V_20_inbound_1400",
+    "start_time" : 49620,
+    "end_time" : 50400
+  }, {
+    "id" : "V_20_inbound_1500",
+    "start_time" : 53220,
+    "end_time" : 54000
+  }, {
+    "id" : "V_20_inbound_1600",
+    "start_time" : 56820,
+    "end_time" : 57600
+  }, {
+    "id" : "V_20_inbound_1700",
+    "start_time" : 60420,
+    "end_time" : 61200
+  }, {
+    "id" : "V_20_inbound_1800",
+    "start_time" : 64020,
+    "end_time" : 64800
+  }, {
+    "id" : "V_20_inbound_1900",
+    "start_time" : 67620,
+    "end_time" : 68400
+  } ]
+}, {
+  "id" : "64",
+  "trips" : [ {
+    "id" : "K_20_outbound_0900",
+    "start_time" : 32400,
+    "end_time" : 32820
+  }, {
+    "id" : "K_20_outbound_1000",
+    "start_time" : 36000,
+    "end_time" : 36420
+  }, {
+    "id" : "K_20_outbound_1100",
+    "start_time" : 39600,
+    "end_time" : 40020
+  }, {
+    "id" : "K_20_outbound_1200",
+    "start_time" : 43200,
+    "end_time" : 43620
+  }, {
+    "id" : "K_20_outbound_1310",
+    "start_time" : 47400,
+    "end_time" : 47820
+  }, {
+    "id" : "K_20_outbound_1410",
+    "start_time" : 51000,
+    "end_time" : 51420
+  }, {
+    "id" : "K_20_outbound_1510",
+    "start_time" : 54600,
+    "end_time" : 55020
+  }, {
+    "id" : "K_20_outbound_1610",
+    "start_time" : 58200,
+    "end_time" : 58620
+  }, {
+    "id" : "K_20_outbound_1710",
+    "start_time" : 61800,
+    "end_time" : 62220
+  }, {
+    "id" : "K_20_outbound_1810",
+    "start_time" : 65400,
+    "end_time" : 65820
+  }, {
+    "id" : "K_20_inbound_0925",
+    "start_time" : 32820,
+    "end_time" : 33900
+  }, {
+    "id" : "K_20_inbound_1025",
+    "start_time" : 36420,
+    "end_time" : 37500
+  }, {
+    "id" : "K_20_inbound_1125",
+    "start_time" : 40020,
+    "end_time" : 41100
+  }, {
+    "id" : "K_20_inbound_1225",
+    "start_time" : 43620,
+    "end_time" : 44700
+  }, {
+    "id" : "K_20_inbound_1335",
+    "start_time" : 47820,
+    "end_time" : 48900
+  }, {
+    "id" : "K_20_inbound_1435",
+    "start_time" : 51420,
+    "end_time" : 52500
+  }, {
+    "id" : "K_20_inbound_1535",
+    "start_time" : 55020,
+    "end_time" : 56100
+  }, {
+    "id" : "K_20_inbound_1635",
+    "start_time" : 58620,
+    "end_time" : 59700
+  }, {
+    "id" : "K_20_inbound_1735",
+    "start_time" : 62220,
+    "end_time" : 63300
+  }, {
+    "id" : "K_20_inbound_1835",
+    "start_time" : 65820,
+    "end_time" : 66900
+  }, {
+    "id" : "M_20_outbound_0925",
+    "start_time" : 33900,
+    "end_time" : 34260
+  }, {
+    "id" : "M_20_outbound_1025",
+    "start_time" : 37500,
+    "end_time" : 37860
+  }, {
+    "id" : "M_20_outbound_1125",
+    "start_time" : 41100,
+    "end_time" : 41460
+  }, {
+    "id" : "M_20_outbound_1235",
+    "start_time" : 45300,
+    "end_time" : 45660
+  }, {
+    "id" : "M_20_outbound_1335",
+    "start_time" : 48900,
+    "end_time" : 49260
+  }, {
+    "id" : "M_20_outbound_1435",
+    "start_time" : 52500,
+    "end_time" : 52860
+  }, {
+    "id" : "M_20_outbound_1535",
+    "start_time" : 56100,
+    "end_time" : 56460
+  }, {
+    "id" : "M_20_outbound_1635",
+    "start_time" : 59700,
+    "end_time" : 60060
+  }, {
+    "id" : "M_20_outbound_1735",
+    "start_time" : 63300,
+    "end_time" : 63660
+  }, {
+    "id" : "M_20_outbound_1835",
+    "start_time" : 66900,
+    "end_time" : 67260
+  }, {
+    "id" : "M_20_inbound_0950",
+    "start_time" : 34260,
+    "end_time" : 35400
+  }, {
+    "id" : "M_20_inbound_1050",
+    "start_time" : 37860,
+    "end_time" : 39000
+  }, {
+    "id" : "M_20_inbound_1150",
+    "start_time" : 41460,
+    "end_time" : 42600
+  }, {
+    "id" : "M_20_inbound_1300",
+    "start_time" : 45660,
+    "end_time" : 46800
+  }, {
+    "id" : "M_20_inbound_1400",
+    "start_time" : 49260,
+    "end_time" : 50400
+  }, {
+    "id" : "M_20_inbound_1500",
+    "start_time" : 52860,
+    "end_time" : 54000
+  }, {
+    "id" : "M_20_inbound_1600",
+    "start_time" : 56460,
+    "end_time" : 57600
+  }, {
+    "id" : "M_20_inbound_1700",
+    "start_time" : 60060,
+    "end_time" : 61200
+  }, {
+    "id" : "M_20_inbound_1800",
+    "start_time" : 63660,
+    "end_time" : 64800
+  }, {
+    "id" : "M_20_inbound_1900",
+    "start_time" : 67260,
+    "end_time" : 68400
+  } ]
+}, {
+  "id" : "66",
+  "trips" : [ {
+    "id" : "O_20_outbound_0900",
+    "start_time" : 32400,
+    "end_time" : 33600
+  }, {
+    "id" : "O_20_outbound_1000",
+    "start_time" : 36000,
+    "end_time" : 37200
+  }, {
+    "id" : "O_20_outbound_1100",
+    "start_time" : 39600,
+    "end_time" : 40800
+  }, {
+    "id" : "O_20_outbound_1200",
+    "start_time" : 43200,
+    "end_time" : 44400
+  }, {
+    "id" : "O_20_outbound_1310",
+    "start_time" : 47400,
+    "end_time" : 48600
+  }, {
+    "id" : "O_20_outbound_1410",
+    "start_time" : 51000,
+    "end_time" : 52200
+  }, {
+    "id" : "O_20_outbound_1510",
+    "start_time" : 54600,
+    "end_time" : 55800
+  }, {
+    "id" : "O_20_outbound_1610",
+    "start_time" : 58200,
+    "end_time" : 59400
+  }, {
+    "id" : "O_20_outbound_1710",
+    "start_time" : 61800,
+    "end_time" : 63000
+  }, {
+    "id" : "O_20_outbound_1810",
+    "start_time" : 65400,
+    "end_time" : 66600
+  }, {
+    "id" : "O_20_inbound_0950",
+    "start_time" : 33600,
+    "end_time" : 35400
+  }, {
+    "id" : "O_20_inbound_1050",
+    "start_time" : 37200,
+    "end_time" : 39000
+  }, {
+    "id" : "O_20_inbound_1150",
+    "start_time" : 40800,
+    "end_time" : 42600
+  }, {
+    "id" : "O_20_inbound_1250",
+    "start_time" : 44400,
+    "end_time" : 46200
+  }, {
+    "id" : "O_20_inbound_1400",
+    "start_time" : 48600,
+    "end_time" : 50400
+  }, {
+    "id" : "O_20_inbound_1500",
+    "start_time" : 52200,
+    "end_time" : 54000
+  }, {
+    "id" : "O_20_inbound_1600",
+    "start_time" : 55800,
+    "end_time" : 57600
+  }, {
+    "id" : "O_20_inbound_1700",
+    "start_time" : 59400,
+    "end_time" : 61200
+  }, {
+    "id" : "O_20_inbound_1800",
+    "start_time" : 63000,
+    "end_time" : 64800
+  }, {
+    "id" : "O_20_inbound_1900",
+    "start_time" : 66600,
+    "end_time" : 68400
+  } ]
+}, {
+  "id" : "67",
+  "trips" : [ {
+    "id" : "P_20__0850",
+    "start_time" : 30240,
+    "end_time" : 31800
+  }, {
+    "id" : "P_20_0900",
+    "start_time" : 32400,
+    "end_time" : 35400
+  }, {
+    "id" : "P_20_1000",
+    "start_time" : 36000,
+    "end_time" : 39000
+  }, {
+    "id" : "P_20_1100",
+    "start_time" : 39600,
+    "end_time" : 42600
+  }, {
+    "id" : "P_20_1200",
+    "start_time" : 43200,
+    "end_time" : 46200
+  }, {
+    "id" : "P_20_1310",
+    "start_time" : 47400,
+    "end_time" : 50400
+  }, {
+    "id" : "P_20_1410",
+    "start_time" : 51000,
+    "end_time" : 54000
+  }, {
+    "id" : "P_20_1510",
+    "start_time" : 54600,
+    "end_time" : 57600
+  }, {
+    "id" : "P_20_1610",
+    "start_time" : 58200,
+    "end_time" : 61200
+  }, {
+    "id" : "P_20_1710",
+    "start_time" : 61800,
+    "end_time" : 64800
+  }, {
+    "id" : "P_20_1810",
+    "start_time" : 65400,
+    "end_time" : 68400
+  } ]
+}, {
+  "id" : "68",
+  "trips" : [ {
+    "id" : "Q_20__0850",
+    "start_time" : 30000,
+    "end_time" : 31800
+  }, {
+    "id" : "Q_20_0900",
+    "start_time" : 32400,
+    "end_time" : 35400
+  }, {
+    "id" : "Q_20_1000",
+    "start_time" : 36000,
+    "end_time" : 39000
+  }, {
+    "id" : "Q_20_1100",
+    "start_time" : 39600,
+    "end_time" : 42600
+  }, {
+    "id" : "Q_20_1200",
+    "start_time" : 43200,
+    "end_time" : 46200
+  }, {
+    "id" : "Q_20_1310",
+    "start_time" : 47400,
+    "end_time" : 50400
+  }, {
+    "id" : "Q_20_1410",
+    "start_time" : 51000,
+    "end_time" : 54000
+  }, {
+    "id" : "Q_20_1510",
+    "start_time" : 54600,
+    "end_time" : 57600
+  }, {
+    "id" : "Q_20_1610",
+    "start_time" : 58200,
+    "end_time" : 61200
+  }, {
+    "id" : "Q_20_1710",
+    "start_time" : 61800,
+    "end_time" : 64800
+  }, {
+    "id" : "Q_20_1810",
+    "start_time" : 65400,
+    "end_time" : 68400
+  } ]
+} ]
