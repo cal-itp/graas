@@ -302,11 +302,11 @@ def load_block_collection(datastore_client, block_metadata):
     block_map[agency_id] = block_collection
     print(f'- block_map: {block_map}')
 
-def load_block_metadata(datastore_client, agency_id):
+def load_block_metadata(datastore_client, agency_id, date_string = None):
     print(f'load_block_metadata()')
     print(f'- agency_id: {agency_id}')
 
-    midnight_from = util.get_midnight_seconds(util.get_epoch_seconds())
+    midnight_from = util.get_midnight_seconds(util.get_epoch_seconds(date_string))
     print(f'- midnight_from: {midnight_from}')
     midnight_to = midnight_from + DAY_SECONDS
     print(f'- midnight_to: {midnight_to}')
@@ -326,11 +326,7 @@ def load_block_metadata(datastore_client, agency_id):
 
     return results[0]
 
-def get_trip_id(datastore_client, agency_id, vehicle_id):
-    print(f'get_trip_id()')
-    print(f'- agency_id: {agency_id}')
-    print(f'- vehicle_id: {vehicle_id}')
-
+def get_current_block_collection(agency_id):
     block_collection = block_map.get(agency_id, None)
     print(f'- block_collection: {block_collection}')
     now = util.get_current_time_millis()
@@ -351,6 +347,15 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
             load_block_collection(datastore_client, block_metadata)
             block_collection = block_map.get(agency_id, None)
 
+    return block_collection
+
+def get_trip_id(datastore_client, agency_id, vehicle_id):
+    print(f'get_trip_id()')
+    print(f'- agency_id: {agency_id}')
+    print(f'- vehicle_id: {vehicle_id}')
+
+    block_collection = get_current_block_collection(agency_id)
+
     if block_collection is None:
         print(f'* no block collection found for agency {agency_id}')
         return None
@@ -370,6 +375,31 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
             return trip['id']
 
     return None
+
+def handle_get_assignments(datastore_client, data):
+    print(f'handle_get_assignments()')
+    print(f'- data: {data}')
+
+    agency_id = data.get('agency_id', None)
+    date = data.get('date', None)
+
+    if agency_id is None or date is None:
+        print(f'* no agency or date given for assignments request')
+        return []
+
+    metadata = load_block_metadata(datastore_client, agency_id, date)
+
+    if metadata is None:
+        print(f'* no metadata found for assignments request')
+        return []
+
+    assignment_summary = datastore_client.get(metadata['assignment_summary_key'])
+
+    if assignment_summary is None:
+        print(f'* no record found for key {metadata["assignment_summary_key"]}')
+        return []
+
+    return assignment_summary['data']
 
 def handle_block_collection(datastore_client, data):
     print(f'handle_block_collection()')
@@ -397,21 +427,39 @@ def handle_block_collection(datastore_client, data):
         print(f'* block collection is missing \'blocks\' field')
         return
 
+    assignments = []
+
+    for block in blocks:
+        assignments.append({
+            'block_id': block['id'],
+            'vehicle_id': block['vehicle_id']
+        })
+
+    assignment_summary = {
+        'data': json.dumps(assignments)
+    }
+    print(f'- assignment_summary: {assignment_summary}')
+
+    entity1 = datastore.Entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
+    entity1.update(assignment_summary)
+    datastore_client.put(entity1)
+
     block_list = {
         'data': json.dumps(blocks)
     }
     print(f'- block_list: {block_list}')
 
-    entity = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
-    entity.update(block_list)
-    datastore_client.put(entity)
+    entity2 = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
+    entity2.update(block_list)
+    datastore_client.put(entity2)
 
     block_metadata = {
         'created': now,
         'agency_id': agency_id,
         'valid_from': valid_from,
         'valid_to': valid_to,
-        'block_list_key': entity.key,
+        'assignment_summary_key': entity1.key,
+        'block_list_key': entity2.key,
     }
     print(f'- block_metadata: {block_metadata}')
 

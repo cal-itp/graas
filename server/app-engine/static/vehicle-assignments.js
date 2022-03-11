@@ -26,6 +26,7 @@ var items = [];
 var blockMap = {};
 var currentModal = null;
 var signatureKey = null;
+var fromDate = null;
 
 function isMobile() {
     util.log("isMobile()");
@@ -67,7 +68,32 @@ function dismissModal() {
     }
 }
 
-function layout(blockIDList, vehicleIDList) {
+function getAssignedVehicle(assignments, blockID) {
+    util.log('getAssignedVehicle()');
+    util.log('- assignments: ' + assignments);
+    util.log('- blockID: ' + blockID);
+
+    for (a of assignments) {
+        if (a.block_id === blockID) return a.vehicle_id;
+    }
+
+    return null;
+}
+
+function getAssignedBlock(assignments, vehicleID) {
+    for (a of assignments) {
+        if (a.vehicle_id === vehicleID) return a.block_id;
+    }
+
+    return null;
+}
+
+function layout(blockIDList, vehicleIDList, assignments) {
+    util.log('layout()');
+    util.log('- blockIDList: ' + blockIDList);
+    util.log('- vehicleIDList: ' + vehicleIDList);
+    util.log('- assignments: ' + assignments);
+
     items = [];
 
     var bw = (window.innerWidth - (COLS + 1) * GAP) / COLS;
@@ -87,6 +113,13 @@ function layout(blockIDList, vehicleIDList) {
             vehicle: null
         };
 
+        var vehicleID = getAssignedVehicle(assignments, blockIDList[i]);
+
+        if (vehicleID) {
+            item.status = 'assigned';
+            item.vehicle = vehicleID;
+        }
+
         items.push(item);
 
         xx += GAP + bw;
@@ -102,6 +135,8 @@ function layout(blockIDList, vehicleIDList) {
     yy = VEHICLES_VOFF;
 
     for (var i=0; i<vehicleIDList.length; i++) {
+        var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
+
         var item = {
             type: 'vehicle',
             x: xx,
@@ -109,7 +144,8 @@ function layout(blockIDList, vehicleIDList) {
             w: bw,
             h: bh,
             label: vehicleIDList[i],
-            status: Math.random() < .15 ? 'inactive' : 'active'
+            //status: Math.random() < .15 ? 'inactive' : 'active'
+            status: blockID ? 'assigned' : 'active'
         };
 
         items.push(item);
@@ -206,16 +242,8 @@ function handleKey(id) {
 
         localStorage.setItem("app-data", value);
         completeInitialization(parseAgencyData(value));
-    } else if (id === 'key-deploy-tomorrow' || id == 'key-deploy-today') {
+    } else if (id === 'key-deploy') {
         var blockData = [];
-
-        var fromDate = new Date();
-
-        if (id === 'key-deploy-tomorrow') {
-            fromDate = util.nextDay(fromDate);
-        }
-
-        fromDate = util.getMidnightDate(fromDate);
         var toDate = util.nextDay(fromDate);
 
         util.log('- fromDate: ' + fromDate);
@@ -250,6 +278,20 @@ function handleKey(id) {
 
         var json = util.getJSONResponse('/block-collection', data, signatureKey);
         util.log('- json: ' + JSON.stringify(json));
+    } else if (id === 'key-select-today') {
+        fromDate = util.getMidnightDate();
+        var str = util.getYYYYMMDD(fromDate);
+        util.log('- str: ' + str);
+
+        dismissModal();
+        loadBlockData(str);
+    } else if (id === 'key-select-tomorrow') {
+        fromDate = util.nextDay(util.getMidnightDate());
+        var str = util.getYYYYMMDD(fromDate);
+        util.log('- str: ' + str);
+
+        dismissModal();
+        loadBlockData(str);
     }
 }
 
@@ -293,7 +335,16 @@ async function completeInitialization(agencyData) {
     document.body.addEventListener('mouseup', handleMouseUp);
     document.body.addEventListener('mousemove', handleMouseMove);
 
-    var blocks = await getBucketData(agencyID, 'blocks.json');
+    handleModal('dateSelectModal');
+}
+
+async function loadBlockData(dateString) {
+    util.log('loadBlockData()');
+    util.log('- dateString: ' + dateString);
+
+    var name = `blocks-${dateString}.json`;
+    //util.log('- name: ' + name);
+    var blocks = await getGithubData(agencyID, name);
     //util.log("- blocks: " + JSON.stringify(blocks));
 
     var bidList = [];
@@ -305,19 +356,30 @@ async function completeInitialization(agencyData) {
 
     util.log('- bidList: ' + bidList);
 
-    var vidList = await getBucketData(agencyID, 'vehicle-ids.json');
+    var vidList = await getGithubData(agencyID, 'vehicle-ids.json');
     util.log('- vidList: ' + vidList);
 
-    layout(bidList, vidList);
+    var data = {
+        agency_id: agencyID,
+        date: dateString
+    };
+    var json = await util.getJSONResponse('/get-assignments', data, signatureKey);
+    util.log('- json: ' + json);
+    var assignments = json.assignments;
+
+    layout(bidList, vidList, assignments);
 }
 
-function getBucketData(agencyID, filename) {
-    //util.log('getBucketData()');
+function getGithubData(agencyID, filename) {
+    //util.log('getGithubData()');
 
     var arg = Math.round(Math.random() * 100000)
     //util.log("- arg: " + arg);
 
 
+    // ### FIXME: replace with GH repo base URL, still using bucket URL for
+    // now to break must-test-before-checkin, can't-test-before-checkin catch 22
+    //var url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
     var url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
     return util.getJSONResponse(url);
 }
@@ -618,7 +680,7 @@ function repaint() {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
-    ctx.fillText('GTFS BLOCKS', window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
+    ctx.fillText('GTFS BLOCKS FOR ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
     ctx.fillText('VEHICLES', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
 
 

@@ -5,7 +5,6 @@
         <title>Vehicle Assignments</title>
         <link type="text/css" rel="stylesheet" href="../static/vehicle-assignment-style.css">
     </head>
-    <!--body onkeydown="handleKey()" onmousedown="handleMouseDown(event)" onmouseup="handleMouseUp(event)" onmousemove="handleMouseMove(event)"-->
     <body style="background-color: #ccd">
         <div id="keyEntryModal" class="modal">
           <div class="modal-content">
@@ -14,10 +13,16 @@
             <button id="key-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="background-color: blue">Okay</button>
           </div>
         </div>
+        <div id="dateSelectModal" class="modal">
+          <div style="text-align: center" class="modal-content">
+            <p id="key-title" style="text-align: center">Select target date</p>
+            <button id="key-select-today" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: blue">Today</button>
+            <button id="key-select-tomorrow" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: blue">Tomorrow</button>
+          </div>
+        </div>
         <canvas id="canvas"></canvas>
         <div style="width: 100%; display: block">
-            <button id="key-deploy-tomorrow" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY FOR TOMORROW</button>
-            <button id="key-deploy-today" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue; margin-right: 0" class="btn">DEPLOY FOR TODAY</button>
+            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY</button>
         </div>
         <script src="../static/gtfs-rt-util.js"></script>
         <script src="../static/vehicle-assignments.js"></script>

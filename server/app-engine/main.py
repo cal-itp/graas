@@ -274,7 +274,7 @@ def verify_request(request, cmd):
 
 @app.route('/block-collection', methods=['POST'])
 def block_collection():
-    print('/new-pos-sig')
+    print('/block-collection')
 
     result = verify_request(request, 'block-collection')
     if not result['verified']:
@@ -288,6 +288,23 @@ def block_collection():
     )
 
     return Response('{"command": "block-collection", "status": "ok"}', mimetype='application/json')
+
+@app.route('/get-assignments', methods=['POST'])
+def get_assignments():
+    print('/get-assignments')
+
+    result = verify_request(request, 'get-assignments')
+    if not result['verified']:
+        return result['response']
+
+    data = request.json['data']
+
+    assignments = gtfsrt.handle_get_assignments(
+        util.datastore_client,
+        data
+    )
+
+    return Response(f'{{"command": "block-collection", "assignments": {assignments}, "status": "ok"}}', mimetype='application/json')
 
 @app.route('/new-pos-sig', methods=['POST'])
 def new_pos_sig():

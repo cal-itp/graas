@@ -15,6 +15,7 @@ Finally, fetch() timeouts are currently not implemented under node.
 
 var crypto = this.crypto
 var fetch = this.fetch
+const MONTH_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 if (!crypto) {
     crypto = require('crypto').webcrypto
@@ -40,6 +41,24 @@ if (!fetch) {
         }
     };
 
+    exports.getYYYYMMDD = function(date) {
+        if (date === null) {
+            date = new Date();
+        }
+
+        var month = ('' + (date.getMonth() + 1)).padStart(2, '0');
+        var day = ('' + date.getDate()).padStart(2, '0');
+        return '' + date.getFullYear() + '-' + month + '-' + day;
+    }
+
+    exports.getShortDate = function(date) {
+        if (date === null) {
+            date = new Date();
+        }
+
+        return MONTH_NAMES[date.getMonth()] + ' ' + date.getDate();
+    }
+
     // returns a date object set to midnight of
     // the date described by 's', which is expected
     // to be of the form mm/dd/yy. yy is assumed to
@@ -56,6 +75,7 @@ if (!fetch) {
     }
 
     exports.getMidnightDate = function(date) {
+        if (!date) date = new Date();
         var d = new Date();
         d.setTime(date.getTime());
         d.setHours(0, 0, 0);

@@ -50,6 +50,8 @@ public class BlockDataGenerator {
         cal.setTime(date);
 
         String outputFile = outputFolder + "/blocks-"
+            + cal.get(cal.YEAR)
+            + "-"
             + Util.pad("" + (cal.get(cal.MONTH) + 1), '0', 2)
             + "-"
             + Util.pad("" + cal.get(cal.DAY_OF_MONTH), '0', 2)
