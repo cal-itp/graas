@@ -2,10 +2,10 @@ const BLOCKS_VOFF = 65;
 const VEHICLES_VOFF = 425;
 const BLOCK_HEIGHT = 60;
 const VEHICLE_HEIGHT = 30;
-const SHADOW_BLUR = 5;
+const SHADOW_BLUR = 3;
 const GAP = 10;
 const COLS = 10;
-const FONT_SIZE = 22;
+const FONT_SIZE = 20;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 
@@ -27,6 +27,8 @@ var blockMap = {};
 var currentModal = null;
 var signatureKey = null;
 var fromDate = null;
+var agencyID = '';
+var agencyName = '';
 
 function isMobile() {
     util.log("isMobile()");
@@ -287,6 +289,7 @@ function handleKey(id) {
 async function completeInitialization(agencyData) {
     agencyID = agencyData.id;
     util.log("- agencyID: " + agencyID);
+    agencyName = getDisplayName(agencyID);
 
     var pem = agencyData.pem;
 
@@ -357,6 +360,9 @@ async function loadBlockData(dateString) {
     var assignments = json.assignments;
 
     layout(bidList, vidList, assignments);
+
+    var deployButton = document.getElementById('key-deploy');
+    deployButton.style.display = 'inline-block';
 }
 
 function getGithubData(agencyID, filename) {
@@ -533,7 +539,8 @@ function drawCloseButton(item) {
     closeButtonData.w = 2 * radius;
     closeButtonData.h = 2 * radius;
 
-    ctx.shadowBlur = 0;
+    var savedShadowBlur = ctx.shadowBlur;
+    //ctx.shadowBlur = SHADOW_BLUR;
 
     ctx.fillStyle = 'black';
     ctx.beginPath();
@@ -548,8 +555,10 @@ function drawCloseButton(item) {
     ctx.moveTo(xx - len, yy - len);
     ctx.lineTo(xx + len, yy + len);
     ctx.stroke();
+    ctx.lineWidth = 1;
 
-    ctx.shadowBlur = SHADOW_BLUR;
+    //ctx.shadowColor = null;
+    //ctx.shadowBlur = 0;
 }
 
 function handleMouseMove(e) {
@@ -624,6 +633,29 @@ function handleMouseMove(e) {
     }
 }
 
+function fillRoundedRect(ctx, x, y, width, height, radius) {
+    var savedShadowBlur = ctx.shadowBlur;
+    ctx.shadowColor = 'gray';
+    ctx.shadowBlur = SHADOW_BLUR;
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowColor = null;
+    ctx.shadowBlur = 0;
+}
+
+
 function drawWidget(item, xx = -1, yy = -1) {
     var color = '#aab';
 
@@ -636,12 +668,18 @@ function drawWidget(item, xx = -1, yy = -1) {
         color = '#3c3';
     }
 
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, item.w, item.h);
+    if (item.type === 'block') {
+        ctx.fillStyle = 'aliceBlue';
+        ctx.fillRect(x, y, item.w, item.h);
+        ctx.fillStyle = 'black';
+    } else {
+        ctx.fillStyle = color;
+        fillRoundedRect(ctx, x, y, item.w, item.h, 4);
+        ctx.fillStyle = 'white';
+    }
 
-    ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.fillText(item.label, x + item.w / 2, y + FONT_SIZE * .7);
+    ctx.fillText(item.label, x + item.w / 2, y + FONT_SIZE * .8);
 
     if (item.type === 'block' && item.vehicle !== null) {
         ctx.fillStyle = '#3c3';
@@ -651,27 +689,56 @@ function drawWidget(item, xx = -1, yy = -1) {
         ctx.textAlign = 'right';
 
         //log('- item.vehicle: ' + JSON.stringify(item.vehicle));
-        ctx.fillText(item.vehicle, x + item.w - 5, y + item.h - FONT_SIZE * .6);
+        ctx.fillText(item.vehicle, x + item.w - 5, y + item.h - FONT_SIZE * .7);
     }
+}
+
+function getDisplayName(s) {
+    var capitalize = true;
+    var r = '';
+
+    for (var i=0; i<s.length; i++) {
+        var c = s.charAt(i);
+
+        if (capitalize) {
+            c = c.toUpperCase();
+            capitalize = false;
+        }
+
+        if (c === '_') {
+            capitalize = true;
+            c = ' ';
+        }
+
+        r += c;
+    }
+
+    return r;
 }
 
 function repaint() {
     //log('repaint()');
 
-    ctx.fillStyle = '#ccd';
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.shadowColor = 'black';
-    ctx.shadowBlur = SHADOW_BLUR;
+    ctx.shadowColor = 'rgba(0,0,0,0)';
 
-    ctx.font = `bold ${FONT_SIZE}px arial`;
-    ctx.fillStyle = 'white';
+    ctx.font = `${FONT_SIZE}px times new roman`;
+    ctx.fillStyle = 'black';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
-    ctx.fillText('GTFS BLOCKS FOR ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
-    ctx.fillText('VEHICLES', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
+    ctx.fillText(agencyName + ' GTFS Blocks For ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
+    ctx.fillText('Vehicles', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
 
+
+    ctx.font = `${FONT_SIZE}px arial`;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
 
     for (var item of items) {
         drawWidget(item);
