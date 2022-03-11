@@ -66,7 +66,7 @@ public class BlockDataGenerator {
     }
 
     private static void usage() {
-        System.err.println("usage: BlockDataGenerator -c|--cache-folder <cache-folder> -a|--agency-id <agency-id> [-d|--date <mm/dd/yy>|<n>]");
+        System.err.println("usage: BlockDataGenerator -c|--cache-folder <cache-folder> -o|--output-folder <output-folder> -a|--agency-id <agency-id> [-d|--date <mm/dd/yy>|<n>]");
         System.err.println("    <cache-folder> a temp folder for unpacking and caching static GTFS data by agency");
         System.err.println("    <output-folder> folder to place output file in (file name will be 'blocks-<mm>-<dd>.json'");
         System.err.println("    <agency-id> a transit agency identifier constructed from the alphabet of [a-z\\-]");

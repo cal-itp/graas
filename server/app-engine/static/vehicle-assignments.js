@@ -169,18 +169,6 @@ function initialize() {
 
     repaint();
 
-    var date = util.getDate('03/02/22');
-    util.log('- date: ' + date.toString());
-    var seconds = util.millisToSeconds(date.getTime());
-    util.log('- seconds: ' + seconds);
-
-    var today = new Date();
-    util.log('- today: ' + today);
-    var midnight = util.getMidnightDate(today);
-    util.log('- midnight: ' + midnight);
-    var tomorrow = util.nextDay(midnight);
-    util.log('- tomorrow: ' + tomorrow);
-
     var str = localStorage.getItem("app-data") || "";
 
     if (!str) {
@@ -188,7 +176,8 @@ function initialize() {
             // ios WKWebView doesn't support camera access :[
             handleModal("keyEntryModal");
         } else {
-            util.log('ADD QR CODE SCANNING!');
+            // ### TODO add QR code scanning once
+            // we're past the initial implementation
             //scanQRCode();
         }
     } else {

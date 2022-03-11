@@ -204,7 +204,7 @@ def post_alert():
 """
 Determine whether or not to accept an incoming user request.
 Requests can be accepted one of two ways:
-- if no previou requests from requestor IP have been verified, confirm
+- if no previous requests from requestor IP have been verified, confirm
   signature for request data matches public key on file for 'agency_id'
 - if previous request from same IP has been verified inside a set amount of time
 """

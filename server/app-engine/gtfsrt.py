@@ -326,7 +326,7 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
 
     return results[0]
 
-def get_current_block_collection(agency_id):
+def get_current_block_collection(datastore_client, agency_id):
     block_collection = block_map.get(agency_id, None)
     print(f'- block_collection: {block_collection}')
     now = util.get_current_time_millis()
@@ -354,7 +354,7 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
     print(f'- agency_id: {agency_id}')
     print(f'- vehicle_id: {vehicle_id}')
 
-    block_collection = get_current_block_collection(agency_id)
+    block_collection = get_current_block_collection(datastore_client, agency_id)
 
     if block_collection is None:
         print(f'* no block collection found for agency {agency_id}')
@@ -484,6 +484,7 @@ def handle_block_collection(datastore_client, data):
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
     data['rcv-timestamp'] = int(round(time.time()))
 
+    ### TODO check if 'use-bulk-assignment-mode' == True
     if data.get('trip_id', None) is None:
         trip_id = get_trip_id(
             datastore_client,
