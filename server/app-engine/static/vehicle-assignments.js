@@ -208,6 +208,21 @@ function parseAgencyData(str) {
     };
 }
 
+async function handleDeploy(data) {
+    handleModal('infiniteProgressModal');
+    var json = await util.getJSONResponse('/block-collection', data, signatureKey);
+    util.log('- json: ' + JSON.stringify(json));
+    util.log('- json.status: ' + json);
+
+    var status = 'failed';
+    if (json && json.status) status = json.status;
+
+    var elem = document.getElementById('key-confirm-text');
+    elem.innerHTML = 'Deploy status: ' + status;
+    dismissModal();
+    handleModal('confirmationModal');
+}
+
 function handleKey(id) {
     util.log('handleKey()');
     util.log('- id: ' + id);
@@ -267,8 +282,7 @@ function handleKey(id) {
         };
         util.log('- data: ' + JSON.stringify(data));
 
-        var json = util.getJSONResponse('/block-collection', data, signatureKey);
-        util.log('- json: ' + JSON.stringify(json));
+        handleDeploy(data);
     } else if (id === 'key-select-today') {
         fromDate = util.getMidnightDate();
         var str = util.getYYYYMMDD(fromDate);
@@ -283,6 +297,8 @@ function handleKey(id) {
 
         dismissModal();
         loadBlockData(str);
+    } else if (id === 'key-confirm-okay') {
+        dismissModal();
     }
 }
 
@@ -334,6 +350,7 @@ async function loadBlockData(dateString) {
     util.log('loadBlockData()');
     util.log('- dateString: ' + dateString);
 
+    handleModal('infiniteProgressModal');
     var name = `blocks-${dateString}.json`;
     //util.log('- name: ' + name);
     var blocks = await getGithubData(agencyID, name);
@@ -361,6 +378,7 @@ async function loadBlockData(dateString) {
 
     layout(bidList, vidList, assignments);
 
+    dismissModal();
     var deployButton = document.getElementById('key-deploy');
     deployButton.style.display = 'inline-block';
 }

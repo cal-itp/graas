@@ -20,6 +20,19 @@
             <button id="key-select-tomorrow" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: darkBlue">Tomorrow</button>
           </div>
         </div>
+        <div id="confirmationModal" class="modal">
+          <div style="text-align: center" class="modal-content">
+            <p id="key-confirm-text" style="text-align: center">""</p>
+            <button id="key-confirm-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: darkBlue">Okay</button>
+          </div>
+        </div>
+        <div id="infiniteProgressModal" class="modal">
+            <div class="demo-container">
+              <div class="progress-bar">
+                <div class="progress-bar-value"></div>
+              </div>
+            </div>
+        </div>
         <canvas id="canvas"></canvas>
         <div style="width: 100%; display: block">
             <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: none; background-color: darkBlue" class="btn">Deploy</button>

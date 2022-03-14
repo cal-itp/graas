@@ -16,7 +16,7 @@ Finally, fetch() timeouts are currently not implemented under node.
 var crypto = this.crypto
 var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const DAY_NAMES = ["Sun", "Mond", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 if (!crypto) {
     crypto = require('crypto').webcrypto
