@@ -727,7 +727,7 @@ function repaint() {
 
     ctx.shadowColor = 'rgba(0,0,0,0)';
 
-    ctx.font = `${FONT_SIZE}px times new roman`;
+    ctx.font = `${FONT_SIZE}px arial`;
     ctx.fillStyle = 'black';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
