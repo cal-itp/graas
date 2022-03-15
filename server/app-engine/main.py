@@ -282,12 +282,12 @@ def block_collection():
 
     data = request.json['data']
 
-    gtfsrt.handle_block_collection(
+    status = gtfsrt.handle_block_collection(
         util.datastore_client,
         data
     )
 
-    return Response('{"command": "block-collection", "status": "ok"}', mimetype='application/json')
+    return Response(f'{{"command": "block-collection", "status": "{status}"}}', mimetype='application/json')
 
 @app.route('/get-assignments', methods=['POST'])
 def get_assignments():

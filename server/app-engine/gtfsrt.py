@@ -2,6 +2,7 @@ from google.cloud import datastore
 from google.transit import gtfs_realtime_pb2
 import json
 import time
+import traceback
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
@@ -413,73 +414,79 @@ def handle_block_collection(datastore_client, data):
 
     if agency_id is None:
         print(f'* block collection is missing \'agency_id\' field')
-        return
+        return 'error: missing agency ID'
 
     if valid_from is None:
         print(f'* block collection is missing \'valid_from\' field')
-        return
+        return 'error: missing start time'
 
     if valid_to is None:
         print(f'* block collection is missing \'valid_to\' field')
-        return
+        return 'error: missing end time'
 
     if blocks is None:
         print(f'* block collection is missing \'blocks\' field')
-        return
+        return 'error: no blocks'
 
-    assignments = []
+    try:
+        assignments = []
 
-    for block in blocks:
-        assignments.append({
-            'block_id': block['id'],
-            'vehicle_id': block['vehicle_id']
-        })
+        for block in blocks:
+            assignments.append({
+                'block_id': block['id'],
+                'vehicle_id': block['vehicle_id']
+            })
 
-    assignment_summary = {
-        'data': json.dumps(assignments)
-    }
-    print(f'- assignment_summary: {assignment_summary}')
+        assignment_summary = {
+            'data': json.dumps(assignments)
+        }
+        print(f'- assignment_summary: {assignment_summary}')
 
-    entity1 = datastore.Entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
-    entity1.update(assignment_summary)
-    datastore_client.put(entity1)
+        entity1 = datastore.Entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
+        entity1.update(assignment_summary)
+        datastore_client.put(entity1)
 
-    block_list = {
-        'data': json.dumps(blocks)
-    }
-    print(f'- block_list: {block_list}')
+        block_list = {
+            'data': json.dumps(blocks)
+        }
+        print(f'- block_list: {block_list}')
 
-    entity2 = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
-    entity2.update(block_list)
-    datastore_client.put(entity2)
+        entity2 = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
+        entity2.update(block_list)
+        datastore_client.put(entity2)
 
-    block_metadata = {
-        'created': now,
-        'agency_id': agency_id,
-        'valid_from': valid_from,
-        'valid_to': valid_to,
-        'assignment_summary_key': entity1.key,
-        'block_list_key': entity2.key,
-    }
-    print(f'- block_metadata: {block_metadata}')
+        block_metadata = {
+            'created': now,
+            'agency_id': agency_id,
+            'valid_from': valid_from,
+            'valid_to': valid_to,
+            'assignment_summary_key': entity1.key,
+            'block_list_key': entity2.key,
+        }
+        print(f'- block_metadata: {block_metadata}')
 
-    entity = datastore.Entity(key=datastore_client.key('block-metadata'))
-    entity.update(block_metadata)
-    datastore_client.put(entity)
+        entity = datastore.Entity(key=datastore_client.key('block-metadata'))
+        entity.update(block_metadata)
+        datastore_client.put(entity)
 
-    query = datastore_client.query(kind="block-metadata")
-    query.add_filter("created", "<", now - WEEK_MILLIS)
+        query = datastore_client.query(kind="block-metadata")
+        query.add_filter("created", "<", now - WEEK_MILLIS)
 
-    results = list(query.fetch())
-    keys = []
+        results = list(query.fetch())
+        keys = []
 
-    for r in results:
-        keys.append(r.key)
-        keys.append(r['block_list_key'])
-        keys.append(r['assignment_summary_key'])
+        for r in results:
+            keys.append(r.key)
+            keys.append(r['block_list_key'])
+            keys.append(r['assignment_summary_key'])
 
-    print(f'- keys: {keys}')
-    datastore_client.delete_multi(keys)
+        print(f'- keys: {keys}')
+        datastore_client.delete_multi(keys)
+    except:
+        print(traceback.format_exc())
+        return 'error: exception'
+
+    return 'ok'
 
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
     data['rcv-timestamp'] = int(round(time.time()))

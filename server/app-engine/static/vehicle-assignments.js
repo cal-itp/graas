@@ -29,6 +29,8 @@ var signatureKey = null;
 var fromDate = null;
 var agencyID = '';
 var agencyName = '';
+var deployedAssignments = [];
+var currentAssignments = [];
 
 function isMobile() {
     util.log("isMobile()");
@@ -120,6 +122,13 @@ function layout(blockIDList, vehicleIDList, assignments) {
         if (vehicleID) {
             item.status = 'assigned';
             item.vehicle = vehicleID;
+
+            var a = {
+                blockID: blockIDList[i],
+                vehicleID: vehicleID
+            };
+
+            currentAssignments.push(a);
         }
 
         items.push(item);
@@ -131,6 +140,13 @@ function layout(blockIDList, vehicleIDList, assignments) {
             yy += GAP + bh;
         }
     }
+
+    for (var a of currentAssignments) {
+        deployedAssignments.push(a);
+    }
+
+    deployedAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+    updateDeploymentIndicator();
 
     bh = VEHICLE_HEIGHT;
     xx = GAP;
@@ -167,7 +183,7 @@ function initialize() {
     //window.addEventListener('resize', resizeCanvas, false);
 
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * .9;
+    canvas.height = window.innerHeight * .9125;
 
     repaint();
 
@@ -219,6 +235,22 @@ async function handleDeploy(data) {
 
     var elem = document.getElementById('key-confirm-text');
     elem.innerHTML = 'Deploy status: ' + status;
+
+    if (status === 'ok') {
+        deployedAssignments = []
+
+        for (var ca of currentAssignments) {
+            var a = {
+                blockID: ca.blockID,
+                vehicleID: ca.vehicleID
+            };
+
+            deployedAssignments.push(a);
+        }
+
+        updateDeploymentIndicator();
+    }
+
     dismissModal();
     handleModal('confirmationModal');
 }
@@ -339,11 +371,32 @@ async function completeInitialization(agencyData) {
 
     util.log("- signatureKey.type: " + signatureKey.type);
 
+    document.body.addEventListener('beforeunload', handleUnload);
     document.body.addEventListener('mousedown', handleMouseDown);
     document.body.addEventListener('mouseup', handleMouseUp);
     document.body.addEventListener('mousemove', handleMouseMove);
 
     handleModal('dateSelectModal');
+}
+
+function handleUnload(e) {
+    util.log('handleUnload()');
+    util.log('- e: ' + JSON.stringify(e));
+
+    currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+
+    if (JSON.stringify(currentAssignments) === JSON.stringify(deployedAssignments)) {
+        util.log('+ no unsaved changes');
+
+        delete e['returnValue'];
+    } else {
+        util.log('+ unsaved changes');
+        util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));
+        util.log('- deployedAssignments: ' + JSON.stringify(deployedAssignments));
+
+        e.preventDefault();
+        e.returnValue = '';
+    }
 }
 
 async function loadBlockData(dateString) {
@@ -397,6 +450,27 @@ function getGithubData(agencyID, filename) {
     return util.getJSONResponse(url);
 }
 
+function updateDeploymentIndicator() {
+    util.log('updateDeploymentIndicator()');
+    var button = document.getElementById('key-deploy');
+    var text = document.getElementById('text-deployment-status');
+
+    currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+
+    util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));
+    util.log('- deployedAssignments: ' + JSON.stringify(deployedAssignments));
+
+    if (JSON.stringify(currentAssignments) === JSON.stringify(deployedAssignments)) {
+        util.log('+ no unsaved changes');
+        button.disabled = true;
+        text.innerHTML = 'All changes are saved.';
+    } else {
+        util.log('+ unsaved changes');
+        button.disabled = false;
+        text.innerHTML = '';
+    }
+}
+
 function handleCloseButtonPress() {
     util.log('handleCloseButtonPress()');
     util.log('- closeButtonData.item: ' + JSON.stringify(closeButtonData.item));
@@ -413,6 +487,14 @@ function handleCloseButtonPress() {
             }
         }
 
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].blockID === closeButtonData.item.label) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
+        updateDeploymentIndicator();
         closeButtonData.item.status = 'active';
     }
 
@@ -427,6 +509,14 @@ function handleCloseButtonPress() {
             }
         }
 
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].vehicleID === closeButtonData.item.vehicle) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
+        updateDeploymentIndicator();
         closeButtonData.item.status = 'unassigned';
         closeButtonData.item.vehicle = null;
     }
@@ -531,6 +621,14 @@ function handleMouseUp(e) {
     if (dragReceiver !== null) {
         dragReceiver.vehicle = dragItem.label;
         dragReceiver.status = 'assigned';
+
+        var a = {
+            blockID: dragReceiver.label,
+            vehicleID: dragItem.label
+        };
+
+        currentAssignments.push(a);
+        updateDeploymentIndicator();
 
         if (dragItem !== null) {
             dragItem.status = 'assigned';
