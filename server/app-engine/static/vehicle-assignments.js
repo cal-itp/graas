@@ -1,10 +1,9 @@
 const BLOCKS_VOFF = 65;
-const VEHICLES_VOFF = 425;
 const BLOCK_HEIGHT = 60;
 const VEHICLE_HEIGHT = 30;
 const SHADOW_BLUR = 3;
 const GAP = 10;
-const COLS = 10;
+const COLS = 15;
 const FONT_SIZE = 20;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
@@ -31,6 +30,9 @@ var agencyID = '';
 var agencyName = '';
 var deployedAssignments = [];
 var currentAssignments = [];
+var VEHICLES_VOFF = 0;
+var lastTouchX;
+var lastTouchY;
 
 function isMobile() {
     util.log("isMobile()");
@@ -150,7 +152,10 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
     bh = VEHICLE_HEIGHT;
     xx = GAP;
-    yy = VEHICLES_VOFF;
+
+
+    yy += 3 * BLOCK_HEIGHT;
+    VEHICLES_VOFF = yy;
 
     for (var i=0; i<vehicleIDList.length; i++) {
         var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
@@ -197,6 +202,7 @@ function initialize() {
             // ### TODO add QR code scanning once
             // we're past the initial implementation
             //scanQRCode();
+            handleModal("keyEntryModal");
         }
     } else {
         completeInitialization(parseAgencyData(str));
@@ -270,15 +276,18 @@ function handleKey(id) {
         var i2 = value.indexOf(PEM_FOOTER);
         util.log("- i2: " + i2);
 
-        if (i1 < 0 || i2 < 0) {
-            alert("not a valid key");
+        if (i1 === 0) {
+            alert('missing agency id');
+            return;
+        } else if (i1 < 0 || i2 < 0) {
+            alert('not a valid key');
             return;
         }
 
         dismissModal();
         p.value = "";
 
-        localStorage.setItem("app-data", value);
+        localStorage.setItem('app-data', value);
         completeInitialization(parseAgencyData(value));
     } else if (id === 'key-deploy') {
         var blockData = [];
@@ -373,16 +382,68 @@ async function completeInitialization(agencyData) {
 
     addEventListener('beforeunload', (event) => {
         util.log('beforeunload callback');
-
-        //event.preventDefault();
-        //event.returnValue = '';
     });
 
-    document.body.addEventListener('mousedown', handleMouseDown);
-    document.body.addEventListener('mouseup', handleMouseUp);
-    document.body.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchmove', handleTouchMove);
+    canvas.addEventListener('touchcancel', handleTouchCancel);
+    canvas.addEventListener('touchend', handleTouchEnd);
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mousemove', handleMouseMove);
 
     handleModal('dateSelectModal');
+}
+
+function handleTouchStart(e) {
+    util.log('* handleTouchStart() *');
+
+    e.preventDefault();
+
+    /*util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
+
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+
+    handleMouseDown({x: lastTouchX, y: lastTouchY})
+}
+
+function handleTouchMove(e) {
+    util.log('* handleTouchMove() *');
+
+    //e.preventDefault();
+
+    /*util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
+
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+
+    handleMouseMove({x: lastTouchX, y: lastTouchY})
+}
+
+function handleTouchEnd(e) {
+    util.log('* handleTouchEnd() *');
+
+    //e.preventDefault();
+    handleMouseUp({x: lastTouchX, y: lastTouchY})
+}
+
+function handleTouchCancel(e) {
+    util.log('* handleTouchCancel() *');
+
+    e.preventDefault();
+
+    util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);
 }
 
 function handleUnload(e) {
@@ -395,7 +456,6 @@ function handleUnload(e) {
         util.log('+ no unsaved changes');
 
         delete e['returnValue'];
-        return 'You have unsaved changes.';
     } else {
         util.log('+ unsaved changes');
         util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));
@@ -587,6 +647,7 @@ function longPress() {
 
 function handleMouseDown(e) {
     util.log('handleMouseDown()');
+    util.log('- e: ' + JSON.stringify(e));
 
     var x = e.x;
     var y = e.y;
@@ -623,6 +684,8 @@ function handleMouseDown(e) {
 
 function handleMouseUp(e) {
     util.log('handleMouseUp()');
+    util.log('- e.x: ' + e.x);
+    util.log('- e.y: ' + e.y);
     util.log('- dragReceiver: ' + JSON.stringify(dragReceiver));
 
     if (dragReceiver !== null) {
@@ -685,12 +748,15 @@ function drawCloseButton(item) {
 }
 
 function handleMouseMove(e) {
-    //log('handleMouseMove()');
+    util.log('handleMouseMove()');
 
     var x = e.x;
     var y = e.y;
 
     if (dragging && dragItem !== null) {
+        util.log('- x: ' + x);
+        util.log('- y: ' + y);
+
         //log('+ dragItem: ' + dragItem);
         var millis = (new Date).getTime();
 
@@ -856,7 +922,7 @@ function repaint() {
     ctx.textAlign = 'center';
 
     ctx.fillText(agencyName + ' GTFS Blocks For ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
-    ctx.fillText('Vehicles', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
+    if (VEHICLES_VOFF > 0) ctx.fillText('Vehicles', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
 
 
     ctx.font = `${FONT_SIZE}px arial`;
