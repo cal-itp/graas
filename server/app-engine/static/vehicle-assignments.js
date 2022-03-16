@@ -371,7 +371,13 @@ async function completeInitialization(agencyData) {
 
     util.log("- signatureKey.type: " + signatureKey.type);
 
-    document.body.addEventListener('beforeunload', handleUnload);
+    addEventListener('beforeunload', (event) => {
+        util.log('beforeunload callback');
+
+        //event.preventDefault();
+        //event.returnValue = '';
+    });
+
     document.body.addEventListener('mousedown', handleMouseDown);
     document.body.addEventListener('mouseup', handleMouseUp);
     document.body.addEventListener('mousemove', handleMouseMove);
@@ -380,7 +386,7 @@ async function completeInitialization(agencyData) {
 }
 
 function handleUnload(e) {
-    util.log('handleUnload()');
+    util.log('* handleUnload() *');
     util.log('- e: ' + JSON.stringify(e));
 
     currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
@@ -389,6 +395,7 @@ function handleUnload(e) {
         util.log('+ no unsaved changes');
 
         delete e['returnValue'];
+        return 'You have unsaved changes.';
     } else {
         util.log('+ unsaved changes');
         util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));

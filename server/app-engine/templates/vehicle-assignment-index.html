@@ -5,7 +5,7 @@
         <title>Vehicle Assignments</title>
         <link type="text/css" rel="stylesheet" href="../static/vehicle-assignment-style.css">
     </head>
-    <body>
+    <body onbeforeunload="handleUnload(event)">
         <div id="keyEntryModal" class="modal">
           <div class="modal-content">
             <p id="key-title" style="text-align: center">Enter Key</p>
