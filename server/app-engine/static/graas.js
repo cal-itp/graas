@@ -30,6 +30,7 @@ var startLon = null;
 var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
+var useBulkAssignmentMode = false;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -44,13 +45,17 @@ var testDow = null;
 var version = null;
 
 const UUID_NAME = 'lat_long_id';
+const VEHICLE_ID_COOKIE_NAME = 'vehicle_id';
+var vehicleIDCookie = null;
 const MSG_NO = 'msg_no';
-const MAX_AGE = 10 * 60 * 60 * 24 * 365;
-const MAX_LIFE = 1000 * 60 * 60 * 24 * 7;
+const MAX_AGE_SECS = 10 * 60 * 60 * 24 * 365;
+const MAX_LIFE_MILLIS = 1000 * 60 * 60 * 24 * 7;
+const MAX_VEHICLE_ID_AGE_SECS = 60 * 60 * 4;
 
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 
+const QR_READER_ELEMENT = "qr-reader";
 const CONFIG_TRIP_NAMES = "trip names";
 const CONFIG_VEHICLE_IDS = "vehicle IDs";
 const CONFIG_DRIVER_NAMES = "driver names";
@@ -71,6 +76,8 @@ const TRIP_STATS_ELEMENT = "stats";
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
 const MILLIS_PER_MINUTE = 1000 * 60;
+
+const GRAY_HEX = "#cccccc";
 
 function isObject(obj) {
     return typeof obj === 'object' && obj !== null
@@ -380,26 +387,40 @@ function handleStartStop() {
         hideElement(ALL_DROPDOWNS);
         showElement(LOADING_TEXT_ELEMENT);
 
-        // Only load trips again if they were last loaded more than a minute ago
-        if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
-            populateTripList();
-        } else {
-            util.log("- trip list is stale. Reloading...");
-            populateTripList(loadTrips());
+        configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
+        configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
+        configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
+
+        vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
+
+        if(vehicleIDCookie){
+            p = document.getElementById(BUS_SELECT_DROPDOWN);
+            p.value = vehicleIDCookie;
+            handleBusChoice();
         }
-        if (millis - startMillis >= MAX_LIFE) {
+
+        if(!useBulkAssignmentMode){
+            // Only load trips again if they were last loaded more than a minute ago
+            if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
+                populateTripList();
+            } else {
+                util.log("- trip list is stale. Reloading...");
+                populateTripList(loadTrips());
+            }
+        } else {
+            hideElement(LOADING_TEXT_ELEMENT);
+            showElement(ALL_DROPDOWNS);
+        }
+
+        if (millis - startMillis >= MAX_LIFE_MILLIS) {
             handleModal("staleModal");
             return;
         }
         var p = document.getElementById(START_STOP_BUTTON);
-        p.style.background = "#cccccc";
-
-        configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
-        configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
-        configMatrix.setSelected(CONFIG_DRIVER_NAMES, false);
+        p.style.background = GRAY_HEX;
     }
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
-    else { //
+    else {
         clearWakeLock();
         hideElement(TRIP_STATS_ELEMENT);
         util.log('- stopping position updates');
@@ -409,10 +430,9 @@ function handleStartStop() {
 
         p = document.getElementById('okay');
         p.disabled = 'true';
-        p.style.background = "#cccccc";
+        p.style.background = GRAY_HEX;
 
-        p = document.getElementById(START_STOP_BUTTON);
-        p.textContent = START_STOP_BUTTON_LOAD_TEXT;
+        changeText(START_STOP_BUTTON, START_STOP_BUTTON_LOAD_TEXT);
 
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
             fetch('/graas-stop').then(function(response) {
@@ -471,18 +491,22 @@ function handleOkay() {
     p.style.background = "green";
     var p = document.getElementById(BUS_SELECT_DROPDOWN);
     vehicleID = p.value
+
+    document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
     util.log("- vehicleID: " + vehicleID);
 
-    p = document.getElementById(TRIP_SELECT_DROPDOWN);
-    var entry = tripIDLookup[p.value];
+    if(!useBulkAssignmentMode){
+        p = document.getElementById(TRIP_SELECT_DROPDOWN);
+        var entry = tripIDLookup[p.value];
 
-    if (isObject(entry)) {
-        tripID = entry['trip_id'];
-    } else {
-        tripID = entry;
+        if (isObject(entry)) {
+            tripID = entry['trip_id'];
+        } else {
+            tripID = entry;
+        }
+
+        util.log("- tripID: " + tripID);
     }
-
-    util.log("- tripID: " + tripID);
 
     if (configMatrix.getPresent(CONFIG_DRIVER_NAMES) == ConfigMatrix.PRESENT) {
         p = document.getElementById(DRIVER_SELECT_DROPDOWN);
@@ -493,11 +517,13 @@ function handleOkay() {
     var p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
+    var p = document.getElementById('trip-assignment-mode');
+    var tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
+    p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
+
     hideElement(ALL_DROPDOWNS);
     showElement(TRIP_STATS_ELEMENT);
-
-    var p = document.getElementById(START_STOP_BUTTON);
-    p.textContent = START_STOP_BUTTON_STOP_TEXT;
+    changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
     running = true;
@@ -524,7 +550,7 @@ function getUUID() {
 
     if (!uuid) {
         uuid = createUUID();
-        document.cookie = `${UUID_NAME}=${uuid}; max-age=${MAX_AGE}`;
+        document.cookie = `${UUID_NAME}=${uuid}; max-age=${MAX_AGE_SECS}`;
     }
 
     return uuid;
@@ -539,7 +565,7 @@ function getNextMsgNo() {
     var nextN = ++n;
     if (nextN < 0) nextN = 0;
 
-    document.cookie = `${MSG_NO}=${nextN}; max-age=${MAX_AGE}`;
+    document.cookie = `${MSG_NO}=${nextN}; max-age=${MAX_AGE_SECS}`;
 
     return n;
 }
@@ -833,6 +859,7 @@ function handleGPSUpdate(position) {
     data['vehicle-id'] = vehicleID;
     data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
+    data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
 
     if (driverName) {
         data['driver-name'] = driverName;
@@ -914,14 +941,20 @@ function initializeCallback(agencyData) {
 
             util.apiCall(hello, '/hello', agencyIDCallback);
         });
-    });
+    }).catch(function(e) {
+      util.log('*** initializeCallback() error: ' + e.message);
+      localStorage.removeItem("lat-long-pem");
+      alert("We've experienced an error and are refreshing the page. Please scan again");
+      window.location.reload();
+  });
 }
 
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    showElement(LOADING_TEXT_ELEMENT)
+    showElement(LOADING_TEXT_ELEMENT);
+    hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -966,14 +999,23 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
+            if(data["use-bulk-assignment-mode"] !== null){
+                useBulkAssignmentMode = data["use-bulk-assignment-mode"];
+            }
+            // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
-        trips = data;
-        loadTrips();
+        if (useBulkAssignmentMode){
+            configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
+            hideElement(TRIP_SELECT_DROPDOWN);
+        } else {
+            trips = data;
+            loadTrips();
+        }
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
         populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
@@ -1118,6 +1160,11 @@ function changeDisplay(id,display) {
     p.style.display = display;
 }
 
+function changeText(id,text) {
+    var p = document.getElementById(id);
+    p.textContent = text;
+}
+
 // Populates dropdown, and then shows all dropdowns
 function populateTripList(tripIDMap = tripIDLookup) {
     util.log("populateTripList()");
@@ -1200,7 +1247,7 @@ if (!Object.entries) {
 
 configMatrix = new ConfigMatrix();
 
-// The below files will be processed in the order they appear here. It's important that filter-params goes before trip-names
+// The below files will be processed in the order they appear here. It's important that agency-params goes before trip-names
 configMatrix.addRow(CONFIG_VEHICLE_IDS, "vehicle-ids.json", ConfigMatrix.PRESENT);
 configMatrix.addRow(CONFIG_DRIVER_NAMES, "driver-names.json", ConfigMatrix.UNKNOWN);
 configMatrix.addRow(CONFIG_AGENCY_PARAMS, "agency-params.json", ConfigMatrix.UNKNOWN);

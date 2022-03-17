@@ -12,7 +12,7 @@
   </head>
 
   <body style="background-color: var(--main-bg-color)" onblur="handleOnBlur()" onfocus="handleOnFocus()" onmouseup="handleTouch()" ontouchstart="handleTouch()">
-    <div id="qr-reader" style="width: 100%"></div>
+    <div id="qr-reader" style="width: 100%; display: block"></div>
     <div align="left" style="width: 100%">
         <button onclick="handleStartStop()" id="start-stop" style="display: none; background-color: green">Load trips</button>
     </div>
@@ -24,7 +24,8 @@
     </div>
     <p id="loading" align="left" style="width: 100%; display: none" class="loading"> Loading GRaaS...</p>
     <div id="stats" style="width: 100%; display: none; padding-left: 25px" class="stats">
-      <p id="version">Version: 0.16 (02/09/22)</p>
+      <p id="version">Version: 0.18 (03/17/22)</p>
+      <p id="trip-assignment-mode">Trip assignment mode:</p>
       <p id="vehicle-id">Vehicle ID:</p>
       <p id="uuid">UUID:</p>
       <p id="session-id">Session ID:</p>
