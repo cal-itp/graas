@@ -55,6 +55,7 @@ const MAX_VEHICLE_ID_AGE_SECS = 60 * 60 * 4;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 
+const QR_READER_ELEMENT = "qr-reader";
 const CONFIG_TRIP_NAMES = "trip names";
 const CONFIG_VEHICLE_IDS = "vehicle IDs";
 const CONFIG_DRIVER_NAMES = "driver names";
@@ -69,7 +70,7 @@ const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
 const DRIVER_SELECT_DROPDOWN_TEXT = "Select Driver";
 const ALL_DROPDOWNS = "config";
-const LOADING_TEXT_ELEMENT = "loading";
+const MESSAGE_TEXT_ELEMENT = "message";
 const TRIP_STATS_ELEMENT = "stats";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
@@ -376,8 +377,6 @@ function handleStartStop() {
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
-
-
     // Driver taps "Load trips", dropdown options appear
     if (text === START_STOP_BUTTON_LOAD_TEXT) {
         var millis = Date.now();
@@ -386,7 +385,7 @@ function handleStartStop() {
         util.log("+ delta: " + (millis - startMillis));
 
         hideElement(ALL_DROPDOWNS);
-        showElement(LOADING_TEXT_ELEMENT);
+        showElement(MESSAGE_TEXT_ELEMENT);
 
         configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
@@ -409,7 +408,7 @@ function handleStartStop() {
                 populateTripList(loadTrips());
             }
         } else {
-            hideElement(LOADING_TEXT_ELEMENT);
+            hideElement(MESSAGE_TEXT_ELEMENT);
             showElement(ALL_DROPDOWNS);
         }
 
@@ -433,8 +432,7 @@ function handleStartStop() {
         p.disabled = 'true';
         p.style.background = GRAY_HEX;
 
-        p = document.getElementById(START_STOP_BUTTON);
-        p.textContent = START_STOP_BUTTON_LOAD_TEXT;
+        changeText(START_STOP_BUTTON, START_STOP_BUTTON_LOAD_TEXT);
 
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
             fetch('/graas-stop').then(function(response) {
@@ -525,9 +523,7 @@ function handleOkay() {
 
     hideElement(ALL_DROPDOWNS);
     showElement(TRIP_STATS_ELEMENT);
-
-    var p = document.getElementById(START_STOP_BUTTON);
-    p.textContent = START_STOP_BUTTON_STOP_TEXT;
+    changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
     running = true;
@@ -904,8 +900,11 @@ function initializeCallback(agencyData) {
 
     var key = atob(b64);
     // util.log("- key.length: " + key.length);
+    util.log("- key: " + key);
+    util.log("- b64: " + b64);
 
     const binaryDer = util.str2ab(key);
+    util.log("- binaryDer: " + binaryDer);
 
     crypto.subtle.importKey(
         "pkcs8",
@@ -945,14 +944,19 @@ function initializeCallback(agencyData) {
 
             util.apiCall(hello, '/hello', agencyIDCallback);
         });
-    });
+    }).catch(function(e) {
+      util.log('*** initializeCallback() error: ' + e.message);
+      changeText(MESSAGE_TEXT_ELEMENT, "QR Scan Internal Error. \r\n Please clear browser cache and then refresh the page.");
+      showElement(MESSAGE_TEXT_ELEMENT);
+  });
 }
 
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    showElement(LOADING_TEXT_ELEMENT)
+    showElement(MESSAGE_TEXT_ELEMENT);
+    hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -997,7 +1001,7 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            if(data["use-bulk-assignment-mode"] != null){
+            if(data["use-bulk-assignment-mode"] !== null){
                 useBulkAssignmentMode = data["use-bulk-assignment-mode"];
             }
             // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
@@ -1158,6 +1162,11 @@ function changeDisplay(id,display) {
     p.style.display = display;
 }
 
+function changeText(id,text) {
+    var p = document.getElementById(id);
+    p.textContent = text;
+}
+
 // Populates dropdown, and then shows all dropdowns
 function populateTripList(tripIDMap = tripIDLookup) {
     util.log("populateTripList()");
@@ -1171,7 +1180,7 @@ function populateTripList(tripIDMap = tripIDLookup) {
 
     setupListHeader(p);
 
-    hideElement(LOADING_TEXT_ELEMENT);
+    hideElement(MESSAGE_TEXT_ELEMENT);
     showElement(ALL_DROPDOWNS);
 }
 
@@ -1183,7 +1192,7 @@ function setupListHeader(p) {
 
 function configComplete() {
     util.log("configComplete()");
-    hideElement(LOADING_TEXT_ELEMENT);
+    hideElement(MESSAGE_TEXT_ELEMENT);
     showElement(START_STOP_BUTTON);
     setInterval(function() {
         if (!running) {
