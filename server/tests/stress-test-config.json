@@ -1,9 +1,9 @@
 {
-"use-production-server": false,
+"use-production-server": true,
 "production-server-url": "https://lat-long-prototype.wl.r.appspot.com/",
-"agency-count": 10,
-"vehicle-count": 500,
+"agency-count": 5,
+"vehicle-count": 5,
 "interval-time": 3,
 "interval-variation": 1,
-"num-repeats": 50
+"num-repeats": 3
 }
