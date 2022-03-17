@@ -12,8 +12,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 var closeButtonData = {x: -1, y: -1, w: 0, h: 0, active:false, item: null};
-var pressTimer = null;
-var pressItem = null;
+var longPressTimer = null;
 var dragging = false;
 var dragItem = null;
 var dragReceiver = null;
@@ -24,6 +23,8 @@ var lastRefresh = 0;
 var items = [];
 var blockMap = {};
 var currentModal = null;
+var currentToast = null;
+var timerID = null;
 var signatureKey = null;
 var fromDate = null;
 var agencyID = '';
@@ -31,6 +32,8 @@ var agencyName = '';
 var deployedAssignments = [];
 var currentAssignments = [];
 var VEHICLES_VOFF = 0;
+var startTouchX;
+var startTouchY;
 var lastTouchX;
 var lastTouchY;
 
@@ -54,6 +57,29 @@ function isMobile() {
     util.log("- result: " + result);
 
     return result;
+}
+
+function showToast(text) {
+    util.log("showToast()");
+    util.log("- text: " + text);
+
+    var toastText = document.getElementById('toast-text');
+    toastText.innerHTML = text;
+
+    currentToast = document.getElementById('toast-container');
+    currentToast.style.display = "block";
+
+    var that = this;
+
+    timerID = setInterval(function() {
+        util.log('toast callback');
+        util.log('- that.timerID: ' + that.timerID);
+        util.log('- that.toast: ' + that.toast);
+
+        that.currentToast.style.display = "none";
+        clearInterval(that.timerID);
+        that.repaint();
+    }, 2000);
 }
 
 function handleModal(name) {
@@ -401,19 +427,31 @@ function handleTouchStart(e) {
 
     e.preventDefault();
 
+    /* ### execute only first time around
+    const sound = new Audio('path/to/your/sound/notification.mp3');
+
+    sound.play();
+    sound.pause();
+    sound.currentTime = 0;
+
+    */
+
     /*util.log('- e.touches.length: ' + e.touches.length);
     util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
     util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
     util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
 
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
+    startTouchX = e.touches[0].clientX;
+    startTouchY = e.touches[0].clientY;
 
-    handleMouseDown({x: lastTouchX, y: lastTouchY})
+    longPressTimer = setInterval(longPress, 2000, startTouchX, startTouchY);
+    util.log('- longPressTimer: ' + longPressTimer);
+
+    handleMouseDown({x: startTouchX, y: startTouchY})
 }
 
 function handleTouchMove(e) {
-    util.log('* handleTouchMove() *');
+    //util.log('* handleTouchMove() *');
 
     //e.preventDefault();
 
@@ -421,6 +459,11 @@ function handleTouchMove(e) {
     util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
     util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
     util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
+
+    if (longPressTimer) {
+        clearInterval(longPressTimer);
+        longPressTimer= null;
+    }
 
     lastTouchX = e.touches[0].clientX;
     lastTouchY = e.touches[0].clientY;
@@ -542,12 +585,15 @@ function handleCloseButtonPress() {
     util.log('handleCloseButtonPress()');
     util.log('- closeButtonData.item: ' + JSON.stringify(closeButtonData.item));
 
+    var blockID = null;
+
     if (closeButtonData.item.type === 'vehicle') {
         for (var item of items) {
             if (item.vehicle === closeButtonData.item.label) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.vehicle = null;
                 item.status = 'unassigned';
+                blockID = item.label;
                 repaint();
 
                 break;
@@ -570,6 +616,7 @@ function handleCloseButtonPress() {
             if (item.label === closeButtonData.item.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
+                blockID = closeButtonData.item.label;
                 repaint();
 
                 break;
@@ -594,18 +641,52 @@ function handleCloseButtonPress() {
     closeButtonData.h = 0;
     closeButtonData.active = false;
     closeButtonData.item = null;
+
+    if (blockID) {
+        showToast(`unassigned block '${blockID}'`);
+        updateDeploymentIndicator();
+    }
 }
 
-/*
-mobile version todos:
-- disable default long press: https://stackoverflow.com/questions/12304012/preventing-default-context-menu-on-longpress-longclick-in-mobile-safari-ipad
-- if runnning on mobile, start 2s timer on mousedown: setInterval(), clearInterval()
-- if dragging or short press, cancel timer
-- when timer expires, cancel timer, play long-press sound and call longPress()
-*/
-function longPress() {
-    clearInterval(pressTimer);
-    pressTimer = null;
+function playSound(url) {
+  const audio = new Audio(url);
+  audio.play();
+}
+
+function getItemAt(x, y) {
+    for (item of items) {
+        if (x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h) {
+            return item;
+        }
+    }
+
+    return null;
+}
+
+function longPress(x, y) {
+    util.log('longPress()');
+    util.log('- x: ' + x);
+    util.log('- y: ' + y);
+
+    if (longPressTimer) {
+        clearInterval(longPressTimer);
+        longPressTimer = null;
+    }
+
+    var pressItem = getItemAt(x, y);
+    util.log('- pressItem: ' + pressItem);
+    if (!pressItem) return;
+
+    util.log('- navigator.vibrate: ' + navigator.vibrate);
+
+    if (navigator && navigator.vibrate) {
+        util.log('+ vibrate');
+        navigator.vibrate(1000);
+    }
+
+    //playSound('vibrate.mp3');
+
+    var blockID = null;
 
     if (pressItem.type === 'vehicle') {
         if (pressItem.status == 'inactive') {
@@ -618,6 +699,7 @@ function longPress() {
                     util.log('-- item: ' + JSON.stringify(item));
                     item.vehicle = null;
                     item.status = 'unassigned';
+                    blockID = item.label;
 
                     break;
                 }
@@ -632,6 +714,7 @@ function longPress() {
             if (item.label === pressItem.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
+                blockID = pressItem.label;
 
                 break;
             }
@@ -642,7 +725,10 @@ function longPress() {
         repaint();
     }
 
-    pressItem = null;
+    if (blockID) {
+        showToast(`unassigned block '${blockID}'`);
+        updateDeploymentIndicator();
+    }
 }
 
 function handleMouseDown(e) {
@@ -748,14 +834,14 @@ function drawCloseButton(item) {
 }
 
 function handleMouseMove(e) {
-    util.log('handleMouseMove()');
+    //util.log('handleMouseMove()');
 
     var x = e.x;
     var y = e.y;
 
     if (dragging && dragItem !== null) {
-        util.log('- x: ' + x);
-        util.log('- y: ' + y);
+        //util.log('- x: ' + x);
+        //util.log('- y: ' + y);
 
         //log('+ dragItem: ' + dragItem);
         var millis = (new Date).getTime();
@@ -786,7 +872,8 @@ function handleMouseMove(e) {
             //ctx.fillStyle = 'white';
             //ctx.fillText(dragItem.label, e.x, e.y);
 
-            drawWidget(dragItem, e.x - dragItem.w / 2, e.y - dragItem.h / 2);
+            var divider = navigator.maxTouchPoints > 0 ? 1.5 : 2
+            drawWidget(dragItem, e.x - dragItem.w / divider, e.y - dragItem.h / divider);
         }
     } else {
         var millis = (new Date).getTime();

@@ -473,12 +473,18 @@ def handle_block_collection(datastore_client, data):
         query.add_filter("created", "<", now - WEEK_MILLIS)
 
         results = list(query.fetch())
+        print(f'- results: {results}')
+
         keys = []
 
         for r in results:
             keys.append(r.key)
-            keys.append(r['block_list_key'])
-            keys.append(r['assignment_summary_key'])
+
+            if 'block_list_key' in r:
+                keys.append(r['block_list_key'])
+
+            if 'assignment_summary_key' in r:
+                keys.append(r['assignment_summary_key'])
 
         print(f'- keys: {keys}')
         datastore_client.delete_multi(keys)

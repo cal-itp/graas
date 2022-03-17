@@ -153,6 +153,12 @@ def test():
     content = util.get_file(fn, 'rb')
     return Response(content, mimetype='text/html')
 
+@app.route('/vibrate.mp3')
+def vibrate():
+    fn = 'static/vibrate.mp3'
+    content = util.get_file(fn, 'rb')
+    return Response(content, mimetype='audio/mpeg')
+
 @app.route('/bus.png')
 def bus():
     fn = 'static/bus.png'
