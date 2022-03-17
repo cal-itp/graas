@@ -71,7 +71,7 @@ public class BlockDataGenerator {
         System.err.println("    <output-folder> folder to place output file in (file name will be 'blocks-<mm>-<dd>.json'");
         System.err.println("    <agency-id> a transit agency identifier constructed from the alphabet of [a-z\\-]");
         System.err.println("    <mm/dd/yy> valid 24 hour period for block data, defaults to current day if omitted");
-        System.err.println("    <n> offset from today's date (must be between 0 and 3): 0 is today, 1 is tomorrow, etc.");
+        System.err.println("    <n> offset from today's date (must be between 0 and 30): 0 is today, 1 is tomorrow, etc.");
         System.exit(1);
     }
 
@@ -84,7 +84,7 @@ public class BlockDataGenerator {
             usage();
         }
 
-        if (offset < 0 || offset > 3) usage();
+        if (offset < 0 || offset > 30) usage();
 
         long millis = Util.now() + offset * Time.MILLIS_PER_DAY;
         return new Date(millis);

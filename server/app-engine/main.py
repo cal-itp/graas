@@ -153,6 +153,12 @@ def test():
     content = util.get_file(fn, 'rb')
     return Response(content, mimetype='text/html')
 
+@app.route('/vibrate.mp3')
+def vibrate():
+    fn = 'static/vibrate.mp3'
+    content = util.get_file(fn, 'rb')
+    return Response(content, mimetype='audio/mpeg')
+
 @app.route('/bus.png')
 def bus():
     fn = 'static/bus.png'
@@ -282,12 +288,12 @@ def block_collection():
 
     data = request.json['data']
 
-    gtfsrt.handle_block_collection(
+    status = gtfsrt.handle_block_collection(
         util.datastore_client,
         data
     )
 
-    return Response('{"command": "block-collection", "status": "ok"}', mimetype='application/json')
+    return Response(f'{{"command": "block-collection", "status": "{status}"}}', mimetype='application/json')
 
 @app.route('/get-assignments', methods=['POST'])
 def get_assignments():

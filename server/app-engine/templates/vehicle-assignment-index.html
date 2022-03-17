@@ -5,7 +5,7 @@
         <title>Vehicle Assignments</title>
         <link type="text/css" rel="stylesheet" href="../static/vehicle-assignment-style.css">
     </head>
-    <body style="background-color: #ccd">
+    <body onbeforeunload="handleUnload(event)">
         <div id="keyEntryModal" class="modal">
           <div class="modal-content">
             <p id="key-title" style="text-align: center">Enter Key</p>
@@ -15,14 +15,31 @@
         </div>
         <div id="dateSelectModal" class="modal">
           <div style="text-align: center" class="modal-content">
-            <p id="key-title" style="text-align: center">Select target date</p>
-            <button id="key-select-today" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: blue">Today</button>
-            <button id="key-select-tomorrow" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: blue">Tomorrow</button>
+            <p id="key-title" style="text-align: center">Target Date:</p>
+            <button id="key-select-today" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; margin-bottom: 0">Today</button>
+            <button id="key-select-tomorrow" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px;">Tomorrow</button>
           </div>
+        </div>
+        <div id="confirmationModal" class="modal">
+          <div style="text-align: center" class="modal-content">
+            <p id="key-confirm-text" style="text-align: center">""</p>
+            <button id="key-confirm-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="width: 200px; background-color: darkBlue">Okay</button>
+          </div>
+        </div>
+        <div id="infiniteProgressModal" class="modal">
+            <div class="demo-container">
+              <div class="progress-bar">
+                <div class="progress-bar-value"></div>
+              </div>
+            </div>
+        </div>
+        <div id="toast-container" class="toast">
+            <p id="toast-text" style="text-align: center" class="toast-content"></p>
         </div>
         <canvas id="canvas"></canvas>
         <div style="width: 100%; display: block">
-            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: inline-block; background-color: blue" class="btn">DEPLOY</button>
+            <button id="key-deploy" onclick="handleKey(this.id)" style="width: auto; float: right; display: none;" class="btn">Deploy</button>
+            <p id="text-deployment-status" style="float: right; text-align: right; font-family: arial; color: lightGray; font-size: 14px; margin-top: 37px"></p>
         </div>
         <script src="../static/gtfs-rt-util.js"></script>
         <script src="../static/vehicle-assignments.js"></script>

@@ -1,11 +1,10 @@
 const BLOCKS_VOFF = 65;
-const VEHICLES_VOFF = 425;
 const BLOCK_HEIGHT = 60;
 const VEHICLE_HEIGHT = 30;
-const SHADOW_BLUR = 5;
+const SHADOW_BLUR = 3;
 const GAP = 10;
-const COLS = 10;
-const FONT_SIZE = 22;
+const COLS = 15;
+const FONT_SIZE = 20;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 
@@ -13,8 +12,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 var closeButtonData = {x: -1, y: -1, w: 0, h: 0, active:false, item: null};
-var pressTimer = null;
-var pressItem = null;
+var longPressTimer = null;
 var dragging = false;
 var dragItem = null;
 var dragReceiver = null;
@@ -25,8 +23,19 @@ var lastRefresh = 0;
 var items = [];
 var blockMap = {};
 var currentModal = null;
+var currentToast = null;
+var timerID = null;
 var signatureKey = null;
 var fromDate = null;
+var agencyID = '';
+var agencyName = '';
+var deployedAssignments = [];
+var currentAssignments = [];
+var VEHICLES_VOFF = 0;
+var startTouchX;
+var startTouchY;
+var lastTouchX;
+var lastTouchY;
 
 function isMobile() {
     util.log("isMobile()");
@@ -48,6 +57,29 @@ function isMobile() {
     util.log("- result: " + result);
 
     return result;
+}
+
+function showToast(text) {
+    util.log("showToast()");
+    util.log("- text: " + text);
+
+    var toastText = document.getElementById('toast-text');
+    toastText.innerHTML = text;
+
+    currentToast = document.getElementById('toast-container');
+    currentToast.style.display = "block";
+
+    var that = this;
+
+    timerID = setInterval(function() {
+        util.log('toast callback');
+        util.log('- that.timerID: ' + that.timerID);
+        util.log('- that.toast: ' + that.toast);
+
+        that.currentToast.style.display = "none";
+        clearInterval(that.timerID);
+        that.repaint();
+    }, 2000);
 }
 
 function handleModal(name) {
@@ -118,6 +150,13 @@ function layout(blockIDList, vehicleIDList, assignments) {
         if (vehicleID) {
             item.status = 'assigned';
             item.vehicle = vehicleID;
+
+            var a = {
+                blockID: blockIDList[i],
+                vehicleID: vehicleID
+            };
+
+            currentAssignments.push(a);
         }
 
         items.push(item);
@@ -130,9 +169,19 @@ function layout(blockIDList, vehicleIDList, assignments) {
         }
     }
 
+    for (var a of currentAssignments) {
+        deployedAssignments.push(a);
+    }
+
+    deployedAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+    updateDeploymentIndicator();
+
     bh = VEHICLE_HEIGHT;
     xx = GAP;
-    yy = VEHICLES_VOFF;
+
+
+    yy += 3 * BLOCK_HEIGHT;
+    VEHICLES_VOFF = yy;
 
     for (var i=0; i<vehicleIDList.length; i++) {
         var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
@@ -165,7 +214,7 @@ function initialize() {
     //window.addEventListener('resize', resizeCanvas, false);
 
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * .9;
+    canvas.height = window.innerHeight * .9125;
 
     repaint();
 
@@ -179,6 +228,7 @@ function initialize() {
             // ### TODO add QR code scanning once
             // we're past the initial implementation
             //scanQRCode();
+            handleModal("keyEntryModal");
         }
     } else {
         completeInitialization(parseAgencyData(str));
@@ -206,6 +256,37 @@ function parseAgencyData(str) {
     };
 }
 
+async function handleDeploy(data) {
+    handleModal('infiniteProgressModal');
+    var json = await util.getJSONResponse('/block-collection', data, signatureKey);
+    util.log('- json: ' + JSON.stringify(json));
+    util.log('- json.status: ' + json);
+
+    var status = 'failed';
+    if (json && json.status) status = json.status;
+
+    var elem = document.getElementById('key-confirm-text');
+    elem.innerHTML = 'Deploy status: ' + status;
+
+    if (status === 'ok') {
+        deployedAssignments = []
+
+        for (var ca of currentAssignments) {
+            var a = {
+                blockID: ca.blockID,
+                vehicleID: ca.vehicleID
+            };
+
+            deployedAssignments.push(a);
+        }
+
+        updateDeploymentIndicator();
+    }
+
+    dismissModal();
+    handleModal('confirmationModal');
+}
+
 function handleKey(id) {
     util.log('handleKey()');
     util.log('- id: ' + id);
@@ -221,15 +302,18 @@ function handleKey(id) {
         var i2 = value.indexOf(PEM_FOOTER);
         util.log("- i2: " + i2);
 
-        if (i1 < 0 || i2 < 0) {
-            alert("not a valid key");
+        if (i1 === 0) {
+            alert('missing agency id');
+            return;
+        } else if (i1 < 0 || i2 < 0) {
+            alert('not a valid key');
             return;
         }
 
         dismissModal();
         p.value = "";
 
-        localStorage.setItem("app-data", value);
+        localStorage.setItem('app-data', value);
         completeInitialization(parseAgencyData(value));
     } else if (id === 'key-deploy') {
         var blockData = [];
@@ -265,8 +349,7 @@ function handleKey(id) {
         };
         util.log('- data: ' + JSON.stringify(data));
 
-        var json = util.getJSONResponse('/block-collection', data, signatureKey);
-        util.log('- json: ' + JSON.stringify(json));
+        handleDeploy(data);
     } else if (id === 'key-select-today') {
         fromDate = util.getMidnightDate();
         var str = util.getYYYYMMDD(fromDate);
@@ -281,12 +364,15 @@ function handleKey(id) {
 
         dismissModal();
         loadBlockData(str);
+    } else if (id === 'key-confirm-okay') {
+        dismissModal();
     }
 }
 
 async function completeInitialization(agencyData) {
     agencyID = agencyData.id;
     util.log("- agencyID: " + agencyID);
+    agencyName = getDisplayName(agencyID);
 
     var pem = agencyData.pem;
 
@@ -320,17 +406,114 @@ async function completeInitialization(agencyData) {
 
     util.log("- signatureKey.type: " + signatureKey.type);
 
-    document.body.addEventListener('mousedown', handleMouseDown);
-    document.body.addEventListener('mouseup', handleMouseUp);
-    document.body.addEventListener('mousemove', handleMouseMove);
+    addEventListener('beforeunload', (event) => {
+        util.log('beforeunload callback');
+    });
+
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchmove', handleTouchMove);
+    canvas.addEventListener('touchcancel', handleTouchCancel);
+    canvas.addEventListener('touchend', handleTouchEnd);
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mousemove', handleMouseMove);
 
     handleModal('dateSelectModal');
+}
+
+function handleTouchStart(e) {
+    util.log('* handleTouchStart() *');
+
+    e.preventDefault();
+
+    /* ### execute only first time around
+    const sound = new Audio('path/to/your/sound/notification.mp3');
+
+    sound.play();
+    sound.pause();
+    sound.currentTime = 0;
+
+    */
+
+    /*util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
+
+    startTouchX = e.touches[0].clientX;
+    startTouchY = e.touches[0].clientY;
+
+    longPressTimer = setInterval(longPress, 2000, startTouchX, startTouchY);
+    util.log('- longPressTimer: ' + longPressTimer);
+
+    handleMouseDown({x: startTouchX, y: startTouchY})
+}
+
+function handleTouchMove(e) {
+    //util.log('* handleTouchMove() *');
+
+    //e.preventDefault();
+
+    /*util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);*/
+
+    if (longPressTimer) {
+        clearInterval(longPressTimer);
+        longPressTimer= null;
+    }
+
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+
+    handleMouseMove({x: lastTouchX, y: lastTouchY})
+}
+
+function handleTouchEnd(e) {
+    util.log('* handleTouchEnd() *');
+
+    //e.preventDefault();
+    handleMouseUp({x: lastTouchX, y: lastTouchY})
+}
+
+function handleTouchCancel(e) {
+    util.log('* handleTouchCancel() *');
+
+    e.preventDefault();
+
+    util.log('- e.touches.length: ' + e.touches.length);
+    util.log('- e.touches[0]: ' + JSON.stringify(e.touches[0]));
+    util.log('- e.touches[0].clientX: ' + e.touches[0].clientX);
+    util.log('- e.touches[0].clientY: ' + e.touches[0].clientY);
+}
+
+function handleUnload(e) {
+    util.log('* handleUnload() *');
+    util.log('- e: ' + JSON.stringify(e));
+
+    currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+
+    if (JSON.stringify(currentAssignments) === JSON.stringify(deployedAssignments)) {
+        util.log('+ no unsaved changes');
+
+        delete e['returnValue'];
+    } else {
+        util.log('+ unsaved changes');
+        util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));
+        util.log('- deployedAssignments: ' + JSON.stringify(deployedAssignments));
+
+        e.preventDefault();
+        e.returnValue = '';
+    }
 }
 
 async function loadBlockData(dateString) {
     util.log('loadBlockData()');
     util.log('- dateString: ' + dateString);
 
+    handleModal('infiniteProgressModal');
     var name = `blocks-${dateString}.json`;
     //util.log('- name: ' + name);
     var blocks = await getGithubData(agencyID, name);
@@ -357,6 +540,10 @@ async function loadBlockData(dateString) {
     var assignments = json.assignments;
 
     layout(bidList, vidList, assignments);
+
+    dismissModal();
+    var deployButton = document.getElementById('key-deploy');
+    deployButton.style.display = 'inline-block';
 }
 
 function getGithubData(agencyID, filename) {
@@ -373,9 +560,32 @@ function getGithubData(agencyID, filename) {
     return util.getJSONResponse(url);
 }
 
+function updateDeploymentIndicator() {
+    util.log('updateDeploymentIndicator()');
+    var button = document.getElementById('key-deploy');
+    var text = document.getElementById('text-deployment-status');
+
+    currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
+
+    util.log('- currentAssignments: ' + JSON.stringify(currentAssignments));
+    util.log('- deployedAssignments: ' + JSON.stringify(deployedAssignments));
+
+    if (JSON.stringify(currentAssignments) === JSON.stringify(deployedAssignments)) {
+        util.log('+ no unsaved changes');
+        button.disabled = true;
+        text.innerHTML = 'All changes are saved.';
+    } else {
+        util.log('+ unsaved changes');
+        button.disabled = false;
+        text.innerHTML = '';
+    }
+}
+
 function handleCloseButtonPress() {
     util.log('handleCloseButtonPress()');
     util.log('- closeButtonData.item: ' + JSON.stringify(closeButtonData.item));
+
+    var blockID = null;
 
     if (closeButtonData.item.type === 'vehicle') {
         for (var item of items) {
@@ -383,12 +593,21 @@ function handleCloseButtonPress() {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.vehicle = null;
                 item.status = 'unassigned';
+                blockID = item.label;
                 repaint();
 
                 break;
             }
         }
 
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].blockID === closeButtonData.item.label) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
+        updateDeploymentIndicator();
         closeButtonData.item.status = 'active';
     }
 
@@ -397,12 +616,21 @@ function handleCloseButtonPress() {
             if (item.label === closeButtonData.item.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
+                blockID = closeButtonData.item.label;
                 repaint();
 
                 break;
             }
         }
 
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].vehicleID === closeButtonData.item.vehicle) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
+        updateDeploymentIndicator();
         closeButtonData.item.status = 'unassigned';
         closeButtonData.item.vehicle = null;
     }
@@ -413,18 +641,52 @@ function handleCloseButtonPress() {
     closeButtonData.h = 0;
     closeButtonData.active = false;
     closeButtonData.item = null;
+
+    if (blockID) {
+        showToast(`unassigned block '${blockID}'`);
+        updateDeploymentIndicator();
+    }
 }
 
-/*
-mobile version todos:
-- disable default long press: https://stackoverflow.com/questions/12304012/preventing-default-context-menu-on-longpress-longclick-in-mobile-safari-ipad
-- if runnning on mobile, start 2s timer on mousedown: setInterval(), clearInterval()
-- if dragging or short press, cancel timer
-- when timer expires, cancel timer, play long-press sound and call longPress()
-*/
-function longPress() {
-    clearInterval(pressTimer);
-    pressTimer = null;
+function playSound(url) {
+  const audio = new Audio(url);
+  audio.play();
+}
+
+function getItemAt(x, y) {
+    for (item of items) {
+        if (x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h) {
+            return item;
+        }
+    }
+
+    return null;
+}
+
+function longPress(x, y) {
+    util.log('longPress()');
+    util.log('- x: ' + x);
+    util.log('- y: ' + y);
+
+    if (longPressTimer) {
+        clearInterval(longPressTimer);
+        longPressTimer = null;
+    }
+
+    var pressItem = getItemAt(x, y);
+    util.log('- pressItem: ' + pressItem);
+    if (!pressItem) return;
+
+    util.log('- navigator.vibrate: ' + navigator.vibrate);
+
+    if (navigator && navigator.vibrate) {
+        util.log('+ vibrate');
+        navigator.vibrate(1000);
+    }
+
+    //playSound('vibrate.mp3');
+
+    var blockID = null;
 
     if (pressItem.type === 'vehicle') {
         if (pressItem.status == 'inactive') {
@@ -437,6 +699,7 @@ function longPress() {
                     util.log('-- item: ' + JSON.stringify(item));
                     item.vehicle = null;
                     item.status = 'unassigned';
+                    blockID = item.label;
 
                     break;
                 }
@@ -451,6 +714,7 @@ function longPress() {
             if (item.label === pressItem.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
+                blockID = pressItem.label;
 
                 break;
             }
@@ -461,11 +725,15 @@ function longPress() {
         repaint();
     }
 
-    pressItem = null;
+    if (blockID) {
+        showToast(`unassigned block '${blockID}'`);
+        updateDeploymentIndicator();
+    }
 }
 
 function handleMouseDown(e) {
     util.log('handleMouseDown()');
+    util.log('- e: ' + JSON.stringify(e));
 
     var x = e.x;
     var y = e.y;
@@ -502,11 +770,21 @@ function handleMouseDown(e) {
 
 function handleMouseUp(e) {
     util.log('handleMouseUp()');
+    util.log('- e.x: ' + e.x);
+    util.log('- e.y: ' + e.y);
     util.log('- dragReceiver: ' + JSON.stringify(dragReceiver));
 
     if (dragReceiver !== null) {
         dragReceiver.vehicle = dragItem.label;
         dragReceiver.status = 'assigned';
+
+        var a = {
+            blockID: dragReceiver.label,
+            vehicleID: dragItem.label
+        };
+
+        currentAssignments.push(a);
+        updateDeploymentIndicator();
 
         if (dragItem !== null) {
             dragItem.status = 'assigned';
@@ -533,7 +811,8 @@ function drawCloseButton(item) {
     closeButtonData.w = 2 * radius;
     closeButtonData.h = 2 * radius;
 
-    ctx.shadowBlur = 0;
+    var savedShadowBlur = ctx.shadowBlur;
+    //ctx.shadowBlur = SHADOW_BLUR;
 
     ctx.fillStyle = 'black';
     ctx.beginPath();
@@ -548,17 +827,22 @@ function drawCloseButton(item) {
     ctx.moveTo(xx - len, yy - len);
     ctx.lineTo(xx + len, yy + len);
     ctx.stroke();
+    ctx.lineWidth = 1;
 
-    ctx.shadowBlur = SHADOW_BLUR;
+    //ctx.shadowColor = null;
+    //ctx.shadowBlur = 0;
 }
 
 function handleMouseMove(e) {
-    //log('handleMouseMove()');
+    //util.log('handleMouseMove()');
 
     var x = e.x;
     var y = e.y;
 
     if (dragging && dragItem !== null) {
+        //util.log('- x: ' + x);
+        //util.log('- y: ' + y);
+
         //log('+ dragItem: ' + dragItem);
         var millis = (new Date).getTime();
 
@@ -588,7 +872,8 @@ function handleMouseMove(e) {
             //ctx.fillStyle = 'white';
             //ctx.fillText(dragItem.label, e.x, e.y);
 
-            drawWidget(dragItem, e.x - dragItem.w / 2, e.y - dragItem.h / 2);
+            var divider = navigator.maxTouchPoints > 0 ? 1.5 : 2
+            drawWidget(dragItem, e.x - dragItem.w / divider, e.y - dragItem.h / divider);
         }
     } else {
         var millis = (new Date).getTime();
@@ -624,6 +909,29 @@ function handleMouseMove(e) {
     }
 }
 
+function fillRoundedRect(ctx, x, y, width, height, radius) {
+    var savedShadowBlur = ctx.shadowBlur;
+    ctx.shadowColor = 'gray';
+    ctx.shadowBlur = SHADOW_BLUR;
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowColor = null;
+    ctx.shadowBlur = 0;
+}
+
+
 function drawWidget(item, xx = -1, yy = -1) {
     var color = '#aab';
 
@@ -636,12 +944,18 @@ function drawWidget(item, xx = -1, yy = -1) {
         color = '#3c3';
     }
 
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, item.w, item.h);
+    if (item.type === 'block') {
+        ctx.fillStyle = 'aliceBlue';
+        ctx.fillRect(x, y, item.w, item.h);
+        ctx.fillStyle = 'black';
+    } else {
+        ctx.fillStyle = color;
+        fillRoundedRect(ctx, x, y, item.w, item.h, 4);
+        ctx.fillStyle = 'white';
+    }
 
-    ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.fillText(item.label, x + item.w / 2, y + FONT_SIZE * .7);
+    ctx.fillText(item.label, x + item.w / 2, y + FONT_SIZE * .8);
 
     if (item.type === 'block' && item.vehicle !== null) {
         ctx.fillStyle = '#3c3';
@@ -651,27 +965,56 @@ function drawWidget(item, xx = -1, yy = -1) {
         ctx.textAlign = 'right';
 
         //log('- item.vehicle: ' + JSON.stringify(item.vehicle));
-        ctx.fillText(item.vehicle, x + item.w - 5, y + item.h - FONT_SIZE * .6);
+        ctx.fillText(item.vehicle, x + item.w - 5, y + item.h - FONT_SIZE * .7);
     }
+}
+
+function getDisplayName(s) {
+    var capitalize = true;
+    var r = '';
+
+    for (var i=0; i<s.length; i++) {
+        var c = s.charAt(i);
+
+        if (capitalize) {
+            c = c.toUpperCase();
+            capitalize = false;
+        }
+
+        if (c === '_') {
+            capitalize = true;
+            c = ' ';
+        }
+
+        r += c;
+    }
+
+    return r;
 }
 
 function repaint() {
     //log('repaint()');
 
-    ctx.fillStyle = '#ccd';
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.shadowColor = 'black';
-    ctx.shadowBlur = SHADOW_BLUR;
+    ctx.shadowColor = 'rgba(0,0,0,0)';
 
-    ctx.font = `bold ${FONT_SIZE}px arial`;
-    ctx.fillStyle = 'white';
+    ctx.font = `${FONT_SIZE}px arial`;
+    ctx.fillStyle = 'black';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
-    ctx.fillText('GTFS BLOCKS FOR ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
-    ctx.fillText('VEHICLES', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
+    ctx.fillText(agencyName + ' GTFS Blocks For ' + util.getShortDate(fromDate), window.innerWidth / 2,  BLOCKS_VOFF - FONT_SIZE * 1.3);
+    if (VEHICLES_VOFF > 0) ctx.fillText('Vehicles', window.innerWidth / 2, VEHICLES_VOFF - FONT_SIZE * 1.3);
 
+
+    ctx.font = `${FONT_SIZE}px arial`;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
 
     for (var item of items) {
         drawWidget(item);
