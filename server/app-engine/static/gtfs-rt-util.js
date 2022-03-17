@@ -66,7 +66,7 @@ if (!fetch) {
         const buf = new ArrayBuffer(str.length);
         const bufView = new Uint8Array(buf);
 
-        for (let i = 0, strLen = str.length; i < strLen; i++) {
+        for (let i = 0, strLen = str.length; i < strLen -1; i++) {
             bufView[i] = str.charCodeAt(i);
         }
 

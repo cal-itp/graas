@@ -70,7 +70,7 @@ const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const DRIVER_SELECT_DROPDOWN = "driver-select";
 const DRIVER_SELECT_DROPDOWN_TEXT = "Select Driver";
 const ALL_DROPDOWNS = "config";
-const MESSAGE_TEXT_ELEMENT = "message";
+const LOADING_TEXT_ELEMENT = "loading";
 const TRIP_STATS_ELEMENT = "stats";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
@@ -385,7 +385,7 @@ function handleStartStop() {
         util.log("+ delta: " + (millis - startMillis));
 
         hideElement(ALL_DROPDOWNS);
-        showElement(MESSAGE_TEXT_ELEMENT);
+        showElement(LOADING_TEXT_ELEMENT);
 
         configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
@@ -408,7 +408,7 @@ function handleStartStop() {
                 populateTripList(loadTrips());
             }
         } else {
-            hideElement(MESSAGE_TEXT_ELEMENT);
+            hideElement(LOADING_TEXT_ELEMENT);
             showElement(ALL_DROPDOWNS);
         }
 
@@ -900,11 +900,8 @@ function initializeCallback(agencyData) {
 
     var key = atob(b64);
     // util.log("- key.length: " + key.length);
-    util.log("- key: " + key);
-    util.log("- b64: " + b64);
 
     const binaryDer = util.str2ab(key);
-    util.log("- binaryDer: " + binaryDer);
 
     crypto.subtle.importKey(
         "pkcs8",
@@ -946,8 +943,9 @@ function initializeCallback(agencyData) {
         });
     }).catch(function(e) {
       util.log('*** initializeCallback() error: ' + e.message);
-      changeText(MESSAGE_TEXT_ELEMENT, "QR Scan Internal Error. \r\n Please clear browser cache and then refresh the page.");
-      showElement(MESSAGE_TEXT_ELEMENT);
+      localStorage.removeItem("lat-long-pem");
+      alert("We've experienced an error and are refreshing the page. Please scan again");
+      window.location.reload();
   });
 }
 
@@ -955,7 +953,7 @@ function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    showElement(MESSAGE_TEXT_ELEMENT);
+    showElement(LOADING_TEXT_ELEMENT);
     hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
@@ -1180,7 +1178,7 @@ function populateTripList(tripIDMap = tripIDLookup) {
 
     setupListHeader(p);
 
-    hideElement(MESSAGE_TEXT_ELEMENT);
+    hideElement(LOADING_TEXT_ELEMENT);
     showElement(ALL_DROPDOWNS);
 }
 
@@ -1192,7 +1190,7 @@ function setupListHeader(p) {
 
 function configComplete() {
     util.log("configComplete()");
-    hideElement(MESSAGE_TEXT_ELEMENT);
+    hideElement(LOADING_TEXT_ELEMENT);
     showElement(START_STOP_BUTTON);
     setInterval(function() {
         if (!running) {
