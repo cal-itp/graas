@@ -34,7 +34,7 @@ public class TripListGenerator {
      */
     public static void generateTripList(String agencyID, String cacheDir, PrintStream out, boolean useValidator) throws Exception {
         Map<String, RouteData> rmap = new HashMap();
-        Map<String, List<Integer>> cmap = new HashMap();
+        Map<String, CalendarData> cmap = new HashMap();
         Map<String, TripData> tmap = new HashMap();
         Map<String, String> dmap = new HashMap();
         Map<String, String> smap = new HashMap();
@@ -133,7 +133,9 @@ public class TripListGenerator {
                 il.add(r.getInt(WEEKDAYS[i]));
             }
 
-            cmap.put(id, il);
+            String startDate = r.get("start_date");
+            String endDate = r.get("end_date");
+            cmap.put(id, new CalendarData(il, startDate, endDate));
         }
 
         tf.dispose();
@@ -352,6 +354,18 @@ class RouteData {
     }
 }
 
+class CalendarData {
+    List<Integer> dayList;
+    String startDate;
+    String endDate;
+
+    public CalendarData(List<Integer> dayList, String startDate, String endDate) {
+        this.dayList = dayList;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+}
+
 class TripListEntry implements Comparable<TripListEntry> {
     String serviceID;
     String routeID;
@@ -403,13 +417,15 @@ class TripListEntry implements Comparable<TripListEntry> {
         return s.substring(0, maxLength) + "...";
     }
 
-    public String toString(Map<String, List<Integer>> cmap, Map<String, String>smap) {
-        return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s}",
+    public String toString(Map<String, CalendarData> cmap, Map<String, String>smap) {
+        return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s, \"start_date\": %s, \"end_date\": %s}",
             name,
             Time.getHMForMillis(departureTime),
             tripID,
-            cmap.get(serviceID),
-            smap.get(firstStopID)
+            cmap.get(serviceID).dayList,
+            smap.get(firstStopID),
+            cmap.get(serviceID).startDate,
+            cmap.get(serviceID).endDate
         );
     }
 }

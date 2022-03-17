@@ -1,6 +1,7 @@
 {
 "is-filter-by-day-of-week": false,
 "max-mins-from-start": 1440,
-"max-feet-from-stop": 1000000
+"max-feet-from-stop": 1000000,
+"ignore-start-end-date": false
 }
 

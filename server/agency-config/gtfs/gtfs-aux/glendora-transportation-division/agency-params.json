@@ -3,5 +3,6 @@
 "max-mins-from-start": 30,
 "max-feet-from-stop": 1320,
 "triplist-generator-namefield": "route_long_name",
-"triplist-generator-use-direction": true
+"triplist-generator-use-direction": true,
+"ignore-start-end-date": false
 }

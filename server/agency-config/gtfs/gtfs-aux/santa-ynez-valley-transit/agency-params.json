@@ -3,5 +3,6 @@
 "max-mins-from-start": 120,
 "max-feet-from-stop": 4239840,
 "triplist-generator-namefield": "headsign",
-"triplist-generator-use-direction": false
+"triplist-generator-use-direction": false,
+"ignore-start-end-date": false
 }
