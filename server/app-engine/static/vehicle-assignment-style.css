@@ -56,6 +56,8 @@ button:disabled {
   padding: 20px;
   border: 1px solid #888;
   width: 30%;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px #606060;
   /* below attributes center modal popup horizontally and vertically */
   margin: 0;
   position: absolute;
@@ -82,7 +84,9 @@ button:disabled {
   padding: 8px;
   border: 1px solid #888;
   width: 30%;
-  font-size: 18px;
+  font-size: 16px;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px #606060;
   /* below attributes center modal popup horizontally and vertically */
   margin: 0;
   position: absolute;
