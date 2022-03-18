@@ -55,7 +55,7 @@ public class UpdateTripNames {
             long lastModifiedLRemote = Util.getLastModifiedRemote(gtfsURL);
             Debug.log("- lastModifiedLRemote: " + lastModifiedLRemote);
 
-            // if(lastModifiedLRemote > lastUpdatedTripList){
+            if(lastModifiedLRemote > lastUpdatedTripList){
                 Debug.log("Static GTFS has been updated since trip-names.json was last updated. Re-running TripListGenerator now to check whether this impacts trip-names.json");
 
                 String fileURL = "https://raw.githubusercontent.com/cal-itp/graas/main/" + filePath;
@@ -85,10 +85,10 @@ public class UpdateTripNames {
                 else{
                     Debug.log("No relevant changes detected.");
                 }
-            // }
-            // else{
-            //     Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
-            // }
+            }
+            else{
+                Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
+            }
         }
         if (prCount == 0) {
             reporter.addLine("...no agencies. Everything looks up to date.");
