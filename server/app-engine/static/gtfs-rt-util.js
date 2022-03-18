@@ -98,7 +98,7 @@ if (!fetch) {
     }
 
     // returns date as an 8-character string (ie 20220317 for 3/17/22)
-    exports.getDate = function() {
+    exports.getTodayYYYYMMDD = function() {
         if (testDate) {
             return testDate;
         } else {

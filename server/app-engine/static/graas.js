@@ -992,7 +992,7 @@ function loadTrips() {
                 //util.log(`- time: ${time}`);
                 const dow = util.getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
-                const date = util.getDate();
+                const date = util.getTodayYYYYMMDD();
                 util.log(`- date: ${date}`);
                 const lat = tripInfo.departure_pos.lat;
                 // util.log(`- lat: ${lat}`);
