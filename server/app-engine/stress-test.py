@@ -223,6 +223,8 @@ def main(argv):
 	successes = 0
 	verificationIssues = 0
 	httpIssues = 0
+	vehicleCounts = {}
+
 	for data in post_metadata_list:
 		totalResponseTime += data.responseTime
 		updates +=1
@@ -242,6 +244,11 @@ def main(argv):
 		if(minResponseTime == None or data.responseTime < minResponseTime):
 			minResponseTime = data.responseTime
 
+		if data.vehicleid in vehicleCounts:
+			vehicleCounts[data.vehicleid] += 1
+		else:
+			vehicleCounts[data.vehicleid] = 1
+
 		# print("----------")
 		# print(f'- agencyid: {data.agencyid}')
 		# print(f'- vehicleid: {data.vehicleid}')
@@ -249,6 +256,8 @@ def main(argv):
 		# print(f'- responseTime: {str(data.responseTime)}')
 		# print(f'- statusCode: {str(data.statusCode)}')
 		# print(f'- status: {str(data.status)}')
+
+	print(vehicleCounts)
 
 	print('Wrapping up...')
 	gcloudUpdates = 0
