@@ -58,6 +58,16 @@ public class Util {
         return sb.toString();
     }
 
+    public static String pad(String s, char c, int count) {
+        StringBuilder sb = new StringBuilder(s);
+
+        while (sb.length() < count) {
+            sb.insert(0, c);
+        }
+
+        return sb.toString();
+    }
+
     public static boolean isAlphaNumeric(char c) {
         return c >= 'a' && c <= 'z'
             || c >= 'A' && c <= 'Z'
@@ -852,7 +862,7 @@ public class Util {
         Debug.log("- tripCollection.getSize(): " + tripCollection.getSize());
         t.dumpLap();
 
-        BlockCollection blockCollection = new BlockCollection(tripCollection);
+        BlockCollection blockCollection = new BlockCollection(calendarCollection, tripCollection);
         collections.put("blocks", blockCollection);
         Debug.log("- blockCollection.getSize(): " + blockCollection.getSize());
 

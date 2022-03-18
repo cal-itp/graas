@@ -137,11 +137,27 @@ def staging():
     resp.headers['Last-Modified'] = util.get_mtime(fn);
     return resp
 
+@app.route('/dispatch-ui')
+def dispatch_ui():
+    print('/dispatch-ui')
+
+    fn = 'templates/vehicle-assignment-index.html'
+    content = util.get_file(fn, 'r')
+    resp = Response(content, mimetype='text/html')
+    resp.headers['Last-Modified'] = util.get_mtime(fn);
+    return resp
+
 @app.route('/test')
 def test():
     fn = 'static/device-test.html'
     content = util.get_file(fn, 'rb')
     return Response(content, mimetype='text/html')
+
+@app.route('/vibrate.mp3')
+def vibrate():
+    fn = 'static/vibrate.mp3'
+    content = util.get_file(fn, 'rb')
+    return Response(content, mimetype='audio/mpeg')
 
 @app.route('/bus.png')
 def bus():
@@ -191,19 +207,32 @@ def post_alert():
 
     return Response('{"command": "post-alert", "status": "ok"}', mimetype='application/json')
 
-
-@app.route('/new-pos-sig', methods=['POST'])
-def new_pos_sig():
+"""
+Determine whether or not to accept an incoming user request.
+Requests can be accepted one of two ways:
+- if no previous requests from requestor IP have been verified, confirm
+  signature for request data matches public key on file for 'agency_id'
+- if previous request from same IP has been verified inside a set amount of time
+"""
+def verify_request(request, cmd):
     global verified_map, verified_map_millis
 
-    print('/new-pos-sig')
     #print('- request.data: ' + str(request.data))
     #print('- request.json: ' + json.dumps(request.json))
 
     data = request.json['data']
     sig = request.json['sig']
 
-    agency = data['agency-id']
+    agency = data.get('agency-id', None)
+    if agency is None:
+        agency = data.get('agency_id', None)
+    if agency is None:
+        print(f'*** can\'t verify signature without agency')
+        return {
+            'verified': False,
+            'response': Response(f'{{"command": {cmd}, "status": "no agency"}}', mimetype='application/json')
+        }
+
     print('- agency: ' + agency)
 
     data_str = json.dumps(data,separators=(',',':'))
@@ -236,12 +265,62 @@ def new_pos_sig():
         print('- verified: ' + str(verified))
 
         if not verified:
-            print('*** could not verify signature for GPS update, discarding')
-            return Response('{"command": "new-pos", "status": "unverified"}', mimetype='application/json')
+            print(f'*** could not verify signature for command {cmd}, discarding')
+            return {
+                'verified': False,
+                'response': Response(f'{{"command": {cmd}, "status": "unverified"}}', mimetype='application/json')
+            }
 
     if str(remote_ip) != '127.0.0.1' and str(remote_ip) != 'localhost':
         verified_map[remote_ip] = util.get_current_time_millis()
 
+    return {
+        'verified': True
+    }
+
+@app.route('/block-collection', methods=['POST'])
+def block_collection():
+    print('/block-collection')
+
+    result = verify_request(request, 'block-collection')
+    if not result['verified']:
+        return result['response']
+
+    data = request.json['data']
+
+    status = gtfsrt.handle_block_collection(
+        util.datastore_client,
+        data
+    )
+
+    return Response(f'{{"command": "block-collection", "status": "{status}"}}', mimetype='application/json')
+
+@app.route('/get-assignments', methods=['POST'])
+def get_assignments():
+    print('/get-assignments')
+
+    result = verify_request(request, 'get-assignments')
+    if not result['verified']:
+        return result['response']
+
+    data = request.json['data']
+
+    assignments = gtfsrt.handle_get_assignments(
+        util.datastore_client,
+        data
+    )
+
+    return Response(f'{{"command": "block-collection", "assignments": {assignments}, "status": "ok"}}', mimetype='application/json')
+
+@app.route('/new-pos-sig', methods=['POST'])
+def new_pos_sig():
+    print('/new-pos-sig')
+
+    result = verify_request(request, 'new-pos')
+    if not result['verified']:
+        return result['response']
+
+    data = request.json['data']
     lat = data.get('lat', None)
 
     # lat/long values of 9999 indicate client inability to

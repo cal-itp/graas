@@ -1,6 +1,7 @@
 package gtfu;
 
 import java.util.HashMap;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +15,29 @@ public class BlockCollection implements Iterable<Block> {
     private Map<String, Block> map;
     public List<Block> list;
 
-    public BlockCollection(TripCollection tripCollection) {
+    public BlockCollection(CalendarCollection calCollection, TripCollection tripCollection) {
+        this(calCollection, tripCollection, new Date());
+    }
+
+    public BlockCollection(CalendarCollection calCollection, TripCollection tripCollection, Date date) {
         map = new HashMap<String, Block>();
         list = new ArrayList<Block>();
 
         for (Trip trip : tripCollection) {
-            String bid = trip.getBlockID();
             String tid = trip.getID();
+            String sid = trip.getServiceID();
+            Calendar cal = calCollection.get(sid);
+
+            if (cal == null) {
+                System.err.println(String.format("* dangling service ID %s for trip %s", sid, tid));
+                continue;
+            }
+
+            if (!cal.isActiveForDate(date)) {
+                continue;
+            }
+
+            String bid = trip.getBlockID();
 
             if (Util.isEmpty(bid)) {
                 continue;

@@ -175,6 +175,14 @@ public class Time {
         return parseDate(format, s).getTime();
     }
 
+    // returns the day of week for the givem epoch value
+    // 1 for Sunday, ... 7 for Saturday
+    public static int getDayOfWeek(long millis) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(millis);
+        return cal.get(cal.DAY_OF_WEEK);
+    }
+
     public static String formatDate(String format, long millis) {
         return formatDate(format, new Date(millis));
     }

@@ -15,6 +15,8 @@ Finally, fetch() timeouts are currently not implemented under node.
 
 var crypto = this.crypto
 var fetch = this.fetch
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 if (!crypto) {
     crypto = require('crypto').webcrypto
@@ -25,18 +27,71 @@ if (!fetch) {
 }
 
 (function(exports) {
+    exports.MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+
     exports.log = function(s) {
         console.log(s);
 
         if (typeof document !== 'undefined') {
             try {
                 var p = document.getElementById('console');
-                p.innerHTML += s + "<br/>";
+                if (p) p.innerHTML += s + "<br/>";
             } catch(e){
                 console.log(e.message)
             }
         }
     };
+
+    exports.getYYYYMMDD = function(date) {
+        if (date === null) {
+            date = new Date();
+        }
+
+        var month = ('' + (date.getMonth() + 1)).padStart(2, '0');
+        var day = ('' + date.getDate()).padStart(2, '0');
+        return '' + date.getFullYear() + '-' + month + '-' + day;
+    }
+
+    exports.getShortDate = function(date) {
+        if (date === null) {
+            date = new Date();
+        }
+
+        return DAY_NAMES[date.getDay()] + ', ' + MONTH_NAMES[date.getMonth()] + ' ' + date.getDate();
+    }
+
+    // returns a date object set to midnight of
+    // the date described by 's', which is expected
+    // to be of the form mm/dd/yy. yy is assumed to
+    // refer to years of the 21st century.
+    exports.getDate = function(s) {
+        var args = s.split('/');
+        if (args.length !== 3) return null;
+        var date = new Date();
+        date.setFullYear(2000 + parseInt(args[2]));
+        date.setMonth(parseInt(args[0]) - 1);
+        date.setDate(parseInt(args[1]));
+        date.setHours(0, 0, 0);
+        return date;
+    }
+
+    exports.getMidnightDate = function(date) {
+        if (!date) date = new Date();
+        var d = new Date();
+        d.setTime(date.getTime());
+        d.setHours(0, 0, 0);
+        return d;
+    }
+
+    exports.nextDay = function(date) {
+        var d = new Date();
+        d.setTime(date.getTime() + util.MILLIS_PER_DAY);
+        return d;
+    }
+
+    exports.millisToSeconds = function(millis) {
+        return Math.floor(millis / 1000);
+    }
 
     exports.sign = function(msg, signatureKey) {
         //this.log("sign()");
@@ -97,6 +152,35 @@ if (!fetch) {
 
         return fetch(url, opts);
     };
+
+    exports.getJSONResponse = async function(url, data, key) {
+        var args = {method: 'GET'};
+
+        if (key) {
+            var data_str = JSON.stringify(data);
+            var buf = await this.sign(data_str, key);
+            var sig = btoa(this.ab2str(buf));
+            this.log('- sig: ' + sig);
+
+            data = {
+                data: data,
+                sig: sig
+            };
+        }
+
+        if (data) {
+            args.method = 'POST';
+            args.headers = {'Content-Type': 'application/json'};
+            args.body = JSON.stringify(data);
+        }
+
+        var response = await this.timedFetch(url, args);
+        this.log('- response: ' + JSON.stringify(response));
+        var json = await response.json();
+        this.log('- json: ' + JSON.stringify(json));
+
+        return json;
+    }
 
     exports.apiCall = function(data, url, callback, document) {
         //this.log("apiCall()");

@@ -16,3 +16,11 @@ indexes:
   - name: time_stamp
     direction: desc
 
+- kind: block-metadata
+  properties:
+  - name: agency_id
+  - name: valid_from
+  - name: valid_to
+  - name: created
+    direction: desc
+
