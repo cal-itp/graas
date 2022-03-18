@@ -498,7 +498,7 @@ def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock
     data['rcv-timestamp'] = int(round(time.time()))
 
     ### TODO check if 'use-bulk-assignment-mode' == True
-    if data.get('trip_id', None) is None:
+    if data.get('trip-id', None) is None:
         trip_id = get_trip_id(
             datastore_client,
             data.get('agency-id', None),
@@ -507,6 +507,7 @@ def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock
         print(f'- trip_id: {trip_id}')
 
         if trip_id is None:
+            print(f'* discarding position update without trip ID: {data}')
             return
 
         data['trip_id'] = trip_id
