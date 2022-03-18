@@ -601,7 +601,7 @@ function handleCloseButtonPress() {
         }
 
         for (var i=currentAssignments.length-1; i>=0; i--) {
-            if (currentAssignments[i].blockID === closeButtonData.item.label) {
+            if (currentAssignments[i].vehicleID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
             }
@@ -624,7 +624,7 @@ function handleCloseButtonPress() {
         }
 
         for (var i=currentAssignments.length-1; i>=0; i--) {
-            if (currentAssignments[i].vehicleID === closeButtonData.item.vehicle) {
+            if (currentAssignments[i].blockID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
             }
@@ -644,6 +644,14 @@ function handleCloseButtonPress() {
 
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
+
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].blockID === blockID) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
         updateDeploymentIndicator();
     }
 }
@@ -727,6 +735,14 @@ function longPress(x, y) {
 
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
+
+        for (var i=currentAssignments.length-1; i>=0; i--) {
+            if (currentAssignments[i].blockID === blockID) {
+                currentAssignments.splice(i, 1);
+                break;
+            }
+        }
+
         updateDeploymentIndicator();
     }
 }
