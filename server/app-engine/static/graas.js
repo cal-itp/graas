@@ -80,62 +80,6 @@ function isObject(obj) {
     return typeof obj === 'object' && obj !== null
 }
 
-// returns 0 for Monday...and 6 for Sunday
-function getDayOfWeek() {
-    if (testDow) {
-        return testDow;
-    } else return ((new Date()).getDay() + 6) % 7;
-}
-
-// returns date as an 8-character string (ie 20220317 for 3/17/22)
-function getDate() {
-    if (testDate) {
-        return testDate;
-    } else {
-        var today = new Date();
-        var year = today.getFullYear();
-        var month = today.getMonth() + 1;
-        var date = today.getDate();
-        return (year * 10000) + (month * 100) + date;
-    }
-}
-
-// 's' is assumed to be a time string like '8:23 am'
-function getTimeFromString(s) {
-    if (s == null){
-        util.log("* Time is null")
-        return null;
-    }
-    var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
-
-    var hour = parseInt(cap[1]);
-    var min = parseInt(cap[2]);
-    var ampm = cap[3];
-
-    if (ampm === 'pm'){
-        // 2:00pm becomes 14:00
-        if (hour < 12) hour += 12;
-        // note that 12:00pm stays 12:00
-    }
-    // 12:00am becomes 0:00
-    else if (hour === 12) hour = 0;
-
-    var date = new Date();
-    date.setHours(hour, min);
-    // util.log(" - date: " + date);
-    return date;
-}
-
-// return the difference in minutes between 's' and the current time.
-function getTimeDelta(s) {
-    var now = new Date();
-    if (testHour && testMin) {
-        now.setHours(testHour, testMin);
-    }
-    var tripTime = getTimeFromString(s);
-    return Math.abs((tripTime - now) / 60000);
-}
-
 function toRadians(degrees) {
     return degrees * (Math.PI / 180);
 }
@@ -1046,16 +990,16 @@ function loadTrips() {
             if (mode === 'vanilla' && isObject(tripInfo)) {
                 const time = getTimeFromName(tripInfo["trip_name"]);
                 //util.log(`- time: ${time}`);
-                const dow = getDayOfWeek();
+                const dow = util.getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
-                const date = getDate();
+                const date = util.getDate();
                 util.log(`- date: ${date}`);
                 const lat = tripInfo.departure_pos.lat;
                 // util.log(`- lat: ${lat}`);
                 const lon = tripInfo.departure_pos.long;
                 // util.log(`- lon: ${lon}`);
 
-                const timeDelta = getTimeDelta(time);
+                const timeDelta = util.getTimeDelta(time);
                 // util.log(`- timeDelta: ${timeDelta}`);
 
                 const distance = getHaversineDistance(lat, lon, startLat, startLon);

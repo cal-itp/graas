@@ -89,6 +89,63 @@ if (!fetch) {
         return d;
     }
 
+
+    // returns 0 for Monday...and 6 for Sunday
+    exports.getDayOfWeek = function() {
+        if (testDow) {
+            return testDow;
+        } else return ((new Date()).getDay() + 6) % 7;
+    }
+
+    // returns date as an 8-character string (ie 20220317 for 3/17/22)
+    exports.getDate = function() {
+        if (testDate) {
+            return testDate;
+        } else {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = today.getMonth() + 1;
+            var date = today.getDate();
+            return (year * 10000) + (month * 100) + date;
+        }
+    }
+
+    // 's' is assumed to be a time string like '8:23 am'
+    function getTimeFromString(s) {
+        if (s == null){
+            util.log("* Time is null")
+            return null;
+        }
+        var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
+
+        var hour = parseInt(cap[1]);
+        var min = parseInt(cap[2]);
+        var ampm = cap[3];
+
+        if (ampm === 'pm'){
+            // 2:00pm becomes 14:00
+            if (hour < 12) hour += 12;
+            // note that 12:00pm stays 12:00
+        }
+        // 12:00am becomes 0:00
+        else if (hour === 12) hour = 0;
+
+        var date = new Date();
+        date.setHours(hour, min);
+        // util.log(" - date: " + date);
+        return date;
+    }
+
+    // return the difference in minutes between 's' and the current time.
+    exports.getTimeDelta = function(s) {
+        var now = new Date();
+        if (testHour && testMin) {
+            now.setHours(testHour, testMin);
+        }
+        var tripTime = getTimeFromString(s);
+        return Math.abs((tripTime - now) / 60000);
+    }
+
     exports.millisToSeconds = function(millis) {
         return Math.floor(millis / 1000);
     }
