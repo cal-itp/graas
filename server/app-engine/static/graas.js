@@ -600,6 +600,7 @@ function getURLContent(agencyID, arg) {
     name = configMatrix.getNextToLoad().name;
 
     url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${locator}?foo=${arg}`
+    util.log('- fetching from ' + url);
     util.timedFetch(url, {
         method: 'GET'/*,
         mode: 'no-cors'*/
@@ -671,6 +672,8 @@ function getRewriteArgs() {
             testMin = value;
         } else if (key === 'testdow') {
             testDow = value;
+        } else if (key === 'testdate') {
+            testDate = value;
         }
     }
 }
@@ -951,8 +954,8 @@ function agencyIDCallback(response) {
     if (agencyID === 'not found') {
         alert('could not verify client identity');
     } else {
-        // ### TODO: write agency ID to local storage if not already present
-        var arg = Math.round(Math.random() * 100000)
+        // Passing current timestamp as an argument ensures that the config file will refresh, rather than loading from cache.
+        var arg = Date.now()
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
     }
@@ -1064,18 +1067,18 @@ function loadTrips() {
                 // util.log(`- cal: ${cal}`);
                 // 3 conditions need to be met for inclusion...
                 if (
-                    // 1. meets time parameters
-                    (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
-                    &&
-                    // 2. meets day-of-weel parameters:
-                    (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
-                    &&
-                    // 3. meets distance parameters:
-                    (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                        // 1. meets time parameters
+                        (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                        &&
+                        // 2. meets day-of-weel parameters:
+                        (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
+                        &&
+                        // 3. meets distance parameters:
+                        (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                        &&
+                        // 4. Falls between start_date and end_date
+                        (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
                     )
-                    &&
-                    // 4. Falls between start_date and end_date
-                    (ignoreStartEndDate || tripInfo.start_date <= date && tripInfo.end_date >= date)
                     {
                         //util.log(`+ adding ${key}`);
                         tripIDLookup[tripInfo["trip_name"]] = tripInfo;
