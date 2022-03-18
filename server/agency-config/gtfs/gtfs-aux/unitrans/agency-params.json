@@ -4,6 +4,5 @@
 "max-feet-from-stop": 4239840,
 "triplist-generator-namefield": "route_short_name",
 "triplist-generator-use-direction": true,
-"ignore-start-end-date": false,
-"use-bulk-assignment-mode": true
+"ignore-start-end-date": false
 }
