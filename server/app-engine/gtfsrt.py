@@ -128,21 +128,21 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 def alert_is_current(alert):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
-    now = int(round(time.time()))
+    now = util.get_epoch_seconds()
     return now >= int(alert['time_start']) and now < int(alert['time_stop'])
 
 def purge_old_alerts(datastore_client):
     global last_alert_purge
     print('purge_old_messages')
 
-    day = int(round(time.time()) / 86400)
+    day = int(util.get_epoch_seconds() / 86400)
     print('- day: ' + str(day))
     print('- last_alert_purge: ' + str(last_alert_purge))
 
     if day == last_alert_purge:
         return
 
-    seconds = int(round(time.time()))
+    seconds = util.get_epoch_seconds()
     print('- seconds: ' + str(seconds))
 
     query = datastore_client.query(kind="alert")
@@ -165,7 +165,7 @@ def get_alert_feed(datastore_client, agency):
     print('- agency: ' + agency)
 
     purge_old_alerts(datastore_client)
-    now = int(round(time.time()))
+    now = util.get_epoch_seconds()
 
     query = datastore_client.query(kind="alert")
     query.add_filter("agency_key", "=", agency)
@@ -200,7 +200,7 @@ def get_position_feed(saved_position_feed, saved_position_feed_millis, vehicle_m
 
     header = gtfs_realtime_pb2.FeedHeader()
     header.gtfs_realtime_version = '2.0'
-    header.timestamp = int(round(time.time()))
+    header.timestamp = util.get_epoch_seconds()
 
     feed = gtfs_realtime_pb2.FeedMessage()
     feed.header.CopyFrom(header)
@@ -210,7 +210,7 @@ def get_position_feed(saved_position_feed, saved_position_feed_millis, vehicle_m
             vehicle = vehicle_map[id];
 
             vts = int(vehicle['timestamp'])
-            now = round(util.get_current_time_millis() / 1000)
+            now = util.get_epoch_seconds()
             delta = now - vts
 
             if delta >= MAX_LIFE:
@@ -308,7 +308,7 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     print(f'- agency_id: {agency_id}')
 
     midnight_from = util.get_midnight_seconds(util.get_epoch_seconds(date_string))
-    print(f'- midnight_from: {midnight_from}')
+    print(f'. midnight_from: {midnight_from}')
     midnight_to = midnight_from + DAY_SECONDS
     print(f'- midnight_to: {midnight_to}')
 
@@ -495,7 +495,7 @@ def handle_block_collection(datastore_client, data):
     return 'ok'
 
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
-    data['rcv-timestamp'] = int(round(time.time()))
+    data['rcv-timestamp'] = util.get_epoch_seconds()
 
     ### TODO check if 'use-bulk-assignment-mode' == True
     if data.get('trip-id', None) is None:

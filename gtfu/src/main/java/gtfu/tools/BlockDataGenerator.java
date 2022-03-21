@@ -116,7 +116,7 @@ public class BlockDataGenerator {
                 String s = arg[++i];
 
                 if (s.indexOf('/') > 0) {
-                    date = Time.parseDate("MM/dd/yy", arg[++i]);
+                    date = Time.parseDate("MM/dd/yy", s);
                 } else {
                     date = getDateFromOffset(s);
                 }
