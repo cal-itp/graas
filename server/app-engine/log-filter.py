@@ -17,8 +17,10 @@ def main(args):
                 str = line[index + len(KEY):]
                 obj = json.loads(str)
                 ts = int(obj["timestamp"])
+                if ts > 2000000000:
+                    ts = ts / 1000
                 hms = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-                print(f'{hms} {obj["agent"]}: {obj["agency-id"]}#{obj["vehicle-id"]} {obj["trip-id"]} {obj["lat"]} {obj["long"]}')
+                print(f'{hms} {obj.get("agent", None)}: {obj.get("agency-id", None)}#{obj.get("vehicle-id", None)} {obj.get("trip-id", None)} {obj.get("lat", None)} {obj.get("long", None)}')
                 sys.stdout.flush()
             except:
                 print(f'* exception for input \'{str}\'')
