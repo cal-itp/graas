@@ -22,7 +22,7 @@ jobs:
           node-version: '16.1.0'
       - name: Run position update script
         working-directory: server/tests/
-        run: NODE_PATH=`pwd`/node_modules node post-position-update.js
+        run: NODE_PATH=../node/node_modules node post-position-update.js
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Java tests
