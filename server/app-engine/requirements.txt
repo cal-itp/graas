@@ -9,3 +9,4 @@ ecdsa==0.16.0
 google-cloud-ndb==1.11.1
 google-cloud-storage==1.43.0
 itsdangerous==2.0.1
+pytz==2021.1

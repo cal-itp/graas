@@ -697,11 +697,7 @@ function longPress(x, y) {
     var blockID = null;
 
     if (pressItem.type === 'vehicle') {
-        if (pressItem.status == 'inactive') {
-            pressItem.status = 'active';
-        } else if (pressItem.status == 'active') {
-            pressItem.status = 'inactive';
-        } else if (pressItem.status == 'assigned') {
+        if (pressItem.status == 'assigned') {
             for (var item of items) {
                 if (item.vehicle === pressItem.label) {
                     util.log('-- item: ' + JSON.stringify(item));

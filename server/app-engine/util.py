@@ -10,11 +10,13 @@ from datetime import datetime
 import time
 from google.cloud import datastore
 from google.cloud import storage
+import pytz
 
 datastore_client = datastore.Client()
 last_bucket_check = 0
 last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds
+PACIFIC_TZ = pytz.timezone("America/Los_Angeles")
 
 # Pull agency IDs & public keys from datastore, save them
 def read_public_keys():
@@ -94,16 +96,26 @@ def verify_signature(agency_id, data, signature):
             return False
 
 def get_current_time_millis():
+    now = datetime.now()
+    now = PACIFIC_TZ.localize(now)
     return int(round(time.time() * 1000))
 
 def get_epoch_seconds(date_string = None):
     if date_string is None:
-        return int(time.time())
+        now = datetime.now()
+        now = PACIFIC_TZ.localize(now)
+        print(f'+ ts: {int(now.timestamp())}')
+        return int(now.timestamp())
     else:
-        return int(datetime.strptime(date_string, '%Y-%m-%d').timestamp())
+        d = datetime.strptime(date_string, '%Y-%m-%d')
+        d = PACIFIC_TZ.localize(d)
+        print(f'+ ts: {int(d.timestamp())}')
+        return int(d.timestamp())
 
 def get_midnight_seconds(epoch_seconds):
     now = datetime.fromtimestamp(epoch_seconds)
+    now = PACIFIC_TZ.localize(now)
+    print(f'. ts: {int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())}')
     return int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
 
 def get_seconds_since_midnight(seconds = None):
@@ -112,6 +124,7 @@ def get_seconds_since_midnight(seconds = None):
     else:
         now = datetime.fromtimestamp(seconds)
 
+    now = PACIFIC_TZ.localize(now)
     return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 # For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
@@ -120,7 +133,7 @@ def update_bucket_timestamp():
     bucket = client.get_bucket('graas-resources')
     blob = bucket.blob('server/last_public_key_update.txt')
     # Could use util.get_current_time_millis() but it would create circular dependency
-    now = int(round(time.time() * 1000))
+    now = get_current_time_millis()
     blob.upload_from_string(str(now))
     print(f'Latest public key update is now {now}')
 
