@@ -1,0 +1,11 @@
+2021-12-08-08-04-tcrta-0: renamed to Dec 12 to fall on a Sunday, since assigned trip is a Sunday trip
+2021-12-08-08-37-tcrta-0: renamed to Dec 12 to fall on a Sunday, since assigned trip is a Sunday trip
+2021-12-08-09-18-tcrta-0: renamed to Dec 12 to fall on a Sunday, since assigned trip is a Sunday trip
+2021-12-08-10-10-tcrta-0: renamed to Dec 12 to fall on a Sunday, since assigned trip is a Sunday trip
+2021-12-08-10-51-tcrta-0: renamed to Dec 12 to fall on a Sunday, since assigned trip is a Sunday trip
+
+2021-12-08-09-32-tcrta-0: removed, first update is 30 mins behind schedule
+2021-12-10-17-08-tcrta-0: removed, map tile has exactly one update dot
+2021-12-10-20-09-tcrta-0: removed, map tile has exactly one update dot
+2021-12-08-14-03-tcrta-0: removed, has merged updates from two or more trips
+2021-12-10-13-30-tcrta-0: removed, has merged updates from two or more trips

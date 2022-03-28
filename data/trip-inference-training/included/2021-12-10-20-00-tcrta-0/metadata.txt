@@ -1,0 +1,2 @@
+trip-id: D2A_T14
+grid: top_left=(36.609672, -119.487061) bottom_right=(35.761387, -118.776532) subdivisions=15
