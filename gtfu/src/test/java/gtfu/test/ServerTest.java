@@ -24,6 +24,7 @@ import com.google.transit.realtime.GtfsRealtime.Position;
 import gtfu.Debug;
 import gtfu.GTFSRTUtil;
 import gtfu.Util;
+import gtfu.tools.DB;
 
 public class ServerTest {
     private static final String DOMAIN = "https://lat-long-prototype.wl.r.appspot.com";
@@ -120,22 +121,46 @@ public class ServerTest {
         }
     }
 
+    // Checks whether the provided agency has a position updated logged to the DB within the last 30 seconds.
+    // Note that the update is posted by running `NODE_PATH=../node/node_modules node post-position-update.js` from server/tests
+    private static boolean checkDBForPosUpdate(String agency) throws Exception {
+        String[] propertyNames = {"agency-id"};
+        int searchWindowSecs = 30;
+
+        DB db = new DB();
+        long nowSecs = Util.now() / 1000;
+        long queryStartTime = nowSecs - searchWindowSecs;
+        long queryEndTime = nowSecs;
+        List<String> results = db.fetch(queryStartTime, queryEndTime, "position", propertyNames);
+
+        for (int i=0; i < results.size(); i++){
+            if(results.get(i).equals(agency)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Run all tests and report results. Fail if any tests fail.
     public static void runTests(String agencyID) throws Exception {
         boolean posUpdateFeedSuccess = false;
         boolean serAlertFeedSuccess = false;
         boolean postAlertSuccess = false;
+        boolean updateInDBSuccess = false;
 
         posUpdateFeedSuccess = checkForPosUpdateFeed(agencyID);
         postAlertSuccess = postTestAlert(agencyID);
         serAlertFeedSuccess = checkForServiceAlertFeed(agencyID);
+        updateInDBSuccess = checkDBForPosUpdate(agencyID);
 
         System.out.println("----- Test Results -----");
         System.out.println("- Position update feed success: " + posUpdateFeedSuccess);
         System.out.println("- Service alert feed success: " + serAlertFeedSuccess);
         System.out.println("- Post alert success: " + postAlertSuccess);
+        System.out.println("- Check DB for positiion update success: " + updateInDBSuccess);
 
-        if(posUpdateFeedSuccess && serAlertFeedSuccess && postAlertSuccess) System.exit(0);
+        if(posUpdateFeedSuccess && serAlertFeedSuccess && postAlertSuccess && updateInDBSuccess) System.exit(0);
         else System.exit(1);
     }
 
