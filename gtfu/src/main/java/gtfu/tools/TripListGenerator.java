@@ -420,6 +420,8 @@ class TripListEntry implements Comparable<TripListEntry> {
 
     public String toString(Map<String, CalendarData> cmap, Map<String, String>smap) {
         CalendarData calData = cmap.get(serviceID);
+        // Omit trips where the service_id is missing from calendar.txt.
+        // This is a temporary fix - the long term fix is to use info from calendar_dates as well. See https://github.com/cal-itp/graas/issues/19
         if(calData == null) {
             return null;
         } else {
