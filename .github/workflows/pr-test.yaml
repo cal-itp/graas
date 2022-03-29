@@ -20,6 +20,13 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16.1.0'
+      - name: Setup Cloud SDK
+        uses: google-github-actions/auth@v0
+        with:
+          # Google recommends using a Workload Identify Federation instead of using the service account key json file
+          # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
+          service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
+          credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
       - name: Run position update script
         working-directory: server/tests/
         run: NODE_PATH=../node/node_modules node post-position-update.js
@@ -30,13 +37,6 @@ jobs:
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
-      - name: Set up Cloud SDK
-        uses: google-github-actions/auth@v0
-        with:
-          # Google recommends using a Workload Identify Federation instead of using the service account key json file
-          # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
-          service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
-          credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
       - name: Run Python unit tests
         uses: actions/setup-python@v2
         with:
