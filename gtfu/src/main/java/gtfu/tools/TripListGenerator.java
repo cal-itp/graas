@@ -244,15 +244,16 @@ public class TripListGenerator {
 
         for (int i=0; i<list.size(); i++) {
             TripListEntry e = list.get(i);
+            String row = e.toString(cmap, smap);
 
-            out.print("    ");
-            out.print(e.toString(cmap, smap));
-
-            if (i < list.size() - 1) {
-                out.print(",");
+            if(row != null){
+                out.print("    ");
+                out.print(row);
+                if (i < list.size() - 1) {
+                    out.print(",");
+                }
+                out.println();
             }
-
-            out.println();
         }
 
         out.println("]");
@@ -418,14 +419,21 @@ class TripListEntry implements Comparable<TripListEntry> {
     }
 
     public String toString(Map<String, CalendarData> cmap, Map<String, String>smap) {
-        return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s, \"start_date\": %s, \"end_date\": %s}",
-            name,
-            Time.getHMForMillis(departureTime),
-            tripID,
-            cmap.get(serviceID).dayList,
-            smap.get(firstStopID),
-            cmap.get(serviceID).startDate,
-            cmap.get(serviceID).endDate
-        );
+        CalendarData calData = cmap.get(serviceID);
+        // Omit trips where the service_id is missing from calendar.txt.
+        // This is a temporary fix - the long term fix is to use info from calendar_dates as well. See https://github.com/cal-itp/graas/issues/19
+        if(calData == null) {
+            return null;
+        } else {
+            return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s, \"start_date\": %s, \"end_date\": %s}",
+                name,
+                Time.getHMForMillis(departureTime),
+                tripID,
+                calData.dayList,
+                smap.get(firstStopID),
+                calData.startDate,
+                calData.endDate
+            );
+        }
     }
 }
