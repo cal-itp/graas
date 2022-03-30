@@ -8,9 +8,7 @@ import gtfu.EmailFailureReporter;
 import gtfu.FailureReporter;
 import gtfu.Recipients;
 
-import java.util.Date;
 import java.util.Arrays;
-import java.io.PrintStream;
 
 /**
  * Creates block data for each agency that uses bulk assignment mode
