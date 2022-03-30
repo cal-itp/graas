@@ -127,6 +127,14 @@ def get_seconds_since_midnight(seconds = None):
     now = PACIFIC_TZ.localize(now)
     return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
+def get_yyyymmdd(date = None):
+    if date is None:
+        date = datetime.now()
+
+    date = PACIFIC_TZ.localize(date)
+    return f'{date.year}-{date.month}-{date.day}'
+
+
 # For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
 def update_bucket_timestamp():
     client = storage.Client()

@@ -343,8 +343,7 @@ function handleKey(id) {
 
         var data = {
             'agency_id': agencyID,
-            'valid_from': Math.floor(fromDate.getTime() / 1000),
-            'valid_to': Math.floor(toDate.getTime() / 1000),
+            'valid_date': util.getYYYYMMDD(fromDate),
             'blocks': blockData
         };
         util.log('- data: ' + JSON.stringify(data));
