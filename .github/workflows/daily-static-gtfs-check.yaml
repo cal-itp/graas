@@ -1,4 +1,4 @@
-name: Daily Static GTFS Check
+name: Daily Static GTFS Processes
 on:
   # Daily at 9PM pacific
   schedule:
@@ -19,6 +19,13 @@ jobs:
       - name: Build with Gradle
         working-directory: gtfu
         run: ./gradlew build
+      - name: Setup Cloud SDK
+        uses: google-github-actions/auth@v0
+        with:
+          # Google recommends using a Workload Identify Federation instead of using the service account key json file
+          # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
+          service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
+          credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
       - name: Load agency data
         working-directory: gtfu
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
@@ -27,6 +34,12 @@ jobs:
       - name: Update Trip Names
         working-directory: gtfu
         run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u ${{ secrets.LIVE_AGENCIES_URL }}
+        env:
+          GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
+      - name: Generate Block Data
+        working-directory: gtfu
+        run: java -cp build/libs/gtfu.jar gtfu.tools.BulkBlockDataGenerator -u ${{ secrets.LIVE_AGENCIES_URL }} -d 2
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
