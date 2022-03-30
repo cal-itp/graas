@@ -19,8 +19,7 @@ indexes:
 - kind: block-metadata
   properties:
   - name: agency_id
-  - name: valid_from
-  - name: valid_to
+  - name: valid_date
   - name: created
     direction: desc
 

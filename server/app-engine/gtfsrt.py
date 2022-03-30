@@ -285,8 +285,7 @@ def load_block_collection(datastore_client, block_metadata):
 
     block_collection = {
         'agency_id': agency_id,
-        'valid_from': block_metadata['valid_from'],
-        'valid_to': block_metadata['valid_to'],
+        'valid_date': block_metadata['valid_date'],
         'last_refresh': util.get_current_time_millis(),
         'blocks': map
     }
@@ -307,22 +306,19 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     print(f'load_block_metadata()')
     print(f'- agency_id: {agency_id}')
 
-    midnight_from = util.get_midnight_seconds(util.get_epoch_seconds(date_string))
-    print(f'. midnight_from: {midnight_from}')
-    midnight_to = midnight_from + DAY_SECONDS
-    print(f'- midnight_to: {midnight_to}')
+    if date_string is None:
+        date_string = util.get_yyyymmdd()
 
     query = datastore_client.query(kind="block-metadata")
     query.add_filter("agency_id", "=", agency_id)
-    query.add_filter("valid_from", "=", midnight_from)
-    query.add_filter("valid_to", "=", midnight_to)
+    query.add_filter("valid_date", "=", date_string)
     query.order = ["-created"]
 
     results = list(query.fetch(limit=1))
     print(f'- results: {results}')
 
     if len(results) == 0:
-        print(f'* no matching block metadata for agency \'{agency_id}\' valid from {midnight_from} to {midnight_to}')
+        print(f'* no matching block metadata for agency \'{agency_id}\' valid on {date_string}')
         return None
 
     return results[0]
@@ -331,9 +327,9 @@ def get_current_block_collection(datastore_client, agency_id):
     block_collection = block_map.get(agency_id, None)
     print(f'- block_collection: {block_collection}')
     now = util.get_current_time_millis()
-    timestamp = util.get_epoch_seconds()
+    yyymmdd = util.get_yyyymmdd()
 
-    if block_collection is None or timestamp < block_collection['valid_from'] or timestamp >= block_collection['valid_to']:
+    if block_collection is None or yyymmdd != block_collection['valid_date']:
         print(f'+ block collection not found or mismatched validity period, reloading from DB')
         block_metadata = load_block_metadata(datastore_client, agency_id)
         load_block_collection(datastore_client, block_metadata)
@@ -408,21 +404,16 @@ def handle_block_collection(datastore_client, data):
 
     now = util.get_current_time_millis()
     agency_id = data.get('agency_id', None)
-    valid_from = data.get('valid_from', None)
-    valid_to = data.get('valid_to', None)
+    valid_date = data.get('valid_date', None)
     blocks = data.get('blocks', None)
 
     if agency_id is None:
         print(f'* block collection is missing \'agency_id\' field')
         return 'error: missing agency ID'
 
-    if valid_from is None:
-        print(f'* block collection is missing \'valid_from\' field')
-        return 'error: missing start time'
-
-    if valid_to is None:
-        print(f'* block collection is missing \'valid_to\' field')
-        return 'error: missing end time'
+    if valid_date is None:
+        print(f'* block collection is missing \'valid_date\' field')
+        return 'error: missing \'valid_date\' field'
 
     if blocks is None:
         print(f'* block collection is missing \'blocks\' field')
@@ -458,8 +449,7 @@ def handle_block_collection(datastore_client, data):
         block_metadata = {
             'created': now,
             'agency_id': agency_id,
-            'valid_from': valid_from,
-            'valid_to': valid_to,
+            'valid_date': valid_date,
             'assignment_summary_key': entity1.key,
             'block_list_key': entity2.key,
         }
