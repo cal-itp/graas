@@ -52,7 +52,7 @@ public class BulkBlockDataGenerator {
      */
     public static void main(String[] arg) throws Exception {
         String url = null;
-        String daysAhead = "0";
+        int daysAhead = -1;
 
         for (int i=0; i<arg.length; i++) {
 
@@ -60,7 +60,12 @@ public class BulkBlockDataGenerator {
                 url = arg[i + 1];
             }
             if ((arg[i].equals("-d") || arg[i].equals("--days-ahead")) && i < arg.length - 1) {
-                daysAhead = arg[i + 1];
+                String s = arg[i + 1];
+                try {
+                    daysAhead = Integer.parseInt(s);
+                } catch (NumberFormatException e) {
+                    usage();
+                }
             }
         }
 
@@ -69,6 +74,6 @@ public class BulkBlockDataGenerator {
         ProgressObserver po = new ConsoleProgressObserver(40);
         String context = Util.getURLContent(url, po);
         String[] agencyIDList = context.split("\n");
-        BulkBlockDataGenerator(agencyIDList, Integer.parseInt(daysAhead));
+        BulkBlockDataGenerator(agencyIDList, daysAhead);
     }
 }

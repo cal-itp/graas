@@ -15,10 +15,23 @@ import gtfu.*;
 // more specifically to list all trips associated with a specific block.
 // Output is formatted as JSON
 public class BlockDataGenerator {
+    /**
+    * Generates block data for an agency
+    * @param agencyID   agency to produce block data for
+    * @param offset     how many days in advance to generate data for.
+    */
     public BlockDataGenerator(String agencyID, Integer offset) throws Exception {
-        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, getDateFromOffset(String.valueOf(offset)), true);
+        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, getDateFromOffset(offset), true);
     }
 
+    /**
+    * Generates block data for an agency
+    * @param cacheFolder    Folder to use for caching static GTFS data
+    * @param outputFolder   Folder for saving output files
+    * @param agencyID       Agency to produce block data for
+    * @param date           Date to generate block data for
+    * @param uploadToGcloud Whether or not to upload results to gcloud rather than downloading
+    */
     public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, Date date, Boolean uploadToGcloud) throws Exception {
 
         if(outputFolder == null){
@@ -111,14 +124,7 @@ public class BlockDataGenerator {
         System.exit(1);
     }
 
-    private static Date getDateFromOffset(String s) {
-        int offset = -1;
-
-        try {
-            offset = Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            usage();
-        }
+    private static Date getDateFromOffset(int offset) {
 
         if (offset < 0 || offset > 30) usage();
 
@@ -155,7 +161,13 @@ public class BlockDataGenerator {
                 if (s.indexOf('/') > 0) {
                     date = Time.parseDate("MM/dd/yy", s);
                 } else {
-                    date = getDateFromOffset(s);
+                    int offset = -1;
+                    try {
+                        offset = Integer.parseInt(s);
+                    } catch (NumberFormatException e) {
+                        usage();
+                    }
+                    date = getDateFromOffset(offset);
                 }
                 continue;
             }
