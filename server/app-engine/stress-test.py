@@ -31,7 +31,7 @@ class test_agency:
 
 		self.vehicleList = []
 		for i in range (vehicleCount):
-			self.vehicleList.append(id + "-" + str(i))
+			self.vehicleList.append(id + "-" + str(i).rjust(2, '0'))
 
 	def keyGen(self):
 		ecdsaPath = 'stress-test/' + self.id + '/id_ecdsa'
@@ -49,21 +49,21 @@ class test_agency:
 		print(f'id_ecdsa: {id_ecdsa}')
 		self.id_ecdsa = id_ecdsa
 
-	def startService(self, domain, intervalTime, intervalVariation, numRepeats):
+	def startService(self, domain, useProductionServer, intervalTime, intervalVariation, numRepeats):
 		print(f'starting thread for agency {self.id}')
 		global post_metadata_list
 
 		for i in range(numRepeats):
 
 			for vehicleid in self.vehicleList:
-				post_metadata_list.append(self.post(domain, vehicleid))
+				post_metadata_list.append(self.post(domain, useProductionServer, vehicleid))
 
 			intervalFloor = intervalTime - intervalVariation
 			intervalCeiling = intervalTime + intervalVariation
 			sleepTime = random.uniform(intervalFloor, intervalCeiling)
 			time.sleep(sleepTime)
 
-	def post(self, domain, vehicleid):
+	def post(self, domain, useProductionServer, vehicleid):
 		print('post()')
 		endpoint = 'new-pos-sig'
 		url = domain + endpoint
@@ -94,7 +94,8 @@ class test_agency:
 			'sig': base64
 		}
 		print(f'posting update for: {self.id}')
-		response = requests.post(url, json = message, verify=False)
+		# Need to verify on production server, and not on local
+		response = requests.post(url, json = message, verify=useProductionServer)
 		responseTime = response.elapsed.total_seconds()
 		statusCode = response.status_code
 		responseJson = response.json()
@@ -136,6 +137,7 @@ def main(argv):
 	# How many updates per agency
 	numRepeats = 1
 	domain = LOCAL_SERVER_URL
+	useProductionServer = False
 
 	if argc != 2:
 		print('* usage: python stress-test.py <path-to-config-json-file>')
@@ -153,6 +155,7 @@ def main(argv):
 
 	if data.get('use-production-server', False):
 		productionServerURL = data.get('production-server-url', None)
+		useProductionServer = True;
 
 		if productionServerURL != None:
 			domain = productionServerURL
@@ -185,7 +188,7 @@ def main(argv):
 
 	# 1.  Create agencies & vehicles
 	for i in range(agencyCount):
-		agencyID = "stress-test-" + str(startTime) + "-agency-" + str(i)
+		agencyID = "stress-test-" + str(startTime) + "-agency-" + str(i).rjust(2, '0')
 		agencyList.append(test_agency(agencyID, vehicleCount, client))
 
 	# 2. Generate keys for each agency
@@ -199,7 +202,7 @@ def main(argv):
 	# 3. Start service!!
 	threads = list()
 	for agency in agencyList:
-		x = threading.Thread(target=agency.startService, args=(domain, intervalTime, intervalVariation, numRepeats))
+		x = threading.Thread(target=agency.startService, args=(domain, useProductionServer, intervalTime, intervalVariation, numRepeats))
 		threads.append(x)
 
 	#    Start each thread
