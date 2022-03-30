@@ -16,7 +16,7 @@ import gtfu.*;
 // Output is formatted as JSON
 public class BlockDataGenerator {
     public BlockDataGenerator(String agencyID, Integer offset) throws Exception {
-        new BlockDataGenerator(null, null, agencyID, getDateFromOffset(String.valueOf(offset)), true);
+        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, getDateFromOffset(String.valueOf(offset)), true);
     }
 
     public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, Date date, Boolean uploadToGcloud) throws Exception {
