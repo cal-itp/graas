@@ -84,8 +84,6 @@ public class BlockDataGenerator {
             + Util.pad("" + (cal.get(cal.MONTH) + 1), '0', 2)
             + "-"
             + Util.pad("" + cal.get(cal.DAY_OF_MONTH), '0', 2)
-            // Remove below line after testing
-            + "-test"
             + ".json";
 
         Debug.log("- fileName: " + fileName);

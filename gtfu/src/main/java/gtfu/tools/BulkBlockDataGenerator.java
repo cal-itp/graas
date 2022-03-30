@@ -24,6 +24,8 @@ public class BulkBlockDataGenerator {
      */
     public static void BulkBlockDataGenerator(String[] agencyIDList, Integer daysAhead) throws Exception {
 
+        if (daysAhead < 0 || daysAhead > 30) usage();
+
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
 
@@ -42,8 +44,9 @@ public class BulkBlockDataGenerator {
     }
 
     private static void usage() {
-        System.err.println("usage: BulkBlockDataGenerator -u|--url <live-agencies-url> [-d|--days-ahead]");
+        System.err.println("usage: BulkBlockDataGenerator -u|--url <live-agencies-url> -d|--days-ahead <n>");
         System.err.println("    <live-agencies-url> is assumed to point to a plain text document that has an agency ID per line");
+        System.err.println("    <n> how many days ahead from todayto generate block data for. 0 is today, and 30 is the maximum");
         System.exit(1);
     }
 
