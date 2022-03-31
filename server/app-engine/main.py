@@ -131,7 +131,7 @@ def vehicle_positions():
 def staging():
     print('/')
 
-    fn = 'templates/index.html'
+    fn = 'static/index.html'
     content = util.get_file(fn, 'r')
     resp = Response(content, mimetype='text/html')
     resp.headers['Last-Modified'] = util.get_mtime(fn);
@@ -141,7 +141,7 @@ def staging():
 def dispatch_ui():
     print('/dispatch-ui')
 
-    fn = 'templates/vehicle-assignment-index.html'
+    fn = 'static/vehicle-assignment-index.html'
     content = util.get_file(fn, 'r')
     resp = Response(content, mimetype='text/html')
     resp.headers['Last-Modified'] = util.get_mtime(fn);
