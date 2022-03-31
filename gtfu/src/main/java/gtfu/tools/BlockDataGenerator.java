@@ -2,10 +2,12 @@ package gtfu.tools;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import gtfu.*;
 
@@ -13,12 +15,39 @@ import gtfu.*;
 // more specifically to list all trips associated with a specific block.
 // Output is formatted as JSON
 public class BlockDataGenerator {
-    public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, Date date) throws Exception {
+    /**
+    * Generates block data for an agency
+    * @param agencyID   agency to produce block data for
+    * @param offset     how many days in advance to generate data for.
+    */
+    public BlockDataGenerator(String agencyID, Integer offset) throws Exception {
+        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, getDateFromOffset(offset), true);
+    }
+
+    /**
+    * Generates block data for an agency
+    * @param cacheFolder    Folder to use for caching static GTFS data
+    * @param outputFolder   Folder for saving output files
+    * @param agencyID       Agency to produce block data for
+    * @param date           Date to generate block data for
+    * @param uploadToGcloud Whether or not to upload results to gcloud rather than downloading
+    */
+    public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, Date date, Boolean uploadToGcloud) throws Exception {
+
+        if(outputFolder == null){
+            outputFolder = System.getenv("HOME") + "/tmp";
+        }
+
+        if(cacheFolder == null){
+            cacheFolder = System.getenv("HOME") + "/tmp/tuff";
+        }
+
         Debug.log("BlockDataGenerator.BlockDataGenerator()");
         Debug.log("- cacheFolder: " + cacheFolder);
         Debug.log("- outputFolder: " + outputFolder);
         Debug.log("- agencyID: " + agencyID);
         Debug.log("- date: " + date);
+        Debug.log("- uploadToGcloud: " + uploadToGcloud);
 
         Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, new ConsoleProgressObserver(40));
         CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
@@ -49,52 +78,63 @@ public class BlockDataGenerator {
         java.util.Calendar cal = java.util.Calendar.getInstance();
         cal.setTime(date);
 
-        String outputFile = outputFolder + "/blocks-"
+        String fileName = "blocks-"
             + cal.get(cal.YEAR)
             + "-"
             + Util.pad("" + (cal.get(cal.MONTH) + 1), '0', 2)
             + "-"
             + Util.pad("" + cal.get(cal.DAY_OF_MONTH), '0', 2)
-            + ".json"
-        ;
-        Debug.log("- outputFile: " + outputFile);
+            + ".json";
 
-        try (FileOutputStream fos = new FileOutputStream(outputFile);
-            PrintStream out = new PrintStream(fos)) {
-            out.println(Util.objectToJSON(list, true));
+        Debug.log("- fileName: " + fileName);
+
+        if(uploadToGcloud){
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            String utf8 = StandardCharsets.UTF_8.name();
+            try (PrintStream ps = new PrintStream(baos, true, utf8)) {
+                ps.println(Util.objectToJSON(list, true));
+            }
+            byte[] file = baos.toByteArray();
+
+            GCloudStorage gcs = new GCloudStorage();
+            gcs.uploadObject("graas-resources", "gtfs-aux/" + agencyID, fileName, file);
+        }
+        else{
+            String outputFile = outputFolder + "/" + fileName;
+
+            Debug.log("- outputFile: " + outputFile);
+
+            try (FileOutputStream fos = new FileOutputStream(outputFile);
+                PrintStream out = new PrintStream(fos)) {
+                out.println(Util.objectToJSON(list, true));
+            }
         }
     }
 
     private static void usage() {
-        System.err.println("usage: BlockDataGenerator -c|--cache-folder <cache-folder> -o|--output-folder <output-folder> -a|--agency-id <agency-id> [-d|--date <mm/dd/yy>|<n>]");
+        System.err.println("usage: BlockDataGenerator -a|--agency-id <agency-id> -u|--upload [-c|--cache-folder <cache-folder>] [-o|--output-folder <output-folder>] [-d|--date <mm/dd/yy>|<n>]");
+        System.err.println("    <agency-id> a transit agency identifier constructed from the alphabet of [a-z\\-]");
+        System.err.println("    use -u or --upload flag to upload files directly to Google Cloud");
         System.err.println("    <cache-folder> a temp folder for unpacking and caching static GTFS data by agency");
         System.err.println("    <output-folder> folder to place output file in (file name will be 'blocks-<mm>-<dd>.json'");
-        System.err.println("    <agency-id> a transit agency identifier constructed from the alphabet of [a-z\\-]");
         System.err.println("    <mm/dd/yy> valid 24 hour period for block data, defaults to current day if omitted");
         System.err.println("    <n> offset from today's date (must be between 0 and 30): 0 is today, 1 is tomorrow, etc.");
         System.exit(1);
     }
 
-    private static Date getDateFromOffset(String s) {
-        int offset = -1;
-
-        try {
-            offset = Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            usage();
-        }
-
+    private static Date getDateFromOffset(int offset) {
         if (offset < 0 || offset > 30) usage();
 
-        long millis = Util.now() + offset * Time.MILLIS_PER_DAY;
+        long millis = Util.now() + (long) offset * Time.MILLIS_PER_DAY;
         return new Date(millis);
     }
 
     public static void main(String[] arg) throws Exception {
         String cacheFolder = null;
         String agencyID = null;
-        String outputFolder = System.getenv("HOME") + "/tmp";
+        String outputFolder = null;
         Date date = new Date();
+        Boolean uploadToGcloud = false;
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-folder")) && i < arg.length - 1) {
@@ -118,18 +158,28 @@ public class BlockDataGenerator {
                 if (s.indexOf('/') > 0) {
                     date = Time.parseDate("MM/dd/yy", s);
                 } else {
-                    date = getDateFromOffset(s);
+                    int offset = -1;
+                    try {
+                        offset = Integer.parseInt(s);
+                    } catch (NumberFormatException e) {
+                        usage();
+                    }
+                    date = getDateFromOffset(offset);
                 }
+                continue;
+            }
 
+            if (arg[i].equals("-u") || arg[i].equals("--upload")) {
+                uploadToGcloud = true;
                 continue;
             }
 
             break;
         }
 
-        if (agencyID == null || cacheFolder == null) usage();
+        if (agencyID == null) usage();
 
-        new BlockDataGenerator(cacheFolder, outputFolder, agencyID, date);
+        new BlockDataGenerator(cacheFolder, outputFolder, agencyID, date, uploadToGcloud);
     }
 
     class TripRecord {
