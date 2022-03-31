@@ -123,10 +123,9 @@ public class BlockDataGenerator {
     }
 
     private static Date getDateFromOffset(int offset) {
-
         if (offset < 0 || offset > 30) usage();
 
-        long millis = Util.now() + offset * Time.MILLIS_PER_DAY;
+        long millis = Util.now() + (long) offset * Time.MILLIS_PER_DAY;
         return new Date(millis);
     }
 

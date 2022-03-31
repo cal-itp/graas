@@ -74,7 +74,8 @@ public class BulkBlockDataGenerator {
 
         ProgressObserver po = new ConsoleProgressObserver(40);
         String context = Util.getURLContent(url, po);
-        String[] agencyIDList = context.split("\n");
+        // String[] agencyIDList = context.split("\n");
+        String[] agencyIDList = {"county-express"};
         BulkBlockDataGenerator(agencyIDList, daysAhead);
     }
 }
