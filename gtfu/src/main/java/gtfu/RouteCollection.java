@@ -41,6 +41,8 @@ public class RouteCollection implements Iterable<Route>, Serializable {
                 name = r.get("route_short_name");
             }
 
+            String longName = r.get("route_long_name");
+            String shortName = r.get("route_short_name");
             String hexRGB = r.get("route_color");
             //Debug.log("- hexRGB: " + hexRGB);
 
@@ -50,7 +52,7 @@ public class RouteCollection implements Iterable<Route>, Serializable {
 
             Color color = Util.getColorFromHexString(hexRGB);
 
-            Route route = new Route(id, agencyID, name, color);
+            Route route = new Route(id, agencyID, name, longName, shortName, color);
             //Debug.log("  - " + id + ": " + name);
 
             map.put(id, route);

@@ -878,6 +878,12 @@ public class Util {
         collections.put("routes", routeCollection);
         t.dumpLap();
 
+        //Debug.log("directions:");
+        t = new Timer("directions");
+        DirectionCollection directionCollection = new DirectionCollection(path, skipErrors);
+        collections.put("directions", directionCollection);
+        t.dumpLap();
+
         for (Route route : routeCollection) {
             route.computeArea();
         }

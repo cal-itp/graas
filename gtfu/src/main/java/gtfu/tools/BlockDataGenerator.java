@@ -49,7 +49,17 @@ public class BlockDataGenerator {
         Debug.log("- date: " + date);
         Debug.log("- uploadToGcloud: " + uploadToGcloud);
 
-        Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, new ConsoleProgressObserver(40));
+        AgencyYML a = new AgencyYML();
+        String gtfsUrl = a.getURL(agencyID);
+
+        if (gtfsUrl == null) {
+            System.out.println(agencyID + " does not appear in agencies.yml, exiting");
+            System.exit(1);
+        }
+
+        ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
+        Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsUrl, progressObserver);
+        Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, progressObserver);
         CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
         TripCollection trips = (TripCollection)collections.get("trips");
         BlockCollection blocks = new BlockCollection(calendars, trips, date);

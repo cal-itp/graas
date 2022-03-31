@@ -32,51 +32,37 @@ public class TripListGenerator {
      * @param out           PrintStream where output will be printed
      * @param useValidator  Whether or not to run the GTFS valdiator prior to generating list. If true, the validator will present a brief a summary in case of errors and give the optiont to bail.
      */
-    public static void generateTripList(String agencyID, String cacheDir, PrintStream out, boolean useValidator) throws Exception {
-        Map<String, RouteData> rmap = new HashMap();
-        Map<String, CalendarData> cmap = new HashMap();
-        Map<String, TripData> tmap = new HashMap();
-        Map<String, String> dmap = new HashMap();
-        Map<String, String> smap = new HashMap();
-        boolean hasDirectionsTxt = false;
+    public static void generateTripList(String agencyID, String cacheFolder, PrintStream out, boolean useValidator) throws Exception {
 
-        if (cacheDir == null) {
-            String home = System.getProperty("user.home");
-            String path = home + "/tmp/tuff";
-            File f = new File(path);
-
-            if (f.exists() && f.isDirectory()) {
-                cacheDir = path;
-            } else {
-                cacheDir = System.getProperty("java.io.tmpdir");
-            }
+        if(cacheFolder == null){
+            cacheFolder = System.getenv("HOME") + "/tmp/tuff";
         }
 
-        AgencyYML yml = new AgencyYML();
-        String gtfsURL = yml.getURL(agencyID);
+        AgencyYML a = new AgencyYML();
+        String gtfsURL = a.getURL(agencyID);
 
         if (gtfsURL == null) {
-            System.out.println("entry for '" + agencyID + "' has no static GTFS URL listed in agencies.yml, bailing...");
+            System.out.println(agencyID + " does not appear in agencies.yml, exiting");
             System.exit(1);
         }
-
-        Debug.log("- cacheDir: " + cacheDir);
-        Debug.log("- agencyID: " + agencyID);
-        Debug.log("- gtfsURL: " + gtfsURL);
 
         byte[] bytes = GCloudStorage.getObject("graas-resources","gtfs-aux/" + agencyID + "/agency-params.json");
         JSONParser parser = new JSONParser();
         JSONObject agencyParams = (JSONObject) parser.parse(new String(bytes, StandardCharsets.UTF_8));
 
-        String nameField = (String) agencyParams.get("triplist-generator-namefield");
+
         Boolean useDirection = (Boolean) agencyParams.get("triplist-generator-use-direction");
+
         if(useDirection == null){
             useDirection = false;
         }
 
+        String nameField = (String) agencyParams.get("triplist-generator-namefield");
+        Debug.log("nameField: " + nameField);
+
         if (nameField == null) {
             System.err.println("Update agency-params for your agency to include a valid value for triplist-generator-namefield. Valid options include:");
-            System.err.println("headsign, route_short_name, route_long_name, shape_id");
+            System.err.println("headsign, route_short_name, route_long_name");
             System.exit(0);
         }
 
@@ -99,157 +85,53 @@ public class TripListGenerator {
             }
         }
 
-        Util.updateCacheIfNeeded(cacheDir, agencyID, gtfsURL, new ConsoleProgressObserver(40));
+        ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
+        Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsURL, progressObserver);
 
-        TextFile tf = new TextFile(cacheDir + "/" + agencyID + "/routes.txt");
-        CSVHeader header = new CSVHeader(tf.getNextLine());
+        Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, progressObserver);
+        CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
+        TripCollection trips = (TripCollection)collections.get("trips");
+        RouteCollection routes = (RouteCollection)collections.get("routes");
 
-        for (;;) {
-            String line = tf.getNextLine();
-            if (line == null) break;
-
-            CSVRecord r = new CSVRecord(header, line);
-            String id = r.get("route_id");
-            String aid = r.get("agency_id");
-            String rsn = r.get("route_short_name");
-            String rln = r.get("route_long_name");
-            rmap.put(id, new RouteData(aid, rsn, rln));
-        }
-
-        // Debug.log("- rmap: " + rmap);
-
-        tf = new TextFile(cacheDir + "/" + agencyID + "/calendar.txt");
-        header = new CSVHeader(tf.getNextLine());
-
-        for (;;) {
-            String line = tf.getNextLine();
-            if (line == null) break;
-
-            CSVRecord r = new CSVRecord(header, line);
-            String id = r.get("service_id");
-            List<Integer> il = new ArrayList<Integer>();
-
-            for (int i=0; i<WEEKDAYS.length; i++) {
-                il.add(r.getInt(WEEKDAYS[i]));
-            }
-
-            String startDate = r.get("start_date");
-            String endDate = r.get("end_date");
-            cmap.put(id, new CalendarData(il, startDate, endDate));
-        }
-
-        tf.dispose();
-        // Debug.log("- cmap: " + cmap);
-
-        tf = new TextFile(cacheDir + "/" + agencyID + "/trips.txt");
-        header = new CSVHeader(tf.getNextLine());
-
-        for (;;) {
-            String line = tf.getNextLine();
-            if (line == null) break;
-            CSVRecord r = new CSVRecord(header, line);
-            String id = r.get("trip_id");
-            String headsign = r.get("trip_headsign");
-            String serviceID = r.get("service_id");
-            String routeID = r.get("route_id");
-            String shapeID = r.get("shape_id");
-            String directionID = r.get("direction_id");
-
-            tmap.put(id, new TripData(headsign, serviceID, routeID, shapeID, directionID));
-        }
-
-        tf.dispose();
-        // Debug.log("- tmap: " + tmap);
-
-        try {
-            tf = new TextFile(cacheDir + "/" + agencyID + "/directions.txt");
-            // If directions.txt is not present, we'll exit the try{} and none of the below code will run.
-            // hasDirectionsTxt will remain false.
-            hasDirectionsTxt = true;
-            header = new CSVHeader(tf.getNextLine());
-
-            for (;;) {
-                String line = tf.getNextLine();
-                if (line == null) break;
-                CSVRecord r = new CSVRecord(header, line);
-                String id = r.get("direction_id");
-                String routeID = r.get("route_id");
-                String direction = r.get("direction");
-                dmap.put(routeID + id, direction);
-            }
-            // Debug.log("dmap: " + dmap);
-
-            tf.dispose();
-
-        } catch (Exception e) {}
-
-        tf = new TextFile(cacheDir + "/" + agencyID + "/stop_times.txt");
-        header = new CSVHeader(tf.getNextLine());
-        List<TripListEntry> list = new ArrayList<TripListEntry>();
-        String lastID = null;
-
-        for (;;) {
-            String line = tf.getNextLine();
-            if (line == null) break;
-
-            CSVRecord r = new CSVRecord(header, line);
-            String id = r.get("trip_id");
-            String stopID = r.get("stop_id");
-            String hms = r.get("departure_time");
-
-            if (!id.equals(lastID)) {
-                int departureTime = Time.getMillisForTime(hms);
-                TripData tdata = tmap.get(id);
-                String routeID = tdata.routeID;
-                String directionID = tdata.directionID;
-                RouteData rdata = rmap.get(routeID);
-                String direction = null;
-                if (hasDirectionsTxt){
-                    direction = dmap.get(routeID + directionID);
-                } else {
-                    direction = createDirectionMap().get(directionID);
-                }
-                list.add(new TripListEntry(tdata, rdata, stopID, id, departureTime, nameField, direction, useDirection));
-            }
-
-            lastID = id;
-        }
-
-        tf.dispose();
-        Collections.sort(list);
-        //Debug.log("- list: " + list);
-
-        tf = new TextFile(cacheDir + "/" + agencyID + "/stops.txt");
-        header = new CSVHeader(tf.getNextLine());
-
-        for (;;) {
-            String line = tf.getNextLine();
-            if (line == null) break;
-
-            CSVRecord r = new CSVRecord(header, line);
-            String id = r.get("stop_id");
-            float lat = r.getFloat("stop_lat");
-            float lon = r.getFloat("stop_lon");
-
-            smap.put(id, String.format("{\"lat\": %f, \"long\": %f}", lat, lon));
-        }
-
-        tf.dispose();
-        //Debug.log("- smap: " + smap);
-
-        // It's temping to replace the below manual JSON generation with JSONObject and JSONArray classes,
-        // but because they offer little control over formatting, this method is preferable for something
-        // needing to be read by humans.
         out.println("[");
 
-        for (int i=0; i<list.size(); i++) {
-            TripListEntry e = list.get(i);
-            String row = e.toString(cmap, smap);
+        for(int i = 0; i < trips.getSize(); i++){
 
-            if(row != null){
+            Trip trip = trips.get(i);
+            Route route = routes.get(trip.getRouteID());
+            Calendar calendar = calendars.get(trip.getServiceID());
+            Stop firstStop = trip.getStop(0);
+
+            String name = null;
+            if(nameField.equals("headsign")){
+                name = trip.getHeadsign();
+            } else if (nameField.equals("route_long_name")){
+                name = route.getLongName();
+            } else if (nameField.equals("route_short_name")){
+                name = route.getShortName();
+            }
+            // TODO:
+            // if(useDirection){
+            //     name += " - " + direction;
+            // }
+
+            if(calendar != null){
+
+                String tripInfo = String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": {\"lat\": %s, \"long\": %s}, \"start_date\": %s, \"end_date\": %s}",
+                                    name,
+                                    Time.getHMForSeconds(trip.getStartTime(), true),
+                                    trip.getID(),
+                                    calendar.toArrayString(),
+                                    firstStop.getLat(),
+                                    firstStop.getLong(),
+                                    calendar.getStartDate(),
+                                    calendar.getEndDate()
+                                );
+
                 out.print("    ");
-                out.print(row);
-                if (i < list.size() - 1) {
+                out.print(tripInfo);
+
+                if (i < trips.getSize() - 1) {
                     out.print(",");
                 }
                 out.println();
@@ -263,14 +145,67 @@ public class TripListGenerator {
         }
     }
 
+        // try {
+        //     tf = new TextFile(cacheDir + "/" + agencyID + "/directions.txt");
+        //     // If directions.txt is not present, we'll exit the try{} and none of the below code will run.
+        //     // hasDirectionsTxt will remain false.
+        //     hasDirectionsTxt = true;
+        //     header = new CSVHeader(tf.getNextLine());
+
+        //     for (;;) {
+        //         String line = tf.getNextLine();
+        //         if (line == null) break;
+        //         CSVRecord r = new CSVRecord(header, line);
+        //         String id = r.get("direction_id");
+        //         String routeID = r.get("route_id");
+        //         String direction = r.get("direction");
+        //         dmap.put(routeID + id, direction);
+        //     }
+        //     // Debug.log("dmap: " + dmap);
+
+        //     tf.dispose();
+
+        // } catch (Exception e) {}
+
+
+        // for (;;) {
+        //     String line = tf.getNextLine();
+        //     if (line == null) break;
+
+        //     CSVRecord r = new CSVRecord(header, line);
+        //     String id = r.get("trip_id");
+        //     String stopID = r.get("stop_id");
+        //     String hms = r.get("departure_time");
+
+        //     if (!id.equals(lastID)) {
+        //         int departureTime = Time.getMillisForTime(hms);
+        //         TripData tdata = tmap.get(id);
+        //         String routeID = tdata.routeID;
+        //         String directionID = tdata.directionID;
+        //         RouteData rdata = rmap.get(routeID);
+        //         String direction = null;
+        //         if (hasDirectionsTxt){
+        //             direction = dmap.get(routeID + directionID);
+        //         } else {
+        //             direction = createDirectionMap().get(directionID);
+        //         }
+        //         list.add(new TripListEntry(tdata, rdata, stopID, id, departureTime, nameField, direction, useDirection));
+        //     }
+
+        //     lastID = id;
+        // }
+
+        // tf.dispose();
+
+
     // For agencies who don't include the optional directions.txt file, assume the following mapping.
     // This is designed specifically around Unitrans
-    private static Map<String, String> createDirectionMap() {
-        Map<String,String> directionMap = new HashMap<String,String>();
-        directionMap.put("0", "Outbound");
-        directionMap.put("1", "Inbound");
-        return directionMap;
-    }
+    // private static Map<String, String> createDirectionMap() {
+    //     Map<String,String> directionMap = new HashMap<String,String>();
+    //     directionMap.put("0", "Outbound");
+    //     directionMap.put("1", "Inbound");
+    //     return directionMap;
+    // }
 
     private static void usage() {
         System.err.println("usage: TripListGenerator [-t|--temp-folder <tmp-folder>] -a|--agency-id <agency-id> [-o|--output-file <output-path>] [-a|--gtfs-agency <gtfs-agency-id>] [-r|-R|-h]");
@@ -324,116 +259,5 @@ public class TripListGenerator {
         }
 
         generateTripList(agencyID, cacheDir, out, useValidator);
-    }
-}
-
-class TripData {
-    String headSign;
-    String serviceID;
-    String routeID;
-    String shapeID;
-    String directionID;
-
-    public TripData(String headSign, String serviceID, String routeID, String shapeID, String directionID) {
-        this.headSign = headSign;
-        this.serviceID = serviceID;
-        this.routeID = routeID;
-        this.shapeID = shapeID;
-        this.directionID = directionID;
-    }
-}
-
-class RouteData {
-    String agencyID;
-    String routeShortName;
-    String routeLongName;
-
-    public RouteData(String agencyID, String routeShortName, String routeLongName) {
-        this.agencyID = agencyID;
-        this.routeShortName = routeShortName;
-        this.routeLongName = routeLongName;
-    }
-}
-
-class CalendarData {
-    List<Integer> dayList;
-    String startDate;
-    String endDate;
-
-    public CalendarData(List<Integer> dayList, String startDate, String endDate) {
-        this.dayList = dayList;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
-}
-
-class TripListEntry implements Comparable<TripListEntry> {
-    String serviceID;
-    String routeID;
-    String firstStopID;
-    String tripID;
-    String name;
-    int departureTime;
-
-    public TripListEntry(TripData data, RouteData rdata, String firstStopID, String tripID, int departureTime, String nameField, String direction, boolean useDirection) {
-        serviceID = data.serviceID;
-        routeID = data.routeID;
-
-        if (nameField.equals("headsign")){
-            name = data.headSign;
-        } else if (nameField.equals("route_short_name")) {
-            name = rdata.routeShortName;
-        } else if (nameField.equals("route_long_name")) {
-            name = rdata.routeLongName;
-        } else if (nameField.equals("shape_id")) {
-            name = data.shapeID;
-        }
-        if (useDirection){
-            name += " - " + direction;
-        }
-        if (Util.isEmpty(name)) {
-            System.err.println("** selected name field " + nameField + " is null/blank for trip "+ tripID);
-        }
-
-        this.firstStopID = firstStopID;
-        this.tripID = tripID;
-        this.departureTime = departureTime;
-    }
-
-    public int compareTo(TripListEntry o) {
-        int res = name.compareTo(o.name);
-        if (res == 0) res = departureTime - o.departureTime;
-        return res;
-    }
-
-    private String shortenString(String s, int maxLength) {
-        if (s.length() <= maxLength) return s;
-
-        int index = s.indexOf('/');
-
-        if (index >= 0 && index <= maxLength) {
-            return s.substring(0, index);
-        }
-
-        return s.substring(0, maxLength) + "...";
-    }
-
-    public String toString(Map<String, CalendarData> cmap, Map<String, String>smap) {
-        CalendarData calData = cmap.get(serviceID);
-        // Omit trips where the service_id is missing from calendar.txt.
-        // This is a temporary fix - the long term fix is to use info from calendar_dates as well. See https://github.com/cal-itp/graas/issues/19
-        if(calData == null) {
-            return null;
-        } else {
-            return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": %s, \"start_date\": %s, \"end_date\": %s}",
-                name,
-                Time.getHMForMillis(departureTime),
-                tripID,
-                calData.dayList,
-                smap.get(firstStopID),
-                calData.startDate,
-                calData.endDate
-            );
-        }
     }
 }
