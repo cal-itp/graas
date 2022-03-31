@@ -1,6 +1,18 @@
 site_name: GRaaS Documentation
 theme:
   name: material
+plugins:
+    - mkdocstrings:
+        handlers:
+            python:
+                setup_commands:
+                    - import sys
+                    - sys.path.append('server/app-engine')
+                selection:
+                    new_path_syntax: true
+        watch:
+            - server/app-engine
+
 nav:
   - About:
     - Intro to GRaaS: "README.md"
@@ -9,4 +21,4 @@ nav:
     - Setting up a new instance of GRaaS: "new-instance-setup.md"
     - Agency Onboarding Runbook: "server/onboarding-runbook.md"
   - GRaaS hardware intro and assembly: "hardware/README.md"
-
+  - Python docs: "python-docs.md"
