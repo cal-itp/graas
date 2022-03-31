@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <title>gtfs test</title>
+</head>
+<body style="background-color: bisque">
+<div>
+    <p id="output" style="font-size: 32px"></p>
+</div>
+<script>
+    var count = 1;
+
+    function output(msg) {
+        var p = document.getElementById('output');
+        p.innerHTML += msg;
+    }
+
+    function initialize() {
+        console.log("+ page loaded");
+
+        if (navigator.wakeLock) {
+            output('wake-lock access');
+        } else {
+            output('no wake-lock access');
+        }
+    }
+
+    initialize();
+</script>
+</body>
+</html>

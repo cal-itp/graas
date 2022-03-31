@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <title>gtfs test</title>
+</head>
+<body style="background-color: bisque">
+<div>
+    <p id="output" style="font-size: 48px"></p>
+</div>
+<script>
+    var count = 1;
+
+    function output(msg) {
+        var p = document.getElementById('output');
+        p.innerHTML = msg;
+    }
+
+    function initialize() {
+        console.log("+ page loaded");
+
+        if (navigator && navigator.geolocation) {
+            setInterval(function() {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var long = position.coords.longitude;
+
+                    output("update: " + (count++) + "<br/>lat: " + lat + "<br/>long: " + long);
+                }, function(error) {
+                    output('*** getCurrentPosition() error: ' + error);
+                });
+            }, 3000);
+        } else {
+            output('no geolocation access');
+        }
+    }
+
+    initialize();
+</script>
+</body>
+</html>
