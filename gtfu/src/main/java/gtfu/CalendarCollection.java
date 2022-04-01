@@ -40,6 +40,8 @@ public class CalendarCollection implements Iterable<Calendar>, Serializable {
                 r.getInt("friday"),
                 r.getInt("saturday"),
                 r.getInt("sunday"),
+                r.get("start_date"),
+                r.get("end_date"),
                 Time.parseDateAsLong(DATE_FORMAT, r.get("start_date")),
                 Time.parseDateAsLong(DATE_FORMAT, r.get("end_date"))
             );
