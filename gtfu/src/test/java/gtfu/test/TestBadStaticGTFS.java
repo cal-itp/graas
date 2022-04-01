@@ -18,7 +18,7 @@ public class TestBadStaticGTFS {
         FailureReporter reporter = new NullFailureReporter();
         Util.setReporter(reporter);
 
-        int expectedFailures = 31;
+        int expectedFailures = 30;
         String cachePath = "src/test/resources/test-gtfs/";
         String agencyID = "bad-static-gtfs";
 

@@ -46,54 +46,13 @@ public class DirectionCollection implements Iterable<Direction>, Serializable {
             tf.dispose();
         }
         catch (Exception e){
-            Util.fail(
-                String.format(
-                    "* Error: directions.txt is not present"
-                ),
-                !skipErrors
-            );
+            e.printStackTrace();
         }
     }
 
     private DirectionCollection() {
         map = new HashMap<String, Direction>();
         list = new ArrayList<Direction>();
-    }
-
-    public void write(DataOutputStream out) {
-        try {
-            out.writeInt(list.size());
-            int count = 0;
-
-            for (Direction d : list) {
-                d.write(out);
-            }
-        } catch (IOException e) {
-            throw new Fail(e);
-        }
-    }
-
-    public static DirectionCollection fromStream(DataInputStream in) {
-        try {
-            DirectionCollection c = new DirectionCollection();
-
-            int count = in.readInt();
-
-            for (int i=0; i<count; i++) {
-                Direction d = Direction.fromStream(in);
-
-                c.list.add(d);
-                c.map.put(d.getRouteDirectionID(), d);
-            }
-
-            return c;
-        } catch (IOException e) {
-            throw new Fail(e);
-        }
-    }
-
-    public Direction get(int index) {
-        return list.get(index);
     }
 
     public Direction get(String id) {

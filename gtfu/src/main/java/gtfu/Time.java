@@ -18,6 +18,8 @@ public class Time {
     public static final int MILLIS_PER_HOUR   = 60 * MILLIS_PER_MINUTE;
     public static final int MILLIS_PER_DAY    = 24 * MILLIS_PER_HOUR;
 
+    public static final int DAYS_PER_WEEK = 7;
+
     public static long getMidnightTimestamp() {
         return getMidnightTimestamp(Util.now());
     }

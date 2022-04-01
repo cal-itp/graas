@@ -76,8 +76,8 @@ public class Calendar {
         6 -> 1
         */
 
-        for (int i=0; i<7; i++) {
-            int n = ((i + 1) % 7 + 1);
+        for (int i=0; i<Time.DAYS_PER_WEEK; i++) {
+            int n = ((i + 1) % Time.DAYS_PER_WEEK + 1);
             sb.append(days[n] == 0 ? '-' : LETTERS.charAt(i));
         }
 
@@ -98,10 +98,10 @@ public class Calendar {
         */
 
         sb.append("[");
-        for (int i=0; i<7; i++) {
-            int n = ((i + 1) % 7 + 1);
+        for (int i=0; i<Time.DAYS_PER_WEEK; i++) {
+            int n = ((i + 1) % Time.DAYS_PER_WEEK + 1);
             sb.append(days[n] == 0 ? "0" : "1");
-            sb.append(i < 6 ? ", " : "");
+            sb.append(i < Time.DAYS_PER_WEEK - 1 ? ", " : "");
         }
         sb.append("]");
         return sb.toString();
