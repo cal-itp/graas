@@ -1,7 +1,6 @@
 package gtfu;
 
 import java.util.Date;
-import java.util.Arrays;
 
 public class Calendar {
     public static final int MONDAY    = java.util.Calendar.MONDAY;
