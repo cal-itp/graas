@@ -92,6 +92,7 @@ public class TripListGenerator {
         CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
         TripCollection trips = (TripCollection)collections.get("trips");
         RouteCollection routes = (RouteCollection)collections.get("routes");
+        DirectionCollection directions = (DirectionCollection)collections.get("directions");
 
         out.println("[");
 
@@ -110,10 +111,12 @@ public class TripListGenerator {
             } else if (nameField.equals("route_short_name")){
                 name = route.getShortName();
             }
-            // TODO:
-            // if(useDirection){
-            //     name += " - " + direction;
-            // }
+            TODO:
+            if(useDirection){
+                Direction direction = directions.get(trip.getRouteID() + "-" + trip.getDirectionID());
+                String directionName = direction.getName();
+                name += " - " + directionName;
+            }
 
             if(calendar != null){
 

@@ -15,6 +15,7 @@ public class Trip implements Serializable {
     String serviceID;
     String headsign;
     String blockID;
+    String directionID;
     List<Stop> stopList;
     List<Integer> milliList;
     Map<String, Integer> stopMap;
@@ -24,7 +25,7 @@ public class Trip implements Serializable {
     int accelerator;
     int startTime;
 
-    public Trip(String id, String routeID, String serviceID, String headsign, Shape shape) {
+    public Trip(String id, String routeID, String serviceID, String headsign, Shape shape, String directionID) {
         this();
 
         this.id = id;
@@ -32,6 +33,7 @@ public class Trip implements Serializable {
         this.serviceID = serviceID;
         this.headsign = headsign;
         this.shape = shape;
+        this.directionID = directionID;
         shapeID = shape.getID();
         //Debug.log("- shapeID: " + shapeID);
 
@@ -131,6 +133,10 @@ public class Trip implements Serializable {
 
     public String getBlockID() {
         return blockID;
+    }
+
+    public String getDirectionID() {
+        return directionID;
     }
 
     public void setSchedule(TripSchedule schedule) {

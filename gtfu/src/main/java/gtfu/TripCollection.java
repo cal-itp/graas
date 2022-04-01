@@ -41,6 +41,7 @@ public class TripCollection implements Iterable<Trip>, Serializable {
             String headSign = r.get("trip_headsign");
             String shapeID = r.get("shape_id");
             String blockID = r.get("block_id");
+            String directionID = r.get("direction_id");
             Shape shape = shapeCollection.get(shapeID);
             if (shape == null) {
                 Util.fail(
@@ -52,7 +53,7 @@ public class TripCollection implements Iterable<Trip>, Serializable {
                     !skipErrors
                 );
             } else {
-                Trip trip = new Trip(id, routeID, serviceID, headSign, shape);
+                Trip trip = new Trip(id, routeID, serviceID, headSign, shape, directionID);
                 trip.setBlockID(blockID);
 
                 map.put(id, trip);
