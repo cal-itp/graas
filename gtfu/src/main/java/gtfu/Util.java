@@ -880,7 +880,8 @@ public class Util {
 
         //Debug.log("directions:");
         t = new Timer("directions");
-        DirectionCollection directionCollection = new DirectionCollection(path, skipErrors);
+        // Not all agencies use directions.txt, so skipErrors is set to always be true
+        DirectionCollection directionCollection = new DirectionCollection(path, true);
         collections.put("directions", directionCollection);
         t.dumpLap();
 

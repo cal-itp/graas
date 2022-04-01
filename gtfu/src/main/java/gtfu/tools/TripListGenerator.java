@@ -24,6 +24,7 @@ public class TripListGenerator {
 
     private static final String[] WEEKDAYS = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
     private static final String reportPath = "src/main/resources/conf/output";
+    private static Map<String, String> customDirectionMap = new HashMap();
 
     /**
      * Generate the triplist and print it to the provided PrintStream. If you pass only these 3 args, useValidator
@@ -96,6 +97,10 @@ public class TripListGenerator {
 
         out.println("[");
 
+        if(useDirection && directions.getSize() == 0){
+            customDirectionMap = createCustomDirectionMap();
+        }
+
         for(int i = 0; i < trips.getSize(); i++){
 
             Trip trip = trips.get(i);
@@ -111,15 +116,20 @@ public class TripListGenerator {
             } else if (nameField.equals("route_short_name")){
                 name = route.getShortName();
             }
-            TODO:
+
             if(useDirection){
-                Direction direction = directions.get(trip.getRouteID() + "-" + trip.getDirectionID());
-                String directionName = direction.getName();
-                name += " - " + directionName;
+                if(directions.getSize() > 0){
+                    Direction direction = directions.get(trip.getRouteID() + "-" + trip.getDirectionID());
+                    String directionName = direction.getName();
+                    name += " - " + directionName;
+                }
+                else{
+                    String directionName = customDirectionMap.get(trip.getDirectionID());
+                    name += " - " + directionName;
+                }
             }
-
+            // Once we solve for calendar_dates, calendar should never be null
             if(calendar != null){
-
                 String tripInfo = String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": {\"lat\": %s, \"long\": %s}, \"start_date\": %s, \"end_date\": %s}",
                                     name,
                                     Time.getHMForSeconds(trip.getStartTime(), true),
@@ -200,15 +210,15 @@ public class TripListGenerator {
 
         // tf.dispose();
 
-
     // For agencies who don't include the optional directions.txt file, assume the following mapping.
     // This is designed specifically around Unitrans
-    // private static Map<String, String> createDirectionMap() {
-    //     Map<String,String> directionMap = new HashMap<String,String>();
-    //     directionMap.put("0", "Outbound");
-    //     directionMap.put("1", "Inbound");
-    //     return directionMap;
-    // }
+    private static Map<String, String> createCustomDirectionMap() {
+        Map<String,String> directionMap = new HashMap();
+        directionMap.put("0", "Outbound");
+        directionMap.put("1", "Inbound");
+        return directionMap;
+    }
+
 
     private static void usage() {
         System.err.println("usage: TripListGenerator [-t|--temp-folder <tmp-folder>] -a|--agency-id <agency-id> [-o|--output-file <output-path>] [-a|--gtfs-agency <gtfs-agency-id>] [-r|-R|-h]");
