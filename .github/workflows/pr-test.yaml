@@ -27,6 +27,9 @@ jobs:
           # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
           service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
           credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+      - name: Install node packages
+        working-directory: server/node/
+        run: npm install
       - name: Run position update script
         working-directory: server/tests/
         run: NODE_PATH=../node/node_modules node post-position-update.js
