@@ -1,6 +1,6 @@
 """
 
-Implement functionality for a GTFS-rt server. GTFS-rt specis here: https://developers.google.com/transit/gtfs-realtime
+Implement functionality for a GTFS-rt server. GTFS-rt spec is here: https://developers.google.com/transit/gtfs-realtime
 
 The server currently supports two of the three feed types from the spec: Vehicle Positions and Service Alerts.
 
@@ -11,9 +11,9 @@ the database at startup.
 There is a proof-of-concept implementation for a Service Alert UI called AlertUI in the gtfu folder. Alerts can
 also be submitted through 3rd party tools using HTTP POST and the /post-alert endpoint below.
 
-Clients can submit updates for individual feeds through the following endpoints:
+Clients can submit alert updates for individual feeds through the following endpoint:
 
-- /post-alert:
+    /post-alert:
     {
         "data": {
             "agency_key": ...,  # id of submitting agency
@@ -28,7 +28,9 @@ Clients can submit updates for individual feeds through the following endpoints:
         "sig": ...              # base-64 encoded ECDSA signature of "data" object
     }
 
-- /new-pos-sig:
+Clients can submit position updates for individual feeds through the following endpoint:
+
+    /new-pos-sig:
     {
         "data": {
             "accuracy": ...,      # accuracy of update
@@ -48,19 +50,25 @@ Clients can submit updates for individual feeds through the following endpoints:
         "sig": ...                # base-64 encoded ECDSA signature of "data" object
     }
 
-Consumers can retrieve feeds through the following endpoints:
+Consumers can retrieve current service alerts for an agency through the following endpoints:
 
-- /service-alerts.pb?agency=<agency-id>
-    get current service alerts for agency 'agency-id' in protobuf format
+    /service-alerts.pb?agency=MY-AGENCY-ID
 
-- /vehicle-positions.pb?agency=<agency-id>
-    get current vehicle positions for agency 'agency-id' in protobuf format
+Consumers can retrieve current vehicle positions for an agency through the following endpoints:
 
-A web-based client for collecting and submitting vehicle position updates is available at the following endpoint:
+    /vehicle-positions.pb?agency=MY-AGENCY-ID
 
-- /
-  navigate to web-based vehicle GTFS-rt client. Client needs to be initialized with QR code that contains agency ID
-  and private key
+A web-based client for collecting and submitting vehicle position updates is available at this endpoint:
+
+    /
+
+*Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
+
+A web-based client for bulk-assigning GTFS blocks to vehicles is available at this endpoint:
+
+    /dispatch-ui
+
+*Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
 
 Please note:
   For simplicity reasons, server currently only works reliably with a single instance. memcache implementation
