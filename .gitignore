@@ -9,4 +9,5 @@ log
 log.txt
 *.pb
 .venv
+node_modules/
 
