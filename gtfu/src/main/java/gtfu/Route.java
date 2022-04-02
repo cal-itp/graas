@@ -14,16 +14,20 @@ public class Route implements Filterable, Serializable {
     String id;
     String agencyID;
     String name;
+    String longName;
+    String shortName;
     transient Color color;
     List<Trip> tripList;
     Area area;
 
-    public Route(String id, String agencyID, String name, Color color) {
+    public Route(String id, String agencyID, String name, String longName, String shortName, Color color) {
         this();
 
         this.id = id;
         this.agencyID = agencyID;
         this.name = name;
+        this.longName = longName;
+        this.shortName = shortName;
         this.color = color;
 
         area = new Area();
@@ -112,6 +116,14 @@ public class Route implements Filterable, Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getLongName() {
+        return longName;
+    }
+
+    public String getShortName() {
+        return shortName;
     }
 
     public void addTrip(Trip trip) {
