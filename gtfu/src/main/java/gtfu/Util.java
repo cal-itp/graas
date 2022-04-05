@@ -431,7 +431,7 @@ public class Util {
         File file = new File(rootFolder);
 
         if (!file.exists()) {
-            file.mkdir();
+            Debug.log("file.mkdir(): " + file.mkdir());
         }
 
         String name = rootFolder + "/" + agencyID;
@@ -440,7 +440,7 @@ public class Util {
 
         if (!file.exists()) {
             Debug.log("File doesn't exist!!");
-            file.mkdir();
+            Debug.log("file.mkdir(): " + file.mkdir());
             writeLastModifiedFile(name, 0);
         }
 
