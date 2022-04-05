@@ -36,8 +36,7 @@ public class TripListGenerator {
     public static void generateTripList(String agencyID, String cacheFolder, PrintStream out, boolean useValidator) throws Exception {
 
         if(cacheFolder == null){
-            cacheFolder = System.getenv("HOME") + "/tmp/tuff";
-            // cacheFolder = "src/main/resources/conf/cache";
+            cacheFolder = "src/main/resources/conf/cache";
         }
 
         AgencyYML a = new AgencyYML();

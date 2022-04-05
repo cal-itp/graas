@@ -386,9 +386,7 @@ public class Util {
                 fos.write(s.getBytes());
             }
         } catch (IOException e) {
-            // throw new Fail(e);
-            e.printStackTrace();
-            System.exit(1);
+            throw new Fail(e);
         }
     }
 
