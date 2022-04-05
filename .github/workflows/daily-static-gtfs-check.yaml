@@ -30,7 +30,7 @@ jobs:
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Update Trip Names
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.tools.TripListGenerator -u https://storage.googleapis.com/graas-resources/test/live-agencies-test.txt
+        run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u https://storage.googleapis.com/graas-resources/test/live-agencies-test.txt
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
