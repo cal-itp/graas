@@ -379,8 +379,10 @@ public class Util {
     private static void writeLastModifiedFile(String path, long millis) {
         Debug.log("writeLastModifiedFile()");
         Debug.log("path: " + path);
+        String lastModifiedPath = path + "/last-update.txt";
+        File file = new File(lastModifiedPath);
         try {
-            try (FileOutputStream fos = new FileOutputStream(path + "/last-update.txt")) {
+            try (FileOutputStream fos = new FileOutputStream(lastModifiedPath)) {
                 String s = Time.formatDate(HTTP_DATE_FORMAT, new Date(millis)) + '\n';
                 fos.write(s.getBytes());
             }
