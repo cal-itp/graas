@@ -30,13 +30,13 @@ jobs:
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Update Trip Names
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u ${{ secrets.LIVE_AGENCIES_URL }}
+        run: java -cp build/libs/gtfu.jar gtfu.tools.UpdateTripNames -u https://storage.googleapis.com/graas-resources/test/live-agencies-test.txt
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Generate Block Data
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.tools.BulkBlockDataGenerator -u ${{ secrets.LIVE_AGENCIES_URL }} -d 2
+        run: java -cp build/libs/gtfu.jar gtfu.tools.BulkBlockDataGenerator -u https://storage.googleapis.com/graas-resources/test/live-agencies-test.txt -d 2
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
