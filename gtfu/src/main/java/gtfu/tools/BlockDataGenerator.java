@@ -117,7 +117,7 @@ public class BlockDataGenerator {
                 out.println(Util.objectToJSON(list, true));
             }
         }
-        Util.getReporter().addLine("date: " + dateString);
+        Util.getReporter().addLine("   - " + dateString);
     }
 
     private static void usage() {
