@@ -381,6 +381,7 @@ public class Util {
         Debug.log("path: " + path);
         String lastModifiedPath = path + "/last-update.txt";
         File file = new File(lastModifiedPath);
+        file.createNewFile();
         try {
             try (FileOutputStream fos = new FileOutputStream(lastModifiedPath)) {
                 String s = Time.formatDate(HTTP_DATE_FORMAT, new Date(millis)) + '\n';
