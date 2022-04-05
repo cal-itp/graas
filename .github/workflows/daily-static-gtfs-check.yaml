@@ -1,8 +1,5 @@
 name: Daily Static GTFS Processes
-on:
-  # Daily at 9PM pacific
-  schedule:
-    - cron: '0 5 * * *'
+on: [push]
 jobs:
   Run-tests:
     runs-on: ubuntu-latest
