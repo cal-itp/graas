@@ -1,3 +1,6 @@
+"""GTFS-rt server business logic and some utility functions regarding DB access and protobuf structures.
+
+"""
 from google.cloud import datastore
 from google.transit import gtfs_realtime_pb2
 import json
@@ -160,7 +163,18 @@ def purge_old_alerts(datastore_client):
     last_alert_purge = day
 
 
+### TODO keep local cache for alert feeds
 def get_alert_feed(datastore_client, agency):
+    """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        agency (str): an agency ID.
+
+    Returns:
+        obj: alert feed in protobuf format
+
+    """
     print('get_alert_feed')
     print('- agency: ' + agency)
 
@@ -191,6 +205,18 @@ def get_alert_feed(datastore_client, agency):
     return feed.SerializeToString()
 
 def get_position_feed(saved_position_feed, saved_position_feed_millis, vehicle_map, agency):
+    """Assemble position feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
+
+    Args:
+        saved_position_feed (dict): dictionary mapping agency IDs to cached feed instances.
+        saved_position_feed_millis (dict): dictionary mapping agency IDs to cache update timestamps.
+        vehicle_map (dict): dictionary mapping vehicle IDs to position data.
+        agency (str): an agency ID.
+
+    Returns:
+        obj: position feed in protobuf format
+
+    """
     millis = saved_position_feed_millis.get(agency, 0)
     feed = saved_position_feed.get(agency, None)
 
@@ -303,6 +329,17 @@ def load_block_collection(datastore_client, block_metadata):
     print(f'- block_map: {block_map}')
 
 def load_block_metadata(datastore_client, agency_id, date_string = None):
+    """Attempt to find and return block metadata for a specific agency ID and date.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        agency_id (str): an agency ID.
+        date_string (str): a date. Current date if omitted.
+
+    Returns:
+        obj: metadata instance if available, `None` otherwise
+
+    """
     print(f'load_block_metadata()')
     print(f'- agency_id: {agency_id}')
 
@@ -324,6 +361,16 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     return results[0]
 
 def get_current_block_collection(datastore_client, agency_id):
+    """Attempt to find the current block collection for a specific agency ID. Return from cache if present and fresh, consult DB otherwise.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        agency_id (str): an agency ID.
+
+    Returns:
+        obj: the current block collection for `agency_id` if available, `None` otherwise
+
+    """
     block_collection = block_map.get(agency_id, None)
     print(f'- block_collection: {block_collection}')
     now = util.get_current_time_millis()
@@ -347,6 +394,17 @@ def get_current_block_collection(datastore_client, agency_id):
     return block_collection
 
 def get_trip_id(datastore_client, agency_id, vehicle_id):
+    """Attempt to find a trip ID for a specific agency ID and vehicle ID and the current time.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        agency_id (str): an agency ID.
+        vehicle_id (str): a vehicle ID.
+
+    Returns:
+        str: a trip ID if one could be determined using block assignment data, `None` otherwise
+
+    """
     print(f'get_trip_id()')
     print(f'- agency_id: {agency_id}')
     print(f'- vehicle_id: {vehicle_id}')
@@ -374,6 +432,16 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
     return None
 
 def handle_get_assignments(datastore_client, data):
+    """Get a list of assigned block IDs and vehicle IDs for a specific agency and date.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        data (obj): JSON data containing `agency_id` and `date` fields.
+
+    Returns:
+        array: list of assignments if everything is in order, an empty array otherwise
+
+    """
     print(f'handle_get_assignments()')
     print(f'- data: {data}')
 
@@ -399,6 +467,19 @@ def handle_get_assignments(datastore_client, data):
     return assignment_summary['data']
 
 def handle_block_collection(datastore_client, data):
+    """Handle an incoming block collection. A collection has metadata like the associated agency ID, the date it is valid for, and the actual list of blocks, each of which has an ID and a list of contained trip IDs. The function checks if the collection contains the required data and discards it with an error message if it doesn't. Otherwise the data is structured for efficient access through caching and database and written to said database:
+    - assignment summary: a shorthand list of which block ID is matched with which vehicle ID
+    - block collection: a detailed list where each entry has a block id and a list of associated trip IDs
+    - metadata: an agency ID, a valid date and DB keys to and `assignment-summary` record and a `block-list` record
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        data (obj): JSON data containing the agency ID, valid date and actual block list.
+
+    Returns:
+        str: `ok` if everything went well, otherwise an error message
+
+    """
     print(f'handle_block_collection()')
     print(f'- data: {data}')
 
@@ -485,6 +566,15 @@ def handle_block_collection(datastore_client, data):
     return 'ok'
 
 def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
+    """Handle an incoming vehicle postion update. If the update is missing a trip ID, check if we have block assignment data to let us backfill the ID. Write update to DB and update internal data structures with the received data.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        timestamp_map (dict): dictionary of vehicle UUIDs to last received timestamp.
+        agency_map (dict): hierarchical dictionary of vehicle position data.
+        position_lock (obj): concurency lock for access to agency_map.
+
+    """
     data['rcv-timestamp'] = util.get_epoch_seconds()
 
     ### TODO check if 'use-bulk-assignment-mode' == True
