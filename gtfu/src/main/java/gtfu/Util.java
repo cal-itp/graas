@@ -377,6 +377,7 @@ public class Util {
     }
 
     private static void writeLastModifiedFile(String path, long millis) {
+        Debug.log("writeLastModifiedFile()");
         try {
             try (FileOutputStream fos = new FileOutputStream(path + "/last-update.txt")) {
                 String s = Time.formatDate(HTTP_DATE_FORMAT, new Date(millis)) + '\n';
@@ -432,6 +433,7 @@ public class Util {
         file = new File(name);
 
         if (!file.exists()) {
+            Debug.log("File doesn't exist!!");
             file.mkdir();
             writeLastModifiedFile(name, 0);
         }
