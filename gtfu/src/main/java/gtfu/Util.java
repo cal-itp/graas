@@ -432,6 +432,7 @@ public class Util {
 
         String name = rootFolder + "/" + agencyID;
         file = new File(name);
+        Debug.log("name: " + name);
 
         if (!file.exists()) {
             Debug.log("File doesn't exist!!");
