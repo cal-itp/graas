@@ -388,6 +388,7 @@ public class Util {
         } catch (IOException e) {
             // throw new Fail(e);
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
