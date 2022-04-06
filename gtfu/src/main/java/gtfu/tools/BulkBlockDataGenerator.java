@@ -33,7 +33,7 @@ public class BulkBlockDataGenerator {
         reporter.addLine("Block data generated for:");
 
         for (String agencyID : agencyIDList) {
-            reporter.addLine(agencyID);
+            reporter.addLine("   " + agencyID);
             for (int i = 0; i < daysAhead + 1; i++){
                 new BlockDataGenerator(agencyID, i);
             }

@@ -82,6 +82,10 @@ public class Util {
         Util.reporter = reporter;
     }
 
+    public static FailureReporter getReporter() {
+        return Util.reporter;
+    }
+
     public static void fail(String s) {
         fail(s, true);
     }

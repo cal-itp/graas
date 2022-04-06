@@ -87,15 +87,13 @@ public class BlockDataGenerator {
 
         java.util.Calendar cal = java.util.Calendar.getInstance();
         cal.setTime(date);
-
-        String fileName = "blocks-"
-            + cal.get(cal.YEAR)
+        String dateString = cal.get(cal.YEAR)
             + "-"
             + Util.pad("" + (cal.get(cal.MONTH) + 1), '0', 2)
             + "-"
-            + Util.pad("" + cal.get(cal.DAY_OF_MONTH), '0', 2)
-            + ".json";
+            + Util.pad("" + cal.get(cal.DAY_OF_MONTH), '0', 2);
 
+        String fileName = "blocks-" + dateString + ".json";
         Debug.log("- fileName: " + fileName);
 
         if(uploadToGcloud){
@@ -119,6 +117,7 @@ public class BlockDataGenerator {
                 out.println(Util.objectToJSON(list, true));
             }
         }
+        Util.getReporter().addLine("   - " + dateString);
     }
 
     private static void usage() {
