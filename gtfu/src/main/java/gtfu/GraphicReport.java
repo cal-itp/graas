@@ -189,8 +189,7 @@ public class GraphicReport {
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
                 // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
-                // REMOVE "test" before PR
-                String agencyDate = key.substring(0, key.length() - 4) + "-test";
+                String agencyDate = key.substring(0, key.length() - 4);
                 blobMap.put(agencyDate, imageToBlob(img));
                 uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json");
             }
@@ -246,7 +245,8 @@ public class GraphicReport {
             fileSuffix = ".json";
             fileTypeName = "text/json";
         }
-        String fileName = key + fileSuffix;
+        // REMOVE "test" before PR
+        String fileName = key + "-test" + fileSuffix;
         gcs.uploadObject("graas-resources", path, fileName, file, fileTypeName);
     }
 

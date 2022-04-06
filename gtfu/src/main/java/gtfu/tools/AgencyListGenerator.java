@@ -38,10 +38,10 @@ public class AgencyListGenerator {
                 String filePath = fileNames.get(j);
                 // Turns "graas-report-archive/agencyname/agencyname-2022-02-07.png" into "agencyname-2022-02-07.png"
                 String fileName = filePath.substring(dirPath.length(), filePath.length());
-
-                if(fileName.contains(".png")){
+                // REMOve "-test"
+                if(fileName.contains("-test.png")){
                     // turns "agencyname-2022-02-10.png" into "2022-02-10"
-                    String date = fileName.substring(agencyName.length() + 1, fileName.length() - 4);
+                    String date = fileName.substring(agencyName.length() + 1, fileName.length() - 9);
                     dates.add(date);
                 }
             }
