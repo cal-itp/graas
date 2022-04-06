@@ -1,3 +1,7 @@
+"""Various utility functions, centered mostly around cryptography and date/time.
+
+"""
+
 from base64 import b64decode
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
@@ -20,6 +24,12 @@ PACIFIC_TZ = pytz.timezone("America/Los_Angeles")
 
 # Pull agency IDs & public keys from datastore, save them
 def read_public_keys():
+    """Read public keys for agencies from DB and return as dictionary that maps IDs to keys.
+
+    Returns:
+        dict: Dictionary that maps IDs to keys.
+
+    """
     print('reading agency IDs and public keys from DB:')
     query = datastore_client.query(kind="agency")
     results = list(query.fetch())
@@ -36,6 +46,17 @@ def read_public_keys():
 key_map = read_public_keys()
 
 def verify_signature(agency_id, data, signature):
+    """Verify the signature of some data. Signature is assumed to be in ECDSA-256 format
+
+    Args:
+        agency_id (str): Agency ID, used to retrieve public key for agency.
+        data (str): The data to be verified.
+        signature (str): The signature to use for verification.
+
+    Returns:
+        bool: True if signature could be verified, False otherwise.
+
+    """
 
     global last_key_refresh, last_bucket_check, key_map
     print('verify_signature()')
@@ -96,11 +117,26 @@ def verify_signature(agency_id, data, signature):
             return False
 
 def get_current_time_millis():
+    """Get the number of milliseconds since the epoch.
+
+    Returns:
+        int: The number of milliseonds since the epoch.
+
+    """
     now = datetime.now()
     now = PACIFIC_TZ.localize(now)
     return int(round(time.time() * 1000))
 
 def get_epoch_seconds(date_string = None):
+    """Get the number of seconds since the epoch for a date string. If date string is omitted, the current date is assumed.
+
+    Args:
+        date_string (str): a date in the form of `yyyy-mm-dd`.
+
+    Returns:
+        int: The number of seconds since the epoch for a date string.
+
+    """
     if date_string is None:
         now = datetime.now()
         now = PACIFIC_TZ.localize(now)
@@ -113,12 +149,30 @@ def get_epoch_seconds(date_string = None):
         return int(d.timestamp())
 
 def get_midnight_seconds(epoch_seconds):
+    """Get the number of seconds at midnight of the provided timestamp.
+
+    Args:
+        epoch_seconds (int): a timestamp given in number of seconds since the epoch.
+
+    Returns:
+        int: The number of seconds at midnight of the provided timestamp.
+
+    """
     now = datetime.fromtimestamp(epoch_seconds)
     now = PACIFIC_TZ.localize(now)
     print(f'. ts: {int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())}')
     return int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
 
 def get_seconds_since_midnight(seconds = None):
+    """Get the number of seconds since midnight of the provided timestamp.
+
+    Args:
+        seconds (int): a timestamp given in number of seconds since the epoch. If omitted, the current timestamp is assumed.
+
+    Returns:
+        int: The number of seconds since midnight of the provided timestamp.
+
+    """
     if seconds is None:
         now = datetime.now()
     else:
@@ -128,6 +182,15 @@ def get_seconds_since_midnight(seconds = None):
     return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 def get_yyyymmdd(date = None):
+    """Get a string representation of the given date in the form `yyyy-mm-dd`.
+
+    Args:
+        date (datetime): a datetime object for which to generate a date string. If omitted, the current date and time is assumed.
+
+    Returns:
+        int: The number of seconds since midnight of the provided timestamp.
+
+    """
     if date is None:
         date = datetime.now()
 
