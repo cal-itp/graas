@@ -189,7 +189,8 @@ public class GraphicReport {
             // Only create report for agencies with trip report data
             if (tdList.size() > 0) {
                 // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
-                String agencyDate = key.substring(0, key.length() - 4);
+                // REMOVE "test" before PR
+                String agencyDate = key.substring(0, key.length() - 4) + "-test";
                 blobMap.put(agencyDate, imageToBlob(img));
                 uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json");
             }
@@ -276,6 +277,21 @@ public class GraphicReport {
             trip.put("avg-update-interval", td.getAvgUpdateInterval());
             trip.put("min-update-interval", td.getMinUpdateInterval());
             trip.put("max-update-interval", td.getMaxUpdateInterval());
+
+            JSONArray tripPoints = new JSONArray();
+
+            Map<String, GPSData> latLonMap = gpsMap.get(td.id);
+
+            for (String latLon : latLonMap.keySet()) {
+                JSONObject tripPoint = new JSONObject();
+                tripPoint.put("lat", latLonMap.get(latLon).lat);
+                tripPoint.put("lon", latLonMap.get(latLon).lon);
+                tripPoint.put("count", latLonMap.get(latLon).count);
+                tripPoint.put("millis", latLonMap.get(latLon).millis);
+                tripPoint.put("secsSinceLastUpdate", latLonMap.get(latLon).secsSinceLastUpdate);
+                tripPoints.add(tripPoint);
+            }
+            trip.put("trip-points", tripPoints);
             tripsInfo.add(trip);
         }
 
