@@ -36,6 +36,7 @@ var startTouchX;
 var startTouchY;
 var lastTouchX;
 var lastTouchY;
+var readOnlyAccess = false;
 
 function isMobile() {
     util.log("isMobile()");
@@ -212,6 +213,19 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
 function initialize() {
     //window.addEventListener('resize', resizeCanvas, false);
+
+    const url = window.location.href;
+    util.log('- url: ' + url);
+
+    if (url.indexOf('show-assignments-only') >= 0) {
+        readOnlyAccess = true;
+
+        var deployButton = document.getElementById('key-deploy');
+        deployButton.style.display = 'none';
+
+        var text = document.getElementById('text-deployment-status');
+        text.style.display = 'none';
+    }
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight * .9125;
@@ -542,7 +556,7 @@ async function loadBlockData(dateString) {
 
     dismissModal();
     var deployButton = document.getElementById('key-deploy');
-    deployButton.style.display = 'inline-block';
+    deployButton.style.display = readOnlyAccess ? 'none' : 'inline-block';
 }
 
 function getGithubData(agencyID, filename) {
@@ -746,6 +760,8 @@ function handleMouseDown(e) {
     util.log('handleMouseDown()');
     util.log('- e: ' + JSON.stringify(e));
 
+    if (readOnlyAccess) return;
+
     var x = e.x;
     var y = e.y;
 
@@ -784,6 +800,8 @@ function handleMouseUp(e) {
     util.log('- e.x: ' + e.x);
     util.log('- e.y: ' + e.y);
     util.log('- dragReceiver: ' + JSON.stringify(dragReceiver));
+
+    if (readOnlyAccess) return;
 
     if (dragReceiver !== null) {
         dragReceiver.vehicle = dragItem.label;
@@ -846,6 +864,8 @@ function drawCloseButton(item) {
 
 function handleMouseMove(e) {
     //util.log('handleMouseMove()');
+
+    if (readOnlyAccess) return;
 
     var x = e.x;
     var y = e.y;
