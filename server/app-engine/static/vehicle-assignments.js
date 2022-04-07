@@ -7,6 +7,7 @@ const COLS = 15;
 const FONT_SIZE = 20;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
+const MAX_LABEL_LENGTH = 5;
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -37,6 +38,9 @@ var startTouchY;
 var lastTouchX;
 var lastTouchY;
 var readOnlyAccess = false;
+var elementWidth = 0;
+var blockDescriptions = {};
+var lastHoveredBlockID = null;
 
 function isMobile() {
     util.log("isMobile()");
@@ -129,7 +133,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
     items = [];
 
-    var bw = (window.innerWidth - (COLS + 1) * GAP) / COLS;
+    elementWidth = (window.innerWidth - (COLS + 1) * GAP) / COLS;
     var bh = BLOCK_HEIGHT;
     var xx = GAP;
     var yy = BLOCKS_VOFF;
@@ -139,7 +143,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             type: 'block',
             x: xx,
             y: yy,
-            w: bw,
+            w: elementWidth,
             h: bh,
             label: blockIDList[i],
             status: 'unassigned',
@@ -162,7 +166,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
         items.push(item);
 
-        xx += GAP + bw;
+        xx += GAP + elementWidth;
 
         if (xx >= window.innerWidth) {
             xx = GAP;
@@ -191,7 +195,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             type: 'vehicle',
             x: xx,
             y: yy,
-            w: bw,
+            w: elementWidth,
             h: bh,
             label: vehicleIDList[i],
             //status: Math.random() < .15 ? 'inactive' : 'active'
@@ -200,7 +204,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
         items.push(item);
 
-        xx += GAP + bw;
+        xx += GAP + elementWidth;
 
         if (xx >= window.innerWidth) {
             xx = GAP;
@@ -522,6 +526,42 @@ function handleUnload(e) {
     }
 }
 
+function createFriendlyBlockDescription(block) {
+    const map = {};
+
+    for (var trip of block.trips) {
+        var headSign = trip.head_sign;
+        var times = map[headSign];
+
+        if (!times) {
+            times = '@';
+        }
+
+        if (times === '@') {
+            times += ' ';
+        } else {
+            times += ', ';
+        }
+
+        times += util.getHMForSeconds(trip.start_time, true);
+
+        map[headSign] = times;
+    }
+
+    var desc = '';
+
+    for (const [key, value] of Object.entries(map)) {
+      desc += `${key} ${value}\n`;
+    }
+
+    //util.log('- block.id: ' + block.id);
+    //util.log('- desc: ' + desc);
+
+    blockDescriptions[block.id] = desc;
+
+    return desc;
+}
+
 async function loadBlockData(dateString) {
     util.log('loadBlockData()');
     util.log('- dateString: ' + dateString);
@@ -535,6 +575,7 @@ async function loadBlockData(dateString) {
     var bidList = [];
 
     for (var block of blocks) {
+        createFriendlyBlockDescription(block);
         bidList.push(block.id);
         blockMap[block.id] = block;
     }
@@ -862,10 +903,20 @@ function drawCloseButton(item) {
     //ctx.shadowBlur = 0;
 }
 
+function drawFullLabel(label) {
+    //util.log('drawFullLabel()');
+    //util.log('- label: ' + label);
+
+    ctx.shadowColor = 'rgba(0,0,0,0)';
+    ctx.fillStyle = 'black';
+    ctx.textAlign = 'left';
+
+    const inset = 5;
+    ctx.fillText(label, inset, canvas.height - 2 * inset);
+}
+
 function handleMouseMove(e) {
     //util.log('handleMouseMove()');
-
-    if (readOnlyAccess) return;
 
     var x = e.x;
     var y = e.y;
@@ -915,7 +966,7 @@ function handleMouseMove(e) {
             var skirt = 7;
 
             for (var item of items) {
-                if ((item.type === 'block' || item.type === 'vehicle') && item.status === 'assigned'
+                if ((item.type === 'block' || item.type === 'vehicle') && item.status === 'assigned' && !readOnlyAccess
                     && x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
                 {
                     repaint();
@@ -935,6 +986,31 @@ function handleMouseMove(e) {
 
                 closeButtonData.active = false;
                 closeButtonData.item = null;
+            }
+
+            for (var item of items) {
+                const metrics = ctx. measureText(item.label);
+
+                if (x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
+                {
+                    if (metrics.width > elementWidth - 10) {
+                        repaint();
+                        drawFullLabel(item.label);
+                    }
+
+                    if (item.type === 'block') {
+                        const blockID = item.label;
+
+                        if (blockID !== lastHoveredBlockID) {
+                            const desc = blockDescriptions[item.label];
+                            util.log('- desc: ' + desc);
+
+                            lastHoveredBlockID = blockID;
+                        }
+                    }
+
+                    break;
+                }
             }
         }
     }
@@ -986,7 +1062,22 @@ function drawWidget(item, xx = -1, yy = -1) {
     }
 
     ctx.textAlign = 'center';
-    ctx.fillText(item.label, x + item.w / 2, y + FONT_SIZE * .8);
+
+    var s = item.label;
+    var metrics = ctx. measureText(s);
+
+    if (metrics.width > elementWidth - 10 && s.length > 1) {
+        s += '…';
+    }
+
+    while (metrics.width > elementWidth - 10 && s.length > 1) {
+        s = s.substring(0, s.length - 2);
+        s += '…';
+
+        metrics = ctx. measureText(s);
+    }
+
+    ctx.fillText(s, x + item.w / 2, y + FONT_SIZE * .8);
 
     if (item.type === 'block' && item.vehicle !== null) {
         ctx.fillStyle = '#3c3';

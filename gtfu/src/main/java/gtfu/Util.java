@@ -883,12 +883,14 @@ public class Util {
         collections.put("routes", routeCollection);
         t.dumpLap();
 
-        //Debug.log("directions:");
-        t = new Timer("directions");
-        // Not all agencies use directions.txt, so skipErrors is set to always be true
-        DirectionCollection directionCollection = new DirectionCollection(path, true);
-        collections.put("directions", directionCollection);
-        t.dumpLap();
+        File df = new File(path + "/directions.txt");
+        if (df.exists()) {
+            //Debug.log("directions:");
+            t = new Timer("directions");
+            DirectionCollection directionCollection = new DirectionCollection(path, skipErrors);
+            collections.put("directions", directionCollection);
+            t.dumpLap();
+        }
 
         for (Route route : routeCollection) {
             route.computeArea();

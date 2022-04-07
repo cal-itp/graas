@@ -76,6 +76,7 @@ public class BlockDataGenerator {
                 Trip trip = trips.get(tripID);
 
                 tr.id = tripID;
+                tr.headSign = trip.getHeadsign();
                 tr.startTime = trip.getStartTime();
                 tr.endTime = tr.startTime + trip.getDurationInSeconds();
 
@@ -193,6 +194,7 @@ public class BlockDataGenerator {
 
     class TripRecord {
         public String id;
+        public String headSign;
         public int startTime;
         public int endTime;
     }
