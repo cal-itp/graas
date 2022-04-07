@@ -543,23 +543,21 @@ function createFriendlyBlockDescription(block) {
             times += ', ';
         }
 
-        times += util.getHMForSeconds(trip.start_time, true);
+        times += util.getHMForSeconds(trip.start_time, false);
 
         map[headSign] = times;
     }
 
-    var desc = '';
+    var desc = `<b>BLOCK ${block.id}:</b><br><hr><br>`;
 
     for (const [key, value] of Object.entries(map)) {
-      desc += `${key} ${value}\n`;
+      desc += `- <b>${key}</b> ${value} <br><br>`;
     }
 
     //util.log('- block.id: ' + block.id);
     //util.log('- desc: ' + desc);
 
     blockDescriptions[block.id] = desc;
-
-    return desc;
 }
 
 async function loadBlockData(dateString) {
@@ -797,6 +795,15 @@ function longPress(x, y) {
     }
 }
 
+function descriptionOn() {
+  document.getElementById("descoverlay").style.display = "block";
+}
+
+function descriptionOff() {
+  document.getElementById("descoverlay").style.display = "none";
+}
+
+
 function handleMouseDown(e) {
     util.log('handleMouseDown()');
     util.log('- e: ' + JSON.stringify(e));
@@ -831,6 +838,20 @@ function handleMouseDown(e) {
             dragItem = item;
             //log('- dragItem: ' + dragItem);
             repaint();
+            break;
+        }
+
+        if (item.type === 'block'
+            && x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h)
+        {
+            var desc = blockDescriptions[item.label];
+
+            if (desc) {
+                var elem = document.getElementById('desctext');
+                elem.innerHTML = desc;
+                descriptionOn();
+            }
+
             break;
         }
     }
