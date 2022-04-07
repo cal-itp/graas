@@ -16,7 +16,7 @@ public class AgencyListGenerator {
     /**
     * Generate the Agency List JSON object and upload it to GCloud
     */
-    public static void generateAgencyList() throws IOException {
+    public static void generateAgencyList(boolean isTest) throws IOException {
 
         GCloudStorage gcs = new GCloudStorage();
         String dirName = "graas-report-archive/";
@@ -38,8 +38,8 @@ public class AgencyListGenerator {
                 String filePath = fileNames.get(j);
                 // Turns "graas-report-archive/agencyname/agencyname-2022-02-07.png" into "agencyname-2022-02-07.png"
                 String fileName = filePath.substring(dirPath.length(), filePath.length());
-                // REMOve "-test"
-                if(fileName.contains("-test.png")){
+                // REMOVE "test"
+                if(fileName.contains(".png") && ((!isTest && !fileName.contains("test")) || (isTest && fileName.contains("test")))) {
                     // turns "agencyname-2022-02-10.png" into "2022-02-10"
                     String date = fileName.substring(agencyName.length() + 1, fileName.length() - 9);
                     dates.add(date);
@@ -49,7 +49,15 @@ public class AgencyListGenerator {
                 agencies.put(agencyName, dates);
             }
         }
-        gcs.uploadObject("graas-resources", "web", "graas-report-agency-dates.json", agencies.toString().getBytes("utf-8"), "text/json");
+
+        String fileName = null;
+        if(isTest){
+            fileName = "graas-report-agency-dates-test.json";
+        } else {
+            fileName = "graas-report-agency-dates.json";
+        }
+
+        gcs.uploadObject("graas-resources", "web", fileName, agencies.toString().getBytes("utf-8"), "text/json");
     }
 
     private static void usage() {
@@ -60,6 +68,6 @@ public class AgencyListGenerator {
     * Generate the Agency List from the command line
     */
     public static void main(String[] arg) throws Exception {
-        generateAgencyList();
+        generateAgencyList(false);
     }
 }

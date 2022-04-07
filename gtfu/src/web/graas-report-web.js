@@ -42,7 +42,7 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
 
 function initialize(){
     getRewriteArgs()
-    url = `${bucketURL}/web/graas-report-agency-dates.json`;
+    url = `${bucketURL}/web/graas-report-agency-dates-test.json`;
     loadJSON(url, processDropdownJSON);
 }
 
@@ -98,7 +98,7 @@ function handleAgencyChoice(){
 function handleDateChoice(){
     console.log("handleDateChoice()");
     selectedDate = document.getElementById("date-select").value;
-    url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json`;
+    url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-test.json`;
     loadJSON(url, processTripJSON);
 }
 
@@ -115,7 +115,12 @@ function processTripJSON(object){
                        width: object["trips"][i]["boundaries"]["timeline-width"],
                        height: object["trips"][i]["boundaries"]["timeline-height"]
                 };
-
+        var points = []
+        for (var j = 0; j < object["trips"][i]["trip-points"].length; j++) {
+            points.push({x: object["trips"][i]["trip-points"][j]["x"],
+                        y: object["trips"][i]["trip-points"][j]["y"]
+                        });
+        }
         // Consider switching from map to array
         trips.push({trip_name: object["trips"][i]["trip-name"],
                     agent: object["trips"][i]["agent"],
@@ -128,10 +133,12 @@ function processTripJSON(object){
                     min_update_interval: object["trips"][i]["min-update-interval"],
                     vehicle_id: object["trips"][i]["vehicle-id"],
                     map: map,
-                    timeline: timeline
-                    })
+                    timeline: timeline,
+                    points: points
+                    });
     }
     timelineHeight = object["header-height"];
+    console.log(trips);
     load();
 }
 
@@ -149,7 +156,7 @@ function load(){
 
     dropdownHeight = document.getElementById('dropdowns').offsetHeight;
 
-    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png`;
+    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-test.png`;
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
@@ -182,6 +189,10 @@ function load(){
             item.timeline.y *= scaleRatio;
             item.timeline.width *= scaleRatio;
             item.timeline.height *= scaleRatio;
+            item.points.forEach(function (point) {
+                point.x *= scaleRatio;
+                point.y *= scaleRatio;
+            });
         });
         drawReport();
     };
@@ -230,6 +241,23 @@ function drawReport(){
     console.log("Drawing map...");
     timelineCtx.drawImage(img, 0, 0, imageWidth, timelineHeight, 0, 0, canvasWidth, timelineCanvasHeight);
     mapCtx.drawImage(img, 0, timelineHeight, imageWidth, mapHeight, 0, 0, canvasWidth, mapCanvasHeight);
+
+    for(var i = 0; i < trips.length; i++){
+        var mapX = trips[i].map.x;
+        var mapY = trips[i].map.y;
+
+        for(var j = 0; j < trips[i].points.length; j++){
+
+            const centerX = mapX + trips[i].points[j].x;
+            const centerY = mapY + trips[i].points[j].y;
+            const radius = 1;
+
+            mapCtx.beginPath();
+            mapCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+            mapCtx.fillStyle = 'green';
+            mapCtx.fill();
+        }
+    }
 }
 
 function drawMetadata(trip){
