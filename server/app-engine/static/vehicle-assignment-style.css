@@ -12,7 +12,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0,0,0,0.83);
+  background-color: rgba(255, 255, 255, .83);
   z-index: 2;
   cursor: pointer;
 }
@@ -22,7 +22,7 @@
   top: 50%;
   left: 50%;
   font-size: 16px;
-  color: white;
+  color: black;
   transform: translate(-50%,-50%);
   -ms-transform: translate(-50%,-50%);
 }
