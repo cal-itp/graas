@@ -779,7 +779,11 @@ function longPress(x, y) {
         pressItem.status = 'unassigned';
         pressItem.vehicle = null;
         repaint();
+    } else if (pressItem.type === 'block') {
+        drawFullLabel(pressItem.label);
+        descriptionOn(blockDescriptions[pressItem.label]);
     }
+
 
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
@@ -795,14 +799,18 @@ function longPress(x, y) {
     }
 }
 
-function descriptionOn() {
-  document.getElementById("descoverlay").style.display = "block";
+function descriptionOn(desc) {
+    if (!desc) return;
+
+    var elem = document.getElementById('desctext');
+    elem.innerHTML = desc;
+
+    document.getElementById("descoverlay").style.display = "block";
 }
 
 function descriptionOff() {
-  document.getElementById("descoverlay").style.display = "none";
+    document.getElementById("descoverlay").style.display = "none";
 }
-
 
 function handleMouseDown(e) {
     util.log('handleMouseDown()');
@@ -841,17 +849,10 @@ function handleMouseDown(e) {
             break;
         }
 
-        if (item.type === 'block'
+        if (!isMobile() && item.type === 'block'
             && x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h)
         {
-            var desc = blockDescriptions[item.label];
-
-            if (desc) {
-                var elem = document.getElementById('desctext');
-                elem.innerHTML = desc;
-                descriptionOn();
-            }
-
+            descriptionOn(blockDescriptions[item.label]);
             break;
         }
     }
