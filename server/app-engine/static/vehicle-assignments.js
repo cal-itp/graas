@@ -543,7 +543,7 @@ function createFriendlyBlockDescription(block) {
             times += ', ';
         }
 
-        times += util.getHMForSeconds(trip.start_time, false);
+        times += util.getHMForSeconds(trip.start_time, true);
 
         map[headSign] = times;
     }
@@ -928,12 +928,15 @@ function drawFullLabel(label) {
     //util.log('drawFullLabel()');
     //util.log('- label: ' + label);
 
-    ctx.shadowColor = 'rgba(0,0,0,0)';
+    /*ctx.shadowColor = 'rgba(0,0,0,0)';
     ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
 
     const inset = 5;
-    ctx.fillText(label, inset, canvas.height - 2 * inset);
+    ctx.fillText(label, inset, canvas.height - 2 * inset);*/
+
+    var elem = document.getElementById('item-label');
+    elem.innerHTML = label;
 }
 
 function handleMouseMove(e) {
@@ -1014,12 +1017,12 @@ function handleMouseMove(e) {
 
                 if (x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
                 {
-                    if (metrics.width > elementWidth - 10) {
+                    if (true /*metrics.width > elementWidth - 10*/) {
                         repaint();
                         drawFullLabel(item.label);
                     }
 
-                    if (item.type === 'block') {
+                    /*if (item.type === 'block') {
                         const blockID = item.label;
 
                         if (blockID !== lastHoveredBlockID) {
@@ -1028,7 +1031,7 @@ function handleMouseMove(e) {
 
                             lastHoveredBlockID = blockID;
                         }
-                    }
+                    }*/
 
                     break;
                 }
