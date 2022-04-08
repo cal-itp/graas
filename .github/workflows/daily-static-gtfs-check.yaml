@@ -43,3 +43,9 @@ jobs:
         env:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
+      - name: Generate Test Block Data
+        working-directory: gtfu
+        run: java -cp build/libs/gtfu.jar gtfu.tools.BulkBlockDataGenerator -a test -d 2
+        env:
+          GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}

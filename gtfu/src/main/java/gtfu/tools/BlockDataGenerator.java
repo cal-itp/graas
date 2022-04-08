@@ -50,7 +50,11 @@ public class BlockDataGenerator {
         Debug.log("- uploadToGcloud: " + uploadToGcloud);
 
         AgencyYML a = new AgencyYML();
-        String gtfsUrl = a.getURL(agencyID);
+        String gtfsUrl = null;
+
+        if(agencyID.equals("test")){
+            gtfsUrl = a.getURL("unitrans");
+        } else gtfsUrl = a.getURL(agencyID);
 
         if (gtfsUrl == null) {
             System.out.println(agencyID + " does not appear in agencies.yml, exiting");
