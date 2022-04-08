@@ -78,7 +78,7 @@ public class BlockDataGenerator {
                 Trip trip = trips.get(tripID);
 
                 tr.id = tripID;
-                tr.headSign = trip.getHeadsign();
+                tr.headsign = trip.getHeadsign();
                 tr.startTime = trip.getStartTime();
                 tr.endTime = tr.startTime + trip.getDurationInSeconds();
 
@@ -126,7 +126,7 @@ public class BlockDataGenerator {
     private static void usage() {
         System.err.println("usage: BlockDataGenerator -a|--agency-id <agency-id> [-U|--url <static-gtfs-url>] -u|--upload [-c|--cache-folder <cache-folder>] [-o|--output-folder <output-folder>] [-d|--date <mm/dd/yy>|<n>]");
         System.err.println("    <agency-id> a transit agency identifier constructed from the alphabet of [a-z\\-]");
-        System.err.println("    <static-gtfs-url> link to agency's static static GTFS data. System attempts to backfill with data from agency.yaml if omitted");
+        System.err.println("    <static-gtfs-url> optional link to agency's static static GTFS data. For agencies present in agencies.yml, the URL will be loaded automatically");
         System.err.println("    use -u or --upload flag to upload files directly to Google Cloud");
         System.err.println("    <cache-folder> a temp folder for unpacking and caching static GTFS data by agency");
         System.err.println("    <output-folder> folder to place output file in (file name will be 'blocks-<mm>-<dd>.json'");
@@ -203,7 +203,7 @@ public class BlockDataGenerator {
 
     class TripRecord {
         public String id;
-        public String headSign;
+        public String headsign;
         public int startTime;
         public int endTime;
     }

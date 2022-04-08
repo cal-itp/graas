@@ -530,8 +530,7 @@ function createFriendlyBlockDescription(block) {
     const map = {};
 
     for (var trip of block.trips) {
-        var headSign = trip.head_sign;
-        var times = map[headSign];
+        var times = map[trip.headsign];
 
         if (!times) {
             times = '@';
@@ -545,7 +544,7 @@ function createFriendlyBlockDescription(block) {
 
         times += util.getHMForSeconds(trip.start_time, true);
 
-        map[headSign] = times;
+        map[trip.headsign] = times;
     }
 
     var desc = `<b>BLOCK ${block.id}:</b><br><hr><br>`;
