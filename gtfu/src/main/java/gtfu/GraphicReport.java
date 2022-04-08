@@ -284,6 +284,8 @@ public class GraphicReport {
                 JSONObject tripPoint = new JSONObject();
                 tripPoint.put("x", p.x + INSET);
                 tripPoint.put("y", p.y + INSET + LINE_HEIGHT);
+                tripPoint.put("millis", p.millis);
+                tripPoint.put("count", p.count);
                 tripPoints.add(tripPoint);
             }
             trip.put("trip-points", tripPoints);
@@ -580,6 +582,8 @@ public class GraphicReport {
         // Draw vehicle location ---
         for (String latLon : latLonMap.keySet()) {
             Point p = latLongToScreenXY(area, latLonMap.get(latLon).lat, latLonMap.get(latLon).lon, length, length);
+            p.millis = latLonMap.get(latLon).millis;
+            p.count = latLonMap.get(latLon).count;
             pointList.add(p);
             // Integer count = latLonMap.get(latLon).count;
             // float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);

@@ -33,6 +33,9 @@ var timelineScrollTop;
 var mapScrollTop;
 var scrollBottom;
 
+var activeAnimationCount = 0;
+var mostRecentAnimation = null;
+
 var font_size = 20;
 const bucketURL = "https://storage.googleapis.com/graas-resources"
 const font = "Arial";
@@ -118,10 +121,19 @@ function processTripJSON(object){
         var points = []
         for (var j = 0; j < object["trips"][i]["trip-points"].length; j++) {
             points.push({x: object["trips"][i]["trip-points"][j]["x"],
-                        y: object["trips"][i]["trip-points"][j]["y"]
+                        y: object["trips"][i]["trip-points"][j]["y"],
+                        secs: Math.round(object["trips"][i]["trip-points"][j]["millis"]/1000),
+                        count: object["trips"][i]["trip-points"][j]["count"]
                         });
         }
-        // Consider switching from map to array
+        // Unclear whether sorting is necessary - they may already be sorted.
+        points.sort(function compareFn(a, b) {
+            if (a.secs <= b.secs) {
+                return -1;
+            }
+            else return 1;
+        });
+
         trips.push({trip_name: object["trips"][i]["trip-name"],
                     agent: object["trips"][i]["agent"],
                     device: object["trips"][i]["device"],
@@ -198,7 +210,6 @@ function load(){
     };
 
     document.body.addEventListener('click', function(event) {
-        drawReport();
 
         scrollTop = document.documentElement.scrollTop; // Top of current screen
         timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
@@ -220,13 +231,24 @@ function load(){
                 searchObject = trips[i].timeline;
             }
             if (objectContainsPoint(searchObject, event.pageX, searchY)){
-                drawMetadata(trips[i]);
-                selectTrip(mapCtx, trips[i].map);
-                selectTrip(timelineCtx, trips[i].timeline);
-                scrollToTrip(trips[i])
-                break;
+                if(mostRecentAnimation === trips[i]){
+                    console.log("Animation for this trip is already in progress.");
+                    return
+                }
+                else{
+                    drawReportBackground();
+                    drawReportTripsExcept(trips[i]);
+                    drawMetadata(trips[i]);
+                    selectTrip(mapCtx, trips[i].map);
+                    selectTrip(timelineCtx, trips[i].timeline);
+                    scrollToTrip(trips[i])
+                    mostRecentAnimation = trips[i];
+                    animateTrip(trips[i], 0, 0)
+                    return;
+                }
             }
         }
+        drawReport();
     });
 }
 
@@ -238,26 +260,69 @@ function objectContainsPoint(object, x, y){
 }
 
 function drawReport(){
+    drawReportBackground();
+    drawReportTrips();
+}
+
+function drawReportBackground(){
     console.log("Drawing map...");
     timelineCtx.drawImage(img, 0, 0, imageWidth, timelineHeight, 0, 0, canvasWidth, timelineCanvasHeight);
     mapCtx.drawImage(img, 0, timelineHeight, imageWidth, mapHeight, 0, 0, canvasWidth, mapCanvasHeight);
+}
 
+function drawReportTripsExcept(trip){
     for(var i = 0; i < trips.length; i++){
+        if(trips[i] === trip){
+            continue;
+        }
         var mapX = trips[i].map.x;
         var mapY = trips[i].map.y;
 
         for(var j = 0; j < trips[i].points.length; j++){
-
-            const centerX = mapX + trips[i].points[j].x;
-            const centerY = mapY + trips[i].points[j].y;
-            const radius = 1;
-
-            mapCtx.beginPath();
-            mapCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-            mapCtx.fillStyle = 'green';
-            mapCtx.fill();
+            var pointSize = 1 + (trips[i].points[j].count - 1) / 8;
+            drawPoint(mapX + trips[i].points[j].x, mapY + trips[i].points[j].y, pointSize);
         }
     }
+}
+
+function drawReportTrips(){
+    drawReportTripsExcept(null)
+}
+
+function animateTrip(trip, indexIterator, secsIterator){
+    if(indexIterator === 0){
+        activeAnimationCount++;
+        secsIterator = trip.points[0].secs;
+        console.log("Animating trip...");
+    }
+    if(activeAnimationCount > 1){
+        if(trip !== mostRecentAnimation){
+            activeAnimationCount--;
+            console.log("Stopping animation because another one started.");
+            return;
+        }
+    }
+    if(indexIterator < trip.points.length){
+        if(trip.points[indexIterator].secs === secsIterator){
+            // var pointSize = 1 + (trip.points[indexIterator].count - 1) / 8;
+            drawPoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1);
+            indexIterator++
+        }
+        setTimeout(function(){
+                    animateTrip(trip, indexIterator, secsIterator + 1);
+                    }, 1);
+    } else {
+        activeAnimationCount--;
+        mostRecentAnimation = null;
+        console.log("Animation complete.");
+    }
+}
+
+function drawPoint(x, y, radius){
+    mapCtx.beginPath();
+    mapCtx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    mapCtx.fillStyle = 'green';
+    mapCtx.fill();
 }
 
 function drawMetadata(trip){
