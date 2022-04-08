@@ -890,6 +890,7 @@ function handleMouseUp(e) {
 }
 
 function drawCloseButton(item) {
+    //util.log('drawCloseButton()');
     repaint();
 
     var xx = item.x + item.w;
@@ -928,15 +929,8 @@ function drawFullLabel(label) {
     //util.log('drawFullLabel()');
     //util.log('- label: ' + label);
 
-    /*ctx.shadowColor = 'rgba(0,0,0,0)';
-    ctx.fillStyle = 'black';
-    ctx.textAlign = 'left';
-
-    const inset = 5;
-    ctx.fillText(label, inset, canvas.height - 2 * inset);*/
-
     var elem = document.getElementById('item-label');
-    elem.innerHTML = label;
+    elem.innerHTML = 'ID: ' + label;
 }
 
 function handleMouseMove(e) {
@@ -1018,20 +1012,8 @@ function handleMouseMove(e) {
                 if (x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
                 {
                     if (true /*metrics.width > elementWidth - 10*/) {
-                        repaint();
                         drawFullLabel(item.label);
                     }
-
-                    /*if (item.type === 'block') {
-                        const blockID = item.label;
-
-                        if (blockID !== lastHoveredBlockID) {
-                            const desc = blockDescriptions[item.label];
-                            util.log('- desc: ' + desc);
-
-                            lastHoveredBlockID = blockID;
-                        }
-                    }*/
 
                     break;
                 }
