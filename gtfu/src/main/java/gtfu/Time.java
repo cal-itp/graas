@@ -81,7 +81,7 @@ public class Time {
     }
 
 
-    // seconds are a millisecond resolution offset into a day
+    // seconds are a second resolution offset into a day
     public static String getHMForSeconds(int seconds, boolean includeAMPM) {
         int hour = seconds / SECONDS_PER_HOUR;
         seconds -= hour * SECONDS_PER_HOUR;
