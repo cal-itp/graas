@@ -39,7 +39,7 @@ public class BlockDataGenerator {
         }
 
         if(cacheFolder == null){
-            cacheFolder = System.getenv("HOME") + "/tmp/tuff";
+            cacheFolder = "src/main/resources/conf/cache";
         }
 
         Debug.log("BlockDataGenerator.BlockDataGenerator()");
