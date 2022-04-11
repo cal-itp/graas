@@ -146,8 +146,9 @@ def staging():
     return resp
 
 @app.route('/dispatch-ui')
+@app.route('/show-assignments-only')
 def dispatch_ui():
-    print('/dispatch-ui')
+    print(f'{request.path}')
 
     fn = 'static/vehicle-assignment-index.html'
     content = util.get_file(fn, 'r')
