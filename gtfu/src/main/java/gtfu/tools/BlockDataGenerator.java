@@ -21,7 +21,7 @@ public class BlockDataGenerator {
     * @param offset     how many days in advance to generate data for.
     */
     public BlockDataGenerator(String agencyID, Integer offset) throws Exception {
-        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, getDateFromOffset(offset), true);
+        new BlockDataGenerator("src/main/resources/conf/cache", null, agencyID, null, getDateFromOffset(offset), true);
     }
 
     /**
@@ -32,7 +32,7 @@ public class BlockDataGenerator {
     * @param date           Date to generate block data for
     * @param uploadToGcloud Whether or not to upload results to gcloud rather than downloading
     */
-    public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, Date date, Boolean uploadToGcloud) throws Exception {
+    public BlockDataGenerator(String cacheFolder, String outputFolder, String agencyID, String gtfsURL, Date date, Boolean uploadToGcloud) throws Exception {
 
         if(outputFolder == null){
             outputFolder = System.getenv("HOME") + "/tmp";
@@ -49,20 +49,18 @@ public class BlockDataGenerator {
         Debug.log("- date: " + date);
         Debug.log("- uploadToGcloud: " + uploadToGcloud);
 
-        AgencyYML a = new AgencyYML();
-        String gtfsUrl = null;
+        if(gtfsURL == null){
+            AgencyYML a = new AgencyYML();
+            gtfsURL = a.getURL(agencyID);
+        }
 
-        if(agencyID.equals("test")){
-            gtfsUrl = a.getURL("unitrans");
-        } else gtfsUrl = a.getURL(agencyID);
-
-        if (gtfsUrl == null) {
+        if (gtfsURL == null) {
             System.out.println(agencyID + " does not appear in agencies.yml, exiting");
             System.exit(1);
         }
 
         ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
-        Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsUrl, progressObserver);
+        Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsURL, progressObserver);
         Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, progressObserver);
         CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
         TripCollection trips = (TripCollection)collections.get("trips");
@@ -146,6 +144,7 @@ public class BlockDataGenerator {
         String cacheFolder = null;
         String agencyID = null;
         String outputFolder = null;
+        String gtfsURL = null;
         Date date = new Date();
         Boolean uploadToGcloud = false;
 
@@ -182,6 +181,10 @@ public class BlockDataGenerator {
                 continue;
             }
 
+            if ((arg[i].equals("-U") || arg[i].equals("--gtfs-url")) && i < arg.length - 1) {
+                gtfsURL = arg[i + 1];
+            }
+
             if (arg[i].equals("-u") || arg[i].equals("--upload")) {
                 uploadToGcloud = true;
                 continue;
@@ -192,7 +195,7 @@ public class BlockDataGenerator {
 
         if (agencyID == null) usage();
 
-        new BlockDataGenerator(cacheFolder, outputFolder, agencyID, date, uploadToGcloud);
+        new BlockDataGenerator(cacheFolder, outputFolder, agencyID, gtfsURL, date, uploadToGcloud);
     }
 
     class TripRecord {
