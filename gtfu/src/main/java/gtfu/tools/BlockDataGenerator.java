@@ -39,7 +39,7 @@ public class BlockDataGenerator {
         }
 
         if(cacheFolder == null){
-            cacheFolder = System.getenv("HOME") + "/tmp/tuff";
+            cacheFolder = "src/main/resources/conf/cache";
         }
 
         Debug.log("BlockDataGenerator.BlockDataGenerator()");
@@ -193,6 +193,10 @@ public class BlockDataGenerator {
                 continue;
             }
 
+            if ((arg[i].equals("-U") || arg[i].equals("--gtfs-url")) && i < arg.length - 1) {
+                gtfsURL = arg[++i];
+                continue;
+            }
             break;
         }
 
