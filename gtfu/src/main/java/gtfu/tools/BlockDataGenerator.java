@@ -49,7 +49,7 @@ public class BlockDataGenerator {
         Debug.log("- date: " + date);
         Debug.log("- uploadToGcloud: " + uploadToGcloud);
 
-        if(gtfsURL == null){
+        if (gtfsURL == null) {
             AgencyYML a = new AgencyYML();
             gtfsURL = a.getURL(agencyID);
         }
