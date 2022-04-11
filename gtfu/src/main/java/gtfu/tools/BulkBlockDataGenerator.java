@@ -16,16 +16,6 @@ import java.util.Arrays;
 public class BulkBlockDataGenerator {
 
     /**
-     * Generates block data for one agency
-     * @param agencyID A single agencyID
-     * @param daysAhead How many days blocks should be generated for. A value of 0 will generate for only today, 1 will generate for today and tomorrow.
-     */
-    public static void BulkBlockDataGenerator(String agencyID, Integer daysAhead) throws Exception {
-        String[] agencyIDList = {agencyID};
-        BulkBlockDataGenerator(agencyIDList, daysAhead);
-    }
-
-    /**
      * * Generates block data for a list of agencies
      * @param agencyIDList A list of agencyIDs
      * @param daysAhead How many days blocks should be generated for. A value of 0 will generate for only today, 1 will generate for today and tomorrow.
@@ -63,16 +53,12 @@ public class BulkBlockDataGenerator {
      */
     public static void main(String[] arg) throws Exception {
         String url = null;
-        String agencyID = null;;
         int daysAhead = -1;
 
         for (int i=0; i<arg.length; i++) {
 
             if ((arg[i].equals("-u") || arg[i].equals("--url")) && i < arg.length - 1) {
                 url = arg[i + 1];
-            }
-            if ((arg[i].equals("-a") || arg[i].equals("--agency-id")) && i < arg.length - 1) {
-                agencyID = arg[i + 1];
             }
             if ((arg[i].equals("-d") || arg[i].equals("--days-ahead")) && i < arg.length - 1) {
                 String s = arg[i + 1];
@@ -84,17 +70,11 @@ public class BulkBlockDataGenerator {
             }
         }
 
-        if (agencyID == null && url == null) usage();
+        if (url == null) usage();
 
-        if(url != null){
-            ProgressObserver po = new ConsoleProgressObserver(40);
-            String context = Util.getURLContent(url, po);
-            String[] agencyIDList = context.split("\n");
-            BulkBlockDataGenerator(agencyIDList, daysAhead);
-
-        }
-        else{
-            BulkBlockDataGenerator(agencyID, daysAhead);
-        }
+        ProgressObserver po = new ConsoleProgressObserver(40);
+        String context = Util.getURLContent(url, po);
+        String[] agencyIDList = context.split("\n");
+        BulkBlockDataGenerator(agencyIDList, daysAhead);
     }
 }
