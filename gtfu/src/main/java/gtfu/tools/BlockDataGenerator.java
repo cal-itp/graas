@@ -183,6 +183,7 @@ public class BlockDataGenerator {
 
             if ((arg[i].equals("-U") || arg[i].equals("--gtfs-url")) && i < arg.length - 1) {
                 gtfsURL = arg[i + 1];
+                continue;
             }
 
             if (arg[i].equals("-u") || arg[i].equals("--upload")) {
