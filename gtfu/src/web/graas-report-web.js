@@ -304,8 +304,13 @@ function animateTrip(trip, indexIterator, secsIterator){
     }
     if(indexIterator < trip.points.length){
         if(trip.points[indexIterator].secs === secsIterator){
-            // var pointSize = 1 + (trip.points[indexIterator].count - 1) / 8;
-            drawPoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1);
+            if(trip.points[indexIterator].count > 1){
+                animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count)
+            }
+            else{
+                drawPoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1);
+            }
+
             indexIterator++
         }
         setTimeout(function(){
@@ -317,6 +322,18 @@ function animateTrip(trip, indexIterator, secsIterator){
         console.log("Animation complete.");
     }
 }
+
+function animatePoint(x, y, i, count){
+    if(i > count){
+        return;
+    }
+    var pointSize = 1 + (i - 1) / 8;
+    drawPoint(x, y, pointSize);
+    setTimeout(function(){
+                animatePoint(x, y, ++i, count);
+                }, 1);
+}
+
 
 function drawPoint(x, y, radius){
     mapCtx.beginPath();
