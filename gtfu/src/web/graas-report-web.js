@@ -18,6 +18,7 @@ var mapCanvas
 var mapCtx;
 var mapHeight;
 var mapCanvasHeight;
+var mapCanvasHeight;
 
 var timelineCanvas;
 var timelineCtx
@@ -28,6 +29,10 @@ var dropdownHeight;
 var headerHeight;
 var windowHeight;
 
+
+var tripMapWidth;
+var tripMapHeight;
+
 var scrollTop;
 var timelineScrollTop;
 var mapScrollTop;
@@ -35,6 +40,10 @@ var scrollBottom;
 
 var activeAnimationCount = 0;
 var mostRecentAnimation = null;
+
+var isZoomedIn = false;
+var translateOffsetY;
+var translateOffsetX;
 
 var font_size = 20;
 const bucketURL = "https://storage.googleapis.com/graas-resources"
@@ -187,8 +196,12 @@ function load(){
         timelineCtx.canvas.height = timelineCanvasHeight;
 
         mapHeight = imageHeight - timelineHeight;
-        mapCanvasHeight = mapHeight * scaleRatio;
+        mapScaledHeight = mapHeight * scaleRatio;
+        mapCanvasHeight = Math.max(mapScaledHeight, window.innerHeight - headerHeight);
         mapCtx.canvas.height = mapCanvasHeight;
+
+        tripMapWidth = trips[0].map.width * scaleRatio;
+        tripMapHeight = trips[0].map.height * scaleRatio;
 
         // It would be nice to perform this multiplication while initially loading JSON,
         // but that occurs before image is loaded and scaleRatio is determined by image size
@@ -211,6 +224,10 @@ function load(){
 
     document.body.addEventListener('click', function(event) {
 
+        if (event.shiftKey && isZoomedIn) {
+            zoomOut();
+            return;
+        }
         scrollTop = document.documentElement.scrollTop; // Top of current screen
         timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
         mapScrollTop = scrollTop + headerHeight;        // Top of current map
@@ -231,6 +248,9 @@ function load(){
                 searchObject = trips[i].timeline;
             }
             if (objectContainsPoint(searchObject, event.pageX, searchY)){
+                if (event.shiftKey && !isZoomedIn) {
+                    zoomTo(trips[i]);
+                }
                 if(mostRecentAnimation === trips[i]){
                     console.log("Animation for this trip is already in progress.");
                     return
@@ -249,6 +269,7 @@ function load(){
             }
         }
         drawReport();
+
     });
 }
 
@@ -259,7 +280,48 @@ function objectContainsPoint(object, x, y){
     else return false;
 }
 
+function zoomTo(trip){
+    console.log("zooming in!");
+    if((trip.map.x + trip.map.width) * 2 > canvasWidth){
+        mapCtx.translate(-trip.map.x, 0);
+    }
+    mapCtx.scale(2,2);
+    isZoomedIn = true;
+    drawReport();
+}
+
+function zoomOut(){
+    console.log("zooming out!");
+    mapCtx.scale(.5,.5);
+    isZoomedIn = false;
+    drawReport();
+}
+
+function changeZoom(x, y){
+    if(!isZoomedIn){
+        console.log("Zooming in...");
+        if(x < canvasWidth / 2){
+            console.log("tripMapWidth: " + tripMapWidth);
+            console.log("x: " + x);
+            console.log("x - tripMapWidth: " + (x - tripMapWidth));
+            translateOffsetX = -Math.max(x - tripMapWidth / 2, 0);
+        }
+        else{
+            translateOffsetX = Math.min(x - tripMapWidth / 2, canvasWidth - tripMapWidth);
+        }
+        mapCtx.translate(translateOffsetX, 0);
+        mapCtx.scale(2,2);
+    } else{
+        console.log("Zooming out...");
+        mapCtx.scale(.5,.5);
+        mapCtx.translate(-translateOffsetX, 0);
+    }
+    isZoomedIn = !isZoomedIn;
+    drawReport();
+}
+
 function drawReport(){
+    console.log("isZoomedIn: " + isZoomedIn);
     drawReportBackground();
     drawReportTrips();
 }
@@ -267,7 +329,10 @@ function drawReport(){
 function drawReportBackground(){
     console.log("Drawing map...");
     timelineCtx.drawImage(img, 0, 0, imageWidth, timelineHeight, 0, 0, canvasWidth, timelineCanvasHeight);
-    mapCtx.drawImage(img, 0, timelineHeight, imageWidth, mapHeight, 0, 0, canvasWidth, mapCanvasHeight);
+    // Clear map background to account for zooming in/out
+    mapCtx.clearRect(0, timelineHeight, imageWidth, mapHeight);
+    mapCtx.drawImage(img, 0, timelineHeight, imageWidth, mapHeight, 0, 0, canvasWidth, mapScaledHeight);
+
 }
 
 function drawReportTripsExcept(trip){
