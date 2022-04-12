@@ -3,35 +3,55 @@ from google.cloud import datastore
 
 class LazyTimers:
 """
-Note that timers don't get restarted until after they are checked for expiration.
+Module administrates a list of recurring timers. Timers are initialized to 'recurring-timer'
+entities read from DB, where each entry has a `name` and a `millis` periodicity.
 
-queue entry:
-- name
-- expiration timestamp
-
-recurring-alert entity:
-- name
-- periodicity
+Note:
+    timers don't get restarted until after they are checked for expiration.
 """
 
-    def __init__(self, datastore):
+    def __init__(self, datastore_client):
         """ Initialize instance with `recurring-alert` entities from DB
 
         """
         self.queue = []
 
-    def __resetTimer(self, name, seconds):
+        query = datastore_client.query(kind="recurring-timer")
+        results = list(query.fetch())
+
+        for r in results:
+            self.__resetTimer(r['name'], r['millis'])
+
+    def __resetTimer(self, name, millis):
         """ Reset an existing timer or create a new one.
 
         Args:
             name (str): a timer name.
-            seconds (int): nnumber od seconds before timer expires.
-
-        # REMOVE ME
-        - create time stamp from current time and second offset
-        - iterate over queue and remove existing timer for name if present
-        - insert timer so that prior elements have lower timestamp and following elements have higher timestamp
+            millis (int): number of milliseconds before timer expires.
         """
+
+        for i in range(len(self.queue)):
+            item = self.queue[i]
+
+            if item['name'] == name:
+                self.queue.pop(i)
+                break
+
+        newItem = {
+            'name': name,
+            'timestamp': int(time.time() * 1000) + millis
+        };
+
+        index = len(self.queue)
+
+        for i in range(index):
+            item = self.queue[i]
+
+            if newItem['timestamp'] > item['timestamp']:
+                index = i
+                break
+
+        self.queue.insert(index, newItem)
 
     def isExpired(self, name):
         """Check if timer `name` has expired. Restart if it has.
@@ -40,12 +60,20 @@ recurring-alert entity:
             name (str): a timer name.
 
         Returns:
-            bool: `True` if expired, `False` otherwise.
-
-        # REMOVE ME
-        - check if timer exists, return `False` if not
-        - if found, check if timestamp is <= current time
-        - if not, return `False`
-        - else call __resetTimer() and retur `True`
+            bool: `True` if expired or not found, `False` otherwise.
 
         """
+
+        for i in range(index):
+            item = self.queue[i]
+
+            if name == item['name']:
+                millis = int(time.time() * 1000) + millis
+
+                if millis > item['timestamp']:
+                    self.queue.pop(i)
+                    return True
+
+                return False
+
+        return True
