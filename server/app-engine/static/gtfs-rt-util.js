@@ -18,15 +18,15 @@ var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export const SECONDS_PER_MINUTE = 60;
-export const SECONDS_PER_HOUR   = 60 * SECONDS_PER_MINUTE;
-export const SECONDS_PER_DAY    = 24 * SECONDS_PER_HOUR;
-export const SECONDS_PER_WEEK   =  7 * SECONDS_PER_DAY;
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR   = 60 * SECONDS_PER_MINUTE;
+const SECONDS_PER_DAY    = 24 * SECONDS_PER_HOUR;
+const SECONDS_PER_WEEK   =  7 * SECONDS_PER_DAY;
 
-export const MILLIS_PER_SECOND = 1000;
-export const MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
-export const MILLIS_PER_HOUR   = 60 * MILLIS_PER_MINUTE;
-export const MILLIS_PER_DAY    = 24 * MILLIS_PER_HOUR;
+const MILLIS_PER_SECOND = 1000;
+const MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
+const MILLIS_PER_HOUR   = 60 * MILLIS_PER_MINUTE;
+const MILLIS_PER_DAY    = 24 * MILLIS_PER_HOUR;
 
 
 if (!crypto) {
@@ -122,7 +122,7 @@ if (!fetch) {
     }
 
     // 's' is assumed to be a time string like '8:23 am'
-    function getTimeFromString(s) {
+    exports.getTimeFromString = function(s) {
         if (s == null){
             util.log("* Time is null")
             return null;
