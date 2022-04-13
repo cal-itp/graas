@@ -4,16 +4,18 @@ module.exports = {
     'commonjs': true,
     'es2021': true,
   },
-  'extends': [
-    'google',
-  ],
+  // Extending the Google JS style guide leads to thousands of errors.
+  // If we'd like to do this it will require significant effort.
+  // 'extends': [
+  //   'google'
+  // ],
   'parserOptions': {
     'ecmaVersion': 'latest',
   },
   'rules': {
-    "indent": ["error", 4],
-    "no-redeclare": "error",
-    "max-len": ["error", { "code": 128 }],
+    // "indent": ["error", 4],
+    "no-redeclare": "warn",
+    // "max-len": ["error", { "code": 128 }],
     "require-jsdoc": "off"
   },
 };

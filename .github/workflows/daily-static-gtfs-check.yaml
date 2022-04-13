@@ -1,10 +1,10 @@
 name: Daily Static GTFS Processes
-on:
+on: [push]
   # Daily at 9PM pacific
-  schedule:
-    - cron: '0 5 * * *'
+  # schedule:
+  #   - cron: '0 5 * * *'
 jobs:
-  Run-tests:
+  Setup:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -26,6 +26,9 @@ jobs:
           # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
           service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
           credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+  Run-tests:
+    runs-on: ubuntu-latest
+    steps:
       - name: Load agency data
         working-directory: gtfu
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
