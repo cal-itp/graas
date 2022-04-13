@@ -1,10 +1,10 @@
 name: Daily Static GTFS Processes
-on: [push]
-  # Daily at 9PM pacific
-  # schedule:
-  #   - cron: '0 5 * * *'
+on:
+  # Daily at 10PM pacific
+  schedule:
+    - cron: '0 5 * * *'
 jobs:
-  Setup:
+  Run-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -16,12 +16,6 @@ jobs:
           java-version: '11'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-  Run-tests:
-    needs: Setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
       - name: Build with Gradle
         working-directory: gtfu
         run: ./gradlew build
@@ -44,8 +38,6 @@ jobs:
           GH_ACCESS_TOKEN: ${{secrets.GH_ACCESS_TOKEN}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Generate Block Data
-        if: always()
-        needs: Setup Cloud SDK
         working-directory: gtfu
         run: java -cp build/libs/gtfu.jar gtfu.tools.BulkBlockDataGenerator -u ${{ secrets.LIVE_AGENCIES_URL }} -d 2
         env:
