@@ -16,8 +16,6 @@ jobs:
           java-version: '11'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-      - name: Build with Gradle
-        working-directory: gtfu
         run: ./gradlew build
       - name: Setup Cloud SDK
         uses: google-github-actions/auth@v0
@@ -32,6 +30,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+      - name: Build with Gradle
+        working-directory: gtfu
       - name: Load agency data
         working-directory: gtfu
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
