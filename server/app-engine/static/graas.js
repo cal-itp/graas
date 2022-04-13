@@ -350,7 +350,6 @@ function handleStartStop() {
             p.value = vehicleIDCookie;
             handleBusChoice();
         }
-        console.log("util.MILLIS_PER_MINUTE: " + util.MILLIS_PER_MINUTE);
         if(!useBulkAssignmentMode){
             // Only load trips again if they were last loaded more than a minute ago
             if ((millis - lastTripLoadMillis) < util.MILLIS_PER_MINUTE * 1) {
