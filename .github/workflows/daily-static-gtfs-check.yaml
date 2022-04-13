@@ -30,6 +30,8 @@ jobs:
     needs: Setup
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
       - name: Load agency data
         working-directory: gtfu
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
