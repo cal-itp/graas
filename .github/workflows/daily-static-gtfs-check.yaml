@@ -27,6 +27,7 @@ jobs:
           service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
           credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
   Run-tests:
+    needs: Setup
     runs-on: ubuntu-latest
     steps:
       - name: Load agency data
