@@ -72,7 +72,6 @@ const TRIP_STATS_ELEMENT = "stats";
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
-const MILLIS_PER_MINUTE = 1000 * 60;
 
 const GRAY_HEX = "#cccccc";
 
@@ -351,10 +350,10 @@ function handleStartStop() {
             p.value = vehicleIDCookie;
             handleBusChoice();
         }
-
+        console.log("util.MILLIS_PER_MINUTE: " + util.MILLIS_PER_MINUTE);
         if(!useBulkAssignmentMode){
             // Only load trips again if they were last loaded more than a minute ago
-            if ((millis - lastTripLoadMillis) < MILLIS_PER_MINUTE * 1) {
+            if ((millis - lastTripLoadMillis) < util.MILLIS_PER_MINUTE * 1) {
                 populateTripList();
             } else {
                 util.log("- trip list is stale. Reloading...");

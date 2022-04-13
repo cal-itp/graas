@@ -18,6 +18,7 @@ var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// Add any constants that need exporting to "function(exports)" below
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR   = 60 * SECONDS_PER_MINUTE;
 const SECONDS_PER_DAY    = 24 * SECONDS_PER_HOUR;
@@ -38,7 +39,9 @@ if (!fetch) {
 }
 
 (function(exports) {
-    exports.MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+    // Add any constants that need exporting here
+    exports.MILLIS_PER_DAY = MILLIS_PER_DAY;
+    exports.MILLIS_PER_MINUTE = MILLIS_PER_MINUTE;
 
     exports.log = function(s) {
         console.log(s);
@@ -122,7 +125,7 @@ if (!fetch) {
     }
 
     // 's' is assumed to be a time string like '8:23 am'
-    exports.getTimeFromString = function(s) {
+    function getTimeFromString(s) {
         if (s == null){
             util.log("* Time is null")
             return null;
