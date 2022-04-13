@@ -67,7 +67,7 @@ public class UpdateTripNames {
                 try (PrintStream ps = new PrintStream(baos, true, utf8)) {
                     TripListGenerator.generateTripList(agencyID, null, ps, false);
                 } catch (Exception e) {
-                    reporter.addLine("   * exception in generating triplist for " + agencyID);
+                    reporter.addLine("   * exception in generating triplist for " + agencyID + ": " + e);
                     continue;
                 }
                 byte[] newFile = baos.toByteArray();
