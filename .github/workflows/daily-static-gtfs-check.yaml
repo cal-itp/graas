@@ -1,6 +1,6 @@
 name: Daily Static GTFS Processes
 on:
-  # Daily at 9PM pacific
+  # Daily at 10PM pacific
   schedule:
     - cron: '0 5 * * *'
 jobs:
