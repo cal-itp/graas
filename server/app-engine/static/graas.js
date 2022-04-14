@@ -29,7 +29,7 @@ var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
 var useBulkAssignmentMode = false;
-var p = null;
+var p;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
