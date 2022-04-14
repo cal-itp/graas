@@ -29,6 +29,7 @@ var trips = [];
 var mode = 'vanilla';
 var sessionID = null;
 var useBulkAssignmentMode = false;
+var p = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -221,7 +222,7 @@ function handleTouch() {
         //util.log("- quickTouchCount: " + quickTouchCount);
 
         if (quickTouchCount >= 6) {
-            var p = document.getElementById('console');
+            p = document.getElementById('console');
             p.style.display = p.style.display === 'none' ? 'block' : 'none';
             //util.log("- p.style.display: " + p.style.display);
 
@@ -296,7 +297,7 @@ function parseAgencyData(str) {
 function handleKeyOkay() {
     util.log("handleKeyOkay()");
 
-    var p = document.getElementById('keyTextArea');
+    p = document.getElementById('keyTextArea');
     var value = p.value.replace(/\n/g, "");
     util.log("- value: " + value);
 
@@ -326,7 +327,7 @@ function handleRefreshOkay() {
 function handleStartStop() {
     util.log("handleStartStop()");
 
-    var p = document.getElementById(START_STOP_BUTTON);
+    p = document.getElementById(START_STOP_BUTTON);
     var text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
@@ -367,7 +368,7 @@ function handleStartStop() {
             handleModal("staleModal");
             return;
         }
-        var p = document.getElementById(START_STOP_BUTTON);
+        p = document.getElementById(START_STOP_BUTTON);
         p.style.background = GRAY_HEX;
     }
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
@@ -396,7 +397,7 @@ function handleStartStop() {
 
 function checkForConfigCompletion() {
     if (configMatrix.isComplete()) {
-        var p = document.getElementById('okay');
+        p = document.getElementById('okay');
         p.disabled = false;
         p.style.background = "blue";
         p.addEventListener('click', handleOkay);
@@ -422,7 +423,7 @@ function handleOkay() {
     util.log("handleOkay()");
 
     sessionID = createUUID();
-    var p = document.getElementById("session-id");
+    p = document.getElementById("session-id");
     p.innerHTML = "Session ID: " + sessionID;
 
     if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
@@ -431,9 +432,9 @@ function handleOkay() {
             util.log('+ requested graas start');
         });
     }
-    var p = document.getElementById(START_STOP_BUTTON);
+    p = document.getElementById(START_STOP_BUTTON);
     p.style.background = "green";
-    var p = document.getElementById(BUS_SELECT_DROPDOWN);
+    p = document.getElementById(BUS_SELECT_DROPDOWN);
     vehicleID = p.value
 
     document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
@@ -452,10 +453,10 @@ function handleOkay() {
         util.log("- tripID: " + tripID);
     }
 
-    var p = document.getElementById('vehicle-id');
+    p = document.getElementById('vehicle-id');
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
-    var p = document.getElementById('trip-assignment-mode');
+    p = document.getElementById('trip-assignment-mode');
     var tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
@@ -761,7 +762,7 @@ function handleGPSUpdate(position) {
 
     var timestamp = Math.floor(Date.now() / 1000);
 
-    var p = document.getElementById("lat");
+    p = document.getElementById("lat");
     p.innerHTML = "Lat: " + lat;
 
     p = document.getElementById("long");
@@ -1069,7 +1070,7 @@ function gpsInterval(millis) {
 function populateList(id, str, list) {
     util.log("populateList()");
     // util.log("str: " + str);
-    var p = document.getElementById(id);
+    p = document.getElementById(id);
     addSelectOption(p, str, true);
 
     list.forEach(el => addSelectOption(p, el, false));
@@ -1078,7 +1079,7 @@ function populateList(id, str, list) {
 }
 
 function disableElement(id) {
-    var p = document.getElementById(id);
+    p = document.getElementById(id);
     p.value = 'disabled'
 }
 
@@ -1095,19 +1096,19 @@ function showElement(id) {
 }
 
 function changeDisplay(id,display) {
-    var p = document.getElementById(id);
+    p = document.getElementById(id);
     p.style.display = display;
 }
 
 function changeText(id,text) {
-    var p = document.getElementById(id);
+    p = document.getElementById(id);
     p.textContent = text;
 }
 
 // Populates dropdown, and then shows all dropdowns
 function populateTripList(tripIDMap = tripIDLookup) {
     util.log("populateTripList()");
-    var p = document.getElementById(TRIP_SELECT_DROPDOWN);
+    p = document.getElementById(TRIP_SELECT_DROPDOWN);
     clearSelectOptions(p);
     addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
 
@@ -1163,7 +1164,7 @@ function configComplete() {
 
     if (navigator && navigator.geolocation) {
         var uuid = getUUID();
-        var p = document.getElementById("uuid");
+        p = document.getElementById("uuid");
         p.innerHTML = "UUID: " + uuid;
 
         gpsInterval(Date.now());
