@@ -7,6 +7,7 @@ import json
 import time
 import traceback
 from cache import Cache
+from entity_key_cache import EntityKeyCache
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
@@ -17,7 +18,7 @@ DAY_SECONDS = 24 * 60 * 60
 last_alert_purge = 0
 block_map = {}
 cache = Cache()
-entity_key_map = {}
+entity_key_cache = EntityKeyCache()
 
 cause_map = {
     'Unknown Cause':     gtfs_realtime_pb2.Alert.Cause.UNKNOWN_CAUSE,
@@ -151,8 +152,8 @@ def purge_old_alerts(datastore_client):
     seconds = util.get_epoch_seconds()
     print('- seconds: ' + str(seconds))
 
-    query = datastore_client.query(kind="alert")
-    query.add_filter("time_stop", "<", seconds)
+    query = datastore_client.query(kind='alert')
+    query.add_filter('time_stop', '<', seconds)
     results = list(query.fetch())
     key_list = []
 
@@ -184,9 +185,9 @@ def get_alert_feed(datastore_client, agency):
     purge_old_alerts(datastore_client)
     now = util.get_epoch_seconds()
 
-    query = datastore_client.query(kind="alert")
-    query.add_filter("agency_key", "=", agency)
-    query.order = ["-time_stamp"]
+    query = datastore_client.query(kind='alert')
+    query.add_filter('agency_key', '=', agency)
+    query.order = ['-time_stamp']
 
     results = list(query.fetch(limit=20))
 
@@ -228,8 +229,8 @@ def get_position_feed(agency):
         feed = gtfs_realtime_pb2.FeedMessage()
         feed.header.CopyFrom(header)
 
-        query = datastore_client.query(kind="current-position")
-        query.add_filter("agency-id", "=", agency)
+        query = datastore_client.query(kind='current-position')
+        query.add_filter('agency-id', '=', agency)
 
         results = list(query.fetch())
 
@@ -344,10 +345,10 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     if date_string is None:
         date_string = util.get_yyyymmdd()
 
-    query = datastore_client.query(kind="block-metadata")
-    query.add_filter("agency_id", "=", agency_id)
-    query.add_filter("valid_date", "=", date_string)
-    query.order = ["-created"]
+    query = datastore_client.query(kind='block-metadata')
+    query.add_filter('agency_id', '=', agency_id)
+    query.add_filter('valid_date', '=', date_string)
+    query.order = ['-created']
 
     results = list(query.fetch(limit=1))
     print(f'- results: {results}')
@@ -538,8 +539,8 @@ def handle_block_collection(datastore_client, data):
         entity.update(block_metadata)
         datastore_client.put(entity)
 
-        query = datastore_client.query(kind="block-metadata")
-        query.add_filter("created", "<", now - WEEK_MILLIS)
+        query = datastore_client.query(kind='block-metadata')
+        query.add_filter('created', '<', now - WEEK_MILLIS)
 
         results = list(query.fetch())
         print(f'- results: {results}')
@@ -563,19 +564,20 @@ def handle_block_collection(datastore_client, data):
 
     return 'ok'
 
-def handle_pos_update(datastore_client, timestamp_map, data):
+def handle_pos_update(datastore_client, data):
     """Handle an incoming vehicle postion update. If the update is missing a trip ID, check if we have block assignment data to let us backfill the ID. Write update to DB and update internal data structures with the received data.
 
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
-        timestamp_map (dict): dictionary of vehicle UUIDs to last received timestamp.
+        data (dict): details of the position update (lat, long, speed, heading, etc).
     """
 
     agencyID = data.get('agency-id', None)
     vehicleID = data.get('vehicle-id', None)
+    timestamp = data.get('timestamp', None)
 
-    if agencyID is None or vehicleID is None:
-        print(f'* position update has no agency ID or vehicle ID, discarding: {data}')
+    if agencyID is None or vehicleID is None or timestamp is None:
+        print(f'* position update has no agency ID or vehicle ID or timestamp, discarding: {data}')
         return
 
     data['rcv-timestamp'] = util.get_epoch_seconds()
@@ -597,36 +599,39 @@ def handle_pos_update(datastore_client, timestamp_map, data):
     if data['uuid'] != 'replay':
         add_position(datastore_client, data)
 
-    prev_timestamp = timestamp_map.get(data['uuid'], None)
-
-    if prev_timestamp and int(data['timestamp']) < int(prev_timestamp):
-        print(f'* discarding out-of-sequence position update: {data}')
-        return
-
-    timestamp_map[data['uuid']] = data['timestamp']
-
     name = agencyID + '-' + vehicleID + '-cur-pos'
-    entity_key = entity_key_map.get(name, None)
+    entity_key = entity_key_cache.get(name)
 
     if entity_key is None:
-        query = datastore_client.query(kind="current-position")
-        query.add_filter("agency-id", "=", agencyID)
-        query.add_filter("vehicle-id", "=", vehicleID)
-        query.order = ["-time_stamp"]
+        query = datastore_client.query(kind='current-position')
+        query.add_filter('agency-id', '=', agencyID)
+        query.add_filter('vehicle-id', '=', vehicleID)
+        query.order = ['-time_stamp']
 
         results = list(query.fetch())
 
         if len(results) == 0:
             entity = datastore.Entity(key=datastore_client.key('current-position'))
+            entity['timestamp'] = 0
             datastore_client.put(entity)
-            entity_key_map[name] = entity.key
+            entity_key_cache.add(name, entity.key)
             entity_key = entity.key
         else:
-            entity_key_map[name] = results[0].key
+            entity_key_cache.add(name, results[0].key)
             entity_key = entity.key
 
     entity = datastore_client.get(entity_key)
-    datastore_client.update(data)
+
+    if entity is None:
+            print(f'* invalid entity key: {entity_key}, discarding pos update and key')
+            entity_key_cache.remove(name)
+            return
+
+    if timestamp <= entity['timestamp']:
+            print(f'* pos update not newer than last update, discarding')
+            return
+
+    entity.update(data)
     datastore_client.put(entity)
 
 
