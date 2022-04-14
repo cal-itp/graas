@@ -18,17 +18,6 @@ var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR   = 60 * SECONDS_PER_MINUTE;
-const SECONDS_PER_DAY    = 24 * SECONDS_PER_HOUR;
-const SECONDS_PER_WEEK   =  7 * SECONDS_PER_DAY;
-
-const MILLIS_PER_SECOND = 1000;
-const MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
-const MILLIS_PER_HOUR   = 60 * MILLIS_PER_MINUTE;
-const MILLIS_PER_DAY    = 24 * MILLIS_PER_HOUR;
-
-
 if (!crypto) {
     crypto = require('crypto').webcrypto
 }
@@ -38,7 +27,15 @@ if (!fetch) {
 }
 
 (function(exports) {
-    exports.MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+    exports.SECONDS_PER_MINUTE = 60;
+    exports.SECONDS_PER_HOUR   = 60 * util.SECONDS_PER_MINUTE;
+    exports.SECONDS_PER_DAY    = 24 * util.SECONDS_PER_HOUR;
+    exports.SECONDS_PER_WEEK   =  7 * util.SECONDS_PER_DAY;
+
+    exports.MILLIS_PER_SECOND = 1000;
+    exports.MILLIS_PER_MINUTE =   60 * util.MILLIS_PER_SECOND;
+    exports.MILLIS_PER_HOUR   =   60 * util.MILLIS_PER_MINUTE;
+    exports.MILLIS_PER_DAY    =   24 * util.MILLIS_PER_HOUR;
 
     exports.log = function(s) {
         console.log(s);
@@ -149,9 +146,9 @@ if (!fetch) {
 
     // create H:MM string from day seconds, optionally include am/pm indicator
     exports.getHMForSeconds = function(daySeconds, includeAMPM) {
-        var hour = Math.floor(daySeconds / SECONDS_PER_HOUR);
-        daySeconds -= hour * SECONDS_PER_HOUR;
-        const min = Math.floor(daySeconds / SECONDS_PER_MINUTE);
+        var hour = Math.floor(daySeconds / util.SECONDS_PER_HOUR);
+        daySeconds -= hour * util.SECONDS_PER_HOUR;
+        const min = Math.floor(daySeconds / util.SECONDS_PER_MINUTE);
 
         const amPm = hour >= 12 ? ' pm' : ' am';
 
@@ -169,7 +166,7 @@ if (!fetch) {
         if (testHour && testMin) {
             now.setHours(testHour, testMin);
         }
-        var tripTime = getTimeFromString(s);
+        var tripTime = this.getTimeFromString(s);
         return Math.abs((tripTime - now) / 60000);
     }
 
