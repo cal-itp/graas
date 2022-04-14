@@ -23,3 +23,14 @@ indexes:
   - name: created
     direction: desc
 
+- kind: current-position
+  properties:
+  - name: agency-id
+  - name: vehicle-id
+  - name: timestamp
+    direction: desc
+
+
+- kind: current-position
+  properties:
+  - name: agency-id

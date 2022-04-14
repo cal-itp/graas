@@ -98,14 +98,9 @@ warnings.filterwarnings("ignore", "Your application has authenticated using end 
 
 app = Flask(__name__)
 
-agency_map = {}
-timestamp_map = {}
 verified_map = {}
 verified_map_millis = 0
-position_lock = threading.Lock()
 alert_lock = threading.Lock()
-saved_position_feed = {}
-saved_position_feed_millis = {}
 
 @app.route('/service-alerts.pb')
 def service_alerts():
@@ -120,18 +115,16 @@ def service_alerts():
 @app.route('/vehicle-positions.pb')
 def vehicle_positions():
     print('/vehicle-positions.pb')
-    agency = request.args.get('agency')
+    agency = request.args.get('agency', None)
     print('- agency: ' + str(agency))
-    position_lock.acquire()
+
+    if agency is None:
+        return 'No agency given', 400
 
     feed = gtfsrt.get_position_feed(
-        saved_position_feed,
-        saved_position_feed_millis,
-        agency_map.get(agency, None),
         agency
     )
 
-    position_lock.release()
     return Response(feed, mimetype='application/octet-stream')
 
 @app.route('/')
@@ -340,9 +333,6 @@ def new_pos_sig():
     else:
         gtfsrt.handle_pos_update(
             util.datastore_client,
-            timestamp_map,
-            agency_map,
-            position_lock,
             data
         )
 

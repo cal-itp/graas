@@ -3,24 +3,24 @@ import time
 import sys
 
 class Cache:
-"""
+    """
 
-Todo:
-    * `getSize()` method that returns size of cache in bytes
+    Todo:
+        * `getSize()` method that returns size of cache in bytes
 
-  + general cache
-    . add item with name and expiration
-    . retrieve item (if expired, return None and remove from cache)
-    . separate module?
-    . get overall cache size in bytes
-    . get number of cache entries
-    . strategies: grow forever, when above limit delete items (oldest to newest)
+      + general cache
+        . add item with name and expiration
+        . retrieve item (if expired, return None and remove from cache)
+        . separate module?
+        . get overall cache size in bytes
+        . get number of cache entries
+        . strategies: grow forever, when above limit delete items (oldest to newest)
 
-cache entry:
-- name
-- value
-- expiration timestamp
-"""
+    cache entry:
+    - name
+    - value
+    - expiration timestamp
+    """
 
     def __init__(self):
         """ Create empty cache instance.
