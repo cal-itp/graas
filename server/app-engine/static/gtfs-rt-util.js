@@ -18,17 +18,6 @@ var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR   = 60 * SECONDS_PER_MINUTE;
-const SECONDS_PER_DAY    = 24 * SECONDS_PER_HOUR;
-const SECONDS_PER_WEEK   =  7 * SECONDS_PER_DAY;
-
-const MILLIS_PER_SECOND = 1000;
-const MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
-const MILLIS_PER_HOUR   = 60 * MILLIS_PER_MINUTE;
-const MILLIS_PER_DAY    = 24 * MILLIS_PER_HOUR;
-
-
 if (!crypto) {
     crypto = require('crypto').webcrypto
 }
@@ -38,7 +27,15 @@ if (!fetch) {
 }
 
 (function(exports) {
-    exports.MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+    exports.SECONDS_PER_MINUTE = 60;
+    exports.SECONDS_PER_HOUR   = 60 * this.SECONDS_PER_MINUTE;
+    exports.SECONDS_PER_DAY    = 24 * this.SECONDS_PER_HOUR;
+    exports.SECONDS_PER_WEEK   =  7 * this.SECONDS_PER_DAY;
+
+    exports.MILLIS_PER_SECOND = 1000;
+    exports.MILLIS_PER_MINUTE =   60 * this.MILLIS_PER_SECOND;
+    exports.MILLIS_PER_HOUR   =   60 * this.MILLIS_PER_MINUTE;
+    exports.MILLIS_PER_DAY    =   24 * this.MILLIS_PER_HOUR;
 
     exports.log = function(s) {
         console.log(s);
@@ -96,7 +93,7 @@ if (!fetch) {
 
     exports.nextDay = function(date) {
         var d = new Date();
-        d.setTime(date.getTime() + util.MILLIS_PER_DAY);
+        d.setTime(date.getTime() + this.MILLIS_PER_DAY);
         return d;
     }
 
@@ -124,7 +121,7 @@ if (!fetch) {
     // 's' is assumed to be a time string like '8:23 am'
     exports.getTimeFromString = function(s) {
         if (s == null){
-            util.log("* Time is null")
+            this.log("* Time is null")
             return null;
         }
         var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
@@ -143,15 +140,15 @@ if (!fetch) {
 
         var date = new Date();
         date.setHours(hour, min);
-        // util.log(" - date: " + date);
+        // this.log(" - date: " + date);
         return date;
     }
 
     // create H:MM string from day seconds, optionally include am/pm indicator
     exports.getHMForSeconds = function(daySeconds, includeAMPM) {
-        var hour = Math.floor(daySeconds / SECONDS_PER_HOUR);
-        daySeconds -= hour * SECONDS_PER_HOUR;
-        const min = Math.floor(daySeconds / SECONDS_PER_MINUTE);
+        var hour = Math.floor(daySeconds / this.SECONDS_PER_HOUR);
+        daySeconds -= hour * this.SECONDS_PER_HOUR;
+        const min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
 
         const amPm = hour >= 12 ? ' pm' : ' am';
 
@@ -169,7 +166,7 @@ if (!fetch) {
         if (testHour && testMin) {
             now.setHours(testHour, testMin);
         }
-        var tripTime = getTimeFromString(s);
+        var tripTime = this.getTimeFromString(s);
         return Math.abs((tripTime - now) / 60000);
     }
 
