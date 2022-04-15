@@ -274,8 +274,8 @@ function parseAgencyData(str) {
     util.log("parseAgencyData()");
     util.log("- str: " + str);
 
-    var id = null;
-    var pem = null;
+    let id = null;
+    let pem = null;
 
     var i1 = str.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
@@ -380,7 +380,7 @@ function handleStartStop() {
         var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN];
         disableElements(dropdowns);
 
-        let p = document.getElementById('okay');
+        p = document.getElementById('okay');
         p.disabled = 'true';
         p.style.background = GRAY_HEX;
 
@@ -810,7 +810,7 @@ function handleGPSUpdate(position) {
 }
 
 function initializeCallback(agencyData) {
-    pem = agencyData.pem;
+    let pem = agencyData.pem;
 
     var i1 = pem.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);

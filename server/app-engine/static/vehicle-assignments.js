@@ -41,8 +41,6 @@ var readOnlyAccess = false;
 var elementWidth = 0;
 var blockDescriptions = {};
 var lastHoveredBlockID = null;
-var i;
-var item;
 
 function isMobile() {
     util.log("isMobile()");
@@ -140,8 +138,8 @@ function layout(blockIDList, vehicleIDList, assignments) {
     var xx = GAP;
     var yy = BLOCKS_VOFF;
 
-    for (i=0; i<blockIDList.length; i++) {
-        item = {
+    for (let i=0; i<blockIDList.length; i++) {
+        var blockItem = {
             type: 'block',
             x: xx,
             y: yy,
@@ -155,8 +153,8 @@ function layout(blockIDList, vehicleIDList, assignments) {
         var vehicleID = getAssignedVehicle(assignments, blockIDList[i]);
 
         if (vehicleID) {
-            item.status = 'assigned';
-            item.vehicle = vehicleID;
+            blockItem.status = 'assigned';
+            blockItem.vehicle = vehicleID;
 
             var a = {
                 blockID: blockIDList[i],
@@ -166,7 +164,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             currentAssignments.push(a);
         }
 
-        items.push(item);
+        items.push(blockItem);
 
         xx += GAP + elementWidth;
 
@@ -190,10 +188,10 @@ function layout(blockIDList, vehicleIDList, assignments) {
     yy += 3 * BLOCK_HEIGHT;
     VEHICLES_VOFF = yy;
 
-    for (i=0; i<vehicleIDList.length; i++) {
+    for (let i=0; i<vehicleIDList.length; i++) {
         var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
 
-        item = {
+        var vehicleItem = {
             type: 'vehicle',
             x: xx,
             y: yy,
@@ -204,7 +202,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             status: blockID ? 'assigned' : 'active'
         };
 
-        items.push(item);
+        items.push(vehicleItem);
 
         xx += GAP + elementWidth;
 
@@ -571,7 +569,7 @@ async function loadBlockData(dateString) {
 
     handleModal('infiniteProgressModal');
     var name = `blocks-${dateString}.json`;
-    util.log('- name: ' + name);
+    // util.log('- name: ' + name);
     var blocks = await getGithubData(agencyID, name);
     //util.log("- blocks: " + JSON.stringify(blocks));
 
@@ -1108,7 +1106,7 @@ function getDisplayName(s) {
     var capitalize = true;
     var r = '';
 
-    for (i=0; i<s.length; i++) {
+    for (let i=0; i<s.length; i++) {
         var c = s.charAt(i);
 
         if (capitalize) {
