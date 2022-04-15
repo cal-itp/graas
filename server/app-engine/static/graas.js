@@ -85,15 +85,15 @@ function toRadians(degrees) {
 
 // return distance in feet between to lat/long pairs
 function getHaversineDistance(lat1, lon1, lat2, lon2) {
-    const phi1 = toRadians(lat1);
-    const phi2 = toRadians(lat2);
-    const deltaPhi = toRadians(lat2 - lat1);
-    const deltaLam = toRadians(lon2 - lon1);
+    let phi1 = toRadians(lat1);
+    let phi2 = toRadians(lat2);
+    let deltaPhi = toRadians(lat2 - lat1);
+    let deltaLam = toRadians(lon2 - lon1);
 
-    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
+    let a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
         + Math.cos(phi1) * Math.cos(phi2)
         * Math.sin(deltaLam / 2) * Math.sin(deltaLam / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return EARTH_RADIUS_IN_FEET * c;
 }
 
@@ -107,7 +107,7 @@ function isMobile() {
         return true;
     }
 
-    var result = navigator.userAgent.match(/Android/i)
+    let result = navigator.userAgent.match(/Android/i)
      || navigator.userAgent.match(/webOS/i)
      || navigator.userAgent.match(/iPhone/i)
      || navigator.userAgent.match(/iPad/i)
@@ -124,7 +124,7 @@ function isPhone() {
     util.log("- navigator.userAgent: " + navigator.userAgent);
     util.log("- navigator.maxTouchPoints: " + navigator.maxTouchPoints);
 
-    var result = navigator.userAgent.match(/Android/i)
+    let result = navigator.userAgent.match(/Android/i)
      || navigator.userAgent.match(/iPhone/i);
     util.log("- result: " + result);
 
@@ -166,8 +166,8 @@ function setWakeLock() {
         return;
     }
 
-    var wakeLockOp = "set";
-    var wakeLockOkay = (wakeLockOp != lastWakeLockOp) || (Date.now() - lastWakeLockMillis >= 2500)
+    let wakeLockOp = "set";
+    let wakeLockOkay = (wakeLockOp != lastWakeLockOp) || (Date.now() - lastWakeLockMillis >= 2500)
 
     //util.log("- wakeLockOp: " + wakeLockOp);
     //util.log("- lastWakeLockOp: " + lastWakeLockOp);
@@ -193,8 +193,8 @@ function clearWakeLock() {
         return;
     }
 
-    var wakeLockOp = "clear";
-    var wakeLockOkay = (wakeLockOp != lastWakeLockOp) || (Date.now() - lastWakeLockMillis >= 2500)
+    let wakeLockOp = "clear";
+    let wakeLockOkay = (wakeLockOp != lastWakeLockOp) || (Date.now() - lastWakeLockMillis >= 2500)
 
     //util.log("- wakeLockOp: " + wakeLockOp);
     //util.log("- lastWakeLockOp: " + lastWakeLockOp);
@@ -212,8 +212,8 @@ function clearWakeLock() {
 function handleTouch() {
     //util.log("handleTouch()");
 
-    var now = Date.now();
-    var delta = (now - lastTouch);
+    let now = Date.now();
+    let delta = (now - lastTouch);
     //util.log("- delta: " + delta);
 
     if (now - lastTouch < 300) {
@@ -277,7 +277,7 @@ function parseAgencyData(str) {
     let id = null;
     let pem = null;
 
-    var i1 = str.indexOf(PEM_HEADER);
+    let i1 = str.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
     if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
@@ -297,13 +297,13 @@ function handleKeyOkay() {
     util.log("handleKeyOkay()");
 
     let p = document.getElementById('keyTextArea');
-    var value = p.value.replace(/\n/g, "");
+    let value = p.value.replace(/\n/g, "");
     util.log("- value: " + value);
 
-    var i1 = value.indexOf(PEM_HEADER);
+    let i1 = value.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
-    var i2 = value.indexOf(PEM_FOOTER);
+    let i2 = value.indexOf(PEM_FOOTER);
     util.log("- i2: " + i2);
 
     if (i1 < 0 || i2 < 0) {
@@ -327,12 +327,12 @@ function handleStartStop() {
     util.log("handleStartStop()");
 
     let p = document.getElementById(START_STOP_BUTTON);
-    var text = p.textContent || p.innerText;
+    let text = p.textContent || p.innerText;
     util.log("- text: " + text);
 
     // Driver taps "Load trips", dropdown options appear
     if (text === START_STOP_BUTTON_LOAD_TEXT) {
-        var millis = Date.now();
+        let millis = Date.now();
         util.log("- millis     : " + millis);
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
@@ -377,7 +377,7 @@ function handleStartStop() {
         hideElement(TRIP_STATS_ELEMENT);
         util.log('- stopping position updates');
         running = false;
-        var dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN];
+        let dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN];
         disableElements(dropdowns);
 
         p = document.getElementById('okay');
@@ -442,7 +442,7 @@ function handleOkay() {
 
     if(!useBulkAssignmentMode){
         p = document.getElementById(TRIP_SELECT_DROPDOWN);
-        var entry = tripIDLookup[p.value];
+        let entry = tripIDLookup[p.value];
 
         if (isObject(entry)) {
             tripID = entry['trip_id'];
@@ -457,7 +457,7 @@ function handleOkay() {
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
     p = document.getElementById('trip-assignment-mode');
-    var tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
+    let tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
     hideElement(ALL_DROPDOWNS);
@@ -473,9 +473,9 @@ function getCookie(name) {
     const cookie = document.cookie;
     if (!cookie) return null;
 
-    const list = cookie.split('; ');
+    let list = cookie.split('; ');
 
-    for (var i=0; i<list.length; i++) {
+    for (let i=0; i<list.length; i++) {
         if (list[i].startsWith(name + '=')) {
             return list[i].split('=')[1];
         }
@@ -485,7 +485,7 @@ function getCookie(name) {
 }
 
 function getUUID() {
-    var uuid = getCookie(UUID_NAME);
+    let uuid = getCookie(UUID_NAME);
 
     if (!uuid) {
         uuid = createUUID();
@@ -496,12 +496,12 @@ function getUUID() {
 }
 
 function getNextMsgNo() {
-    var s = getCookie(MSG_NO);
+    let s = getCookie(MSG_NO);
 
     if (!s) s = '0';
 
-    var n = parseInt(s);
-    var nextN = ++n;
+    let n = parseInt(s);
+    let nextN = ++n;
     if (nextN < 0) nextN = 0;
 
     document.cookie = `${MSG_NO}=${nextN}; max-age=${MAX_AGE_SECS}`;
@@ -512,9 +512,9 @@ function getNextMsgNo() {
 // ### todo: create UUIDs that follow the spec, instead of these
 // completely fake ones
 function createUUID() {
-    var s = ""
+    let s = ""
 
-    for (var i=0; i<32; i++) {
+    for (let i=0; i<32; i++) {
         s += hexDigits[Math.floor(Math.random() * hexDigits.length)];
 
         if (i === 7 || i === 11 || i === 15 || i === 19) {
@@ -569,7 +569,7 @@ function getURLContent(agencyID, arg) {
 }
 
 function addSelectOption(sel, text, disabled) {
-    var opt = document.createElement('option');
+    let opt = document.createElement('option');
 
     opt.appendChild(document.createTextNode(text));
     opt.disabled = disabled;
@@ -577,10 +577,10 @@ function addSelectOption(sel, text, disabled) {
 }
 
 function clearSelectOptions(sel) {
-    var l = sel.options.length - 1;
+    let l = sel.options.length - 1;
     util.log('- l: ' + l);
 
-    for(var i = l; i >= 0; i--) {
+    for(let i = l; i >= 0; i--) {
         sel.remove(i);
     }
 }
@@ -590,15 +590,15 @@ function handleEvent(e) {
 }
 
 function getRewriteArgs() {
-    const s = window.location.search;
-    const arg = s.split(/[&\?]/);
+    let s = window.location.search;
+    let arg = s.split(/[&\?]/);
 
-    for (var a of arg) {
+    for (let a of arg) {
         if (!a) continue;
 
-        const t = a.split('=');
-        const key = t[0];
-        const value = t[1];
+        let t = a.split('=');
+        let key = t[0];
+        let value = t[1];
 
         util.log(`- ${key}: ${value}`);
 
@@ -624,13 +624,13 @@ function getRewriteArgs() {
 function scanQRCode() {
     util.log("scanQRCode()");
 
-    var lastResult, countResults = 0;
+    let lastResult, countResults = 0;
 
-    var elem = document.getElementById('qr-reader');
-    var qw = elem.clientWidth;
+    let elem = document.getElementById('qr-reader');
+    let qw = elem.clientWidth;
     util.log(`- qw: ${qw}`);
 
-    var html5QrcodeScanner = new Html5QrcodeScanner(
+    let html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader", { fps: 10, qrbox: Math.round(qw * .83), videoConstraints: {facingMode: isMobile() ? "environment" : "user"}});
 
     function onScanSuccess(qrCodeMessage) {
@@ -640,13 +640,13 @@ function scanQRCode() {
             //resultContainer.innerHTML += `<div>[${countResults}] - ${qrCodeMessage}</div>`;
             // util.log(`- qrCodeMessage: '${qrCodeMessage}'`);
 
-            var value = qrCodeMessage.replace(/\n/g, "");
+            let value = qrCodeMessage.replace(/\n/g, "");
             // util.log("- value: " + value);
 
-            var i1 = value.indexOf(PEM_HEADER);
+            let i1 = value.indexOf(PEM_HEADER);
             // util.log("- i1: " + i1);
 
-            var i2 = value.indexOf(PEM_FOOTER);
+            let i2 = value.indexOf(PEM_FOOTER);
             // util.log("- i2: " + i2);
 
             if (i1 < 0 || i2 < 0) {
@@ -689,9 +689,9 @@ function initialize() {
         util.log("- graasShimVersion: " + graasShimVersion);
     }
 
-    var e = document.getElementById("version");
+    let e = document.getElementById("version");
     version = e.innerHTML;
-    var i = version.indexOf(': ');
+    let i = version.indexOf(': ');
     if (i > 0 && i + 1 < version.length) {
         version = version.substring(i + 2)
     }
@@ -718,14 +718,14 @@ function positionCallback() {
     util.log("+ got start position");
 
     if (isPhone()) {
-        var list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, "okay"];
+        let list = [START_STOP_BUTTON, TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN, "okay"];
         list.forEach(l => resizeElement(document.getElementById(l)));
 
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
 
-    var str = localStorage.getItem("lat-long-pem") || "";
+    let str = localStorage.getItem("lat-long-pem") || "";
 
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
@@ -741,8 +741,8 @@ function positionCallback() {
 
 function handleGPSUpdate(position) {
     util.log('handleGPSUpdate()');
-    var lat, long, accuracy, posTimestamp, speed, heading;
-    var uuid = getUUID();
+    let lat, long, accuracy, posTimestamp, speed, heading = 0;
+    let uuid = getUUID();
 
     if (position) {
         lat = position.coords.latitude;
@@ -751,16 +751,9 @@ function handleGPSUpdate(position) {
         posTimestamp = Math.round(position.timestamp / 1000);
         speed = position.coords.speed;
         heading = position.coords.heading;
-    } else {
-        lat = 0;
-        long = 0;
-        accuracy = 0;
-        posTimestamp = 0;
-        speed = 0;
-        heading = 0;
     }
 
-    var timestamp = Math.floor(Date.now() / 1000);
+    let timestamp = Math.floor(Date.now() / 1000);
 
     let p = document.getElementById("lat");
     p.innerHTML = "Lat: " + lat;
@@ -768,7 +761,7 @@ function handleGPSUpdate(position) {
     p = document.getElementById("long");
     p.innerHTML = "Long: " + long;
 
-    var agent = navigator.userAgent.match(/\(.*?\)/);
+    let agent = navigator.userAgent.match(/\(.*?\)/);
 
     if (!speed) speed = 0;
     if (!heading) heading = 0;
@@ -784,7 +777,7 @@ function handleGPSUpdate(position) {
     util.log('- heading: ' + heading);
     util.log('- agent: ' + agent);*/
 
-    var data = {
+    let data = {
         uuid: uuid,
         agent: agent,
         timestamp: timestamp,
@@ -812,13 +805,13 @@ function handleGPSUpdate(position) {
 function initializeCallback(agencyData) {
     let pem = agencyData.pem;
 
-    var i1 = pem.indexOf(PEM_HEADER);
+    let i1 = pem.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
-    var i2 = pem.indexOf(PEM_FOOTER);
+    let i2 = pem.indexOf(PEM_FOOTER);
     util.log("- i2: " + i2);
 
-    var b64 = pem.substring(i1 + PEM_HEADER.length, i2);
+    let b64 = pem.substring(i1 + PEM_HEADER.length, i2);
     // util.log("- b64: " + b64);
     // util.log("- b64.length: " + b64.length);
 
@@ -836,10 +829,10 @@ function initializeCallback(agencyData) {
     util.log("- keyType: " + keyType);
     // util.log("- keyLength: " + keyLength);
 
-    var key = atob(b64);
+    let key = atob(b64);
     // util.log("- key.length: " + key.length);
 
-    const binaryDer = util.str2ab(key);
+    let binaryDer = util.str2ab(key);
 
     crypto.subtle.importKey(
         "pkcs8",
@@ -861,12 +854,12 @@ function initializeCallback(agencyData) {
         util.log("- key.type: " + key.type);
         signatureKey = key;
 
-        var str = 'hello ' + Math.floor(Date.now() / 1000);
+        let str = 'hello ' + Math.floor(Date.now() / 1000);
 
         util.sign(str, signatureKey).then(function(buf) {
-            var sig = btoa(util.ab2str(buf));
+            let sig = btoa(util.ab2str(buf));
 
-            var hello = {
+            let hello = {
                 msg: str,
                 sig: sig
             };
@@ -898,7 +891,7 @@ function agencyIDCallback(response) {
         alert('could not verify client identity');
     } else {
         // Passing current timestamp as an argument ensures that the config file will refresh, rather than loading from cache.
-        var arg = Date.now()
+        let arg = Date.now()
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
     }
@@ -979,31 +972,31 @@ function loadTrips() {
         startLon = testLong;
     }
 
-    for (var i = 0; i < trips.length; i++) {
+    for (let i = 0; i < trips.length; i++) {
         // util.log(`- trips.length: ${trips.length}`);
         if (Array.isArray(trips)) {
             // util.log(`-- trips[i]: ${trips[i]}`);
-            const tripInfo = trips[i];
+            let tripInfo = trips[i];
             //util.log(`-- value: ${value}`);
 
             if (mode === 'vanilla' && isObject(tripInfo)) {
-                const time = getTimeFromName(tripInfo["trip_name"]);
+                let time = getTimeFromName(tripInfo["trip_name"]);
                 //util.log(`- time: ${time}`);
-                const dow = util.getDayOfWeek();
+                let dow = util.getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
-                const date = util.getTodayYYYYMMDD();
+                let date = util.getTodayYYYYMMDD();
                 //util.log(`- date: ${date}`);
-                const lat = tripInfo.departure_pos.lat;
+                let lat = tripInfo.departure_pos.lat;
                 // util.log(`- lat: ${lat}`);
-                const lon = tripInfo.departure_pos.long;
+                let lon = tripInfo.departure_pos.long;
                 // util.log(`- lon: ${lon}`);
 
-                const timeDelta = util.getTimeDelta(time);
+                let timeDelta = util.getTimeDelta(time);
                 // util.log(`- timeDelta: ${timeDelta}`);
 
-                const distance = getHaversineDistance(lat, lon, startLat, startLon);
+                let distance = getHaversineDistance(lat, lon, startLat, startLon);
                 // util.log(`- distance: ${distance}`);
-                var cal = 0;
+                let cal = 0;
                 if (tripInfo.calendar != null) {
                     cal = tripInfo.calendar[dow];
                 }
@@ -1112,7 +1105,7 @@ function populateTripList(tripIDMap = tripIDLookup) {
     clearSelectOptions(p);
     addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
 
-    for (const [key, value] of Object.entries(tripIDMap)) {
+    for (let [key, value] of Object.entries(tripIDMap)) {
         addSelectOption(p, key, !value);
     }
 
@@ -1140,7 +1133,7 @@ function configComplete() {
                 method: 'HEAD',
             })
             .then(function(response) {
-                var lm = response.headers.get('Last-Modified');
+                let lm = response.headers.get('Last-Modified');
                 util.log('- lastModified: ' + lastModified);
                 util.log('-           lm: ' + lm);
 
@@ -1163,7 +1156,7 @@ function configComplete() {
     }, 15 * 60000);
 
     if (navigator && navigator.geolocation) {
-        var uuid = getUUID();
+        let uuid = getUUID();
         let p = document.getElementById("uuid");
         p.innerHTML = "UUID: " + uuid;
 
@@ -1175,7 +1168,7 @@ function configComplete() {
 
 if (!Object.entries) {
    Object.entries = function( obj ){
-      var ownProps = Object.keys( obj ),
+      let ownProps = Object.keys( obj ),
          i = ownProps.length,
          resArray = new Array(i); // preallocate the Array
 
