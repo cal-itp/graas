@@ -17,7 +17,6 @@ var crypto = this.crypto
 var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-var p;
 
 if (!crypto) {
     crypto = require('crypto').webcrypto
@@ -29,21 +28,21 @@ if (!fetch) {
 
 (function(exports) {
     exports.SECONDS_PER_MINUTE = 60;
-    exports.SECONDS_PER_HOUR   = 60 * this.SECONDS_PER_MINUTE;
-    exports.SECONDS_PER_DAY    = 24 * this.SECONDS_PER_HOUR;
-    exports.SECONDS_PER_WEEK   =  7 * this.SECONDS_PER_DAY;
+    exports.SECONDS_PER_HOUR   = 60 * exports.SECONDS_PER_MINUTE;
+    exports.SECONDS_PER_DAY    = 24 * exports.SECONDS_PER_HOUR;
+    exports.SECONDS_PER_WEEK   =  7 * exports.SECONDS_PER_DAY;
 
     exports.MILLIS_PER_SECOND = 1000;
-    exports.MILLIS_PER_MINUTE =   60 * this.MILLIS_PER_SECOND;
-    exports.MILLIS_PER_HOUR   =   60 * this.MILLIS_PER_MINUTE;
-    exports.MILLIS_PER_DAY    =   24 * this.MILLIS_PER_HOUR;
+    exports.MILLIS_PER_MINUTE =   60 * exports.MILLIS_PER_SECOND;
+    exports.MILLIS_PER_HOUR   =   60 * exports.MILLIS_PER_MINUTE;
+    exports.MILLIS_PER_DAY    =   24 * exports.MILLIS_PER_HOUR;
 
     exports.log = function(s) {
         console.log(s);
 
         if (typeof document !== 'undefined') {
             try {
-                p = document.getElementById('console');
+                let p = document.getElementById('console');
                 if (p) p.innerHTML += s + "<br/>";
             } catch(e){
                 console.log(e.message)
@@ -55,7 +54,6 @@ if (!fetch) {
         if (date === null) {
             date = new Date();
         }
-
         var month = ('' + (date.getMonth() + 1)).padStart(2, '0');
         var day = ('' + date.getDate()).padStart(2, '0');
         return '' + date.getFullYear() + '-' + month + '-' + day;
@@ -97,7 +95,6 @@ if (!fetch) {
         d.setTime(date.getTime() + this.MILLIS_PER_DAY);
         return d;
     }
-
 
     // returns 0 for Monday...and 6 for Sunday
     exports.getDayOfWeek = function() {
@@ -281,7 +278,7 @@ if (!fetch) {
             if (!response.ok) {
                 if (document) {
                     try {
-                        p = document.getElementById('server-response');
+                        let p = document.getElementById('server-response');
                         p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
                     } catch(e) {
                         console.log(e.message);
@@ -319,7 +316,7 @@ if (!fetch) {
             that.apiCall(msg, url, function(response) {
                 if (document) {
                     try {
-                        p = document.getElementById('last-update');
+                        let p = document.getElementById('last-update');
                         var now = new Date();
                         var hour = now.getHours();
                         var ampm = hour >= 12 ? "PM" : "AM";

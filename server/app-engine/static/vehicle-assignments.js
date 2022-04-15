@@ -350,7 +350,7 @@ function handleKey(id) {
                 util.log('-- itemID: ' + itemID);
                 var vid = item.vehicle;
                 util.log('-- vid: ' + vid);
-                var block = blockMap[id];
+                var block = blockMap[itemID];
                 //util.log('-- block: ' + JSON.stringify(block));
 
                 var blockDatum = {};
@@ -374,17 +374,17 @@ function handleKey(id) {
     } else if (id === 'key-select-today') {
         fromDate = util.getMidnightDate();
         dateStr = util.getYYYYMMDD(fromDate);
-        util.log('- str: ' + str);
+        util.log('- dateStr: ' + dateStr);
 
         dismissModal();
-        loadBlockData(str);
+        loadBlockData(dateStr);
     } else if (id === 'key-select-tomorrow') {
         fromDate = util.nextDay(util.getMidnightDate());
         dateStr = util.getYYYYMMDD(fromDate);
-        util.log('- str: ' + str);
+        util.log('- dateStr: ' + dateStr);
 
         dismissModal();
-        loadBlockData(str);
+        loadBlockData(dateStr);
     } else if (id === 'key-confirm-okay') {
         dismissModal();
     }
@@ -571,7 +571,7 @@ async function loadBlockData(dateString) {
 
     handleModal('infiniteProgressModal');
     var name = `blocks-${dateString}.json`;
-    //util.log('- name: ' + name);
+    util.log('- name: ' + name);
     var blocks = await getGithubData(agencyID, name);
     //util.log("- blocks: " + JSON.stringify(blocks));
 
