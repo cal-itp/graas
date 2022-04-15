@@ -93,7 +93,7 @@ if (!fetch) {
 
     exports.nextDay = function(date) {
         var d = new Date();
-        d.setTime(date.getTime() + util.MILLIS_PER_DAY);
+        d.setTime(date.getTime() + this.MILLIS_PER_DAY);
         return d;
     }
 
@@ -121,7 +121,7 @@ if (!fetch) {
     // 's' is assumed to be a time string like '8:23 am'
     exports.getTimeFromString = function(s) {
         if (s == null){
-            util.log("* Time is null")
+            this.log("* Time is null")
             return null;
         }
         var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
@@ -140,15 +140,15 @@ if (!fetch) {
 
         var date = new Date();
         date.setHours(hour, min);
-        // util.log(" - date: " + date);
+        // this.log(" - date: " + date);
         return date;
     }
 
     // create H:MM string from day seconds, optionally include am/pm indicator
     exports.getHMForSeconds = function(daySeconds, includeAMPM) {
-        var hour = Math.floor(daySeconds / util.SECONDS_PER_HOUR);
-        daySeconds -= hour * util.SECONDS_PER_HOUR;
-        const min = Math.floor(daySeconds / util.SECONDS_PER_MINUTE);
+        var hour = Math.floor(daySeconds / this.SECONDS_PER_HOUR);
+        daySeconds -= hour * this.SECONDS_PER_HOUR;
+        const min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
 
         const amPm = hour >= 12 ? ' pm' : ' am';
 
