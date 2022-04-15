@@ -258,19 +258,19 @@ function parseAgencyData(str) {
     util.log("parseAgencyData()");
     util.log("- str: " + str);
 
-    var agencyID = null;
+    var aid = null;
     var pem = null;
 
     var i1 = str.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
     if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
-        agencyID = str.substring(0, i1).trim();
+        aid = str.substring(0, i1).trim();
         pem = str.substring(i1);
     }
 
     return {
-        id: agencyID,
+        id: aid,
         pem: pem
     };
 }
