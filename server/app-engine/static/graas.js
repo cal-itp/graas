@@ -624,7 +624,8 @@ function getRewriteArgs() {
 function scanQRCode() {
     util.log("scanQRCode()");
 
-    let lastResult, countResults = 0;
+    let lastResult = 0;
+    let countResults = 0;
 
     let elem = document.getElementById('qr-reader');
     let qw = elem.clientWidth;
@@ -741,16 +742,22 @@ function positionCallback() {
 
 function handleGPSUpdate(position) {
     util.log('handleGPSUpdate()');
-    let lat, long, accuracy, posTimestamp, speed, heading = 0;
     let uuid = getUUID();
 
     if (position) {
-        lat = position.coords.latitude;
-        long = position.coords.longitude;
-        accuracy = position.coords.accuracy;
-        posTimestamp = Math.round(position.timestamp / 1000);
-        speed = position.coords.speed;
-        heading = position.coords.heading;
+        let lat = position.coords.latitude;
+        let long = position.coords.longitude;
+        let accuracy = position.coords.accuracy;
+        let posTimestamp = Math.round(position.timestamp / 1000);
+        let speed = position.coords.speed;
+        let heading = position.coords.heading;
+    } else {
+        let lat = 0;
+        let long = 0;
+        let accuracy = 0;
+        let posTimestamp = 0;
+        let speed = 0;
+        let heading = 0;
     }
 
     let timestamp = Math.floor(Date.now() / 1000);

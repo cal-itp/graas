@@ -944,7 +944,6 @@ function handleMouseMove(e) {
 
     let x = e.x;
     let y = e.y;
-    let skirt = null;
     let millis = (new Date).getTime();
 
     if (dragging && dragItem !== null) {
@@ -967,7 +966,7 @@ function handleMouseMove(e) {
                     ctx.strokeStyle = '#c33';
                     let lw = ctx.lineWidth;
                     ctx.lineWidth = 4;
-                    skirt = 10;
+                    let skirt = 10;
                     ctx.strokeRect(item.x - skirt, item.y - skirt, item.w + 2 * skirt, item.h + 2 * skirt);
                     ctx.lineWidth = lw;
                     break;
@@ -986,7 +985,7 @@ function handleMouseMove(e) {
         if (millis - lastRefresh >= 30) {
             lastRefresh = millis;
             let match = false;
-            skirt = 7;
+            let skirt = 7;
 
             for (let item of items) {
                 if ((item.type === 'block' || item.type === 'vehicle') && item.status === 'assigned' && !readOnlyAccess
