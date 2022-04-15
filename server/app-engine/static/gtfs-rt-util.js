@@ -54,8 +54,8 @@ if (!fetch) {
         if (date === null) {
             date = new Date();
         }
-        var month = ('' + (date.getMonth() + 1)).padStart(2, '0');
-        var day = ('' + date.getDate()).padStart(2, '0');
+        let month = ('' + (date.getMonth() + 1)).padStart(2, '0');
+        let day = ('' + date.getDate()).padStart(2, '0');
         return '' + date.getFullYear() + '-' + month + '-' + day;
     }
 
@@ -72,9 +72,9 @@ if (!fetch) {
     // to be of the form mm/dd/yy. yy is assumed to
     // refer to years of the 21st century.
     exports.getDate = function(s) {
-        var args = s.split('/');
+        let args = s.split('/');
         if (args.length !== 3) return null;
-        var date = new Date();
+        let date = new Date();
         date.setFullYear(2000 + parseInt(args[2]));
         date.setMonth(parseInt(args[0]) - 1);
         date.setDate(parseInt(args[1]));
@@ -84,14 +84,14 @@ if (!fetch) {
 
     exports.getMidnightDate = function(date) {
         if (!date) date = new Date();
-        var d = new Date();
+        let d = new Date();
         d.setTime(date.getTime());
         d.setHours(0, 0, 0);
         return d;
     }
 
     exports.nextDay = function(date) {
-        var d = new Date();
+        let d = new Date();
         d.setTime(date.getTime() + this.MILLIS_PER_DAY);
         return d;
     }
@@ -108,10 +108,10 @@ if (!fetch) {
         if (testDate) {
             return testDate;
         } else {
-            var today = new Date();
-            var year = today.getFullYear();
-            var month = today.getMonth() + 1;
-            var date = today.getDate();
+            let today = new Date();
+            let year = today.getFullYear();
+            let month = today.getMonth() + 1;
+            let date = today.getDate();
             return (year * 10000) + (month * 100) + date;
         }
     }
@@ -122,11 +122,11 @@ if (!fetch) {
             this.log("* Time is null")
             return null;
         }
-        var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
+        let cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
 
-        var hour = parseInt(cap[1]);
-        var min = parseInt(cap[2]);
-        var ampm = cap[3];
+        let hour = parseInt(cap[1]);
+        let min = parseInt(cap[2]);
+        let ampm = cap[3];
 
         if (ampm === 'pm'){
             // 2:00pm becomes 14:00
@@ -136,7 +136,7 @@ if (!fetch) {
         // 12:00am becomes 0:00
         else if (hour === 12) hour = 0;
 
-        var date = new Date();
+        let date = new Date();
         date.setHours(hour, min);
         // this.log(" - date: " + date);
         return date;
@@ -144,27 +144,27 @@ if (!fetch) {
 
     // create H:MM string from day seconds, optionally include am/pm indicator
     exports.getHMForSeconds = function(daySeconds, includeAMPM) {
-        var hour = Math.floor(daySeconds / this.SECONDS_PER_HOUR);
+        let hour = Math.floor(daySeconds / this.SECONDS_PER_HOUR);
         daySeconds -= hour * this.SECONDS_PER_HOUR;
-        const min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
+        let min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
 
-        const amPm = hour >= 12 ? ' pm' : ' am';
+        let amPm = hour >= 12 ? ' pm' : ' am';
 
         if (hour == 0) hour = 12;
         else if (hour > 12) hour -= 12;
 
-        const ms = ('' + min).padStart(2, '0');
-        const aps = includeAMPM ? amPm : '';
+        let ms = ('' + min).padStart(2, '0');
+        let aps = includeAMPM ? amPm : '';
         return `${hour}:${ms}${aps}`
     }
 
     // return the difference in minutes between 's' and the current time.
     exports.getTimeDelta = function(s) {
-        var now = new Date();
+        let now = new Date();
         if (testHour && testMin) {
             now.setHours(testHour, testMin);
         }
-        var tripTime = this.getTimeFromString(s);
+        let tripTime = this.getTimeFromString(s);
         return Math.abs((tripTime - now) / 60000);
     }
 
@@ -177,7 +177,7 @@ if (!fetch) {
         //this.log("- msg: " + msg);
         //this.log("- signatureKey: " + signatureKey);
 
-        var keyType = 'unknown';
+        let keyType = 'unknown';
 
         if (signatureKey.length < 256) {
             keyType = "ECDSA";
@@ -197,8 +197,8 @@ if (!fetch) {
     };
 
     exports.str2ab = function(str) {
-        const buf = new ArrayBuffer(str.length);
-        const bufView = new Uint8Array(buf);
+        let buf = new ArrayBuffer(str.length);
+        let bufView = new Uint8Array(buf);
 
         for (let i = 0, strLen = str.length; i < strLen; i++) {
             bufView[i] = str.charCodeAt(i);
@@ -208,11 +208,11 @@ if (!fetch) {
     };
 
     exports.ab2str = function(ab) {
-        var binary = '';
-        var bytes = new Uint8Array(ab);
-        var len = bytes.byteLength;
+        let binary = '';
+        let bytes = new Uint8Array(ab);
+        let len = bytes.byteLength;
 
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
 
@@ -233,12 +233,12 @@ if (!fetch) {
     };
 
     exports.getJSONResponse = async function(url, data, key) {
-        var args = {method: 'GET'};
+        let args = {method: 'GET'};
 
         if (key) {
-            var data_str = JSON.stringify(data);
-            var buf = await this.sign(data_str, key);
-            var sig = btoa(this.ab2str(buf));
+            let data_str = JSON.stringify(data);
+            let buf = await this.sign(data_str, key);
+            let sig = btoa(this.ab2str(buf));
             this.log('- sig: ' + sig);
 
             data = {
@@ -253,9 +253,9 @@ if (!fetch) {
             args.body = JSON.stringify(data);
         }
 
-        var response = await this.timedFetch(url, args);
+        let response = await this.timedFetch(url, args);
         this.log('- response: ' + JSON.stringify(response));
-        var json = await response.json();
+        let json = await response.json();
         this.log('- json: ' + JSON.stringify(json));
 
         return json;
@@ -264,7 +264,7 @@ if (!fetch) {
     exports.apiCall = function(data, url, callback, document) {
         //this.log("apiCall()");
 
-        var body = JSON.stringify(data);
+        let body = JSON.stringify(data);
         // this.log("- body: " + body);
 
         this.timedFetch(url, {
@@ -296,17 +296,17 @@ if (!fetch) {
 
     exports.signAndPost = function(data, signatureKey, url, document) {
         this.log("util.signAndPost()");
-        var data_str = JSON.stringify(data);
+        let data_str = JSON.stringify(data);
         // this.log('- data_str: ' + data_str);
         // this.log('- document: ' + document);
 
-        var that = this;
+        let that = this;
 
         this.sign(data_str, signatureKey).then(function(buf) {
-            var sig = btoa(that.ab2str(buf));
+            let sig = btoa(that.ab2str(buf));
             // that.log('- sig: ' + sig);
 
-            var msg = {
+            let msg = {
                 data: data,
                 sig: sig
             };
@@ -317,14 +317,14 @@ if (!fetch) {
                 if (document) {
                     try {
                         let p = document.getElementById('last-update');
-                        var now = new Date();
-                        var hour = now.getHours();
-                        var ampm = hour >= 12 ? "PM" : "AM";
+                        let now = new Date();
+                        let hour = now.getHours();
+                        let ampm = hour >= 12 ? "PM" : "AM";
 
                         if (hour > 12) hour -= 12;
                         if (hour === 0) hour = 12;
 
-                        var time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
+                        let time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
 
                         p.innerHTML = 'Last update: ' + time;
 
