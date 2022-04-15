@@ -6,9 +6,9 @@ module.exports = {
   },
 // Extending the Google JS style guide creates 13816 errors, omitting for now
 // If we'd like to do this it will require significant effort.
-'extends': [
-  'google'
-],
+// 'extends': [
+//   'google'
+// ],
   'parserOptions': {
     'ecmaVersion': 'latest',
   },
