@@ -19,8 +19,6 @@ const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var p;
 
-// Add any constants that need exporting to "function(exports)" below
-
 if (!crypto) {
     crypto = require('crypto').webcrypto
 }
@@ -36,9 +34,9 @@ if (!fetch) {
     exports.SECONDS_PER_WEEK   =  7 * this.SECONDS_PER_DAY;
 
     exports.MILLIS_PER_SECOND = 1000;
-    exports.MILLIS_PER_MINUTE = 60 * this.MILLIS_PER_SECOND;
-    exports.MILLIS_PER_HOUR   = 60 * this.MILLIS_PER_MINUTE;
-    exports.MILLIS_PER_DAY    = 24 * this.MILLIS_PER_HOUR;
+    exports.MILLIS_PER_MINUTE =   60 * this.MILLIS_PER_SECOND;
+    exports.MILLIS_PER_HOUR   =   60 * this.MILLIS_PER_MINUTE;
+    exports.MILLIS_PER_DAY    =   24 * this.MILLIS_PER_HOUR;
 
     exports.log = function(s) {
         console.log(s);
@@ -124,7 +122,7 @@ if (!fetch) {
     // 's' is assumed to be a time string like '8:23 am'
     exports.getTimeFromString = function(s) {
         if (s == null){
-            util.log("* Time is null")
+            this.log("* Time is null")
             return null;
         }
         var cap = s.match(/([0-9]+):([0-9]+) ([ap]m)/);
@@ -143,7 +141,7 @@ if (!fetch) {
 
         var date = new Date();
         date.setHours(hour, min);
-        // util.log(" - date: " + date);
+        // this.log(" - date: " + date);
         return date;
     }
 
