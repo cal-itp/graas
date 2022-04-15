@@ -41,6 +41,8 @@ var readOnlyAccess = false;
 var elementWidth = 0;
 var blockDescriptions = {};
 var lastHoveredBlockID = null;
+var i;
+var item;
 
 function isMobile() {
     util.log("isMobile()");
@@ -138,8 +140,8 @@ function layout(blockIDList, vehicleIDList, assignments) {
     var xx = GAP;
     var yy = BLOCKS_VOFF;
 
-    for (var i=0; i<blockIDList.length; i++) {
-        var item = {
+    for (i=0; i<blockIDList.length; i++) {
+        item = {
             type: 'block',
             x: xx,
             y: yy,
@@ -174,8 +176,8 @@ function layout(blockIDList, vehicleIDList, assignments) {
         }
     }
 
-    for (var a of currentAssignments) {
-        deployedAssignments.push(a);
+    for (var assignment of currentAssignments) {
+        deployedAssignments.push(assignment);
     }
 
     deployedAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
@@ -188,10 +190,10 @@ function layout(blockIDList, vehicleIDList, assignments) {
     yy += 3 * BLOCK_HEIGHT;
     VEHICLES_VOFF = yy;
 
-    for (var i=0; i<vehicleIDList.length; i++) {
+    for (i=0; i<vehicleIDList.length; i++) {
         var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
 
-        var item = {
+        item = {
             type: 'vehicle',
             x: xx,
             y: yy,
@@ -257,19 +259,19 @@ function parseAgencyData(str) {
     util.log("parseAgencyData()");
     util.log("- str: " + str);
 
-    var id = null;
+    var aID = null;
     var pem = null;
 
     var i1 = str.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
     if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
-        id = str.substring(0, i1).trim();
+        aID = str.substring(0, i1).trim();
         pem = str.substring(i1);
     }
 
     return {
-        id: id,
+        id: aID,
         pem: pem
     };
 }
@@ -309,6 +311,8 @@ function handleKey(id) {
     util.log('handleKey()');
     util.log('- id: ' + id);
 
+    var dateStr;
+
     if (id === 'key-okay') {
         var p = document.getElementById('keyTextArea');
         var value = p.value.replace(/\n/g, "");
@@ -340,22 +344,22 @@ function handleKey(id) {
         util.log('- fromDate: ' + fromDate);
         util.log('- toDate  : ' + toDate);
 
-        for (var item of items) {
+        for (item of items) {
             if (item.type === 'block' && item.status === 'assigned') {
-                var id = item.label;
-                util.log('-- id: ' + id);
+                var itemID = item.label;
+                util.log('-- itemID: ' + itemID);
                 var vid = item.vehicle;
                 util.log('-- vid: ' + vid);
                 var block = blockMap[id];
                 //util.log('-- block: ' + JSON.stringify(block));
 
-                var data = {};
+                var blockDatum = {};
 
-                data['id'] = id;
-                data['vehicle_id'] = vid;
-                data['trips'] = block.trips;
+                blockDatum['id'] = itemID;
+                blockDatum['vehicle_id'] = vid;
+                blockDatum['trips'] = block.trips;
 
-                blockData.push(data);
+                blockData.push(blockDatum);
             }
         }
 
@@ -369,14 +373,14 @@ function handleKey(id) {
         handleDeploy(data);
     } else if (id === 'key-select-today') {
         fromDate = util.getMidnightDate();
-        var str = util.getYYYYMMDD(fromDate);
+        dateStr = util.getYYYYMMDD(fromDate);
         util.log('- str: ' + str);
 
         dismissModal();
         loadBlockData(str);
     } else if (id === 'key-select-tomorrow') {
         fromDate = util.nextDay(util.getMidnightDate());
-        var str = util.getYYYYMMDD(fromDate);
+        dateStr = util.getYYYYMMDD(fromDate);
         util.log('- str: ' + str);
 
         dismissModal();
@@ -584,11 +588,11 @@ async function loadBlockData(dateString) {
     var vidList = await getGithubData(agencyID, 'vehicle-ids.json');
     util.log('- vidList: ' + vidList);
 
-    var data = {
+    var agencyDate = {
         agency_id: agencyID,
         date: dateString
     };
-    var json = await util.getJSONResponse('/get-assignments', data, signatureKey);
+    var json = await util.getJSONResponse('/get-assignments', agencyDate, signatureKey);
     util.log('- json: ' + json);
     var assignments = json.assignments;
 
@@ -641,7 +645,7 @@ function handleCloseButtonPress() {
     var blockID = null;
 
     if (closeButtonData.item.type === 'vehicle') {
-        for (var item of items) {
+        for (item of items) {
             if (item.vehicle === closeButtonData.item.label) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.vehicle = null;
@@ -653,7 +657,7 @@ function handleCloseButtonPress() {
             }
         }
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].vehicleID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -665,7 +669,7 @@ function handleCloseButtonPress() {
     }
 
     if (closeButtonData.item.type === 'block') {
-        for (var item of items) {
+        for (item of items) {
             if (item.label === closeButtonData.item.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
@@ -676,7 +680,7 @@ function handleCloseButtonPress() {
             }
         }
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -698,7 +702,7 @@ function handleCloseButtonPress() {
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === blockID) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -753,7 +757,7 @@ function longPress(x, y) {
 
     if (pressItem.type === 'vehicle') {
         if (pressItem.status == 'assigned') {
-            for (var item of items) {
+            for (item of items) {
                 if (item.vehicle === pressItem.label) {
                     util.log('-- item: ' + JSON.stringify(item));
                     item.vehicle = null;
@@ -769,7 +773,7 @@ function longPress(x, y) {
 
         repaint();
     } else if (pressItem.type === 'block' && pressItem.status === 'assigned') {
-        for (var item of items) {
+        for (item of items) {
             if (item.label === pressItem.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
@@ -791,7 +795,7 @@ function longPress(x, y) {
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === blockID) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -840,7 +844,7 @@ function handleMouseDown(e) {
     util.log('- x: ' + x);
     util.log('- y: ' + y);
 
-    for (var item of items) {
+    for (item of items) {
         //log('- item: ' + JSON.stringify(item));
 
         if (item.type === 'vehicle' && item.status === 'active'
@@ -942,19 +946,20 @@ function handleMouseMove(e) {
 
     var x = e.x;
     var y = e.y;
+    var skirt;
+    var millis = (new Date).getTime();
 
     if (dragging && dragItem !== null) {
         //util.log('- x: ' + x);
         //util.log('- y: ' + y);
 
         //log('+ dragItem: ' + dragItem);
-        var millis = (new Date).getTime();
 
         if (millis - lastRefresh >= 30) {
             lastRefresh = millis;
             repaint();
 
-            for (var item of items) {
+            for (item of items) {
                 if (item.type === 'block' && item.status === 'unassigned'
                     && x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h)
                 {
@@ -964,7 +969,7 @@ function handleMouseMove(e) {
                     ctx.strokeStyle = '#c33';
                     var lw = ctx.lineWidth;
                     ctx.lineWidth = 4;
-                    var skirt = 10;
+                    skirt = 10;
                     ctx.strokeRect(item.x - skirt, item.y - skirt, item.w + 2 * skirt, item.h + 2 * skirt);
                     ctx.lineWidth = lw;
                     break;
@@ -980,14 +985,12 @@ function handleMouseMove(e) {
             drawWidget(dragItem, e.x - dragItem.w / divider, e.y - dragItem.h / divider);
         }
     } else {
-        var millis = (new Date).getTime();
-
         if (millis - lastRefresh >= 30) {
             lastRefresh = millis;
             var match = false;
-            var skirt = 7;
+            skirt = 7;
 
-            for (var item of items) {
+            for (item of items) {
                 if ((item.type === 'block' || item.type === 'vehicle') && item.status === 'assigned' && !readOnlyAccess
                     && x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
                 {
@@ -1010,7 +1013,7 @@ function handleMouseMove(e) {
                 closeButtonData.item = null;
             }
 
-            for (var item of items) {
+            for (item of items) {
                 const metrics = ctx. measureText(item.label);
 
                 if (x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
@@ -1105,7 +1108,7 @@ function getDisplayName(s) {
     var capitalize = true;
     var r = '';
 
-    for (var i=0; i<s.length; i++) {
+    for (i=0; i<s.length; i++) {
         var c = s.charAt(i);
 
         if (capitalize) {
@@ -1148,7 +1151,7 @@ function repaint() {
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
 
-    for (var item of items) {
+    for (item of items) {
         drawWidget(item);
     }
 }

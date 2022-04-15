@@ -17,6 +17,7 @@ var crypto = this.crypto
 var fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var p;
 
 if (!crypto) {
     crypto = require('crypto').webcrypto
@@ -42,7 +43,7 @@ if (!fetch) {
 
         if (typeof document !== 'undefined') {
             try {
-                var p = document.getElementById('console');
+                p = document.getElementById('console');
                 if (p) p.innerHTML += s + "<br/>";
             } catch(e){
                 console.log(e.message)
@@ -280,7 +281,7 @@ if (!fetch) {
             if (!response.ok) {
                 if (document) {
                     try {
-                        var p = document.getElementById('server-response');
+                        p = document.getElementById('server-response');
                         p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
                     } catch(e) {
                         console.log(e.message);
@@ -318,7 +319,7 @@ if (!fetch) {
             that.apiCall(msg, url, function(response) {
                 if (document) {
                     try {
-                        var p = document.getElementById('last-update');
+                        p = document.getElementById('last-update');
                         var now = new Date();
                         var hour = now.getHours();
                         var ampm = hour >= 12 ? "PM" : "AM";
@@ -330,7 +331,7 @@ if (!fetch) {
 
                         p.innerHTML = 'Last update: ' + time;
 
-                        var p = document.getElementById('server-response');
+                        p = document.getElementById('server-response');
                         p.innerHTML = 'Server response: ok';
                     } catch(e) {
                         console.log(e.message);
