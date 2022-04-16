@@ -95,7 +95,7 @@ public class TripListGenerator {
         RouteCollection routes = (RouteCollection)collections.get("routes");
         DirectionCollection directions = (DirectionCollection)collections.get("directions");
 
-        if(useDirection && directions.getSize() == 0){
+        if(useDirection && directions == null){
             customDirectionMap = createCustomDirectionMap();
         }
 
@@ -115,7 +115,7 @@ public class TripListGenerator {
             }
 
             if(useDirection){
-                if(directions.getSize() > 0){
+                if(directions != null){
                     Direction direction = directions.get(trip.getRouteID() + "-" + trip.getDirectionID());
                     String directionName = direction.getName();
                     name += " - " + directionName;

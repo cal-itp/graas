@@ -461,8 +461,10 @@ function handleTouchStart(e) {
     startTouchX = e.touches[0].clientX;
     startTouchY = e.touches[0].clientY;
 
-    longPressTimer = setInterval(longPress, 2000, startTouchX, startTouchY);
-    util.log('- longPressTimer: ' + longPressTimer);
+    if (!longPressTimer) {
+        longPressTimer = setInterval(longPress, 2000, startTouchX, startTouchY);
+        util.log('- longPressTimer: ' + longPressTimer);
+    }
 
     handleMouseDown({x: startTouchX, y: startTouchY})
 }
@@ -726,8 +728,10 @@ function longPress(x, y) {
     util.log('longPress()');
     util.log('- x: ' + x);
     util.log('- y: ' + y);
+    util.log('- longPressTimer: ' + longPressTimer);
 
     if (longPressTimer) {
+        util.log('+ clearing longPressTimer...');
         clearInterval(longPressTimer);
         longPressTimer = null;
     }

@@ -16,7 +16,7 @@ import java.util.Arrays;
 public class BulkBlockDataGenerator {
 
     /**
-     * Checks whether each agency has bulk assignment mode enabled, and generates block data for them if so.
+     * * Generates block data for a list of agencies
      * @param agencyIDList A list of agencyIDs
      * @param daysAhead How many days blocks should be generated for. A value of 0 will generate for only today, 1 will generate for today and tomorrow.
      */
