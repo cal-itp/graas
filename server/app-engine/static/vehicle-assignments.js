@@ -52,7 +52,7 @@ function isMobile() {
         return true;
     }
 
-    var result = navigator.userAgent.match(/Android/i)
+    let result = navigator.userAgent.match(/Android/i)
      || navigator.userAgent.match(/webOS/i)
      || navigator.userAgent.match(/iPhone/i)
      || navigator.userAgent.match(/iPad/i)
@@ -68,13 +68,13 @@ function showToast(text) {
     util.log("showToast()");
     util.log("- text: " + text);
 
-    var toastText = document.getElementById('toast-text');
+    let toastText = document.getElementById('toast-text');
     toastText.innerHTML = text;
 
     currentToast = document.getElementById('toast-container');
     currentToast.style.display = "block";
 
-    var that = this;
+    let that = this;
 
     timerID = setInterval(function() {
         util.log('toast callback');
@@ -110,7 +110,7 @@ function getAssignedVehicle(assignments, blockID) {
     util.log('- assignments: ' + assignments);
     util.log('- blockID: ' + blockID);
 
-    for (a of assignments) {
+    for (let a of assignments) {
         if (a.block_id === blockID) return a.vehicle_id;
     }
 
@@ -118,7 +118,7 @@ function getAssignedVehicle(assignments, blockID) {
 }
 
 function getAssignedBlock(assignments, vehicleID) {
-    for (a of assignments) {
+    for (let a of assignments) {
         if (a.vehicle_id === vehicleID) return a.block_id;
     }
 
@@ -134,12 +134,12 @@ function layout(blockIDList, vehicleIDList, assignments) {
     items = [];
 
     elementWidth = (window.innerWidth - (COLS + 1) * GAP) / COLS;
-    var bh = BLOCK_HEIGHT;
-    var xx = GAP;
-    var yy = BLOCKS_VOFF;
+    let bh = BLOCK_HEIGHT;
+    let xx = GAP;
+    let yy = BLOCKS_VOFF;
 
-    for (var i=0; i<blockIDList.length; i++) {
-        var item = {
+    for (let i=0; i<blockIDList.length; i++) {
+        let blockItem = {
             type: 'block',
             x: xx,
             y: yy,
@@ -150,13 +150,13 @@ function layout(blockIDList, vehicleIDList, assignments) {
             vehicle: null
         };
 
-        var vehicleID = getAssignedVehicle(assignments, blockIDList[i]);
+        let vehicleID = getAssignedVehicle(assignments, blockIDList[i]);
 
         if (vehicleID) {
-            item.status = 'assigned';
-            item.vehicle = vehicleID;
+            blockItem.status = 'assigned';
+            blockItem.vehicle = vehicleID;
 
-            var a = {
+            let a = {
                 blockID: blockIDList[i],
                 vehicleID: vehicleID
             };
@@ -164,7 +164,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             currentAssignments.push(a);
         }
 
-        items.push(item);
+        items.push(blockItem);
 
         xx += GAP + elementWidth;
 
@@ -174,8 +174,8 @@ function layout(blockIDList, vehicleIDList, assignments) {
         }
     }
 
-    for (var a of currentAssignments) {
-        deployedAssignments.push(a);
+    for (let assignment of currentAssignments) {
+        deployedAssignments.push(assignment);
     }
 
     deployedAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
@@ -188,10 +188,10 @@ function layout(blockIDList, vehicleIDList, assignments) {
     yy += 3 * BLOCK_HEIGHT;
     VEHICLES_VOFF = yy;
 
-    for (var i=0; i<vehicleIDList.length; i++) {
-        var blockID = getAssignedBlock(assignments, vehicleIDList[i]);
+    for (let i=0; i<vehicleIDList.length; i++) {
+        let blockID = getAssignedBlock(assignments, vehicleIDList[i]);
 
-        var item = {
+        let vehicleItem = {
             type: 'vehicle',
             x: xx,
             y: yy,
@@ -202,7 +202,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
             status: blockID ? 'assigned' : 'active'
         };
 
-        items.push(item);
+        items.push(vehicleItem);
 
         xx += GAP + elementWidth;
 
@@ -224,10 +224,10 @@ function initialize() {
     if (url.indexOf('show-assignments-only') >= 0) {
         readOnlyAccess = true;
 
-        var deployButton = document.getElementById('key-deploy');
+        let deployButton = document.getElementById('key-deploy');
         deployButton.style.display = 'none';
 
-        var text = document.getElementById('text-deployment-status');
+        let text = document.getElementById('text-deployment-status');
         text.style.display = 'none';
     }
 
@@ -236,7 +236,7 @@ function initialize() {
 
     repaint();
 
-    var str = localStorage.getItem("app-data") || "";
+    let str = localStorage.getItem("app-data") || "";
 
     if (!str) {
         if (!isMobile()) {
@@ -257,40 +257,40 @@ function parseAgencyData(str) {
     util.log("parseAgencyData()");
     util.log("- str: " + str);
 
-    var id = null;
-    var pem = null;
+    let aID = null;
+    let pem = null;
 
-    var i1 = str.indexOf(PEM_HEADER);
+    let i1 = str.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
     if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
-        id = str.substring(0, i1).trim();
+        aID = str.substring(0, i1).trim();
         pem = str.substring(i1);
     }
 
     return {
-        id: id,
+        id: aID,
         pem: pem
     };
 }
 
 async function handleDeploy(data) {
     handleModal('infiniteProgressModal');
-    var json = await util.getJSONResponse('/block-collection', data, signatureKey);
+    let json = await util.getJSONResponse('/block-collection', data, signatureKey);
     util.log('- json: ' + JSON.stringify(json));
     util.log('- json.status: ' + json);
 
-    var status = 'failed';
+    let status = 'failed';
     if (json && json.status) status = json.status;
 
-    var elem = document.getElementById('key-confirm-text');
+    let elem = document.getElementById('key-confirm-text');
     elem.innerHTML = 'Deploy status: ' + status;
 
     if (status === 'ok') {
         deployedAssignments = []
 
-        for (var ca of currentAssignments) {
-            var a = {
+        for (let ca of currentAssignments) {
+            let a = {
                 blockID: ca.blockID,
                 vehicleID: ca.vehicleID
             };
@@ -309,15 +309,17 @@ function handleKey(id) {
     util.log('handleKey()');
     util.log('- id: ' + id);
 
+    let dateStr;
+
     if (id === 'key-okay') {
-        var p = document.getElementById('keyTextArea');
-        var value = p.value.replace(/\n/g, "");
+        let p = document.getElementById('keyTextArea');
+        let value = p.value.replace(/\n/g, "");
         util.log("- value: " + value);
 
-        var i1 = value.indexOf(PEM_HEADER);
+        let i1 = value.indexOf(PEM_HEADER);
         util.log("- i1: " + i1);
 
-        var i2 = value.indexOf(PEM_FOOTER);
+        let i2 = value.indexOf(PEM_FOOTER);
         util.log("- i2: " + i2);
 
         if (i1 === 0) {
@@ -334,32 +336,32 @@ function handleKey(id) {
         localStorage.setItem('app-data', value);
         completeInitialization(parseAgencyData(value));
     } else if (id === 'key-deploy') {
-        var blockData = [];
-        var toDate = util.nextDay(fromDate);
+        let blockData = [];
+        let toDate = util.nextDay(fromDate);
 
         util.log('- fromDate: ' + fromDate);
         util.log('- toDate  : ' + toDate);
 
-        for (var item of items) {
+        for (let item of items) {
             if (item.type === 'block' && item.status === 'assigned') {
-                var id = item.label;
-                util.log('-- id: ' + id);
-                var vid = item.vehicle;
+                let itemID = item.label;
+                util.log('-- itemID: ' + itemID);
+                let vid = item.vehicle;
                 util.log('-- vid: ' + vid);
-                var block = blockMap[id];
+                let block = blockMap[itemID];
                 //util.log('-- block: ' + JSON.stringify(block));
 
-                var data = {};
+                let blockDatum = {};
 
-                data['id'] = id;
-                data['vehicle_id'] = vid;
-                data['trips'] = block.trips;
+                blockDatum['id'] = itemID;
+                blockDatum['vehicle_id'] = vid;
+                blockDatum['trips'] = block.trips;
 
-                blockData.push(data);
+                blockData.push(blockDatum);
             }
         }
 
-        var data = {
+        let data = {
             'agency_id': agencyID,
             'valid_date': util.getYYYYMMDD(fromDate),
             'blocks': blockData
@@ -369,18 +371,18 @@ function handleKey(id) {
         handleDeploy(data);
     } else if (id === 'key-select-today') {
         fromDate = util.getMidnightDate();
-        var str = util.getYYYYMMDD(fromDate);
-        util.log('- str: ' + str);
+        dateStr = util.getYYYYMMDD(fromDate);
+        util.log('- dateStr: ' + dateStr);
 
         dismissModal();
-        loadBlockData(str);
+        loadBlockData(dateStr);
     } else if (id === 'key-select-tomorrow') {
         fromDate = util.nextDay(util.getMidnightDate());
-        var str = util.getYYYYMMDD(fromDate);
-        util.log('- str: ' + str);
+        dateStr = util.getYYYYMMDD(fromDate);
+        util.log('- dateStr: ' + dateStr);
 
         dismissModal();
-        loadBlockData(str);
+        loadBlockData(dateStr);
     } else if (id === 'key-confirm-okay') {
         dismissModal();
     }
@@ -391,21 +393,21 @@ async function completeInitialization(agencyData) {
     util.log("- agencyID: " + agencyID);
     agencyName = getDisplayName(agencyID);
 
-    var pem = agencyData.pem;
+    let pem = agencyData.pem;
 
-    var i1 = pem.indexOf(PEM_HEADER);
+    let i1 = pem.indexOf(PEM_HEADER);
     util.log("- i1: " + i1);
 
-    var i2 = pem.indexOf(PEM_FOOTER);
+    let i2 = pem.indexOf(PEM_FOOTER);
     util.log("- i2: " + i2);
 
-    var b64 = pem.substring(i1 + PEM_HEADER.length, i2);
+    let b64 = pem.substring(i1 + PEM_HEADER.length, i2);
     // util.log("- b64: " + b64);
 
     keyType = "ECDSA";
     keyLength = 256;
 
-    var key = atob(b64);
+    let key = atob(b64);
     // util.log("- key.length: " + key.length);
 
     const binaryDer = util.str2ab(key);
@@ -531,8 +533,8 @@ function handleUnload(e) {
 function createFriendlyBlockDescription(block) {
     const map = {};
 
-    for (var trip of block.trips) {
-        var times = map[trip.headsign];
+    for (let trip of block.trips) {
+        let times = map[trip.headsign];
 
         if (!times) {
             times = '@';
@@ -549,7 +551,7 @@ function createFriendlyBlockDescription(block) {
         map[trip.headsign] = times;
     }
 
-    var desc = `<b>BLOCK ${block.id}:</b><br><hr><br>`;
+    let desc = `<b>BLOCK ${block.id}:</b><br><hr><br>`;
 
     for (const [key, value] of Object.entries(map)) {
       desc += `- <b>${key}</b> ${value} <br><br>`;
@@ -566,14 +568,14 @@ async function loadBlockData(dateString) {
     util.log('- dateString: ' + dateString);
 
     handleModal('infiniteProgressModal');
-    var name = `blocks-${dateString}.json`;
-    //util.log('- name: ' + name);
-    var blocks = await getGithubData(agencyID, name);
+    let name = `blocks-${dateString}.json`;
+    // util.log('- name: ' + name);
+    let blocks = await getGithubData(agencyID, name);
     //util.log("- blocks: " + JSON.stringify(blocks));
 
-    var bidList = [];
+    let bidList = [];
 
-    for (var block of blocks) {
+    for (let block of blocks) {
         createFriendlyBlockDescription(block);
         bidList.push(block.id);
         blockMap[block.id] = block;
@@ -581,42 +583,42 @@ async function loadBlockData(dateString) {
 
     util.log('- bidList: ' + bidList);
 
-    var vidList = await getGithubData(agencyID, 'vehicle-ids.json');
+    let vidList = await getGithubData(agencyID, 'vehicle-ids.json');
     util.log('- vidList: ' + vidList);
 
-    var data = {
+    let agencyDate = {
         agency_id: agencyID,
         date: dateString
     };
-    var json = await util.getJSONResponse('/get-assignments', data, signatureKey);
+    let json = await util.getJSONResponse('/get-assignments', agencyDate, signatureKey);
     util.log('- json: ' + json);
-    var assignments = json.assignments;
+    let assignments = json.assignments;
 
     layout(bidList, vidList, assignments);
 
     dismissModal();
-    var deployButton = document.getElementById('key-deploy');
+    let deployButton = document.getElementById('key-deploy');
     deployButton.style.display = readOnlyAccess ? 'none' : 'inline-block';
 }
 
 function getGithubData(agencyID, filename) {
     //util.log('getGithubData()');
 
-    var arg = Math.round(Math.random() * 100000)
+    let arg = Math.round(Math.random() * 100000)
     //util.log("- arg: " + arg);
 
 
     // ### FIXME: replace with GH repo base URL, still using bucket URL for
     // now to break must-test-before-checkin, can't-test-before-checkin catch 22
     //var url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
-    var url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
+    let url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
     return util.getJSONResponse(url);
 }
 
 function updateDeploymentIndicator() {
     util.log('updateDeploymentIndicator()');
-    var button = document.getElementById('key-deploy');
-    var text = document.getElementById('text-deployment-status');
+    let button = document.getElementById('key-deploy');
+    let text = document.getElementById('text-deployment-status');
 
     currentAssignments.sort((a, b) => {return a.blockID.localeCompare(b.blockID);});
 
@@ -638,10 +640,10 @@ function handleCloseButtonPress() {
     util.log('handleCloseButtonPress()');
     util.log('- closeButtonData.item: ' + JSON.stringify(closeButtonData.item));
 
-    var blockID = null;
+    let blockID = null;
 
     if (closeButtonData.item.type === 'vehicle') {
-        for (var item of items) {
+        for (let item of items) {
             if (item.vehicle === closeButtonData.item.label) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.vehicle = null;
@@ -653,7 +655,7 @@ function handleCloseButtonPress() {
             }
         }
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (let i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].vehicleID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -665,7 +667,7 @@ function handleCloseButtonPress() {
     }
 
     if (closeButtonData.item.type === 'block') {
-        for (var item of items) {
+        for (let item of items) {
             if (item.label === closeButtonData.item.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
@@ -676,7 +678,7 @@ function handleCloseButtonPress() {
             }
         }
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (let i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === closeButtonData.item.label) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -698,7 +700,7 @@ function handleCloseButtonPress() {
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (let i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === blockID) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -715,7 +717,7 @@ function playSound(url) {
 }
 
 function getItemAt(x, y) {
-    for (item of items) {
+    for (let item of items) {
         if (x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h) {
             return item;
         }
@@ -736,7 +738,7 @@ function longPress(x, y) {
         longPressTimer = null;
     }
 
-    var pressItem = getItemAt(x, y);
+    let pressItem = getItemAt(x, y);
     util.log('- pressItem: ' + pressItem);
     if (!pressItem) return;
 
@@ -749,11 +751,11 @@ function longPress(x, y) {
 
     //playSound('vibrate.mp3');
 
-    var blockID = null;
+    let blockID = null;
 
     if (pressItem.type === 'vehicle') {
         if (pressItem.status == 'assigned') {
-            for (var item of items) {
+            for (let item of items) {
                 if (item.vehicle === pressItem.label) {
                     util.log('-- item: ' + JSON.stringify(item));
                     item.vehicle = null;
@@ -769,7 +771,7 @@ function longPress(x, y) {
 
         repaint();
     } else if (pressItem.type === 'block' && pressItem.status === 'assigned') {
-        for (var item of items) {
+        for (let item of items) {
             if (item.label === pressItem.vehicle) {
                 util.log('-- item: ' + JSON.stringify(item));
                 item.status = 'active';
@@ -791,7 +793,7 @@ function longPress(x, y) {
     if (blockID) {
         showToast(`unassigned block '${blockID}'`);
 
-        for (var i=currentAssignments.length-1; i>=0; i--) {
+        for (let i=currentAssignments.length-1; i>=0; i--) {
             if (currentAssignments[i].blockID === blockID) {
                 currentAssignments.splice(i, 1);
                 break;
@@ -805,7 +807,7 @@ function longPress(x, y) {
 function descriptionOn(desc) {
     if (!desc) return;
 
-    var elem = document.getElementById('desctext');
+    let elem = document.getElementById('desctext');
     elem.innerHTML = desc;
 
     document.getElementById("descoverlay").style.display = "block";
@@ -821,8 +823,8 @@ function handleMouseDown(e) {
 
     if (readOnlyAccess) return;
 
-    var x = e.x;
-    var y = e.y;
+    let x = e.x;
+    let y = e.y;
 
     util.log('- x: ' + x);
     util.log('- y: ' + y);
@@ -840,7 +842,7 @@ function handleMouseDown(e) {
     util.log('- x: ' + x);
     util.log('- y: ' + y);
 
-    for (var item of items) {
+    for (let item of items) {
         //log('- item: ' + JSON.stringify(item));
 
         if (item.type === 'vehicle' && item.status === 'active'
@@ -873,7 +875,7 @@ function handleMouseUp(e) {
         dragReceiver.vehicle = dragItem.label;
         dragReceiver.status = 'assigned';
 
-        var a = {
+        let a = {
             blockID: dragReceiver.label,
             vehicleID: dragItem.label
         };
@@ -897,17 +899,17 @@ function drawCloseButton(item) {
     //util.log('drawCloseButton()');
     repaint();
 
-    var xx = item.x + item.w;
-    var yy = item.y + (item.type === 'block' ? item.h / 2 : 0);
-    var radius = 10;
-    var len = Math.floor(radius * .4);
+    let xx = item.x + item.w;
+    let yy = item.y + (item.type === 'block' ? item.h / 2 : 0);
+    let radius = 10;
+    let len = Math.floor(radius * .4);
 
     closeButtonData.x = xx - radius;
     closeButtonData.y = yy - radius;
     closeButtonData.w = 2 * radius;
     closeButtonData.h = 2 * radius;
 
-    var savedShadowBlur = ctx.shadowBlur;
+    let savedShadowBlur = ctx.shadowBlur;
     //ctx.shadowBlur = SHADOW_BLUR;
 
     ctx.fillStyle = 'black';
@@ -933,28 +935,28 @@ function drawFullLabel(label) {
     //util.log('drawFullLabel()');
     //util.log('- label: ' + label);
 
-    var elem = document.getElementById('item-label');
+    let elem = document.getElementById('item-label');
     elem.innerHTML = 'ID: ' + label;
 }
 
 function handleMouseMove(e) {
     //util.log('handleMouseMove()');
 
-    var x = e.x;
-    var y = e.y;
+    let x = e.x;
+    let y = e.y;
+    let millis = (new Date).getTime();
 
     if (dragging && dragItem !== null) {
         //util.log('- x: ' + x);
         //util.log('- y: ' + y);
 
         //log('+ dragItem: ' + dragItem);
-        var millis = (new Date).getTime();
 
         if (millis - lastRefresh >= 30) {
             lastRefresh = millis;
             repaint();
 
-            for (var item of items) {
+            for (let item of items) {
                 if (item.type === 'block' && item.status === 'unassigned'
                     && x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h)
                 {
@@ -962,9 +964,9 @@ function handleMouseMove(e) {
                     dragReceiver = item;
 
                     ctx.strokeStyle = '#c33';
-                    var lw = ctx.lineWidth;
+                    let lw = ctx.lineWidth;
                     ctx.lineWidth = 4;
-                    var skirt = 10;
+                    let skirt = 10;
                     ctx.strokeRect(item.x - skirt, item.y - skirt, item.w + 2 * skirt, item.h + 2 * skirt);
                     ctx.lineWidth = lw;
                     break;
@@ -976,18 +978,16 @@ function handleMouseMove(e) {
             //ctx.fillStyle = 'white';
             //ctx.fillText(dragItem.label, e.x, e.y);
 
-            var divider = navigator.maxTouchPoints > 0 ? 1.5 : 2
+            let divider = navigator.maxTouchPoints > 0 ? 1.5 : 2
             drawWidget(dragItem, e.x - dragItem.w / divider, e.y - dragItem.h / divider);
         }
     } else {
-        var millis = (new Date).getTime();
-
         if (millis - lastRefresh >= 30) {
             lastRefresh = millis;
-            var match = false;
-            var skirt = 7;
+            let match = false;
+            let skirt = 7;
 
-            for (var item of items) {
+            for (let item of items) {
                 if ((item.type === 'block' || item.type === 'vehicle') && item.status === 'assigned' && !readOnlyAccess
                     && x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
                 {
@@ -1010,7 +1010,7 @@ function handleMouseMove(e) {
                 closeButtonData.item = null;
             }
 
-            for (var item of items) {
+            for (let item of items) {
                 const metrics = ctx. measureText(item.label);
 
                 if (x >= item.x - skirt && x < item.x + item.w  + skirt && y >= item.y - skirt && y < item.y + item.h + skirt)
@@ -1027,7 +1027,7 @@ function handleMouseMove(e) {
 }
 
 function fillRoundedRect(ctx, x, y, width, height, radius) {
-    var savedShadowBlur = ctx.shadowBlur;
+    let savedShadowBlur = ctx.shadowBlur;
     ctx.shadowColor = 'gray';
     ctx.shadowBlur = SHADOW_BLUR;
 
@@ -1050,10 +1050,10 @@ function fillRoundedRect(ctx, x, y, width, height, radius) {
 
 
 function drawWidget(item, xx = -1, yy = -1) {
-    var color = '#aab';
+    let color = '#aab';
 
-    var x = xx < 0 ? item.x : xx;
-    var y = yy < 0 ? item.y : yy;
+    let x = xx < 0 ? item.x : xx;
+    let y = yy < 0 ? item.y : yy;
 
     if (item.status === 'active') {
         color = '#c33';
@@ -1073,8 +1073,8 @@ function drawWidget(item, xx = -1, yy = -1) {
 
     ctx.textAlign = 'center';
 
-    var s = item.label;
-    var metrics = ctx. measureText(s);
+    let s = item.label;
+    let metrics = ctx.measureText(s);
 
     if (metrics.width > elementWidth - 10 && s.length > 1) {
         s += '…';
@@ -1102,11 +1102,11 @@ function drawWidget(item, xx = -1, yy = -1) {
 }
 
 function getDisplayName(s) {
-    var capitalize = true;
-    var r = '';
+    let capitalize = true;
+    let r = '';
 
-    for (var i=0; i<s.length; i++) {
-        var c = s.charAt(i);
+    for (let i=0; i<s.length; i++) {
+        let c = s.charAt(i);
 
         if (capitalize) {
             c = c.toUpperCase();
@@ -1148,7 +1148,7 @@ function repaint() {
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
 
-    for (var item of items) {
+    for (let item of items) {
         drawWidget(item);
     }
 }
