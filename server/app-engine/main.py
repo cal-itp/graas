@@ -122,6 +122,7 @@ def vehicle_positions():
         return 'No agency given', 400
 
     feed = gtfsrt.get_position_feed(
+        util.datastore_client,
         agency
     )
 

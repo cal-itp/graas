@@ -269,6 +269,8 @@ if (!fetch) {
         var body = JSON.stringify(data);
         // this.log("- body: " + body);
 
+        let that = this;
+
         this.timedFetch(url, {
             method: 'POST',
             headers: {
@@ -286,13 +288,13 @@ if (!fetch) {
                         console.log(e.message);
                     }
                 }
-                this.log('server response: ' + response.status + ' ' + response.statusText);
+                that.log('server response: ' + response.status + ' ' + response.statusText);
             } else {
                 response.json().then(callback);
             }
         })
         .catch((error) => {
-            this.log('*** fetch() error: ' + error);
+            that.log('*** fetch() error: ' + error);
         });
     };
 

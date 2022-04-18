@@ -6,6 +6,10 @@ import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.net.URL;
 import java.net.InetAddress;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +17,13 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.List;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedHeader;
@@ -136,7 +147,7 @@ public class MonitorPositionUpdates {
     }
 
     private static void usage() {
-        System.err.println("usage: vpos [-raw] [-help] {-url <url> | -id <id> -lookup-file <lookup-file>}");
+        System.err.println("usage: MonitorPositionUpdates [-raw] [-help] {-url <url> | -id <id> -lookup-file <lookup-file>}");
         System.exit(0);
     }
 
@@ -144,6 +155,48 @@ public class MonitorPositionUpdates {
         String host = url.getHost();
         InetAddress address = InetAddress.getByName(host);
         return address.getHostAddress();
+    }
+
+    private static void disableSSLChecking() {
+        TrustManager[] trustAllCerts = new TrustManager[] {
+            new X509TrustManager() {
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                public void checkClientTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
+                }
+
+                public void checkServerTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
+                }
+            }
+        };
+
+        SSLContext sc=null;
+
+        try {
+            sc = SSLContext.getInstance("SSL");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+        HostnameVerifier validHosts = new HostnameVerifier() {
+            public boolean verify(String arg0, SSLSession arg1) {
+                return true;
+            }
+        };
+
+        HttpsURLConnection.setDefaultHostnameVerifier(validHosts);
     }
 
     public static void main(String[] arg) throws Exception {
@@ -206,6 +259,16 @@ public class MonitorPositionUpdates {
         }
 
         if (raw) {
+            String host = url.getHost();
+
+            if (host.equals("127.0.0.1") || host.equals("localhost")) {
+                // if we're connecting to localhost, chances
+                // are the cert will be self-signed, which won't
+                // go over well with any checks
+
+                disableSSLChecking();
+            }
+
             try (InputStream is = url.openStream()) {
                 dumpRawFeed(FeedMessage.parseFrom(is), id != null ? id : url.toString());
             }

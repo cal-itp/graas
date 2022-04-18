@@ -30,7 +30,3 @@ indexes:
   - name: timestamp
     direction: desc
 
-
-- kind: current-position
-  properties:
-  - name: agency-id

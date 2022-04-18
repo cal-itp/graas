@@ -208,10 +208,11 @@ def get_alert_feed(datastore_client, agency):
 
     return feed.SerializeToString()
 
-def get_position_feed(agency):
+def get_position_feed(datastore_client, agency):
     """Assemble position feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
 
     Args:
+        datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
 
     Returns:
@@ -219,7 +220,7 @@ def get_position_feed(agency):
 
     """
     name = agency + '-pos-feed'
-    pos_feed = cache.get(name, None)
+    pos_feed = cache.get(name)
 
     if pos_feed is None:
         header = gtfs_realtime_pb2.FeedHeader()
@@ -233,6 +234,7 @@ def get_position_feed(agency):
         query.add_filter('agency-id', '=', agency)
 
         results = list(query.fetch())
+        print(f'- results: {results}')
 
         for pos in results:
             vts = int(pos['timestamp'])
@@ -243,7 +245,7 @@ def get_position_feed(agency):
                 datastore_client.delete(pos.key)
             else:
                 feed.entity.append(make_position(
-                    id,
+                    pos['vehicle-id'],
                     float(pos['lat']),
                     float(pos['long']),
                     float(pos['heading']),
@@ -606,7 +608,7 @@ def handle_pos_update(datastore_client, data):
         query = datastore_client.query(kind='current-position')
         query.add_filter('agency-id', '=', agencyID)
         query.add_filter('vehicle-id', '=', vehicleID)
-        query.order = ['-time_stamp']
+        query.order = ['-timestamp']
 
         results = list(query.fetch())
 
@@ -618,7 +620,7 @@ def handle_pos_update(datastore_client, data):
             entity_key = entity.key
         else:
             entity_key_cache.add(name, results[0].key)
-            entity_key = entity.key
+            entity_key = results[0].key
 
     entity = datastore_client.get(entity_key)
 
