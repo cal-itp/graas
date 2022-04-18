@@ -85,15 +85,15 @@ function toRadians(degrees) {
 
 // return distance in feet between to lat/long pairs
 function getHaversineDistance(lat1, lon1, lat2, lon2) {
-    let phi1 = toRadians(lat1);
-    let phi2 = toRadians(lat2);
-    let deltaPhi = toRadians(lat2 - lat1);
-    let deltaLam = toRadians(lon2 - lon1);
+    const phi1 = toRadians(lat1);
+    const phi2 = toRadians(lat2);
+    const deltaPhi = toRadians(lat2 - lat1);
+    const deltaLam = toRadians(lon2 - lon1);
 
-    let a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
+    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
         + Math.cos(phi1) * Math.cos(phi2)
         * Math.sin(deltaLam / 2) * Math.sin(deltaLam / 2);
-    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return EARTH_RADIUS_IN_FEET * c;
 }
 
@@ -473,7 +473,7 @@ function getCookie(name) {
     const cookie = document.cookie;
     if (!cookie) return null;
 
-    let list = cookie.split('; ');
+    const list = cookie.split('; ');
 
     for (let i=0; i<list.length; i++) {
         if (list[i].startsWith(name + '=')) {
@@ -590,15 +590,15 @@ function handleEvent(e) {
 }
 
 function getRewriteArgs() {
-    let s = window.location.search;
-    let arg = s.split(/[&\?]/);
+    const s = window.location.search;
+    const arg = s.split(/[&\?]/);
 
     for (let a of arg) {
         if (!a) continue;
 
-        let t = a.split('=');
-        let key = t[0];
-        let value = t[1];
+        const t = a.split('=');
+        const key = t[0];
+        const value = t[1];
 
         util.log(`- ${key}: ${value}`);
 
@@ -743,21 +743,20 @@ function positionCallback() {
 function handleGPSUpdate(position) {
     util.log('handleGPSUpdate()');
     let uuid = getUUID();
+    let lat = 0;
+    let long = 0;
+    let accuracy = 0;
+    let posTimestamp = 0;
+    let speed = 0;
+    let heading = 0;
 
     if (position) {
-        let lat = position.coords.latitude;
-        let long = position.coords.longitude;
-        let accuracy = position.coords.accuracy;
-        let posTimestamp = Math.round(position.timestamp / 1000);
-        let speed = position.coords.speed;
-        let heading = position.coords.heading;
-    } else {
-        let lat = 0;
-        let long = 0;
-        let accuracy = 0;
-        let posTimestamp = 0;
-        let speed = 0;
-        let heading = 0;
+        lat = position.coords.latitude;
+        long = position.coords.longitude;
+        accuracy = position.coords.accuracy;
+        posTimestamp = Math.round(position.timestamp / 1000);
+        speed = position.coords.speed;
+        heading = position.coords.heading;
     }
 
     let timestamp = Math.floor(Date.now() / 1000);
@@ -839,7 +838,7 @@ function initializeCallback(agencyData) {
     let key = atob(b64);
     // util.log("- key.length: " + key.length);
 
-    let binaryDer = util.str2ab(key);
+    const binaryDer = util.str2ab(key);
 
     crypto.subtle.importKey(
         "pkcs8",
@@ -983,25 +982,25 @@ function loadTrips() {
         // util.log(`- trips.length: ${trips.length}`);
         if (Array.isArray(trips)) {
             // util.log(`-- trips[i]: ${trips[i]}`);
-            let tripInfo = trips[i];
+            const tripInfo = trips[i];
             //util.log(`-- value: ${value}`);
 
             if (mode === 'vanilla' && isObject(tripInfo)) {
-                let time = getTimeFromName(tripInfo["trip_name"]);
+                const time = getTimeFromName(tripInfo["trip_name"]);
                 //util.log(`- time: ${time}`);
-                let dow = util.getDayOfWeek();
+                const dow = util.getDayOfWeek();
                 //util.log(`- dow: ${dow}`);
-                let date = util.getTodayYYYYMMDD();
+                const date = util.getTodayYYYYMMDD();
                 //util.log(`- date: ${date}`);
-                let lat = tripInfo.departure_pos.lat;
+                const lat = tripInfo.departure_pos.lat;
                 // util.log(`- lat: ${lat}`);
-                let lon = tripInfo.departure_pos.long;
+                const lon = tripInfo.departure_pos.long;
                 // util.log(`- lon: ${lon}`);
 
-                let timeDelta = util.getTimeDelta(time);
+                const timeDelta = util.getTimeDelta(time);
                 // util.log(`- timeDelta: ${timeDelta}`);
 
-                let distance = getHaversineDistance(lat, lon, startLat, startLon);
+                const distance = getHaversineDistance(lat, lon, startLat, startLon);
                 // util.log(`- distance: ${distance}`);
                 let cal = 0;
                 if (tripInfo.calendar != null) {
@@ -1112,7 +1111,7 @@ function populateTripList(tripIDMap = tripIDLookup) {
     clearSelectOptions(p);
     addSelectOption(p, TRIP_SELECT_DROPDOWN_TEXT, true);
 
-    for (let [key, value] of Object.entries(tripIDMap)) {
+    for (const [key, value] of Object.entries(tripIDMap)) {
         addSelectOption(p, key, !value);
     }
 

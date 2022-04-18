@@ -147,15 +147,15 @@ if (!fetch) {
     exports.getHMForSeconds = function(daySeconds, includeAMPM) {
         let hour = Math.floor(daySeconds / this.SECONDS_PER_HOUR);
         daySeconds -= hour * this.SECONDS_PER_HOUR;
-        let min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
+        const min = Math.floor(daySeconds / this.SECONDS_PER_MINUTE);
 
-        let amPm = hour >= 12 ? ' pm' : ' am';
+        const amPm = hour >= 12 ? ' pm' : ' am';
 
         if (hour == 0) hour = 12;
         else if (hour > 12) hour -= 12;
 
-        let ms = ('' + min).padStart(2, '0');
-        let aps = includeAMPM ? amPm : '';
+        const ms = ('' + min).padStart(2, '0');
+        const aps = includeAMPM ? amPm : '';
         return `${hour}:${ms}${aps}`
     }
 
@@ -198,8 +198,8 @@ if (!fetch) {
     };
 
     exports.str2ab = function(str) {
-        let buf = new ArrayBuffer(str.length);
-        let bufView = new Uint8Array(buf);
+        const buf = new ArrayBuffer(str.length);
+        const bufView = new Uint8Array(buf);
 
         for (let i = 0, strLen = str.length; i < strLen; i++) {
             bufView[i] = str.charCodeAt(i);
