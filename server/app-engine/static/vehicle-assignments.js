@@ -553,7 +553,7 @@ function createFriendlyBlockDescription(block) {
 
     let desc = `<b>BLOCK ${block.id}:</b><br><hr><br>`;
 
-    for (let [key, value] of Object.entries(map)) {
+    for (const [key, value] of Object.entries(map)) {
       desc += `- <b>${key}</b> ${value} <br><br>`;
     }
 
