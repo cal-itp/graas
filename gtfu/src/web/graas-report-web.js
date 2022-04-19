@@ -45,6 +45,8 @@ var isZoomedIn = false;
 var translateOffsetY;
 var translateOffsetX;
 
+var lastClick = null;
+
 var font_size = 20;
 const bucketURL = "https://storage.googleapis.com/graas-resources"
 const font = "Arial";
@@ -224,6 +226,11 @@ function load(){
 
     document.body.addEventListener('click', function(event) {
 
+        clickTime = new Date().getTime();
+        console.log("clickTime: " + clickTime);
+        console.log("lastClick: " + lastClick);
+        lastClick = clickTime;
+
         if (event.shiftKey && isZoomedIn) {
             zoomOut();
             return;
@@ -234,6 +241,7 @@ function load(){
         scrollBottom = scrollTop + windowHeight;        // Bottom of current map
 
         for (var i = 0; i < trips.length; i++){
+            var searchX = event.pageX;
             var searchY = event.pageY;
             var searchObject;
 
@@ -247,8 +255,16 @@ function load(){
                 searchY -=timelineScrollTop;
                 searchObject = trips[i].timeline;
             }
-            if (objectContainsPoint(searchObject, event.pageX, searchY)){
+            if (isZoomedIn){
+                searchX += translateOffsetX;
+                searchX /= 2;
+                searchY /= 2;
+            }
+
+            if (objectContainsPoint(searchObject, searchX, searchY)){
+                console.log("Found trip: " + trips[i].trip_name);
                 if (event.shiftKey && !isZoomedIn) {
+                    console.log("Zooming into this trip...");
                     zoomTo(trips[i]);
                 }
                 if(mostRecentAnimation === trips[i]){
@@ -256,8 +272,8 @@ function load(){
                     return
                 }
                 else{
-                    drawReportBackground();
-                    drawReportTripsExcept(trips[i]);
+                    console.log("Drawing background, metadata, etc...");
+                    drawReportExcept(trips[i]);
                     drawMetadata(trips[i]);
                     selectTrip(mapCtx, trips[i].map);
                     selectTrip(timelineCtx, trips[i].timeline);
@@ -268,7 +284,7 @@ function load(){
                 }
             }
         }
-        drawReport();
+        drawReportExcept(mostRecentAnimation);
 
     });
 }
@@ -282,52 +298,49 @@ function objectContainsPoint(object, x, y){
 
 function zoomTo(trip){
     console.log("zooming in!");
-    if((trip.map.x + trip.map.width) * 2 > canvasWidth){
-        mapCtx.translate(-trip.map.x, 0);
+    let gridNum = Math.round(trip.map.x / trip.map.width);
+    console.log("gridNum: " + gridNum);
+    if(gridNum === 0){
+        translateOffsetX = 0;
+    } else if( gridNum <= 2){
+        translateOffsetX = (trip.map.width * 2);
+    } else {
+        translateOffsetX = (trip.map.width * 4);
     }
+
+    mapCtx.translate(-translateOffsetX, 0);
+
+    console.log("translateOffsetX: " + translateOffsetX);
     mapCtx.scale(2,2);
     isZoomedIn = true;
-    drawReport();
+    drawReportExcept(trip);
 }
 
 function zoomOut(){
     console.log("zooming out!");
-    mapCtx.scale(.5,.5);
+    console.log("translateOffsetX: " + translateOffsetX);
+    mapCtx.scale(.5, .5);
+    mapCtx.translate(translateOffsetX, 0);
     isZoomedIn = false;
-    drawReport();
-}
-
-function changeZoom(x, y){
-    if(!isZoomedIn){
-        console.log("Zooming in...");
-        if(x < canvasWidth / 2){
-            console.log("tripMapWidth: " + tripMapWidth);
-            console.log("x: " + x);
-            console.log("x - tripMapWidth: " + (x - tripMapWidth));
-            translateOffsetX = -Math.max(x - tripMapWidth / 2, 0);
-        }
-        else{
-            translateOffsetX = Math.min(x - tripMapWidth / 2, canvasWidth - tripMapWidth);
-        }
-        mapCtx.translate(translateOffsetX, 0);
-        mapCtx.scale(2,2);
-    } else{
-        console.log("Zooming out...");
-        mapCtx.scale(.5,.5);
-        mapCtx.translate(-translateOffsetX, 0);
-    }
-    isZoomedIn = !isZoomedIn;
+    mostRecentAnimation = null;
     drawReport();
 }
 
 function drawReport(){
+    console.log("Drawing report...");
+    drawReportExcept(null);
+}
+
+function drawReportExcept(trip){
+    if(trip !== null){
+        console.log("...except for trip " + trip.trip_name);
+    }
     console.log("isZoomedIn: " + isZoomedIn);
     drawReportBackground();
-    drawReportTrips();
+    drawReportTripsExcept(trip);
 }
 
 function drawReportBackground(){
-    console.log("Drawing map...");
     timelineCtx.drawImage(img, 0, 0, imageWidth, timelineHeight, 0, 0, canvasWidth, timelineCanvasHeight);
     // Clear map background to account for zooming in/out
     mapCtx.clearRect(0, timelineHeight, imageWidth, mapHeight);
@@ -348,10 +361,6 @@ function drawReportTripsExcept(trip){
             drawPoint(mapX + trips[i].points[j].x, mapY + trips[i].points[j].y, pointSize);
         }
     }
-}
-
-function drawReportTrips(){
-    drawReportTripsExcept(null)
 }
 
 function animateTrip(trip, indexIterator, secsIterator){
@@ -466,7 +475,7 @@ function selectTrip(ctx, object){
     ctx.beginPath();
     ctx.lineWidth = 4;
     ctx.strokeStyle = "green";
-    ctx.rect(object.x, object.y, object.width, object.height);
+    ctx.rect(object.x, object.y, object.width, object.height + 1);
     ctx.stroke();
 }
 
