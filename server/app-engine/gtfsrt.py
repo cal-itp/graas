@@ -87,10 +87,10 @@ def make_alert(id, item):
         alert.active_period.append(range)
 
     if 'cause' in item:
-        alert.cause = cause_map[item['cause']]
+        alert.cause = cause_map.get(item['cause'], None)
 
     if 'effect' in item:
-        alert.effect = effect_map[item['effect']]
+        alert.effect = effect_map.get(item['effect'], None)
 
     if 'header' in item:
         alert.header_text.CopyFrom(make_translated_string(item['header']))
@@ -182,31 +182,37 @@ def get_alert_feed(datastore_client, agency):
     print('get_alert_feed')
     print('- agency: ' + agency)
 
-    purge_old_alerts(datastore_client)
-    now = util.get_epoch_seconds()
+    name = agency + '-alert-feed'
+    alert_feed = cache.get(name)
 
-    query = datastore_client.query(kind='alert')
-    query.add_filter('agency_key', '=', agency)
-    query.order = ['-time_stamp']
+    if alert_feed is None:
+        purge_old_alerts(datastore_client)
+        now = util.get_epoch_seconds()
 
-    results = list(query.fetch(limit=20))
+        query = datastore_client.query(kind='alert')
+        query.add_filter('agency_key', '=', agency)
+        query.order = ['-time_stamp']
 
-    header = gtfs_realtime_pb2.FeedHeader()
-    header.gtfs_realtime_version = '2.0'
-    header.timestamp = now
+        results = list(query.fetch(limit=20))
 
-    feed = gtfs_realtime_pb2.FeedMessage()
-    feed.header.CopyFrom(header)
+        header = gtfs_realtime_pb2.FeedHeader()
+        header.gtfs_realtime_version = '2.0'
+        header.timestamp = now
 
-    count = 1
+        feed = gtfs_realtime_pb2.FeedMessage()
+        feed.header.CopyFrom(header)
 
-    for item in results:
-        if alert_is_current(item):
-            print('-- ' + str(item))
-            feed.entity.append(make_alert(count, item))
-            count += 1
+        count = 1
 
-    return feed.SerializeToString()
+        for item in results:
+            if alert_is_current(item):
+                print('-- ' + str(item))
+                feed.entity.append(make_alert(count, item))
+                count += 1
+
+        alert_feed = feed.SerializeToString()
+        cache.add(name, alert_feed, 60)
+    return alert_feed
 
 def get_position_feed(datastore_client, agency):
     """Assemble position feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
@@ -263,6 +269,10 @@ def add_alert(datastore_client, alert):
     print('add_alert()')
     print('- alert: ' + str(alert))
 
+    if not 'agency_key' in alert:
+        print('alert doesn\'t have associated agency, discarding')
+        return
+
     if not('time_start' in alert and 'time_stop' in alert):
         print('alert doesn\'t have valid time range, discarding')
         return
@@ -272,15 +282,9 @@ def add_alert(datastore_client, alert):
         return
 
     entity = datastore.Entity(key=datastore_client.key('alert'))
-    obj = {}
+    alert['time_stamp'] = int(time.time())
 
-    obj['time_stamp'] = util.get_current_time_millis()
-
-    for field in alert:
-        print('-- ' + str(field))
-        obj[str(field)] = alert[str(field)]
-
-    entity.update(obj)
+    entity.update(alert)
     datastore_client.put(entity)
     print('+ wrote alert')
 

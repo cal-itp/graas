@@ -31,7 +31,7 @@ public class DumpServiceAlerts {
 
     public static void main(String[] arg) throws Exception {
         if (arg.length == 0) {
-            System.err.println("usage: DumpServiceAlerts <service-alert-url");
+            System.err.println("usage: DumpServiceAlerts <service-alert-url>");
             System.exit(-1);
         }
 

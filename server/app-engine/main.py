@@ -70,10 +70,6 @@ A web-based client for bulk-assigning GTFS blocks to vehicles is available at th
 
 *Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
 
-Please note:
-  For simplicity reasons, server currently only works reliably with a single instance. memcache implementation
-  with support for multiple instances is forthcoming
-
 See how-to-run.txt in this folder for details on how to run the server both locally and in the cloud.
 
 """

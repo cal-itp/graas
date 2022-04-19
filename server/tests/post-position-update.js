@@ -1,8 +1,8 @@
 // prod url: https://lat-long-prototype.wl.r.appspot.com/new-pos-sig
 // local url: https://127.0.0.1:8080/new-pos-sig
 
-var crypto = require('crypto').webcrypto
-var util = require('../app-engine/static/gtfs-rt-util')
+const crypto = require('crypto').webcrypto
+const util = require('../app-engine/static/gtfs-rt-util')
 
 function sleep(ms) {
   return new Promise((resolve) => {
