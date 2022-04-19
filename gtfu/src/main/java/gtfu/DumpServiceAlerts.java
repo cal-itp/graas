@@ -19,26 +19,49 @@ import java.util.List;
 import com.google.transit.realtime.GtfsRealtime.*;
 
 public class DumpServiceAlerts {
-    private static URL url;
+    private static final String CSV_ARG = "-csvoutput";
+    private static final String URL_ARG = "-url";
 
-    private static void dumpFeed(FeedMessage msg) throws Exception {
+    private static void dumpFeed(FeedMessage msg, boolean csv) throws Exception {
         for (FeedEntity entity : msg.getEntityList()) {
             if (entity.hasAlert()) {
-                System.out.println(new ServiceAlert(entity.getAlert()));
+                ServiceAlert alert = new ServiceAlert(entity.getAlert());
+                System.out.println(csv ? alert.toCSVString() : alert);
             }
         }
     }
 
     public static void main(String[] arg) throws Exception {
-        if (arg.length == 0) {
-            System.err.println("usage: DumpServiceAlerts <service-alert-url>");
+        boolean csv = false;
+        URL url = null;
+
+        for (int i=0; i<arg.length; i++) {
+            if (arg[i].equals(CSV_ARG)) {
+                csv = true;
+            }
+
+            if (arg[i].equals(URL_ARG) && i + 1 < arg.length) {
+                url = new URL(arg[++i]);
+            }
+        }
+
+        if (url == null) {
+            System.err.println("usage: DumpServiceAlerts -url <service-alert-url> [-csvoutput]");
             System.exit(-1);
         }
 
-        url = new URL(arg[0]);
+        String host = url.getHost();
+
+        if (host.equals("127.0.0.1") || host.equals("localhost")) {
+            // if we're connecting to localhost, chances
+            // are the cert will be self-signed, which won't
+            // go over well with any checks
+
+            Util.disableSSLChecking();
+        }
 
         try (InputStream is = url.openStream()) {
-            dumpFeed(FeedMessage.parseFrom(is));
+            dumpFeed(FeedMessage.parseFrom(is), csv);
         }
     }
 }
@@ -98,6 +121,59 @@ class ServiceAlert {
         }
 
         return from + " - " + to;
+    }
+
+    public String getCSVHeader() {
+        return "agency_id,route_id,trip_id,stop_id,header,description,url,cause,effect";
+    }
+
+    public String toCSVString() {
+        StringBuilder sb = new StringBuilder();
+
+        String agency_id = "";
+        String route_id = "";
+        String trip_id = "";
+        String stop_id = "";
+        String header = "";
+        String description = "";
+        String url = "";
+        String cause = "";
+        String effect = "";
+
+        for (EntitySelector sel : src.getInformedEntityList()) {
+            if (sel.hasAgencyId()) agency_id = sel.getAgencyId();
+            if (sel.hasRouteId()) route_id = sel.getRouteId();
+
+            if (sel.hasTrip()) {
+                TripDescriptor trip = sel.getTrip();
+                if (trip.hasTripId()) trip_id = trip.getTripId();
+            }
+
+            if (sel.hasStopId()) stop_id = sel.getStopId();
+        }
+
+        if (src.hasHeaderText()) {
+            List<TranslatedString.Translation> list = src.getHeaderText().getTranslationList();
+            if (list.size() > 0) header = list.get(0).getText();
+        }
+
+        if (src.hasDescriptionText()) {
+            List<TranslatedString.Translation> list = src.getDescriptionText().getTranslationList();
+            if (list.size() > 0) description = list.get(0).getText();
+        }
+
+        if (src.hasUrl()) {
+            List<TranslatedString.Translation> list = src.getUrl().getTranslationList();
+            if (list.size() > 0) url = list.get(0).getText();
+        }
+
+        if (src.hasCause()) cause = causeMap.get(src.getCause().toString());
+        if (src.hasEffect()) effect = effectMap.get(src.getEffect().toString());
+
+        return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s",
+            agency_id, route_id, trip_id, stop_id,
+            header, description, url, cause, effect
+        );
     }
 
     public String toString() {
