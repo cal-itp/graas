@@ -39,11 +39,10 @@ async function test(url) {
         ["sign"]
     );
 
-    const timestamp = Math.floor(Date.now() / 1000);
     let data = {
         uuid: 'test',
         agent: 'node',
-        timestamp: timestamp,
+        timestamp: 0,
         lat: 0,
         long: 0,
         speed: 0,
@@ -57,7 +56,6 @@ async function test(url) {
     data['vehicle-id'] = 'test';
     data['pos-timestamp'] = 'test';
 
-    util.log('- timestamp: ' + timestamp);
     util.log('- signatureKey: ' + signatureKey);
     util.log('- data: ' + JSON.stringify(data));
 
@@ -70,8 +68,11 @@ async function test(url) {
     ];
 
     for (let vid of vids) {
-        util.log(`-- vid: ${vid}`);
         data['vehicle-id'] = vid;
+        util.log(`-- vid: ${vid}`);
+
+        data['timestamp'] = Math.floor(Date.now() / 1000);
+        util.log(`++ timestamp: ${data.timestamp}`);
 
         util.signAndPost(data, signatureKey, url);
         await sleep(1000);

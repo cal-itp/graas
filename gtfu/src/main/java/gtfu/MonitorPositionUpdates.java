@@ -34,6 +34,7 @@ import com.google.transit.realtime.GtfsRealtime.Position;
 
 public class MonitorPositionUpdates {
     private static final String RAW_ARG = "-raw";
+    private static final String CSV_ARG = "-csvoutput";
     private static final String ID_ARG = "-id";
     private static final String LOOKUP_ARG = "-lookup-file";
     private static final String SLEEP_MILLIS_ARG = "-sleep-millis";
@@ -57,6 +58,52 @@ public class MonitorPositionUpdates {
 
         for (FeedEntity entity : msg.getEntityList()) {
             System.out.println(entity);
+        }
+    }
+
+    private static void dumpCSV(FeedMessage msg) throws Exception {
+        System.out.println("vehicleid,timestamp,lat,long,heading,speed");
+
+        for (FeedEntity entity : msg.getEntityList()) {
+            VehiclePosition vp = entity.getVehicle();
+
+            String vid = "";
+            String lat = "";
+            String lon = "";
+            String heading = "";
+            String speed = "";
+            String timestamp = "";
+
+            if (vp.hasVehicle()) {
+                VehicleDescriptor vd = vp.getVehicle();
+
+                if (vd.hasLabel()) {
+                    vid = vd.getLabel();
+                } else if (vd.hasId()) {
+                    vid = vd.getId();
+                }
+            }
+
+            if (vp.hasPosition()) {
+                Position pos = vp.getPosition();
+
+                lat = "" + pos.getLatitude();
+                lon = "" + pos.getLongitude();
+
+                if (pos.hasBearing()) {
+                    heading = "" + (int)pos.getBearing();
+                }
+
+                if (pos.hasSpeed()) {
+                    speed = "" + (int)pos.getSpeed();
+                }
+            }
+
+            if (vp.hasTimestamp()) {
+                timestamp = "" + vp.getTimestamp();
+            }
+
+            System.out.println(String.format("%s,%s,%s,%s,%s,%s", vid, timestamp, lat, lon, heading, speed));
         }
     }
 
@@ -147,7 +194,7 @@ public class MonitorPositionUpdates {
     }
 
     private static void usage() {
-        System.err.println("usage: MonitorPositionUpdates [-raw] [-help] {-url <url> | -id <id> -lookup-file <lookup-file>}");
+        System.err.println("usage: MonitorPositionUpdates [-raw [-csvoutput]] [-help] {-url <url> | -id <id> -lookup-file <lookup-file>}");
         System.exit(0);
     }
 
@@ -203,6 +250,7 @@ public class MonitorPositionUpdates {
         String id = null;
         String lookupFile = null;
         boolean raw = false;
+        boolean csvoutput = false;
         boolean help = false;
     	int sleepMillis = 1000;
 
@@ -215,6 +263,10 @@ public class MonitorPositionUpdates {
         for (int i=0; i<arg.length; i++) {
             if (arg[i].equals(RAW_ARG)) {
                 raw = true;
+            }
+
+            if (arg[i].equals(CSV_ARG)) {
+                csvoutput = true;
             }
 
             if (arg[i].equals(HELP_ARG)) {
@@ -270,7 +322,13 @@ public class MonitorPositionUpdates {
             }
 
             try (InputStream is = url.openStream()) {
-                dumpRawFeed(FeedMessage.parseFrom(is), id != null ? id : url.toString());
+                FeedMessage msg = FeedMessage.parseFrom(is);
+
+                if (!csvoutput) {
+                    dumpRawFeed(msg, id != null ? id : url.toString());
+                } else {
+                    dumpCSV(msg);
+                }
             }
         } else {
             for (;;) {
