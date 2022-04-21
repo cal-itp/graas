@@ -16,7 +16,6 @@ the sorted list of current vehicle IDs received in the feed. If the lists
 aren't identical, the test fails.
 */
 
-const crypto = require('crypto').webcrypto
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 const util = require('../app-engine/static/gtfs-rt-util');
 const testutil = require('./test-util');
@@ -147,7 +146,7 @@ const args = process.argv.slice(1);
 //util.log(`- args: ${args}`);
 
 if (args.length < 2) {
-    util.log(`usage: ${getBaseName(args[0])} <position-update-endpoint>`);
+    util.log(`usage: ${getBaseName(args[0])} <server-base-url>`);
     process.exit(1);
 }
 

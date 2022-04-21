@@ -376,6 +376,7 @@ function handleKey(id) {
         loadBlockData(str);
     } else if (id === 'key-select-tomorrow') {
         fromDate = util.nextDay(util.getMidnightDate());
+        util.log('- fromDate: ' + fromDate);
         var str = util.getYYYYMMDD(fromDate);
         util.log('- str: ' + str);
 

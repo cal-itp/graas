@@ -1,5 +1,19 @@
-// prod url: https://lat-long-prototype.wl.r.appspot.com/post-alert
-// local url: https://127.0.0.1:8080/post-alert
+/*
+A roundtrip test of server service alert feed functionality.
+
+First, we post a batch of service alert updates. Alert details are read
+from local file alerts.csv.
+
+Then, we download the current service alert feed and iterate over the
+contained alert entries, checking that timestamps are current and that
+alert description start with `pr-test-alert-header` (this is useful to
+e.g. weed out updates sent as part of different tests).
+
+Finally, we compare a sorted list of alert details posted with a sorted
+list of alert details received in the feed. If the lists aren't identical,
+the test fails.
+*/
+
 
 const util = require('../app-engine/static/gtfs-rt-util')
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
@@ -177,12 +191,14 @@ async function test(baseUrl) {
             throw `expected alert data '${updates[i]}' but got '${entries[i]}'`;
         }
     }
+
+    util.log('---> test succeeded');
 }
 
 const args = process.argv.slice(2);
 
 if (args.length == 0) {
-    util.log('usage: post-alert-updates <alert-update-endpoint>');
+    util.log('usage: post-alert-updates <server-base-url>');
     process.exit(1);
 }
 

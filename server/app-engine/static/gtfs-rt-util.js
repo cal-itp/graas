@@ -28,14 +28,14 @@ if (!fetch) {
 
 (function(exports) {
     exports.SECONDS_PER_MINUTE = 60;
-    exports.SECONDS_PER_HOUR   = 60 * this.SECONDS_PER_MINUTE;
-    exports.SECONDS_PER_DAY    = 24 * this.SECONDS_PER_HOUR;
-    exports.SECONDS_PER_WEEK   =  7 * this.SECONDS_PER_DAY;
+    exports.SECONDS_PER_HOUR   = 60 * exports.SECONDS_PER_MINUTE;
+    exports.SECONDS_PER_DAY    = 24 * exports.SECONDS_PER_HOUR;
+    exports.SECONDS_PER_WEEK   =  7 * exports.SECONDS_PER_DAY;
 
     exports.MILLIS_PER_SECOND = 1000;
-    exports.MILLIS_PER_MINUTE =   60 * this.MILLIS_PER_SECOND;
-    exports.MILLIS_PER_HOUR   =   60 * this.MILLIS_PER_MINUTE;
-    exports.MILLIS_PER_DAY    =   24 * this.MILLIS_PER_HOUR;
+    exports.MILLIS_PER_MINUTE =   60 * exports.MILLIS_PER_SECOND;
+    exports.MILLIS_PER_HOUR   =   60 * exports.MILLIS_PER_MINUTE;
+    exports.MILLIS_PER_DAY    =   24 * exports.MILLIS_PER_HOUR;
 
     exports.log = function(s) {
         console.log(s);
