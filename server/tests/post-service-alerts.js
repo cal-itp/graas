@@ -21,61 +21,18 @@ function serialize(obj, fields) {
     return s;
 }
 
-async function test(url) {
+async function test(baseUrl) {
     util.log('starting test...');
-    util.log(`- url: ${url}`);
+    util.log(`- baseUrl: ${baseUrl}`);
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     const signatureKey = await testutil.getSignatureKey();
 
-    /*const contents = fs.readFileSync('alerts.csv', 'utf8');
-    //util.log('- contents: ' + contents);
-    let lines = contents.split('\n');
-    //util.log('- lines: ' + JSON.stringify(lines));
-    lines.shift();
-    //util.log('- lines: ' + JSON.stringify(lines));
-
-    for (let line of lines) {
-        if (line.length == 0) continue;
-
-        const token = line.split(',');
-        util.log(`-- line: ${line}`);
-        util.log(`-- token: ${JSON.stringify(token)}`);
-
-        if (token.length < 9) {
-            util.log(`** missing fields for line: ${token}`);
-            continue;
-        }
-
-        const now = Math.round(Date.now() / 1000);
-
-        let data = {
-            agency_key: 'test',
-            time_start: now,
-            time_stop: now + 60
-        };
-
-        // agency_id,route_id,trip_id,stop_id,header,description,url,cause,effect
-        if (token[0].length > 0) data['agency_id'] = token[0]
-        if (token[1].length > 0) data['route_id'] = token[1]
-        if (token[2].length > 0) data['trip_id'] = token[2]
-        if (token[3].length > 0) data['stop_id'] = token[3]
-        if (token[4].length > 0) data['header'] = token[4]
-        if (token[5].length > 0) data['description'] = token[5]
-        if (token[6].length > 0) data['url'] = token[6]
-        if (token[7].length > 0) data['cause'] = token[7]
-        if (token[8].length > 0) data['effect'] = token[8]
-
-        util.log(`-- data: ${JSON.stringify(data)}`);
-
-        util.signAndPost(data, signatureKey, url);
-        await sleep(1000);
-    }*/
-
     const SER_FIELDS = ['agency_id', 'route_id', 'trip_id', 'stop_id', 'header', 'description', 'url', 'cause', 'effect'];
     const reader = new CSVReader('alerts.csv', true);
     let updates = [];
+    let now = null;
 
     for (;;) {
         let data = reader.getNextLine();
@@ -83,7 +40,7 @@ async function test(url) {
 
         util.log(`- obj: ${JSON.stringify(data)}`);
 
-        const now = Math.round(Date.now() / 1000);
+        now = Math.round(Date.now() / 1000);
 
         data['agency_key'] = 'test';
         data['time_start'] = now;
@@ -91,47 +48,110 @@ async function test(url) {
 
         updates.push(serialize(data, SER_FIELDS));
 
-        util.signAndPost(data, signatureKey, url + '/post-alert');
+        util.signAndPost(data, signatureKey, baseUrl + '/post-alert');
         await testutil.sleep(1000);
     }
 
     util.log(`-- updates: ${JSON.stringify(updates)}`);
 
-    const body = await testutil.getResponseBody(url + '/service-alerts.pb?agency=test');
+    const body = await testutil.getResponseBody(baseUrl + '/service-alerts.pb?agency=test');
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
+    now = Math.round(Date.now() / 1000);
 
     feed.entity.forEach(function(entity) {
-        util.log(entity);
+        //util.log(entity);
+
+        let cause = null;
+        let effect = null;
+        let time_start = null;
+        let time_stop = null;
+        let agency_id = null;
+        let route_id = null;
+        let trip_id = null;
+        let stop_id = null;
+        let url = null;
+        let header = null;
+        let description = null;
 
         if (entity.alert && entity.alert.activePeriod) {
-            util.log(entity.alert.activePeriod);
+            const range = entity.alert.activePeriod[0];
+            time_start = range.start.low;
+            time_stop = range.end.low;
+            //util.log(`-- time_start: ${time_start}`);
+            //util.log(`-- time_stop: ${time_stop}`);
+        }
+
+        if (entity.alert && entity.alert.informedEntity) {
+            const selector = entity.alert.informedEntity[0];
+
+            if (selector.agencyId) {
+                agency_id = selector.agencyId;
+                //util.log(`-- agency_id: ${agency_id}`);
+            }
+
+            if (selector.routeId) {
+                route_id = selector.routeId;
+                //util.log(`-- route_id: ${route_id}`);
+            }
+
+            if (selector.tripId) {
+                trip_id = selector.tripId;
+                //util.log(`-- trip_id: ${trip_id}`);
+            }
+
+            if (selector.stopId) {
+                stop_id = selector.stopId;
+                //util.log(`-- stop_id: ${stop_id}`);
+            }
+        }
+
+        if (entity.alert && entity.alert.cause) {
+            cause = GtfsRealtimeBindings.transit_realtime.Alert.Cause[entity.alert.cause].toLowerCase();
+            //util.log(`-- cause: ${cause}`);
+        }
+
+        if (entity.alert && entity.alert.effect) {
+            effect = GtfsRealtimeBindings.transit_realtime.Alert.Effect[entity.alert.effect].toLowerCase();
+            //util.log(`-- effect: ${effect}`);
+        }
+
+        if (entity.alert && entity.alert.url && entity.alert.url.translation) {
+            const translation = entity.alert.url.translation[0];
+            url = translation.text;
+            //util.log(`-- url: ${url}`);
         }
 
         if (entity.alert && entity.alert.headerText && entity.alert.headerText.translation) {
-            util.log(entity.alert.headerText.translation);
+            const translation = entity.alert.headerText.translation[0];
+            header = translation.text;
+            //util.log(`-- header: ${header}`);
         }
 
         if (entity.alert && entity.alert.descriptionText && entity.alert.descriptionText.translation) {
-            util.log(entity.alert.descriptionText.translation);
+            const translation = entity.alert.descriptionText.translation[0];
+            description = translation.text;
+            //util.log(`-- description: ${description}`);
         }
 
-        /*if (entity.vehicle) {
-            let current = false;
+        if (time_start <= now && time_stop > now) {
+            let obj = {};
 
-            if (entity.vehicle.timestamp && entity.vehicle.timestamp.low) {
-                //util.log(`++ timestamp: ${entity.vehicle.timestamp.low}`);
+            obj.agency_id = agency_id;
+            obj.route_id = route_id;
+            obj.trip_id = trip_id;
+            obj.stop_id = stop_id;
+            obj.time_start = time_start;
+            obj.time_stop = time_stop;
+            obj.url = url;
+            obj.header = header;
+            obj.description = description;
+            obj.cause = cause;
+            obj.effect = effect;
 
-                const timestamp = entity.vehicle.timestamp.low;
-                const delta = Math.abs(now - timestamp);
-                //util.log(`++ delta: ${delta}`);
+            const s = serialize(obj, SER_FIELDS);
+            util.log(`-- s: ${s}`);
 
-                if (delta < 60) {
-                    current = true;
-                } else {
-                    util.log(`** excessive delta: ${delta}, discarding entity ${entity.vehicle}`);
-                }
-            }
-        }*/
+        }
     });
 }
 
