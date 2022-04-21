@@ -112,7 +112,7 @@ function handleAgencyChoice(){
 function handleDateChoice(){
     console.log("handleDateChoice()");
     selectedDate = document.getElementById("date-select").value;
-    url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-test.json`;
+    url = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json`;
     loadJSON(url, processTripJSON);
 }
 
@@ -178,8 +178,9 @@ function load(){
     timelineCtx.canvas.width = canvasWidth;
 
     dropdownHeight = document.getElementById('dropdowns').offsetHeight;
-
-    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}-test.png`;
+    // ?nocache= prevents annoying caching...mostly for debugging purposes
+    // Remove "test" before PR
+    reportImageUrl = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
@@ -240,28 +241,31 @@ function load(){
         mapScrollTop = scrollTop + headerHeight;        // Top of current map
         scrollBottom = scrollTop + windowHeight;        // Bottom of current map
 
-        for (var i = 0; i < trips.length; i++){
-            var searchX = event.pageX;
-            var searchY = event.pageY;
-            var searchObject;
+        let searchX = event.pageX;
+        let searchY = event.pageY;
+        let searchObject = null;
 
-            // If the click occurs below the header, adjust y value and search map objects
-            if(searchY >= mapScrollTop){
-                searchY -=headerHeight;
-                searchObject = trips[i].map;
+        // If the click occurs below the header, adjust y value and search map objects
+        if(searchY >= mapScrollTop){
+            console.log("Click is BELOW header");
+            searchY -=headerHeight;
+            searchObject = "map";
 
-            // If the click occurs within the header, adjust y value and search timeline objects
-            } else {
-                searchY -=timelineScrollTop;
-                searchObject = trips[i].timeline;
-            }
-            if (isZoomedIn){
-                searchX += translateOffsetX;
-                searchX /= 2;
-                searchY /= 2;
-            }
+        // If the click occurs within the header, adjust y value and search timeline objects
+        } else {
+            console.log("Click is ABOVE header");
+            searchY -=timelineScrollTop;
+            searchObject = "timeline";
+        }
+        if (isZoomedIn){
+            searchX += translateOffsetX;
+            searchX /= 2;
+            searchY /= 2;
+        }
 
-            if (objectContainsPoint(searchObject, searchX, searchY)){
+        for (let i = 0; i < trips.length; i++){
+
+            if (objectContainsPoint(trips[i][searchObject], searchX, searchY)){
                 console.log("Found trip: " + trips[i].trip_name);
                 if (event.shiftKey && !isZoomedIn) {
                     console.log("Zooming into this trip...");
@@ -275,8 +279,8 @@ function load(){
                     console.log("Drawing background, metadata, etc...");
                     drawReportExcept(trips[i]);
                     drawMetadata(trips[i]);
-                    selectTrip(mapCtx, trips[i].map);
-                    selectTrip(timelineCtx, trips[i].timeline);
+                    selectTrip(mapCtx, trips[i], "map");
+                    selectTrip(timelineCtx, trips[i], "timeline");
                     scrollToTrip(trips[i])
                     mostRecentAnimation = trips[i];
                     animateTrip(trips[i], 0, 0)
@@ -471,11 +475,12 @@ function getMaxTextWidth(trip) {
     return Math.round(maxWidth);
 }
 
-function selectTrip(ctx, object){
+function selectTrip(ctx, trip, part){
+    console.log(part + "context is selecting trip " + trip.trip_name);
     ctx.beginPath();
     ctx.lineWidth = 4;
     ctx.strokeStyle = "green";
-    ctx.rect(object.x, object.y, object.width, object.height + 1);
+    ctx.rect(trip[part].x, trip[part].y, trip[part].width, trip[part].height + 1);
     ctx.stroke();
 }
 

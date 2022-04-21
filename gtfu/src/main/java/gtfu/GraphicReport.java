@@ -234,7 +234,7 @@ public class GraphicReport {
     private void uploadToGCloud(String key, byte[] file, String fileType, boolean isTest) throws IOException {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = key.substring(0, key.length() - 11);
-        String path = "graas-report-archive/" + agencyID;
+        String path = (isTest ? "test/" : "") + "graas-report-archive/" + agencyID;
         String fileSuffix = "";
         String fileTypeName = "";
         if(fileType.equals("png")){
@@ -245,7 +245,7 @@ public class GraphicReport {
             fileSuffix = ".json";
             fileTypeName = "text/json";
         }
-        String fileName = key + (isTest ? "-test" : "") + fileSuffix;
+        String fileName = key + fileSuffix;
         gcs.uploadObject("graas-resources", path, fileName, file, fileTypeName);
     }
 
