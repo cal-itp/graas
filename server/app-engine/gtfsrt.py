@@ -135,7 +135,7 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 def alert_is_current(alert):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
-    now = util.get_epoch_seconds()
+    now = int(time.time())
     return now >= int(alert['time_start']) and now < int(alert['time_stop'])
 
 def purge_old_alerts(datastore_client):
@@ -179,7 +179,7 @@ def get_alert_feed(datastore_client, agency):
         obj: alert feed in protobuf format
 
     """
-    print('get_alert_feed')
+    print('get_alert_feed()')
     print('- agency: ' + agency)
 
     name = agency + '-alert-feed'
@@ -187,7 +187,7 @@ def get_alert_feed(datastore_client, agency):
 
     if alert_feed is None:
         purge_old_alerts(datastore_client)
-        now = util.get_epoch_seconds()
+        now = int(time.time())
 
         query = datastore_client.query(kind='alert')
         query.add_filter('agency_key', '=', agency)

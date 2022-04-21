@@ -1,14 +1,24 @@
-// prod url: https://lat-long-prototype.wl.r.appspot.com/new-pos-sig
-// local url: https://127.0.0.1:8080/new-pos-sig
+// prod url: https://lat-long-prototype.wl.r.appspot.com/post-alert
+// local url: https://127.0.0.1:8080/post-alert
 
-const crypto = require('crypto').webcrypto
 const util = require('../app-engine/static/gtfs-rt-util')
-const fs = require('fs')
+const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
+const CSVReader = require('./csv')
+const testutil = require('./test-util');
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+function serialize(obj, fields) {
+    let s = '';
+
+    for (f of fields) {
+        const v = obj[f];
+
+        if (v) {
+            if (s.length > 0) s += ',';
+            s += v;
+        }
+    }
+
+    return s;
 }
 
 async function test(url) {
@@ -17,33 +27,9 @@ async function test(url) {
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-    const base64 = process.env.PR_TEST_ID_ECDSA;
+    const signatureKey = await testutil.getSignatureKey();
 
-    if (!base64) {
-        util.log('* no private key found in $PR_TEST_ID_ECDSA, exiting...');
-        process.exit(1);
-    }
-
-    const key = atob(base64);
-    util.log("- key.length: " + key.length);
-
-    const binaryDer = util.str2ab(key);
-
-    const signatureKey = await crypto.subtle.importKey(
-        "pkcs8",
-        binaryDer,
-        {
-            name: "ECDSA",
-            namedCurve: "P-256"
-        },
-        false,
-        ["sign"]
-    );
-
-    util.log('- signatureKey: ' + signatureKey);
-
-
-    const contents = fs.readFileSync('alerts.csv', 'utf8');
+    /*const contents = fs.readFileSync('alerts.csv', 'utf8');
     //util.log('- contents: ' + contents);
     let lines = contents.split('\n');
     //util.log('- lines: ' + JSON.stringify(lines));
@@ -85,7 +71,68 @@ async function test(url) {
 
         util.signAndPost(data, signatureKey, url);
         await sleep(1000);
+    }*/
+
+    const SER_FIELDS = ['agency_id', 'route_id', 'trip_id', 'stop_id', 'header', 'description', 'url', 'cause', 'effect'];
+    const reader = new CSVReader('alerts.csv', true);
+    let updates = [];
+
+    for (;;) {
+        let data = reader.getNextLine();
+        if (data == null) break;
+
+        util.log(`- obj: ${JSON.stringify(data)}`);
+
+        const now = Math.round(Date.now() / 1000);
+
+        data['agency_key'] = 'test';
+        data['time_start'] = now;
+        data['time_stop'] = now + 60;
+
+        updates.push(serialize(data, SER_FIELDS));
+
+        util.signAndPost(data, signatureKey, url + '/post-alert');
+        await testutil.sleep(1000);
     }
+
+    util.log(`-- updates: ${JSON.stringify(updates)}`);
+
+    const body = await testutil.getResponseBody(url + '/service-alerts.pb?agency=test');
+    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
+
+    feed.entity.forEach(function(entity) {
+        util.log(entity);
+
+        if (entity.alert && entity.alert.activePeriod) {
+            util.log(entity.alert.activePeriod);
+        }
+
+        if (entity.alert && entity.alert.headerText && entity.alert.headerText.translation) {
+            util.log(entity.alert.headerText.translation);
+        }
+
+        if (entity.alert && entity.alert.descriptionText && entity.alert.descriptionText.translation) {
+            util.log(entity.alert.descriptionText.translation);
+        }
+
+        /*if (entity.vehicle) {
+            let current = false;
+
+            if (entity.vehicle.timestamp && entity.vehicle.timestamp.low) {
+                //util.log(`++ timestamp: ${entity.vehicle.timestamp.low}`);
+
+                const timestamp = entity.vehicle.timestamp.low;
+                const delta = Math.abs(now - timestamp);
+                //util.log(`++ delta: ${delta}`);
+
+                if (delta < 60) {
+                    current = true;
+                } else {
+                    util.log(`** excessive delta: ${delta}, discarding entity ${entity.vehicle}`);
+                }
+            }
+        }*/
+    });
 }
 
 const args = process.argv.slice(2);
