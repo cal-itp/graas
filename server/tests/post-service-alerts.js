@@ -21,6 +21,13 @@ function serialize(obj, fields) {
     return s;
 }
 
+function normalize(s) {
+    s = s.toLowerCase();
+    s = s.replace('_', ' ');
+
+    return s;
+}
+
 async function test(baseUrl) {
     util.log('starting test...');
     util.log(`- baseUrl: ${baseUrl}`);
@@ -38,7 +45,7 @@ async function test(baseUrl) {
         let data = reader.getNextLine();
         if (data == null) break;
 
-        util.log(`- obj: ${JSON.stringify(data)}`);
+        //util.log(`- obj: ${JSON.stringify(data)}`);
 
         now = Math.round(Date.now() / 1000);
 
@@ -46,17 +53,19 @@ async function test(baseUrl) {
         data['time_start'] = now;
         data['time_stop'] = now + 60;
 
-        updates.push(serialize(data, SER_FIELDS));
+        updates.push(serialize(data, SER_FIELDS).toLowerCase());
 
         util.signAndPost(data, signatureKey, baseUrl + '/post-alert');
         await testutil.sleep(1000);
     }
 
-    util.log(`-- updates: ${JSON.stringify(updates)}`);
+    updates.sort();
+    util.log(`- updates: ${JSON.stringify(updates)}`);
 
     const body = await testutil.getResponseBody(baseUrl + '/service-alerts.pb?agency=test');
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
     now = Math.round(Date.now() / 1000);
+    let entries = [];
 
     feed.entity.forEach(function(entity) {
         //util.log(entity);
@@ -94,8 +103,8 @@ async function test(baseUrl) {
                 //util.log(`-- route_id: ${route_id}`);
             }
 
-            if (selector.tripId) {
-                trip_id = selector.tripId;
+            if (selector.trip && selector.trip.tripId) {
+                trip_id = selector.trip.tripId;
                 //util.log(`-- trip_id: ${trip_id}`);
             }
 
@@ -106,12 +115,12 @@ async function test(baseUrl) {
         }
 
         if (entity.alert && entity.alert.cause) {
-            cause = GtfsRealtimeBindings.transit_realtime.Alert.Cause[entity.alert.cause].toLowerCase();
+            cause = normalize(GtfsRealtimeBindings.transit_realtime.Alert.Cause[entity.alert.cause]);
             //util.log(`-- cause: ${cause}`);
         }
 
         if (entity.alert && entity.alert.effect) {
-            effect = GtfsRealtimeBindings.transit_realtime.Alert.Effect[entity.alert.effect].toLowerCase();
+            effect = normalize(GtfsRealtimeBindings.transit_realtime.Alert.Effect[entity.alert.effect]);
             //util.log(`-- effect: ${effect}`);
         }
 
@@ -133,8 +142,10 @@ async function test(baseUrl) {
             //util.log(`-- description: ${description}`);
         }
 
-        if (time_start <= now && time_stop > now) {
+        if (header && header.indexOf('pr-test-alert-header-') === 0 && time_start <= now && time_stop > now) {
             let obj = {};
+
+            //util.log(entity.alert.informedEntity);
 
             obj.agency_id = agency_id;
             obj.route_id = route_id;
@@ -149,10 +160,23 @@ async function test(baseUrl) {
             obj.effect = effect;
 
             const s = serialize(obj, SER_FIELDS);
-            util.log(`-- s: ${s}`);
-
+            //util.log(`-- s: ${s}`);
+            entries.push(s);
         }
     });
+
+    entries.sort();
+    util.log(`- entries: ${JSON.stringify(entries)}`);
+
+    if (updates.length !== entries.length) {
+        throw `expected ${updates.length} feed entries but got ${entries.length}`;
+    }
+
+    for (let i=0; i<updates.length; i++) {
+        if (updates[i] !== entries[i]) {
+            throw `expected alert data '${updates[i]}' but got '${entries[i]}'`;
+        }
+    }
 }
 
 const args = process.argv.slice(2);
