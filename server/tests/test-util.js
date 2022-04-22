@@ -48,10 +48,10 @@ const fetch = require('node-fetch');
         return body;
     }
 
-    exports.getSignatureKey = async function() {
-        const base64 = process.env.PR_TEST_ID_ECDSA;
-
-        if (!base64) throw 'unset environment variable $PR_TEST_ID_ECDSA';
+    exports.getSignatureKey = async function(ecdsaVarName) {
+        const base64 = process.env[ecdsaVarName];
+        console.log(base64);
+        if (!base64) throw `unset environment variable ${ecdsaVarName}`;
 
         const key = atob(base64);
         util.log("- key.length: " + key.length);

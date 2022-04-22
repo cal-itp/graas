@@ -42,13 +42,13 @@ function normalize(s) {
     return s;
 }
 
-async function test(baseUrl) {
+async function test(baseUrl, agencyID, ecdsaVarName) {
     util.log('starting test...');
     util.log(`- baseUrl: ${baseUrl}`);
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-    const signatureKey = await testutil.getSignatureKey();
+    const signatureKey = await testutil.getSignatureKey(ecdsaVarName);
 
     const SER_FIELDS = ['agency_id', 'route_id', 'trip_id', 'stop_id', 'header', 'description', 'url', 'cause', 'effect'];
     const reader = new CSVReader('alerts.csv', true);
@@ -63,7 +63,7 @@ async function test(baseUrl) {
 
         now = Math.round(Date.now() / 1000);
 
-        data['agency_key'] = 'test';
+        data['agency_key'] = agencyID;
         data['time_start'] = now;
         data['time_stop'] = now + 60;
 
@@ -76,7 +76,7 @@ async function test(baseUrl) {
     updates.sort();
     util.log(`- updates: ${JSON.stringify(updates)}`);
 
-    const body = await testutil.getResponseBody(baseUrl + '/service-alerts.pb?agency=test');
+    const body = await testutil.getResponseBody(baseUrl + '/service-alerts.pb?agency=' + agencyID);
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
     now = Math.round(Date.now() / 1000);
     let entries = [];
@@ -197,11 +197,30 @@ async function test(baseUrl) {
 
 const args = process.argv.slice(2);
 
-if (args.length == 0) {
-    util.log('usage: post-alert-updates <server-base-url>');
+let url = null;
+let agencyID = null;
+let ecdsaVarName = null;
+
+for(let j = 0; j < args.length; j++){
+    if((args[j] === '-u' || args[j] === '--url') && j + 1 < args.length){
+        url = args[j+1];
+        j++;
+        continue;
+    }
+    if((args[j] === '-a' || args[j] === '--agency-id') && j + 1 < args.length){
+        agencyID = args[j+1];
+        j++;
+        continue;
+    }
+    if((args[j] === '-e' || args[j] === '--ecdsa-var-name') && j + 1 < args.length){
+        ecdsaVarName = args[j+1];
+        j++;
+        continue;
+    }
+}
+if (url === null || agencyID === null || ecdsaVarName === null) {
+    util.log(`usage: ${testutil.getBaseName(args[0])} -u <server-base-url> -a <agency-id> -e <ecdsa-var-name>`);
     process.exit(1);
 }
 
-test(args[0]);
-
-
+test(url, agencyID, ecdsaVarName);

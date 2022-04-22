@@ -121,7 +121,6 @@ def vehicle_positions():
         util.datastore_client,
         agency
     )
-
     return Response(feed, mimetype='application/octet-stream')
 
 @app.route('/')
@@ -216,8 +215,8 @@ Requests can be accepted one of two ways:
 def verify_request(request, cmd):
     global verified_map, verified_map_millis
 
-    #print('- request.data: ' + str(request.data))
-    #print('- request.json: ' + json.dumps(request.json))
+    print('- request.data: ' + str(request.data))
+    print('- request.json: ' + json.dumps(request.json))
 
     data = request.json['data']
     sig = request.json['sig']
@@ -356,7 +355,7 @@ if __name__ == '__main__':
         exit(1)
 
     # run https server locally with supplied credentials
-    app.run(ssl_context=(certfile, keyfile), host = '127.0.0.1', port = 8080, debug = True, threaded = False)
+    # app.run(ssl_context=(certfile, keyfile), host = '127.0.0.1', port = 8080, debug = True, threaded = False)
 
     # run http server locally
-    # app.run(host = '127.0.0.1', port = 8080, debug = True)
+    app.run(host = '127.0.0.1', port = 8080, debug = True)

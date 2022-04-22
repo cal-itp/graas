@@ -28,7 +28,7 @@ const VEHICLE_IDS = [
     'pr-test-vehicle-id-6', 'pr-test-vehicle-id-7'
 ];
 
-async function postUpdates(signatureKey, url) {
+async function postUpdates(signatureKey, agencyID, url) {
     let data = {
         uuid: 'test',
         agent: 'node',
@@ -42,7 +42,7 @@ async function postUpdates(signatureKey, url) {
     };
 
     data['trip-id'] = 'test';
-    data['agency-id'] = 'test';
+    data['agency-id'] = 'pr-test';
     data['vehicle-id'] = 'test';
     data['pos-timestamp'] = 'test';
 
@@ -61,16 +61,16 @@ async function postUpdates(signatureKey, url) {
     }
 }
 
-async function test(url) {
+async function test(url, agencyID, ecdsaVarName) {
     util.log(`test()`);
     util.log(`- url: ${url}`);
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-    const signatureKey = await testutil.getSignatureKey();
+    const signatureKey = await testutil.getSignatureKey(ecdsaVarName);
     util.log(`- signatureKey: ${JSON.stringify(signatureKey)}`);
 
-    await postUpdates(signatureKey, url + '/new-pos-sig');
+    await postUpdates(signatureKey, agencyID, url + '/new-pos-sig');
 
     const sleepCount = 30;
     console.log(`sleeping for ${sleepCount} seconds before accessing vehicle position feed...`);
@@ -83,7 +83,7 @@ async function test(url) {
     console.log('done');
 
     const now = testutil.getEpochSeconds();
-    const body = await testutil.getResponseBody(url + '/vehicle-positions.pb?agency=test');
+    const body = await testutil.getResponseBody(url + '/vehicle-positions.pb?agency=' + agencyID);
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
 
     let expectedVIDS = [];
@@ -142,12 +142,34 @@ async function test(url) {
     }
 }
 
-const args = process.argv.slice(1);
-//util.log(`- args: ${args}`);
+const args = process.argv.slice(2);
+util.log(`- args: ${args}`);
 
-if (args.length < 2) {
-    util.log(`usage: ${getBaseName(args[0])} <server-base-url>`);
+let url = null;
+let agencyID = null;
+let ecdsaVarName = null;
+
+for(let j = 0; j < args.length; j++){
+    if((args[j] === '-u' || args[j] === '--url') && j + 1 < args.length){
+        url = args[j+1];
+        j++;
+        continue;
+    }
+    if((args[j] === '-a' || args[j] === '--agency-id') && j + 1 < args.length){
+        agencyID = args[j+1];
+        j++;
+        continue;
+    }
+    if((args[j] === '-e' || args[j] === '--ecdsa-var-name') && j + 1 < args.length){
+        ecdsaVarName = args[j+1];
+        j++;
+        continue;
+    }
+}
+if (url === null || agencyID === null || ecdsaVarName === null) {
+    util.log(`usage: ${testutil.getBaseName(args[0])} -u <server-base-url> -a <agency-id> -e <ecdsa-var-name>`);
     process.exit(1);
 }
 
-test(args[1]);
+
+test(url, agencyID, ecdsaVarName);
