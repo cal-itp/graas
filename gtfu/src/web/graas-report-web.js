@@ -29,7 +29,6 @@ var dropdownHeight;
 var headerHeight;
 var windowHeight;
 
-
 var tripMapWidth;
 var tripMapHeight;
 
@@ -38,8 +37,12 @@ var timelineScrollTop;
 var mapScrollTop;
 var scrollBottom;
 
+const columnCount = 4;
+var rowCount;
+
 var activeAnimationCount = 0;
 var mostRecentAnimation = null;
+var isNewPageSelect = false;
 
 var isZoomedIn = false;
 var translateOffsetY;
@@ -53,6 +56,9 @@ const font = "Arial";
 const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
                      "os", "uuid_tail", "avg_update_interval",
                      "max_update_interval", "min_update_interval"];
+
+ const OPACITY_MULTIPLIER = 0.98;
+ const ALPHA_MIN = 0.4;
 
 function initialize(){
     getRewriteArgs()
@@ -93,7 +99,7 @@ function processDropdownJSON(object){
 
 function handleAgencyChoice(){
     console.log("handleAgencyChoice()");
-
+    isNewPageSelect = true;
     if(utmAgency == null){
         selectedAgency = document.getElementById("agency-select").value;
     }
@@ -111,6 +117,7 @@ function handleAgencyChoice(){
 
 function handleDateChoice(){
     console.log("handleDateChoice()");
+    isNewPageSelect = true;
     selectedDate = document.getElementById("date-select").value;
     url = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json`;
     loadJSON(url, processTripJSON);
@@ -188,6 +195,8 @@ function load(){
     p.download = `${selectedAgency}-${selectedDate}.png`;
     p.style.display = "inline-block";
 
+    rowCount = Math.ceil(trips.length / columnCount);
+
     img.onload = function() {
         imageWidth = this.naturalWidth
         imageHeight = this.naturalHeight;
@@ -226,16 +235,21 @@ function load(){
     };
 
     document.body.addEventListener('click', function(event) {
-
-        clickTime = new Date().getTime();
-        console.log("clickTime: " + clickTime);
-        console.log("lastClick: " + lastClick);
+        // Click event tends to fire twice - this is a hacky way of preventing that
+        let clickTime = new Date().getTime();
+        if(clickTime - lastClick < 100){
+            lastClick = clickTime;
+            return
+        }
         lastClick = clickTime;
 
         if (event.shiftKey && isZoomedIn) {
             zoomOut();
             return;
         }
+
+        isNewPageSelect = false;
+
         scrollTop = document.documentElement.scrollTop; // Top of current screen
         timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
         mapScrollTop = scrollTop + headerHeight;        // Top of current map
@@ -259,6 +273,7 @@ function load(){
         }
         if (isZoomedIn){
             searchX += translateOffsetX;
+            searchY += translateOffsetY;
             searchX /= 2;
             searchY /= 2;
         }
@@ -266,10 +281,12 @@ function load(){
         for (let i = 0; i < trips.length; i++){
 
             if (objectContainsPoint(trips[i][searchObject], searchX, searchY)){
-                console.log("Found trip: " + trips[i].trip_name);
+                let clickedTrip = trips[i];
+                console.log("Found trip: " + clickedTrip.trip_name);
                 if (event.shiftKey && !isZoomedIn) {
                     console.log("Zooming into this trip...");
-                    zoomTo(trips[i]);
+                    zoomTo(clickedTrip);
+                    scrollToTrip(clickedTrip)
                 }
                 if(mostRecentAnimation === trips[i]){
                     console.log("Animation for this trip is already in progress.");
@@ -277,13 +294,19 @@ function load(){
                 }
                 else{
                     console.log("Drawing background, metadata, etc...");
-                    drawReportExcept(trips[i]);
-                    drawMetadata(trips[i]);
-                    selectTrip(mapCtx, trips[i], "map");
-                    selectTrip(timelineCtx, trips[i], "timeline");
-                    scrollToTrip(trips[i])
-                    mostRecentAnimation = trips[i];
-                    animateTrip(trips[i], 0, 0)
+                    drawReportExcept(clickedTrip);
+                    drawMetadata(clickedTrip);
+                    selectTrip(mapCtx, clickedTrip, "map");
+                    selectTrip(timelineCtx, clickedTrip, "timeline");
+                    scrollToTrip(clickedTrip)
+                    mostRecentAnimation = clickedTrip;
+                    let tripDuration = clickedTrip.points[clickedTrip.points.length - 1].secs - clickedTrip.points[0].secs;
+                    let timeoutInterval = 1;
+                    if(tripDuration < 1000){
+                        timeoutInterval = 10;
+                    }
+                    console.log("tripDuration: " + tripDuration);
+                    animateTrip(clickedTrip, 0, 0, timeoutInterval);
                     return;
                 }
             }
@@ -303,7 +326,6 @@ function objectContainsPoint(object, x, y){
 function zoomTo(trip){
     console.log("zooming in!");
     let gridNum = Math.round(trip.map.x / trip.map.width);
-    console.log("gridNum: " + gridNum);
     if(gridNum === 0){
         translateOffsetX = 0;
     } else if( gridNum <= 2){
@@ -311,10 +333,20 @@ function zoomTo(trip){
     } else {
         translateOffsetX = (trip.map.width * 4);
     }
+    let rowNum = Math.round(trip.map.y / trip.map.height);
+    if(rowNum === 0){
+        translateOffsetY = 0;
+    }
+    else{
+        translateOffsetY = trip.map.height * rowNum;
+    }
+    // Different behavior for last row. Add 1 to rowNum since it counts row 0
+    if(rowNum + 1 == rowCount){
+        translateOffsetY += trip.map.height;
+    }
 
-    mapCtx.translate(-translateOffsetX, 0);
+    mapCtx.translate(-translateOffsetX, -translateOffsetY);
 
-    console.log("translateOffsetX: " + translateOffsetX);
     mapCtx.scale(2,2);
     isZoomedIn = true;
     drawReportExcept(trip);
@@ -322,9 +354,8 @@ function zoomTo(trip){
 
 function zoomOut(){
     console.log("zooming out!");
-    console.log("translateOffsetX: " + translateOffsetX);
     mapCtx.scale(.5, .5);
-    mapCtx.translate(translateOffsetX, 0);
+    mapCtx.translate(translateOffsetX, translateOffsetY);
     isZoomedIn = false;
     mostRecentAnimation = null;
     drawReport();
@@ -360,18 +391,29 @@ function drawReportTripsExcept(trip){
         var mapX = trips[i].map.x;
         var mapY = trips[i].map.y;
 
-        for(var j = 0; j < trips[i].points.length; j++){
-            var pointSize = 1 + (trips[i].points[j].count - 1) / 8;
-            drawPoint(mapX + trips[i].points[j].x, mapY + trips[i].points[j].y, pointSize);
+        for(let j = 0; j < trips[i].points.length; j++){
+            let pointSize = getPointSize(trips[i].points[j].count);
+            let opacity = getOpacity(trips[i].points[j].count);
+            drawPoint(mapX + trips[i].points[j].x, mapY + trips[i].points[j].y, pointSize, "green", opacity);
         }
     }
 }
 
-function animateTrip(trip, indexIterator, secsIterator){
+function getOpacity(count){
+    let alpha = Math.pow(OPACITY_MULTIPLIER, (count - 1));
+    return Math.max(alpha, ALPHA_MIN);
+}
+
+function getPointSize(count){
+    return 1 + (count - 1) / 8;
+}
+
+function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
+
     if(indexIterator === 0){
         activeAnimationCount++;
         secsIterator = trip.points[0].secs;
-        console.log("Animating trip...");
+        console.log("Animating trip " + trip.trip_name);
     }
     if(activeAnimationCount > 1){
         if(trip !== mostRecentAnimation){
@@ -380,20 +422,19 @@ function animateTrip(trip, indexIterator, secsIterator){
             return;
         }
     }
+    if(isNewPageSelect === true){
+        console.log("Page change detected. Aborting.")
+        return;
+    }
     if(indexIterator < trip.points.length){
-        if(trip.points[indexIterator].secs === secsIterator){
-            if(trip.points[indexIterator].count > 1){
-                animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count)
-            }
-            else{
-                drawPoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1);
-            }
-
-            indexIterator++
+        // >= rather than == because of rare instances when adjacent points have same timestamp
+        if(trip.points[indexIterator].secs >= secsIterator){
+            animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count, "green");
+            indexIterator++;
         }
         setTimeout(function(){
                     animateTrip(trip, indexIterator, secsIterator + 1);
-                    }, 1);
+                    }, timeoutInterval);
     } else {
         activeAnimationCount--;
         mostRecentAnimation = null;
@@ -401,23 +442,31 @@ function animateTrip(trip, indexIterator, secsIterator){
     }
 }
 
-function animatePoint(x, y, i, count){
-    if(i > count){
-        return;
-    }
-    var pointSize = 1 + (i - 1) / 8;
-    drawPoint(x, y, pointSize);
-    setTimeout(function(){
-                animatePoint(x, y, ++i, count);
-                }, 1);
+function animatePoint(x, y, i, count, color){
+    // Commented-out code creates an expanding circle, but doesn't work w/ opacity
+    // if(i > count){
+    //     return;
+    // }
+    // let pointSize = getPointSize(i);
+    // let opacity = getOpacity(i);
+    // drawPoint(x, y, pointSize, color, opacity);
+    // setTimeout(function(){
+    //             animatePoint(x, y, ++i, count);
+    //             }, 1);
+
+    let fullPointSize = getPointSize(count);
+    let opacity = getOpacity(count);
+    drawPoint(x, y, fullPointSize, color, opacity);
 }
 
 
-function drawPoint(x, y, radius){
+function drawPoint(x, y, radius, color, alpha){
     mapCtx.beginPath();
     mapCtx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    mapCtx.fillStyle = 'green';
+    mapCtx.fillStyle = color;
+    mapCtx.globalAlpha = alpha;
     mapCtx.fill();
+    mapCtx.globalAlpha = 1;
 }
 
 function drawMetadata(trip){
@@ -465,7 +514,7 @@ function drawMetadata(trip){
 function getMaxTextWidth(trip) {
     maxWidth = 0;
     mapCtx.font= font_size + "px " + font;
-    for (var i = 0; i < tooltipItems.length; i++) {
+    for (let i = 0; i < tooltipItems.length; i++) {
         text = tooltipItems[i] + ": " + trip[tooltipItems[i]];
         length = mapCtx.measureText(text).width;
         if (length > maxWidth){
@@ -476,7 +525,6 @@ function getMaxTextWidth(trip) {
 }
 
 function selectTrip(ctx, trip, part){
-    console.log(part + "context is selecting trip " + trip.trip_name);
     ctx.beginPath();
     ctx.lineWidth = 4;
     ctx.strokeStyle = "green";
@@ -485,8 +533,8 @@ function selectTrip(ctx, trip, part){
 }
 
 function scrollToTrip(trip){
-    var mapY = trip.map.y;
-    var tripMapHeight = trip.map.height;
+    let mapY = trip.map.y;
+    let tripMapHeight = trip.map.height;
 
     // Center the mapview if it's overlapping top or bottom
     if(mapY < mapScrollTop || mapY + tripMapHeight + headerHeight > scrollBottom){

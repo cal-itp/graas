@@ -28,7 +28,6 @@ public class AgencyListGenerator {
 
         for (int i = 0; i < objectList.size(); i++){
             String dirPath = objectList.get(i);
-            Debug.log("dirPath: " + dirPath);
             // Turns "graas-report-archive/agencyname/" into "agencyname"
             String agencyName = dirPath.substring(dirName.length(), dirPath.length() - 1);
             List <String> fileNames = gcs.getObjectList("graas-resources", dirPath);
@@ -37,16 +36,12 @@ public class AgencyListGenerator {
 
             for (int j = 0; j < fileNames.size(); j++)   {
                 String filePath = fileNames.get(j);
-                Debug.log("filePath: " + filePath);
                 // Turns "graas-report-archive/agencyname/agencyname-2022-02-07.png" into "agencyname-2022-02-07.png"
                 String fileName = filePath.substring(dirPath.length(), filePath.length());
                 if(fileName.contains(".png")) {
                     // turns "agencyname-2022-02-10.png" into "2022-02-10"
                     String date = fileName.substring(agencyName.length() + 1, fileName.length() - 4);
                     dates.add(date);
-                    Debug.log("fileName: " + fileName);
-                    Debug.log("agencyName: " + agencyName);
-                    Debug.log("date: " + date);
                 }
             }
             if(dates.size() > 0){
