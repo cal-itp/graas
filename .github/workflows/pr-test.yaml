@@ -30,19 +30,19 @@ jobs:
       - name: Install node packages
         working-directory: server/node/
         run: npm install
-      - name: Run position update script
+      - name: Run position updates script
         working-directory: server/tests/
-        run: NODE_PATH=../node/node_modules node post-position-update.js
+        run: NODE_PATH=../node/node_modules node post-vehicle-positions.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA
+        env:
+          PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
+      - name: Run service alerts script
+        working-directory: server/tests/
+        run: NODE_PATH=../node/node_modules node post-service-alerts.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA
         env:
           PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run eslint
         working-directory: server/tools/eslint/
         run: ./lint-files.sh
-      - name: Run Java tests
-        working-directory: gtfu
-        run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test
-        env:
-          PR_TEST_ID_ECDSA: ${{ secrets.PR_TEST_ID_ECDSA }}
       - name: Run Python unit tests
         uses: actions/setup-python@v2
         with:
