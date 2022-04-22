@@ -143,7 +143,7 @@ async function test(url, agencyID, ecdsaVarName) {
 }
 
 const args = process.argv.slice(2);
-util.log(`- args: ${args}`);
+// util.log(`- args: ${args}`);
 
 let url = null;
 let agencyID = null;
