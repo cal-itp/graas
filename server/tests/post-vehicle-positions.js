@@ -42,7 +42,7 @@ async function postUpdates(signatureKey, agencyID, url) {
     };
 
     data['trip-id'] = 'test';
-    data['agency-id'] = 'pr-test';
+    data['agency-id'] = agencyID;
     data['vehicle-id'] = 'test';
     data['pos-timestamp'] = 'test';
 
