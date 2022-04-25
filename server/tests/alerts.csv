@@ -1,0 +1,5 @@
+agency_id,route_id,trip_id,stop_id,header,description,url,cause,effect
+agency-id-1,,,,pr-test-alert-header-1,desc-1,url-1,Strike,No Service
+,route-id-2,,,pr-test-alert-header-2,desc-2,url-2,Demonstration,Reduced Service
+,,trip-id-3,,pr-test-alert-header-3,desc-3,url-3,Accident,Significant Delays
+,,,stop-id-4,pr-test-alert-header-4,desc-4,url-4,Weather,Detour

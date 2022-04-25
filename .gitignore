@@ -10,4 +10,5 @@ log.txt
 *.pb
 .venv
 node_modules/
+server/tests/vehicles.csv
 

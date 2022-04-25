@@ -70,10 +70,6 @@ A web-based client for bulk-assigning GTFS blocks to vehicles is available at th
 
 *Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
 
-Please note:
-  For simplicity reasons, server currently only works reliably with a single instance. memcache implementation
-  with support for multiple instances is forthcoming
-
 See how-to-run.txt in this folder for details on how to run the server both locally and in the cloud.
 
 """
@@ -98,14 +94,9 @@ warnings.filterwarnings("ignore", "Your application has authenticated using end 
 
 app = Flask(__name__)
 
-agency_map = {}
-timestamp_map = {}
 verified_map = {}
 verified_map_millis = 0
-position_lock = threading.Lock()
 alert_lock = threading.Lock()
-saved_position_feed = {}
-saved_position_feed_millis = {}
 
 @app.route('/service-alerts.pb')
 def service_alerts():
@@ -120,18 +111,17 @@ def service_alerts():
 @app.route('/vehicle-positions.pb')
 def vehicle_positions():
     print('/vehicle-positions.pb')
-    agency = request.args.get('agency')
+    agency = request.args.get('agency', None)
     print('- agency: ' + str(agency))
-    position_lock.acquire()
+
+    if agency is None:
+        return 'No agency given', 400
 
     feed = gtfsrt.get_position_feed(
-        saved_position_feed,
-        saved_position_feed_millis,
-        agency_map.get(agency, None),
+        util.datastore_client,
         agency
     )
 
-    position_lock.release()
     return Response(feed, mimetype='application/octet-stream')
 
 @app.route('/')
@@ -226,8 +216,8 @@ Requests can be accepted one of two ways:
 def verify_request(request, cmd):
     global verified_map, verified_map_millis
 
-    #print('- request.data: ' + str(request.data))
-    #print('- request.json: ' + json.dumps(request.json))
+    # print('- request.data: ' + str(request.data))
+    # print('- request.json: ' + json.dumps(request.json))
 
     data = request.json['data']
     sig = request.json['sig']
@@ -340,9 +330,6 @@ def new_pos_sig():
     else:
         gtfsrt.handle_pos_update(
             util.datastore_client,
-            timestamp_map,
-            agency_map,
-            position_lock,
             data
         )
 

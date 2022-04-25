@@ -244,3 +244,21 @@ def get_token(s, start):
         return {'text': s[start: i + 1], 'type': 'string', 'length': i - start + 1}
     else:
         return {'text': s[start], 'type': 'symbol', 'length': 1}
+
+def memory(obj):
+    """
+    """
+    size = 0
+
+    if type(obj) is list:
+        for e in obj:
+            size += memory(e)
+    elif type(obj) is dict:
+        for key in obj:
+            size += memory(key)
+            size += memory(obj[key])
+    else:
+        size += sys.getsizeof(obj)
+
+    return size
+

@@ -6,6 +6,8 @@ from google.transit import gtfs_realtime_pb2
 import json
 import time
 import traceback
+from cache import Cache
+from entity_key_cache import EntityKeyCache
 import util
 
 MAX_LIFE = 30 * 60 # 30 minutes in seconds
@@ -15,6 +17,8 @@ DAY_SECONDS = 24 * 60 * 60
 
 last_alert_purge = 0
 block_map = {}
+cache = Cache()
+entity_key_cache = EntityKeyCache()
 
 cause_map = {
     'Unknown Cause':     gtfs_realtime_pb2.Alert.Cause.UNKNOWN_CAUSE,
@@ -83,10 +87,10 @@ def make_alert(id, item):
         alert.active_period.append(range)
 
     if 'cause' in item:
-        alert.cause = cause_map[item['cause']]
+        alert.cause = cause_map.get(item['cause'], None)
 
     if 'effect' in item:
-        alert.effect = effect_map[item['effect']]
+        alert.effect = effect_map.get(item['effect'], None)
 
     if 'header' in item:
         alert.header_text.CopyFrom(make_translated_string(item['header']))
@@ -131,7 +135,7 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 def alert_is_current(alert):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
-    now = util.get_epoch_seconds()
+    now = int(time.time())
     return now >= int(alert['time_start']) and now < int(alert['time_stop'])
 
 def purge_old_alerts(datastore_client):
@@ -148,8 +152,8 @@ def purge_old_alerts(datastore_client):
     seconds = util.get_epoch_seconds()
     print('- seconds: ' + str(seconds))
 
-    query = datastore_client.query(kind="alert")
-    query.add_filter("time_stop", "<", seconds)
+    query = datastore_client.query(kind='alert')
+    query.add_filter('time_stop', '<', seconds)
     results = list(query.fetch())
     key_list = []
 
@@ -175,92 +179,99 @@ def get_alert_feed(datastore_client, agency):
         obj: alert feed in protobuf format
 
     """
-    print('get_alert_feed')
+    print('get_alert_feed()')
     print('- agency: ' + agency)
 
-    purge_old_alerts(datastore_client)
-    now = util.get_epoch_seconds()
+    name = agency + '-alert-feed'
+    alert_feed = cache.get(name)
 
-    query = datastore_client.query(kind="alert")
-    query.add_filter("agency_key", "=", agency)
-    query.order = ["-time_stamp"]
+    if alert_feed is None:
+        purge_old_alerts(datastore_client)
+        now = int(time.time())
 
-    results = list(query.fetch(limit=20))
+        query = datastore_client.query(kind='alert')
+        query.add_filter('agency_key', '=', agency)
+        query.order = ['-time_stamp']
 
-    header = gtfs_realtime_pb2.FeedHeader()
-    header.gtfs_realtime_version = '2.0'
-    header.timestamp = now
+        results = list(query.fetch(limit=20))
 
-    feed = gtfs_realtime_pb2.FeedMessage()
-    feed.header.CopyFrom(header)
+        header = gtfs_realtime_pb2.FeedHeader()
+        header.gtfs_realtime_version = '2.0'
+        header.timestamp = now
 
-    count = 1
+        feed = gtfs_realtime_pb2.FeedMessage()
+        feed.header.CopyFrom(header)
 
-    for item in results:
-        if alert_is_current(item):
-            print('-- ' + str(item))
-            feed.entity.append(make_alert(count, item))
-            count += 1
+        count = 1
 
-    return feed.SerializeToString()
+        for item in results:
+            if alert_is_current(item):
+                print('-- ' + str(item))
+                feed.entity.append(make_alert(count, item))
+                count += 1
 
-def get_position_feed(saved_position_feed, saved_position_feed_millis, vehicle_map, agency):
+        alert_feed = feed.SerializeToString()
+        cache.add(name, alert_feed, 60)
+    return alert_feed
+
+def get_position_feed(datastore_client, agency):
     """Assemble position feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
 
     Args:
-        saved_position_feed (dict): dictionary mapping agency IDs to cached feed instances.
-        saved_position_feed_millis (dict): dictionary mapping agency IDs to cache update timestamps.
-        vehicle_map (dict): dictionary mapping vehicle IDs to position data.
+        datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
 
     Returns:
         obj: position feed in protobuf format
 
     """
-    millis = saved_position_feed_millis.get(agency, 0)
-    feed = saved_position_feed.get(agency, None)
+    name = agency + '-pos-feed'
+    pos_feed = cache.get(name)
 
-    if millis > 0 and util.get_current_time_millis() - millis <= 1000:
-        print('+ returning cached feed message')
-        return feed
+    if pos_feed is None:
+        header = gtfs_realtime_pb2.FeedHeader()
+        header.gtfs_realtime_version = '2.0'
+        header.timestamp = util.get_epoch_seconds()
 
-    header = gtfs_realtime_pb2.FeedHeader()
-    header.gtfs_realtime_version = '2.0'
-    header.timestamp = util.get_epoch_seconds()
+        feed = gtfs_realtime_pb2.FeedMessage()
+        feed.header.CopyFrom(header)
 
-    feed = gtfs_realtime_pb2.FeedMessage()
-    feed.header.CopyFrom(header)
+        query = datastore_client.query(kind='current-position')
+        query.add_filter('agency-id', '=', agency)
 
-    if vehicle_map:
-        for id in list(vehicle_map):
-            vehicle = vehicle_map[id];
+        results = list(query.fetch())
+        print(f'- results: {results}')
 
-            vts = int(vehicle['timestamp'])
+        for pos in results:
+            vts = int(pos['timestamp'])
             now = util.get_epoch_seconds()
             delta = now - vts
 
             if delta >= MAX_LIFE:
-                del vehicle_map[id]
+                datastore_client.delete(pos.key)
             else:
                 feed.entity.append(make_position(
-                    id,
-                    float(vehicle['lat']),
-                    float(vehicle['long']),
-                    float(vehicle['heading']),
-                    float(vehicle['speed']),
-                    vehicle['trip-id'],
-                    int(vehicle['timestamp'])
+                    pos['vehicle-id'],
+                    float(pos['lat']),
+                    float(pos['long']),
+                    float(pos['heading']),
+                    float(pos['speed']),
+                    pos['trip-id'],
+                    int(pos['timestamp'])
                 ));
 
-    saved_position_feed[agency] = feed.SerializeToString()
-    saved_position_feed_millis[agency] = util.get_current_time_millis()
-    print('+ created new feed message at ' + str(saved_position_feed_millis[agency]))
+        pos_feed = feed.SerializeToString()
+        cache.add(name, pos_feed, 3)
 
-    return saved_position_feed[agency]
+    return pos_feed
 
 def add_alert(datastore_client, alert):
     print('add_alert()')
     print('- alert: ' + str(alert))
+
+    if not 'agency_key' in alert:
+        print('alert doesn\'t have associated agency, discarding')
+        return
 
     if not('time_start' in alert and 'time_stop' in alert):
         print('alert doesn\'t have valid time range, discarding')
@@ -271,15 +282,9 @@ def add_alert(datastore_client, alert):
         return
 
     entity = datastore.Entity(key=datastore_client.key('alert'))
-    obj = {}
+    alert['time_stamp'] = int(time.time())
 
-    obj['time_stamp'] = util.get_current_time_millis()
-
-    for field in alert:
-        print('-- ' + str(field))
-        obj[str(field)] = alert[str(field)]
-
-    entity.update(obj)
+    entity.update(alert)
     datastore_client.put(entity)
     print('+ wrote alert')
 
@@ -346,10 +351,10 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     if date_string is None:
         date_string = util.get_yyyymmdd()
 
-    query = datastore_client.query(kind="block-metadata")
-    query.add_filter("agency_id", "=", agency_id)
-    query.add_filter("valid_date", "=", date_string)
-    query.order = ["-created"]
+    query = datastore_client.query(kind='block-metadata')
+    query.add_filter('agency_id', '=', agency_id)
+    query.add_filter('valid_date', '=', date_string)
+    query.order = ['-created']
 
     results = list(query.fetch(limit=1))
     print(f'- results: {results}')
@@ -540,8 +545,8 @@ def handle_block_collection(datastore_client, data):
         entity.update(block_metadata)
         datastore_client.put(entity)
 
-        query = datastore_client.query(kind="block-metadata")
-        query.add_filter("created", "<", now - WEEK_MILLIS)
+        query = datastore_client.query(kind='block-metadata')
+        query.add_filter('created', '<', now - WEEK_MILLIS)
 
         results = list(query.fetch())
         print(f'- results: {results}')
@@ -565,24 +570,29 @@ def handle_block_collection(datastore_client, data):
 
     return 'ok'
 
-def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock, data):
+def handle_pos_update(datastore_client, data):
     """Handle an incoming vehicle postion update. If the update is missing a trip ID, check if we have block assignment data to let us backfill the ID. Write update to DB and update internal data structures with the received data.
 
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
-        timestamp_map (dict): dictionary of vehicle UUIDs to last received timestamp.
-        agency_map (dict): hierarchical dictionary of vehicle position data.
-        position_lock (obj): concurency lock for access to agency_map.
-
+        data (dict): details of the position update (lat, long, speed, heading, etc).
     """
+
+    agencyID = data.get('agency-id', None)
+    vehicleID = data.get('vehicle-id', None)
+    timestamp = data.get('timestamp', None)
+
+    if agencyID is None or vehicleID is None or timestamp is None:
+        print(f'* position update has no agency ID or vehicle ID or timestamp, discarding: {data}')
+        return
+
     data['rcv-timestamp'] = util.get_epoch_seconds()
 
-    ### TODO check if 'use-bulk-assignment-mode' == True
     if data.get('trip-id', None) is None:
         trip_id = get_trip_id(
             datastore_client,
-            data.get('agency-id', None),
-            data.get('vehicle-id', None)
+            agencyID,
+            vehicleID
         )
         print(f'- trip_id: {trip_id}')
 
@@ -595,20 +605,41 @@ def handle_pos_update(datastore_client, timestamp_map, agency_map, position_lock
     if data['uuid'] != 'replay':
         add_position(datastore_client, data)
 
-    prev_timestamp = timestamp_map.get(data['uuid'], None)
+    name = agencyID + '-' + vehicleID + '-cur-pos'
+    entity_key = entity_key_cache.get(name)
 
-    if prev_timestamp and int(data['timestamp']) < int(prev_timestamp):
-        return '{"command": "new-pos", "status": "out-of-sequence"}'
+    if entity_key is None:
+        query = datastore_client.query(kind='current-position')
+        query.add_filter('agency-id', '=', agencyID)
+        query.add_filter('vehicle-id', '=', vehicleID)
+        query.order = ['-timestamp']
 
-    timestamp_map[data['uuid']] = data['timestamp']
+        results = list(query.fetch())
 
-    position_lock.acquire();
-    agency = data['agency-id'];
-    vehicle_map = agency_map.get(agency, None)
-    if not vehicle_map:
-        vehicle_map = {}
-        agency_map[agency] = vehicle_map
-    vehicle_id = data['vehicle-id'];
-    print('- vehicle_id: ' + vehicle_id)
-    vehicle_map[vehicle_id] = data
-    position_lock.release()
+        if len(results) == 0:
+            entity = datastore.Entity(key=datastore_client.key('current-position'))
+            entity['timestamp'] = 0
+            datastore_client.put(entity)
+            entity_key_cache.add(name, entity.key)
+            entity_key = entity.key
+        else:
+            entity_key_cache.add(name, results[0].key)
+            entity_key = results[0].key
+
+    entity = datastore_client.get(entity_key)
+
+    if entity is None:
+            print(f'* invalid entity key: {entity_key}, discarding pos update and key')
+            entity_key_cache.remove(name)
+            return
+
+    if timestamp <= entity['timestamp']:
+            print(f'* pos update not newer than last update, discarding')
+            return
+
+    entity.update(data)
+    datastore_client.put(entity)
+
+
+
+

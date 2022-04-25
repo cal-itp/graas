@@ -23,8 +23,8 @@ Deployment
 1. Ensure you are on the latest version of the main branch, and run `gcloud app deploy --no-promote` from the app-engine directory. This deploys the web app to a sort of "staging environment", since web traffic continues to be directed to the previous version.
 2. When the deploy is done, visit the staging environment at `https://<VERSION_ID>-dot--<PROJECT_ID>.wl.r.appspot.com/` Get the versionID from the [Versions Console](https://console.cloud.google.com/appengine/versions). Manually ensure the app UX works as expected by scanning a QR code and starting a trip. Note that all API requests will be routed to the previous instance, so this method won't test back-end updates.
 3. After checking that the front end updates are working correctly to the [Versions Console](https://console.cloud.google.com/appengine/versions) and direct all traffic to the new version. Select the latest version, click the 3-dot "hamburger menu" and then click "migrate."
-4. From server/test, run the command `NODE_PATH=../node/node_modules node post-position-update.js` to post an update to the server.
-5. From the gtfu directory, and within 30 seconds after running step 4, run Java tests with this command: `java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.ServerTest pr-test`
+4. From server/test, run `NODE_PATH=../node/node_modules node post-vehicle-positions.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
+5. From server/test, run `NODE_PATH=../node/node_modules node post-service-alerts.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
 6. From the app-engine directory, run a server stress test with this command: `python stress-test.py ../tests/stress-test-config.json`
 
 Generate Weekly Reports
