@@ -356,7 +356,7 @@ if __name__ == '__main__':
         exit(1)
 
     # run https server locally with supplied credentials
-    app.run(ssl_context=(certfile, keyfile), host = '127.0.0.1', port = 8080, debug = True, threaded = False)
+    # app.run(ssl_context=(certfile, keyfile), host = '127.0.0.1', port = 8080, debug = True, threaded = False)
 
     # run http server locally
-    # app.run(host = '127.0.0.1', port = 8080, debug = True)
+    app.run(host = '127.0.0.1', port = 8080, debug = True)

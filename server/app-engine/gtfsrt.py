@@ -167,7 +167,6 @@ def purge_old_alerts(datastore_client):
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
 
-### TODO keep local cache for alert feeds
 def get_alert_feed(datastore_client, agency):
     """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
 
@@ -230,7 +229,7 @@ def get_position_feed(datastore_client, agency):
     if pos_feed is None:
         header = gtfs_realtime_pb2.FeedHeader()
         header.gtfs_realtime_version = '2.0'
-        header.timestamp = util.get_epoch_seconds()
+        header.timestamp = int(time.time())
 
         feed = gtfs_realtime_pb2.FeedMessage()
         feed.header.CopyFrom(header)
@@ -288,6 +287,7 @@ def add_alert(datastore_client, alert):
     print('+ wrote alert')
 
 def add_position(datastore_client, pos):
+
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)
     datastore_client.put(entity)
@@ -585,7 +585,7 @@ def handle_pos_update(datastore_client, data):
         print(f'* position update has no agency ID or vehicle ID or timestamp, discarding: {data}')
         return
 
-    data['rcv-timestamp'] = util.get_epoch_seconds()
+    data['rcv-timestamp'] = int(time.time())
 
     if data.get('trip-id', None) is None:
         trip_id = get_trip_id(
@@ -638,7 +638,3 @@ def handle_pos_update(datastore_client, data):
 
     entity.update(data)
     datastore_client.put(entity)
-
-
-
-
