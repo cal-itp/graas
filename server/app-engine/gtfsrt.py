@@ -133,6 +133,7 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     return entity
 
 def alert_is_current(alert):
+    print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
@@ -142,14 +143,14 @@ def purge_old_alerts(datastore_client):
     global last_alert_purge
     print('purge_old_messages')
 
-    day = int(util.get_epoch_seconds() / 86400)
+    day = int(time.time() / DAY_SECONDS)
     print('- day: ' + str(day))
     print('- last_alert_purge: ' + str(last_alert_purge))
 
     if day == last_alert_purge:
         return
 
-    seconds = util.get_epoch_seconds()
+    seconds = int(time.time())
     print('- seconds: ' + str(seconds))
 
     query = datastore_client.query(kind='alert')
@@ -158,14 +159,13 @@ def purge_old_alerts(datastore_client):
     key_list = []
 
     for alert in results:
-        print('-- alert: ' + str(alert))
+        print('-- alert to purge: ' + str(alert))
         key_list.append(alert.key)
 
     print('- key_list: ' + str(key_list))
 
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
-
 
 ### TODO keep local cache for alert feeds
 def get_alert_feed(datastore_client, agency):
@@ -194,7 +194,6 @@ def get_alert_feed(datastore_client, agency):
         query.order = ['-time_stamp']
 
         results = list(query.fetch(limit=20))
-
         header = gtfs_realtime_pb2.FeedHeader()
         header.gtfs_realtime_version = '2.0'
         header.timestamp = now
