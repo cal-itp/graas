@@ -287,7 +287,6 @@ def add_alert(datastore_client, alert):
     print('+ wrote alert')
 
 def add_position(datastore_client, pos):
-
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)
     datastore_client.put(entity)
