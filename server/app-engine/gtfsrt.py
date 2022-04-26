@@ -133,6 +133,7 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     return entity
 
 def alert_is_current(alert):
+    print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
@@ -142,14 +143,14 @@ def purge_old_alerts(datastore_client):
     global last_alert_purge
     print('purge_old_messages')
 
-    day = int(util.get_epoch_seconds() / 86400)
+    day = int(time.time() / DAY_SECONDS)
     print('- day: ' + str(day))
     print('- last_alert_purge: ' + str(last_alert_purge))
 
     if day == last_alert_purge:
         return
 
-    seconds = util.get_epoch_seconds()
+    seconds = int(time.time())
     print('- seconds: ' + str(seconds))
 
     query = datastore_client.query(kind='alert')
@@ -158,7 +159,7 @@ def purge_old_alerts(datastore_client):
     key_list = []
 
     for alert in results:
-        print('-- alert: ' + str(alert))
+        print('-- alert to purge: ' + str(alert))
         key_list.append(alert.key)
 
     print('- key_list: ' + str(key_list))
@@ -166,8 +167,6 @@ def purge_old_alerts(datastore_client):
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
 
-
-### TODO keep local cache for alert feeds
 def get_alert_feed(datastore_client, agency):
     """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
 
@@ -194,7 +193,6 @@ def get_alert_feed(datastore_client, agency):
         query.order = ['-time_stamp']
 
         results = list(query.fetch(limit=20))
-
         header = gtfs_realtime_pb2.FeedHeader()
         header.gtfs_realtime_version = '2.0'
         header.timestamp = now
@@ -231,7 +229,7 @@ def get_position_feed(datastore_client, agency):
     if pos_feed is None:
         header = gtfs_realtime_pb2.FeedHeader()
         header.gtfs_realtime_version = '2.0'
-        header.timestamp = util.get_epoch_seconds()
+        header.timestamp = int(time.time())
 
         feed = gtfs_realtime_pb2.FeedMessage()
         feed.header.CopyFrom(header)
@@ -244,7 +242,7 @@ def get_position_feed(datastore_client, agency):
 
         for pos in results:
             vts = int(pos['timestamp'])
-            now = util.get_epoch_seconds()
+            now = int(time.time())
             delta = now - vts
 
             if delta >= MAX_LIFE:
@@ -586,7 +584,7 @@ def handle_pos_update(datastore_client, data):
         print(f'* position update has no agency ID or vehicle ID or timestamp, discarding: {data}')
         return
 
-    data['rcv-timestamp'] = util.get_epoch_seconds()
+    data['rcv-timestamp'] = int(time.time())
 
     if data.get('trip-id', None) is None:
         trip_id = get_trip_id(
@@ -639,7 +637,3 @@ def handle_pos_update(datastore_client, data):
 
     entity.update(data)
     datastore_client.put(entity)
-
-
-
-
