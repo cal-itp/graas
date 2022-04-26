@@ -244,7 +244,7 @@ def get_position_feed(datastore_client, agency):
 
         for pos in results:
             vts = int(pos['timestamp'])
-            now = util.get_epoch_seconds()
+            now = int(time.time())
             delta = now - vts
 
             if delta >= MAX_LIFE:
