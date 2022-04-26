@@ -65,16 +65,24 @@ public class CSVRecord {
         Token token = new Token();
         int i = from;
         char c = '\0';
+        StringBuilder sb = new StringBuilder();
 
         for (;;) {
             if (i >= s.length()) break;
 
             c = s.charAt(i++);
-            if (c == '"') break;
+
+            if (c == '"') {
+                if (i < s.length() && s.charAt(i) == '"') {
+                    i++;
+                } else break;
+            }
+
+            sb.append(c);
         }
 
         if (c != '"') throw new Fail("can't parse '" + s + "'");
-        token.s = s.substring(from, i - 1);
+        token.s = sb.toString();
         token.to = i + 1;
 
         return token;
