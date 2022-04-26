@@ -50,6 +50,8 @@ var translateOffsetX;
 
 var lastClick = null;
 
+var instructionsVisible = false;
+
 var font_size = 20;
 const bucketURL = "https://storage.googleapis.com/graas-resources"
 const font = "Arial";
@@ -59,6 +61,7 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
 
  const OPACITY_MULTIPLIER = 0.98;
  const ALPHA_MIN = 0.4;
+ const MARGIN = 5;
 
 function initialize(){
     getRewriteArgs()
@@ -77,14 +80,14 @@ function loadJSON(url, callback){
 
 function processDropdownJSON(object){
 
-    var p = document.getElementById("agency-select");
-    var opt = document.createElement('option');
+    let p = document.getElementById("agency-select");
+    let opt = document.createElement('option');
     opt.appendChild(document.createTextNode("Select agency-id..."));
     p.appendChild(opt);
 
-    for (var key in object) {
+    for (let key in object) {
         agencies.set(key, object[key])
-        var opt = document.createElement('option');
+        let opt = document.createElement('option');
         opt.appendChild(document.createTextNode(key));
         p.appendChild(opt);
     }
@@ -103,12 +106,12 @@ function handleAgencyChoice(){
     if(utmAgency == null){
         selectedAgency = document.getElementById("agency-select").value;
     }
-    var p = document.getElementById("date-select");
+    let p = document.getElementById("date-select");
     clearSelectOptions(p);
 
     // loop counts down to get reverse-chronological dates
-    for (var i = agencies.get(selectedAgency).length -1; i >= 0; i--) {
-        var opt = document.createElement('option');
+    for (let i = agencies.get(selectedAgency).length -1; i >= 0; i--) {
+        let opt = document.createElement('option');
         opt.appendChild(document.createTextNode(agencies.get(selectedAgency)[i]));
         p.appendChild(opt);
     }
@@ -125,32 +128,47 @@ function handleDateChoice(){
 
 function processTripJSON(object){
     trips.length = 0;
-    for (var i = 0; i < object.trips.length; i++) {
-        var map = {x: object["trips"][i]["boundaries"]["map-x"],
+    for (let i = 0; i < object.trips.length; i++) {
+        let map = {x: object["trips"][i]["boundaries"]["map-x"],
                    y: object["trips"][i]["boundaries"]["map-y"],
                    width: object["trips"][i]["boundaries"]["map-width"],
                    height: object["trips"][i]["boundaries"]["map-height"]
                 };
-        var timeline = {x: object["trips"][i]["boundaries"]["timeline-x"],
+        let timeline = {x: object["trips"][i]["boundaries"]["timeline-x"],
                        y: object["trips"][i]["boundaries"]["timeline-y"],
                        width: object["trips"][i]["boundaries"]["timeline-width"],
                        height: object["trips"][i]["boundaries"]["timeline-height"]
                 };
-        var points = []
-        for (var j = 0; j < object["trips"][i]["trip-points"].length; j++) {
+        let points = []
+        for (let j = 0; j < object["trips"][i]["trip-points"].length; j++) {
             points.push({x: object["trips"][i]["trip-points"][j]["x"],
                         y: object["trips"][i]["trip-points"][j]["y"],
                         secs: Math.round(object["trips"][i]["trip-points"][j]["millis"]/1000),
                         count: object["trips"][i]["trip-points"][j]["count"]
                         });
         }
-        // Unclear whether sorting is necessary - they may already be sorted.
+        // Sort points
         points.sort(function compareFn(a, b) {
             if (a.secs <= b.secs) {
                 return -1;
             }
             else return 1;
         });
+
+        // Remove points with duplicate timestamps - this is rare but it happens.
+        // A more robust approach would be to determine why duplicate timestamps are occuring.
+        let x = 0;
+        let y = 1;
+        while(x < points.length && y < points.length){
+            if(points[y].secs !== points[x].secs){
+                x++;
+                points[x] = points[y];
+                y++;
+            } else {
+                y++;
+            }
+        }
+        points.splice(x);
 
         trips.push({trip_name: object["trips"][i]["trip-name"],
                     agent: object["trips"][i]["agent"],
@@ -184,7 +202,7 @@ function load(){
     timelineCtx = timelineCanvas.getContext('2d');
     timelineCtx.canvas.width = canvasWidth;
 
-    dropdownHeight = document.getElementById('dropdowns').offsetHeight;
+    dropdownHeight = document.getElementById('top').offsetHeight;
     // ?nocache= prevents annoying caching...mostly for debugging purposes
     // Remove "test" before PR
     reportImageUrl = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
@@ -195,6 +213,7 @@ function load(){
     p.download = `${selectedAgency}-${selectedDate}.png`;
     p.style.display = "inline-block";
 
+    showElement("click-here");
     rowCount = Math.ceil(trips.length / columnCount);
 
     img.onload = function() {
@@ -237,11 +256,20 @@ function load(){
     document.body.addEventListener('click', function(event) {
         // Click event tends to fire twice - this is a hacky way of preventing that
         let clickTime = new Date().getTime();
+        let searchX = event.pageX;
+        let searchY = event.pageY;
+
         if(clickTime - lastClick < 100){
             lastClick = clickTime;
             return
         }
         lastClick = clickTime;
+
+        if(searchY > dropdownHeight && instructionsVisible){
+            hideElement("box");
+            instructionsVisible = false;
+            return;
+        }
 
         if (event.shiftKey && isZoomedIn) {
             zoomOut();
@@ -255,8 +283,7 @@ function load(){
         mapScrollTop = scrollTop + headerHeight;        // Top of current map
         scrollBottom = scrollTop + windowHeight;        // Bottom of current map
 
-        let searchX = event.pageX;
-        let searchY = event.pageY;
+
         let searchObject = null;
 
         // If the click occurs below the header, adjust y value and search map objects
@@ -302,9 +329,6 @@ function load(){
                     mostRecentAnimation = clickedTrip;
                     let tripDuration = clickedTrip.points[clickedTrip.points.length - 1].secs - clickedTrip.points[0].secs;
                     let timeoutInterval = 1;
-                    if(tripDuration < 1000){
-                        timeoutInterval = 10;
-                    }
                     console.log("tripDuration: " + tripDuration);
                     animateTrip(clickedTrip, 0, 0, timeoutInterval);
                     return;
@@ -380,16 +404,15 @@ function drawReportBackground(){
     // Clear map background to account for zooming in/out
     mapCtx.clearRect(0, timelineHeight, imageWidth, mapHeight);
     mapCtx.drawImage(img, 0, timelineHeight, imageWidth, mapHeight, 0, 0, canvasWidth, mapScaledHeight);
-
 }
 
 function drawReportTripsExcept(trip){
-    for(var i = 0; i < trips.length; i++){
+    for(let i = 0; i < trips.length; i++){
         if(trips[i] === trip){
             continue;
         }
-        var mapX = trips[i].map.x;
-        var mapY = trips[i].map.y;
+        let mapX = trips[i].map.x;
+        let mapY = trips[i].map.y;
 
         for(let j = 0; j < trips[i].points.length; j++){
             let pointSize = getPointSize(trips[i].points[j].count);
@@ -409,7 +432,8 @@ function getPointSize(count){
 }
 
 function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
-
+    // console.log("indexIterator: " + indexIterator);
+    // console.log("secsIterator: " + secsIterator);
     if(indexIterator === 0){
         activeAnimationCount++;
         secsIterator = trip.points[0].secs;
@@ -427,13 +451,13 @@ function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
         return;
     }
     if(indexIterator < trip.points.length){
-        // >= rather than == because of rare instances when adjacent points have same timestamp
-        if(trip.points[indexIterator].secs >= secsIterator){
+        // console.log("trip.points[indexIterator].secs: " + trip.points[indexIterator].secs);
+        if(trip.points[indexIterator].secs == secsIterator){
             animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count, "green");
             indexIterator++;
         }
         setTimeout(function(){
-                    animateTrip(trip, indexIterator, secsIterator + 1);
+                    animateTrip(trip, indexIterator, secsIterator + 1, timeoutInterval);
                     }, timeoutInterval);
     } else {
         activeAnimationCount--;
@@ -475,14 +499,13 @@ function drawMetadata(trip){
     // Font size would only get to 0 as a result of very buggy behavior. If that occurs, simply don't display metadata.
     if (font_size <= 0) return;
 
-    var margin = 5;
     metadataWidth = trip.map.width;
     metadataX = trip.map.x + metadataWidth;
     metadataY = trip.map.y;
     metadataHeight = trip.map.height;
 
-    while ((tooltipItems.length * (font_size + margin) >= metadataHeight)
-            || (getMaxTextWidth(trip) + margin * 2 >= metadataWidth))  {
+    while ((tooltipItems.length * (font_size + MARGIN) >= metadataHeight)
+            || (getMaxTextWidth(trip) + MARGIN * 2 >= metadataWidth))  {
         font_size -= 5;
         if (font_size <= 0) return;
     }
@@ -505,9 +528,9 @@ function drawMetadata(trip){
     mapCtx.fillStyle = "black";
     mapCtx.font= `${font_size}px ${font}`;
 
-    for (var i = 0; i < tooltipItems.length; i++) {
-        metadataY += (font_size + margin);
-        mapCtx.fillText(`${tooltipItems[i]}: ${trip[tooltipItems[i]]}`, metadataX + margin , metadataY);
+    for (let i = 0; i < tooltipItems.length; i++) {
+        metadataY += (font_size + MARGIN);
+        mapCtx.fillText(`${tooltipItems[i]}: ${trip[tooltipItems[i]]}`, metadataX + MARGIN , metadataY);
     }
 }
 
@@ -545,9 +568,9 @@ function scrollToTrip(trip){
 // Below two functions are copied from graas.js
 // TODO: consolidate this type of html util functions into one file
 function clearSelectOptions(sel) {
-    var l = sel.options.length - 1;
+    let l = sel.options.length - 1;
 
-    for(var i = l; i >= 0; i--) {
+    for(let i = l; i >= 0; i--) {
         sel.remove(i);
     }
 }
@@ -556,7 +579,7 @@ function getRewriteArgs() {
     const s = window.location.search;
     const arg = s.split(/[&\?]/);
 
-    for (var a of arg) {
+    for (let a of arg) {
         if (!a) continue;
 
         const t = a.split('=');
@@ -567,4 +590,22 @@ function getRewriteArgs() {
             utmAgency = value
         }
     }
+}
+
+function showInstructions(){
+    instructionsVisible = true;
+    showElement("box");
+}
+
+function hideElement(id) {
+    changeDisplay(id,"none");
+}
+
+function showElement(id) {
+    changeDisplay(id,"inline-block");
+}
+
+function changeDisplay(id,display) {
+    var p = document.getElementById(id);
+    p.style.display = display;
 }
