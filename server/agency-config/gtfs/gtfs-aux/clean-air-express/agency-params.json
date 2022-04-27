@@ -4,5 +4,6 @@
 "max-feet-from-stop": 1320,
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
-"ignore-start-end-date": false
+"ignore-start-end-date": false,
+"use-bulk-assignment-mode": true
 }
