@@ -102,6 +102,7 @@ public class GraphicReport {
         Debug.log("- selectedDate: " + selectedDate);
         Debug.log("- savePath: " + savePath);
         Debug.log("- sendEmail: " + sendEmail);
+        Debug.log("- isTest: " + isTest);
 
         DB db = new DB();
         long queryStartTime = 0;
@@ -112,8 +113,8 @@ public class GraphicReport {
             queryStartTime = Time.parseDateAsLong("MM/dd/yy", selectedDate) / 1000;
         }
         queryEndTime = Time.getNextDaySeconds(queryStartTime);
-        Debug.log("- queryStartTime: " + queryStartTime);
-        Debug.log("- queryEndTime: " + queryEndTime);
+        // Debug.log("- queryStartTime: " + queryStartTime);
+        // Debug.log("- queryEndTime: " + queryEndTime);
         List<String> results = db.fetch(queryStartTime, queryEndTime, "position", PROPERTY_NAMES);
         GPSLogSlicer slicer = new GPSLogSlicer(results, "");
         Map<String, List<String>> logs = slicer.getLogs();
@@ -187,10 +188,10 @@ public class GraphicReport {
             // addRandomTestData(1);
             // Debug.log("- tdList.size(): " + tdList.size());
 
-
             // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>-yyyy-mm-dd
             String agencyDate = key.substring(0, key.length() - 4);
 
+            // Create the canvas once without position updates, and then again with them
             Graphics2D noVehiclePos = createCanvas(name, date);
             reportTimeCoverage(noVehiclePos);
             reportGPSCoverage(noVehiclePos, false);
@@ -239,9 +240,9 @@ public class GraphicReport {
         int responseCode = grid.send();
     }
 
-    private void uploadToGCloud(String key, byte[] file, String fileType, boolean isTest) throws IOException {
+    private void uploadToGCloud(String agencyDate, byte[] file, String fileType, boolean isTest) throws IOException {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
-        String agencyID = key.substring(0, key.length() - 11);
+        String agencyID = agencyDate.substring(0, agencyDate.length() - 11);
         String path = (isTest ? "test/" : "") + "graas-report-archive/" + agencyID;
         String fileSuffix = "";
         String fileTypeName = "";
@@ -253,7 +254,7 @@ public class GraphicReport {
             fileSuffix = ".json";
             fileTypeName = "text/json";
         }
-        String fileName = key + fileSuffix;
+        String fileName = agencyDate + fileSuffix;
         gcs.uploadObject("graas-resources", path, fileName, file, fileTypeName);
     }
 
@@ -564,7 +565,6 @@ public class GraphicReport {
         g.setStroke(new BasicStroke(SCALE));
         g.setColor(DARK);
 
-
         // Draw static GTFS
         Path2D.Float path = new Path2D.Float();
 
@@ -585,12 +585,13 @@ public class GraphicReport {
 
         List<Point> pointList = new ArrayList<Point>();
 
-        // Draw vehicle location ---
+        // Process vehicle location data and optionally draw it
         for (String latLon : latLonMap.keySet()) {
             Point p = latLongToScreenXY(area, latLonMap.get(latLon).lat, latLonMap.get(latLon).lon, LENGTH, LENGTH);
             p.millis = latLonMap.get(latLon).millis;
             p.count = latLonMap.get(latLon).count;
             pointList.add(p);
+
             if(drawPosUpdates){
                 Integer count = latLonMap.get(latLon).count;
                 float scaledDotSize = DOT_SIZE * (1 + (count - 1) / DOT_SIZE_MULTIPLIER);
@@ -599,7 +600,6 @@ public class GraphicReport {
                 dot.width = scaledDotSize;
                 dot.height = scaledDotSize;
 
-                //g.fillOval(p.x - 1, p.y - 1, 2, 2);
                 dot.x = p.x - dot.width / 2;
                 dot.y = p.y - dot.width / 2;
                 AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER,alphaFinal);
@@ -641,10 +641,11 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email]");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email] [-t|--test]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
         System.err.println("    <save-path> (if given) is the path to a folder where to save position logs & reports");
         System.err.println("    Using -ne prevents an email report from being sent");
+        System.err.println("    Using -t runs as a test and doesn't save results to production GCloudStorage");
         System.exit(1);
     }
 
