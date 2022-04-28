@@ -105,7 +105,7 @@ public class BlockDataGenerator {
             byte[] file = baos.toByteArray();
 
             GCloudStorage gcs = new GCloudStorage();
-            gcs.uploadObject("graas-resources", "gtfs-aux/" + agencyID, fileName, file);
+            gcs.uploadObject("graas-resources", "gtfs-aux/" + agencyID + "/", fileName, file);
         }
         else{
             String outputFile = outputFolder + "/" + fileName;

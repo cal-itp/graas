@@ -16,20 +16,23 @@ public class AgencyListGenerator {
     /**
     * Generate the Agency List JSON object and upload it to GCloud
     */
-    public static void generateAgencyList(boolean isTest) throws IOException {
+    public static void generateAgencyList(String gCloudPath) throws IOException {
 
         GCloudStorage gcs = new GCloudStorage();
         String bucketName = "graas-resources";
-        String dirName = (isTest ? "test/" : "") + "graas-report-archive/";
 
-        List <String> objectList = gcs.getObjectList(bucketName, dirName);
+        if (gCloudPath == null){
+            gCloudPath = "graas-report-archive/";
+        }
+
+        List <String> objectList = gcs.getObjectList(bucketName, gCloudPath);
 
         JSONObject agencies = new JSONObject();
 
         for (int i = 0; i < objectList.size(); i++){
             String dirPath = objectList.get(i);
             // Turns "graas-report-archive/agencyname/" into "agencyname"
-            String agencyName = dirPath.substring(dirName.length(), dirPath.length() - 1);
+            String agencyName = dirPath.substring(gCloudPath.length(), dirPath.length() - 1);
             List <String> fileNames = gcs.getObjectList("graas-resources", dirPath);
 
             JSONArray dates = new JSONArray();
@@ -49,9 +52,9 @@ public class AgencyListGenerator {
             }
         }
 
-        String fileName = "graas-report-agency-dates" + (isTest ? "-test" : "") + ".json";
+        String fileName = "graas-report-agency-dates.json";
 
-        gcs.uploadObject("graas-resources", "web", fileName, agencies.toString().getBytes("utf-8"), "text/json");
+        gcs.uploadObject("graas-resources", gCloudPath, fileName, agencies.toString().getBytes("utf-8"), "text/json");
     }
 
     private static void usage() {
@@ -62,6 +65,6 @@ public class AgencyListGenerator {
     * Generate the Agency List from the command line
     */
     public static void main(String[] arg) throws Exception {
-        generateAgencyList(false);
+        generateAgencyList(null);
     }
 }

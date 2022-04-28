@@ -1,3 +1,7 @@
+const bucketURL = "https://storage.googleapis.com/graas-resources/";
+// When testing, update archiveDir with your test directory
+const archiveDir = "graas-report-archive/";
+
 const trips = [];
 const agencies = new Map();
 
@@ -50,7 +54,6 @@ var lastClick = null;
 var instructionsVisible = false;
 
 var font_size = 20;
-const bucketURL = "https://storage.googleapis.com/graas-resources"
 const font = "Arial";
 const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
                      "os", "uuid_tail", "avg_update_interval",
@@ -63,7 +66,7 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
 
 function initialize(){
     getRewriteArgs()
-    url = `${bucketURL}/web/graas-report-agency-dates.json`;
+    url = `${bucketURL}${archiveDir}graas-report-agency-dates.json`;
     loadJSON(url, processDropdownJSON);
 }
 
@@ -121,29 +124,29 @@ function handleDateChoice(){
     isNewPageSelect = true;
     selectedDate = document.getElementById("date-select").value;
     // "?nocache=" mostly forces the page to reload files each time
-    url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json?nocache=${(new Date()).getTime()}`;
+    url = `${bucketURL}${archiveDir}${selectedAgency}/${selectedAgency}-${selectedDate}.json?nocache=${(new Date()).getTime()}`;
     loadJSON(url, processTripJSON);
 }
 
 function processTripJSON(object){
     trips.length = 0;
     for (let i = 0; i < object.trips.length; i++) {
-        let map = {x: object["trips"][i]["boundaries"]["map-x"],
-                   y: object["trips"][i]["boundaries"]["map-y"],
-                   width: object["trips"][i]["boundaries"]["map-width"],
-                   height: object["trips"][i]["boundaries"]["map-height"]
+        let map = {x: object.trips[i].boundaries.mapX,
+                   y: object.trips[i].boundaries.mapY,
+                   width: object.trips[i].boundaries.mapWidth,
+                   height: object.trips[i].boundaries.mapHeight
                 };
-        let timeline = {x: object["trips"][i]["boundaries"]["timeline-x"],
-                       y: object["trips"][i]["boundaries"]["timeline-y"],
-                       width: object["trips"][i]["boundaries"]["timeline-width"],
-                       height: object["trips"][i]["boundaries"]["timeline-height"]
+        let timeline = {x: object.trips[i].boundaries.timelineX,
+                       y: object.trips[i].boundaries.timelineY,
+                       width: object.trips[i].boundaries.timelineWidth,
+                       height: object.trips[i].boundaries.timelineHeight
                 };
         let points = []
-        for (let j = 0; j < object["trips"][i]["trip-points"].length; j++) {
-            points.push({x: object["trips"][i]["trip-points"][j]["x"],
-                        y: object["trips"][i]["trip-points"][j]["y"],
-                        secs: Math.round(object["trips"][i]["trip-points"][j]["millis"]/1000),
-                        count: object["trips"][i]["trip-points"][j]["count"]
+        for (let j = 0; j < object.trips[i].tripPoints.length; j++) {
+            points.push({x: object.trips[i].tripPoints[j].x,
+                        y: object.trips[i].tripPoints[j].y,
+                        secs: Math.round(object.trips[i].tripPoints[j].millis/1000),
+                        count: object.trips[i].tripPoints[j].count
                         });
         }
         // Sort points
@@ -154,8 +157,12 @@ function processTripJSON(object){
             else return 1;
         });
 
-        // Remove points with duplicate timestamps - this is rare but it happens.
-        // A more robust approach would be to prevent duplicate timestamps from occuring.
+        // Remove points with duplicate timestamps from the array that is already sorted by timestamp (a more robust approach might be to prevent duplicate timestamps from occuring).
+        // To summarize, y goes ahead to find the next unique value, and x keeps track of the previous unique value.
+        // When a new unique value is found, x increments and the value is stored at points[x].
+        // This approach is largely taken from this blog post, which contains a detailed explanation:
+        //// https://medium.com/swlh/javascript-remove-duplicates-from-sorted-array-in-place-d3d959fb4d77
+
         let x = 0;
         let y = 1;
         while(x < points.length && y < points.length){
@@ -167,24 +174,26 @@ function processTripJSON(object){
                 y++;
             }
         }
+        // At this point x is equal to the number of unique timestamps,
+        // and so splice(x) will remove the remaining values ((points.length - x) values to be exact)
         points.splice(x);
 
-        trips.push({trip_name: object["trips"][i]["trip-name"],
-                    agent: object["trips"][i]["agent"],
-                    device: object["trips"][i]["device"],
-                    uuid_tail: object["trips"][i]["uuid-tail"],
-                    os: object["trips"][i]["os"],
-                    trip_id: object["trips"][i]["trip-id"],
-                    max_update_interval: object["trips"][i]["max-update-interval"],
-                    avg_update_interval: object["trips"][i]["avg-update-interval"],
-                    min_update_interval: object["trips"][i]["min-update-interval"],
-                    vehicle_id: object["trips"][i]["vehicle-id"],
+        trips.push({trip_name: object.trips[i].tripName,
+                    agent: object.trips[i].agent,
+                    device: object.trips[i].device,
+                    uuid_tail: object.trips[i].uuidTail,
+                    os: object.trips[i].os,
+                    trip_id: object.trips[i].tripId,
+                    max_update_interval: object.trips[i].maxUpdateInterval,
+                    avg_update_interval: object.trips[i].avgUpdateInterval,
+                    min_update_interval: object.trips[i].minUpdateInterval,
+                    vehicle_id: object.trips[i].vehicleId,
                     map: map,
                     timeline: timeline,
                     points: points
                     });
     }
-    timelineHeight = object["header-height"];
+    timelineHeight = object.headerHeight;
     console.log(trips);
     load();
 }
@@ -203,7 +212,7 @@ function load(){
 
     dropdownHeight = document.getElementById('top').offsetHeight;
     // ?nocache= prevents annoying caching...mostly for debugging purposes
-    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
+    reportImageUrl = `${bucketURL}${archiveDir}${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
@@ -251,18 +260,19 @@ function load(){
     };
 
     document.body.addEventListener('click', function(event) {
-        // Click event fires twice - this is a hacky way of preventing that
-        let clickTime = new Date().getTime();
-        if(clickTime - lastClick < 100){
-            lastClick = clickTime;
-            return
-        }
-        lastClick = clickTime;
+        console.log(event);
+        event.stopPropagation();
+        event.preventDefault();
 
         let searchX = event.pageX;
         let searchY = event.pageY;
 
-        if(searchY > dropdownHeight && instructionsVisible){
+        scrollTop = document.documentElement.scrollTop; // Top of current screen
+        timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
+        mapScrollTop = scrollTop + headerHeight;        // Top of current map
+        scrollBottom = scrollTop + windowHeight;        // Bottom of current map
+
+        if(searchY > scrollTop + dropdownHeight && instructionsVisible){
             hideElement("box");
             instructionsVisible = false;
             return;
@@ -274,11 +284,6 @@ function load(){
         }
 
         isNewPageSelect = false;
-
-        scrollTop = document.documentElement.scrollTop; // Top of current screen
-        timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
-        mapScrollTop = scrollTop + headerHeight;        // Top of current map
-        scrollBottom = scrollTop + windowHeight;        // Bottom of current map
 
         let searchObject = null;
 
@@ -563,6 +568,7 @@ function scrollToTrip(trip){
 }
 
 function showInstructions(){
+    console.log("showInstructions()");
     instructionsVisible = true;
     showElement("box");
 }

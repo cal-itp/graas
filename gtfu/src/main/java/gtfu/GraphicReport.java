@@ -96,13 +96,13 @@ public class GraphicReport {
     private GCloudStorage gcs = new GCloudStorage();
     private AgencyListGenerator alg = new AgencyListGenerator();
 
-    public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail, boolean isTest) throws Exception {
+    public GraphicReport(String cacheDir, String selectedDate, String savePath, boolean sendEmail, String gCloudPath) throws Exception {
         Debug.log("GraphicReport.GraphicReport()");
         Debug.log("- cacheDir: " + cacheDir);
         Debug.log("- selectedDate: " + selectedDate);
         Debug.log("- savePath: " + savePath);
         Debug.log("- sendEmail: " + sendEmail);
-        Debug.log("- isTest: " + isTest);
+        Debug.log("- gCloudPath: " + gCloudPath);
 
         DB db = new DB();
         long queryStartTime = 0;
@@ -113,6 +113,11 @@ public class GraphicReport {
             queryStartTime = Time.parseDateAsLong("MM/dd/yy", selectedDate) / 1000;
         }
         queryEndTime = Time.getNextDaySeconds(queryStartTime);
+
+        if (gCloudPath == null){
+            gCloudPath = "graas-report-archive/";
+        }
+
         // Debug.log("- queryStartTime: " + queryStartTime);
         // Debug.log("- queryEndTime: " + queryEndTime);
         List<String> results = db.fetch(queryStartTime, queryEndTime, "position", PROPERTY_NAMES);
@@ -196,8 +201,8 @@ public class GraphicReport {
             reportTimeCoverage(noVehiclePos);
             reportGPSCoverage(noVehiclePos, false);
             byte[] buf = imageToBlob(img);
-            uploadToGCloud(agencyDate, buf, "png", isTest);
-            uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json", isTest);
+            uploadToGCloud(agencyDate, buf, "png", gCloudPath);
+            uploadToGCloud(agencyDate, generateJsonFile().toString().getBytes("utf-8"), "json", gCloudPath);
 
             Graphics2D withVehiclePos = createCanvas(name, date);
             reportTimeCoverage(withVehiclePos);
@@ -220,7 +225,7 @@ public class GraphicReport {
         if (sendEmail) {
             sendEmail(blobMap);
         }
-        alg.generateAgencyList(isTest);
+        alg.generateAgencyList(gCloudPath);
     }
 
     private byte[] imageToBlob(BufferedImage img) throws IOException {
@@ -240,10 +245,10 @@ public class GraphicReport {
         int responseCode = grid.send();
     }
 
-    private void uploadToGCloud(String agencyDate, byte[] file, String fileType, boolean isTest) throws IOException {
+    private void uploadToGCloud(String agencyDate, byte[] file, String fileType, String gCloudPath) throws IOException {
         // converts <agency-id>-yyyy-mm-dd to <agency-id>
         String agencyID = agencyDate.substring(0, agencyDate.length() - 11);
-        String path = (isTest ? "test/" : "") + "graas-report-archive/" + agencyID;
+        String path = gCloudPath + agencyID + "/";
         String fileSuffix = "";
         String fileTypeName = "";
         if(fileType.equals("png")){
@@ -264,27 +269,27 @@ public class GraphicReport {
             Rectangle timelineRect = timelineCoords.get(td.id);
             Rectangle mapRect = mapCoords.get(td.id);
             JSONObject boundaries = new JSONObject();
-            boundaries.put("timeline-x", timelineRect.x);
-            boundaries.put("timeline-y", timelineRect.y);
-            boundaries.put("timeline-width", timelineRect.width);
-            boundaries.put("timeline-height", timelineRect.height);
-            boundaries.put("map-x", mapRect.x);
-            boundaries.put("map-y", mapRect.y);
-            boundaries.put("map-width", mapRect.width);
-            boundaries.put("map-height", mapRect.height);
+            boundaries.put("timelineX", timelineRect.x);
+            boundaries.put("timelineY", timelineRect.y);
+            boundaries.put("timelineWidth", timelineRect.width);
+            boundaries.put("timelineHeight", timelineRect.height);
+            boundaries.put("mapX", mapRect.x);
+            boundaries.put("mapY", mapRect.y);
+            boundaries.put("mapWidth", mapRect.width);
+            boundaries.put("mapHeight", mapRect.height);
 
             JSONObject trip = new JSONObject();
-            trip.put("trip-id", td.id);
+            trip.put("tripID", td.id);
             trip.put("boundaries", boundaries);
-            trip.put("trip-name", td.getTripName());
+            trip.put("tripName", td.getTripName());
             trip.put("agent", td.getAgent());
             trip.put("os", td.getOs());
             trip.put("device", td.getDevice());
-            trip.put("vehicle-id", td.getVehicleId());
-            trip.put("uuid-tail", td.getUuidTail());
-            trip.put("avg-update-interval", td.getAvgUpdateInterval());
-            trip.put("min-update-interval", td.getMinUpdateInterval());
-            trip.put("max-update-interval", td.getMaxUpdateInterval());
+            trip.put("vehicleID", td.getVehicleId());
+            trip.put("uuidTail", td.getUuidTail());
+            trip.put("avgUpdateInterval", td.getAvgUpdateInterval());
+            trip.put("minUpdateInterval", td.getMinUpdateInterval());
+            trip.put("maxUpdateInterval", td.getMaxUpdateInterval());
 
             JSONArray tripPoints = new JSONArray();
             List<Point> pl = pointsMap.get(td.id);
@@ -297,13 +302,13 @@ public class GraphicReport {
                 tripPoint.put("count", p.count);
                 tripPoints.add(tripPoint);
             }
-            trip.put("trip-points", tripPoints);
+            trip.put("tripPoints", tripPoints);
             tripsInfo.add(trip);
         }
 
         JSONObject agencyReport = new JSONObject();
         agencyReport.put("trips", tripsInfo);
-        agencyReport.put("header-height", headerHeight);
+        agencyReport.put("headerHeight", headerHeight);
         return agencyReport;
     }
 
@@ -641,7 +646,7 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email] [-t|--test]");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email] [-gp|--gcloud-path]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
         System.err.println("    <save-path> (if given) is the path to a folder where to save position logs & reports");
         System.err.println("    Using -ne prevents an email report from being sent");
@@ -653,8 +658,8 @@ public class GraphicReport {
         String cacheDir = null;
         String date = null;
         String savePath = null;
+        String gCloudPath = null;
         boolean sendEmail = true;
-        boolean isTest = false;
 
         for (int i=0; i<arg.length; i++) {
             if ((arg[i].equals("-c") || arg[i].equals("--cache-dir")) && i < arg.length - 1) {
@@ -677,8 +682,8 @@ public class GraphicReport {
                 continue;
             }
 
-            if (arg[i].equals("-t") || arg[i].equals("--test")) {
-                isTest = true;
+            if ((arg[i].equals("-gp") || arg[i].equals("--gcloud-path")) && i < arg.length - 1){
+                gCloudPath = arg[++i];
                 continue;
             }
 
@@ -687,6 +692,6 @@ public class GraphicReport {
 
         if (cacheDir == null) usage();
 
-        new GraphicReport(cacheDir, date, savePath, sendEmail, isTest);
+        new GraphicReport(cacheDir, date, savePath, sendEmail, gCloudPath);
     }
 }

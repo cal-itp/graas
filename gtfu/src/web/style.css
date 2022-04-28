@@ -46,6 +46,7 @@ html, body {
     margin:  auto;
     width:60%;
     position: fixed;
+    top:30px;
     left:10px;
     right:10px;
 }
