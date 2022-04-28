@@ -17,7 +17,6 @@ var mapCanvas
 var mapCtx;
 var mapHeight;
 var mapCanvasHeight;
-var mapCanvasHeight;
 
 var timelineCanvas;
 var timelineCtx
@@ -36,7 +35,6 @@ var timelineScrollTop;
 var mapScrollTop;
 var scrollBottom;
 
-const columnCount = 4;
 var rowCount;
 
 var activeAnimationCount = 0;
@@ -58,6 +56,7 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
                      "os", "uuid_tail", "avg_update_interval",
                      "max_update_interval", "min_update_interval"];
 
+ const COLUMN_COUNT = 4;
  const OPACITY_MULTIPLIER = 0.98;
  const ALPHA_MIN = 0.4;
  const MARGIN = 5;
@@ -156,7 +155,7 @@ function processTripJSON(object){
         });
 
         // Remove points with duplicate timestamps - this is rare but it happens.
-        // A more robust approach would be to determine why duplicate timestamps are occuring.
+        // A more robust approach would be to prevent duplicate timestamps from occuring.
         let x = 0;
         let y = 1;
         while(x < points.length && y < points.length){
@@ -213,7 +212,7 @@ function load(){
     p.style.display = "inline-block";
 
     showElement("click-here");
-    rowCount = Math.ceil(trips.length / columnCount);
+    rowCount = Math.ceil(trips.length / COLUMN_COUNT);
 
     img.onload = function() {
         imageWidth = this.naturalWidth
@@ -390,7 +389,7 @@ function drawReportExcept(trip){
     if(trip !== null){
         console.log("...except for trip " + trip.trip_name);
     }
-    console.log("isZoomedIn: " + isZoomedIn);
+    // console.log("isZoomedIn: " + isZoomedIn);
     drawReportBackground();
     drawReportTripsExcept(trip);
 }
@@ -469,6 +468,7 @@ function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
     }
 }
 
+// see note in animateTrip() about this function
 // function animatePoint(x, y, i, count, color){
     // if(i > count){
     //     return;
