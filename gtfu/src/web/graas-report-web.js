@@ -1,4 +1,3 @@
-
 const trips = [];
 const agencies = new Map();
 
@@ -65,12 +64,12 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
 
 function initialize(){
     getRewriteArgs()
-    url = `${bucketURL}/web/graas-report-agency-dates-test.json`;
+    url = `${bucketURL}/web/graas-report-agency-dates.json`;
     loadJSON(url, processDropdownJSON);
 }
 
 function loadJSON(url, callback){
-    // ?nocache= prevents annoying json caching...mostly for debugging purposes
+    // "?nocache=" mostly forces the page to reload files each time
     fetch(url + "?nocache="  + (new Date()).getTime())
     .then(response => {
        return response.json();
@@ -122,7 +121,8 @@ function handleDateChoice(){
     console.log("handleDateChoice()");
     isNewPageSelect = true;
     selectedDate = document.getElementById("date-select").value;
-    url = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json`;
+    // "?nocache=" mostly forces the page to reload files each time
+    url = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.json?nocache=${(new Date()).getTime()}`;
     loadJSON(url, processTripJSON);
 }
 
@@ -204,8 +204,7 @@ function load(){
 
     dropdownHeight = document.getElementById('top').offsetHeight;
     // ?nocache= prevents annoying caching...mostly for debugging purposes
-    // Remove "test" before PR
-    reportImageUrl = `${bucketURL}/test/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
+    reportImageUrl = `${bucketURL}/graas-report-archive/${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
@@ -220,7 +219,7 @@ function load(){
         imageWidth = this.naturalWidth
         imageHeight = this.naturalHeight;
         scaleRatio = window.innerWidth / imageWidth;
-        console.log("scaleRatio: " + scaleRatio);
+        // console.log("scaleRatio: " + scaleRatio);
 
         timelineCanvasHeight = timelineHeight * scaleRatio;
         headerHeight = timelineCanvasHeight + dropdownHeight
@@ -234,8 +233,7 @@ function load(){
         tripMapWidth = trips[0].map.width * scaleRatio;
         tripMapHeight = trips[0].map.height * scaleRatio;
 
-        // It would be nice to perform this multiplication while initially loading JSON,
-        // but that occurs before image is loaded and scaleRatio is determined by image size
+        // Once image is loaded, coordinates and dimensions need to be scaled
         trips.forEach(function (item) {
             item.map.x *= scaleRatio;
             item.map.y *= scaleRatio;
@@ -254,16 +252,16 @@ function load(){
     };
 
     document.body.addEventListener('click', function(event) {
-        // Click event tends to fire twice - this is a hacky way of preventing that
+        // Click event fires twice - this is a hacky way of preventing that
         let clickTime = new Date().getTime();
-        let searchX = event.pageX;
-        let searchY = event.pageY;
-
         if(clickTime - lastClick < 100){
             lastClick = clickTime;
             return
         }
         lastClick = clickTime;
+
+        let searchX = event.pageX;
+        let searchY = event.pageY;
 
         if(searchY > dropdownHeight && instructionsVisible){
             hideElement("box");
@@ -283,21 +281,20 @@ function load(){
         mapScrollTop = scrollTop + headerHeight;        // Top of current map
         scrollBottom = scrollTop + windowHeight;        // Bottom of current map
 
-
         let searchObject = null;
 
         // If the click occurs below the header, adjust y value and search map objects
+        // If the click occurs within the header, adjust y value and search timeline objects
         if(searchY >= mapScrollTop){
-            console.log("Click is BELOW header");
+            // console.log("Click is BELOW header");
             searchY -=headerHeight;
             searchObject = "map";
-
-        // If the click occurs within the header, adjust y value and search timeline objects
         } else {
-            console.log("Click is ABOVE header");
+            // console.log("Click is ABOVE header");
             searchY -=timelineScrollTop;
             searchObject = "timeline";
         }
+
         if (isZoomedIn){
             searchX += translateOffsetX;
             searchY += translateOffsetY;
@@ -348,7 +345,7 @@ function objectContainsPoint(object, x, y){
 }
 
 function zoomTo(trip){
-    console.log("zooming in!");
+    // console.log("zooming in");
     let gridNum = Math.round(trip.map.x / trip.map.width);
     if(gridNum === 0){
         translateOffsetX = 0;
@@ -357,16 +354,15 @@ function zoomTo(trip){
     } else {
         translateOffsetX = (trip.map.width * 4);
     }
+
     let rowNum = Math.round(trip.map.y / trip.map.height);
     if(rowNum === 0){
         translateOffsetY = 0;
     }
-    else{
+    else if(rowNum + 1 < rowCount){
         translateOffsetY = trip.map.height * rowNum;
-    }
-    // Different behavior for last row. Add 1 to rowNum since it counts row 0
-    if(rowNum + 1 == rowCount){
-        translateOffsetY += trip.map.height;
+    } else{
+        translateOffsetY = trip.map.height * (rowNum + 1);
     }
 
     mapCtx.translate(-translateOffsetX, -translateOffsetY);
@@ -377,7 +373,7 @@ function zoomTo(trip){
 }
 
 function zoomOut(){
-    console.log("zooming out!");
+    // console.log("zooming out");
     mapCtx.scale(.5, .5);
     mapCtx.translate(translateOffsetX, translateOffsetY);
     isZoomedIn = false;
@@ -453,9 +449,16 @@ function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
     if(indexIterator < trip.points.length){
         // console.log("trip.points[indexIterator].secs: " + trip.points[indexIterator].secs);
         if(trip.points[indexIterator].secs == secsIterator){
-            animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count, "green");
+            let count = trip.points[indexIterator].count;
+            let pointSize = getPointSize(count);
+            let opacity = getOpacity(count);
+            drawPoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, pointSize, "green", opacity);
+
+            // The animatePoint function creates an animated expanding circle, which unfortunately does not work with opaque points
+            // animatePoint(trip.map.x + trip.points[indexIterator].x, trip.map.y + trip.points[indexIterator].y, 1, trip.points[indexIterator].count, "green");
             indexIterator++;
         }
+
         setTimeout(function(){
                     animateTrip(trip, indexIterator, secsIterator + 1, timeoutInterval);
                     }, timeoutInterval);
@@ -466,8 +469,7 @@ function animateTrip(trip, indexIterator, secsIterator, timeoutInterval){
     }
 }
 
-function animatePoint(x, y, i, count, color){
-    // Commented-out code creates an expanding circle, but doesn't work w/ opacity
+// function animatePoint(x, y, i, count, color){
     // if(i > count){
     //     return;
     // }
@@ -477,12 +479,7 @@ function animatePoint(x, y, i, count, color){
     // setTimeout(function(){
     //             animatePoint(x, y, ++i, count);
     //             }, 1);
-
-    let fullPointSize = getPointSize(count);
-    let opacity = getOpacity(count);
-    drawPoint(x, y, fullPointSize, color, opacity);
-}
-
+// }
 
 function drawPoint(x, y, radius, color, alpha){
     mapCtx.beginPath();
@@ -565,7 +562,12 @@ function scrollToTrip(trip){
     }
 }
 
-// Below two functions are copied from graas.js
+function showInstructions(){
+    instructionsVisible = true;
+    showElement("box");
+}
+
+// Below 5 functions are copied from graas.js
 // TODO: consolidate this type of html util functions into one file
 function clearSelectOptions(sel) {
     let l = sel.options.length - 1;
@@ -590,11 +592,6 @@ function getRewriteArgs() {
             utmAgency = value
         }
     }
-}
-
-function showInstructions(){
-    instructionsVisible = true;
-    showElement("box");
 }
 
 function hideElement(id) {
