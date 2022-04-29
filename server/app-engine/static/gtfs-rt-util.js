@@ -173,6 +173,12 @@ if (!fetch) {
         return Math.floor(millis / 1000);
     }
 
+    exports.isNull = function(object) {
+        if(object === null || object === "null"){
+            return true;
+        } else return false;
+    }
+
     exports.sign = function(msg, signatureKey) {
         //this.log("sign()");
         //this.log("- msg: " + msg);

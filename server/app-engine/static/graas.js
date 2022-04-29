@@ -26,7 +26,6 @@ var countGetURLCallbacks = 0;
 var startLat = null;
 var startLon = null;
 var trips = [];
-var mode = 'vanilla';
 var sessionID = null;
 var useBulkAssignmentMode = false;
 
@@ -980,55 +979,63 @@ function loadTrips() {
 
     for (let i = 0; i < trips.length; i++) {
         // util.log(`- trips.length: ${trips.length}`);
-        if (Array.isArray(trips)) {
+        if (!Array.isArray(trips)) continue;
             // util.log(`-- trips[i]: ${trips[i]}`);
-            const tripInfo = trips[i];
+        const tripInfo = trips[i];
             //util.log(`-- value: ${value}`);
+        if (!isObject(tripInfo)) continue;
 
-            if (mode === 'vanilla' && isObject(tripInfo)) {
-                const time = getTimeFromName(tripInfo["trip_name"]);
-                //util.log(`- time: ${time}`);
-                const dow = util.getDayOfWeek();
-                //util.log(`- dow: ${dow}`);
-                const date = util.getTodayYYYYMMDD();
-                //util.log(`- date: ${date}`);
-                const lat = tripInfo.departure_pos.lat;
-                // util.log(`- lat: ${lat}`);
-                const lon = tripInfo.departure_pos.long;
-                // util.log(`- lon: ${lon}`);
+        const time = getTimeFromName(tripInfo.trip_name);
+        //util.log(`- time: ${time}`);
+        const dow = util.getDayOfWeek();
+        //util.log(`- dow: ${dow}`);
+        const date = (testDate ? testDate : util.getTodayYYYYMMDD());
+        util.log(`- date: ${date}`);
+        const lat = tripInfo.departure_pos.lat;
+        // util.log(`- lat: ${lat}`);
+        const lon = tripInfo.departure_pos.long;
+        // util.log(`- lon: ${lon}`);
+        const timeDelta = util.getTimeDelta(time);
+        // util.log(`- timeDelta: ${timeDelta}`);
 
-                const timeDelta = util.getTimeDelta(time);
-                // util.log(`- timeDelta: ${timeDelta}`);
+        const distance = getHaversineDistance(lat, lon, startLat, startLon);
+        // util.log(`- distance: ${distance}`);
+        let holidayOn = false;
+        let holidayOff = false;
+        let onDates = tripInfo.on_dates;
+        let offDates = tripInfo.off_dates;
+        console.log("onDates: " + onDates);
+        console.log("offDates: " + offDates);
+        if(!util.isNull(onDates) && onDates.indexOf(date) > 0){
+            holidayOn = true;
+        }
+        if(!util.isNull(offDates) && offDates.indexOf(date) > 0){
+            holidayOff = true;
+        }
 
-                const distance = getHaversineDistance(lat, lon, startLat, startLon);
-                // util.log(`- distance: ${distance}`);
-                let cal = 0;
-                if (tripInfo.calendar != null) {
-                    cal = tripInfo.calendar[dow];
-                }
-                // util.log(`- cal: ${cal}`);
-                // 3 conditions need to be met for inclusion...
-                if (
-                        // 1. meets time parameters
-                        (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
-                        &&
-                        // 2. meets day-of-weel parameters:
+        // 3 conditions need to be met for inclusion...
+        if (
+                // 1. meets time parameters
+                (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                &&
+                // 2. meets day-of-week parameters, or has holiday exception
+                (
+                    holidayOn  ||
+                    (
                         (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
-                        &&
-                        // 3. meets distance parameters:
-                        (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
-                        &&
-                        // 4. Falls between start_date and end_date
-                        (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
+                        && !holidayOff
                     )
-                    {
-                        //util.log(`+ adding ${key}`);
-                        tripIDLookup[tripInfo["trip_name"]] = tripInfo;
-                    }
-            } else {
+                )
+                &&
+                // 3. meets distance parameters:
+                (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                &&
+                // 4. Falls between start_date and end_date
+                (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
+            ){
+                //util.log(`+ adding ${key}`);
                 tripIDLookup[tripInfo["trip_name"]] = tripInfo;
             }
-        }
     }
     lastTripLoadMillis = Date.now()
     return tripIDLookup;
