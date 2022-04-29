@@ -44,7 +44,7 @@ public class GCloudStorage {
    * @param contentType Content type description, such as "text/json"
   */
   public static void uploadObject(String bucketName, String directory, String fileName, byte[] file, String contentType) throws IOException {
-    String path = directory + "/" + fileName;
+    String path = directory + fileName;
     BlobId blobId = BlobId.of(bucketName, path);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(contentType).build();
     storage.create(blobInfo, file);

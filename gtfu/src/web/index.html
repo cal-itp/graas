@@ -6,17 +6,27 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body onload="initialize()">
+        <div id="box">
+            <div id="instructions">
+                Each trip is represented in the timeline above and in the map view below. If you click on the trip in either place, it will be highlighted in both places. Clicking a trip will also perform a "replay" of the trip. <br><br>
+
+                Sometimes the GPS gets "stuck", a result of connectivity or hardware issues. This leads to repeat updates from the same location - which on these maps will appear as a larger dot proportional to the number of repeat updates. <br><br>
+
+                Hold down the shift key while clicking to zoom in and out. And click on this box to dismiss.
+            </div>
+        </div>
         <div id="header">
-            <div id="dropdowns">
+            <div id="top">
                 <select id="agency-select" onchange="handleAgencyChoice()" ></select>
                 <select id="date-select" onchange="handleDateChoice()" ></select>
-                 <a id="download" target="_blank">
+                <a id="click-here" onclick="showInstructions()"> Click here for instructions</a>
+                <a id="download" target="_blank">
                     <button type="button">Download</button>
-                 </a>
+                </a>
             </div>
             <canvas id="timeline" ></canvas>
         </div>
-        <div>
+        <div id="map-area">
             <canvas id="maps"></canvas>
         </div>
     </body>

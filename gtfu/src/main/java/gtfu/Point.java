@@ -4,6 +4,8 @@ package gtfu;
 class Point {
     int x;
     int y;
+    long millis;
+    int count;
 
     Point() {
         this(0, 0);
