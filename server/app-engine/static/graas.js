@@ -970,11 +970,16 @@ function loadTrips() {
     tripIDLookup = {};
 
     if (testLat && testLong) {
-        util.log(`- testLat: ${testLat}`);
-        util.log(`- testLong: ${testLong}`);
+        // util.log(`- testLat: ${testLat}`);
+        // util.log(`- testLong: ${testLong}`);
         startLat = testLat;
         startLon = testLong;
     }
+    let dow = util.getDayOfWeek();
+    if (testDow) dow = testDow;
+
+    let date = util.getTodayYYYYMMDD();
+    if(testDate) date = testDate;
 
     for (let i = 0; i < trips.length; i++) {
         // util.log(`- trips.length: ${trips.length}`);
@@ -983,9 +988,6 @@ function loadTrips() {
             const tripInfo = trips[i];
             const time = getTimeFromName(tripInfo.trip_name);
             //util.log(`- time: ${time}`);
-            const dow = util.getDayOfWeek();
-            //util.log(`- dow: ${dow}`);
-            const date = (testDate ? testDate : util.getTodayYYYYMMDD());
             const lat = tripInfo.departure_pos.lat;
             // util.log(`- lat: ${lat}`);
             const lon = tripInfo.departure_pos.long;

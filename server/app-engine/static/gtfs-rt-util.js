@@ -99,9 +99,7 @@ if (!fetch) {
 
     // returns 0 for Monday...and 6 for Sunday
     exports.getDayOfWeek = function() {
-        if (testDow) {
-            return testDow;
-        } else return ((new Date()).getDay() + 6) % 7;
+        return ((new Date()).getDay() + 6) % 7;
     }
 
     // returns date as an 8-character string (ie 20220317 for 3/17/22)
