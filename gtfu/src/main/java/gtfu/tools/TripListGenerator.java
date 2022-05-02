@@ -194,21 +194,18 @@ public class TripListGenerator {
 
     private static Map<String, List<String>> createServiceIDMap(int exception, CalendarDateCollection calendarDates){
         Map<String, List<String>> dateMap = new HashMap();
-        CalendarDate currentCalDate = null;
-
-        for(int i = 0; i < calendarDates.getSize(); i++){
-            currentCalDate = calendarDates.get(i);
-            if(currentCalDate.getExceptionType() == exception){
-                if(dateMap.get(currentCalDate.getServiceID()) == null){
-                    List<String> dateList = new ArrayList();
-                    dateList.add(currentCalDate.getDate());
-                    dateMap.put(currentCalDate.getServiceID(),dateList);
+        for (CalendarDate cd : calendarDates){
+            if(cd.getExceptionType() == exception){
+                List<String> dateList = dateMap.get(cd.getServiceID());
+                if (dateList == null){
+                    dateList = new ArrayList();
+                    dateList.add(cd.getDate());
+                    dateMap.put(cd.getServiceID(),dateList);
                 } else{
-                    dateMap.get(currentCalDate.getServiceID()).add(currentCalDate.getDate());
+                    dateMap.get(cd.getServiceID()).add(cd.getDate());
                 }
             }
         }
-
         return dateMap;
     }
 

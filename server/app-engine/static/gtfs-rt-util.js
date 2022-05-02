@@ -172,9 +172,7 @@ if (!fetch) {
     }
 
     exports.isNullOrUndefined = function(object) {
-        if(object === null || typeof object === 'undefined'){
-            return true;
-        } else return false;
+        return object === null || typeof object === 'undefined';
     }
 
     exports.sign = function(msg, signatureKey) {

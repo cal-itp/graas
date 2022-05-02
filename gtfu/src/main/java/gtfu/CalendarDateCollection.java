@@ -13,7 +13,6 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 public class CalendarDateCollection implements Iterable<CalendarDate>, Serializable {
-    private static final String DATE_FORMAT = "yyyyMMdd";
     private Map<String, CalendarDate> map;
     private List<CalendarDate> list;
 
