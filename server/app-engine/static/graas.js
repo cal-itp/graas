@@ -25,7 +25,6 @@ var countGetURLCallbacks = 0;
 var startLat = null;
 var startLon = null;
 var trips = [];
-var mode = 'vanilla';
 var sessionID = null;
 var useBulkAssignmentMode = false;
 
@@ -979,67 +978,60 @@ function loadTrips() {
 
     for (let i = 0; i < trips.length; i++) {
         // util.log(`- trips.length: ${trips.length}`);
-        if (Array.isArray(trips)) {
+        if (!Array.isArray(trips) || !isObject(trips[i])) continue;
             // util.log(`-- trips[i]: ${trips[i]}`);
             const tripInfo = trips[i];
-            //util.log(`-- value: ${value}`);
+            const time = getTimeFromName(tripInfo.trip_name);
+            //util.log(`- time: ${time}`);
+            const dow = util.getDayOfWeek();
+            //util.log(`- dow: ${dow}`);
+            const date = (testDate ? testDate : util.getTodayYYYYMMDD());
+            const lat = tripInfo.departure_pos.lat;
+            // util.log(`- lat: ${lat}`);
+            const lon = tripInfo.departure_pos.long;
+            // util.log(`- lon: ${lon}`);
+            const timeDelta = util.getTimeDelta(time);
+            // util.log(`- timeDelta: ${timeDelta}`);
+            const distance = getHaversineDistance(lat, lon, startLat, startLon);
+            // util.log(`- distance: ${distance}`);
+            let holidayOn = false;
+            let holidayOff = false;
+            const onDates = tripInfo.on_dates;
+            const offDates = tripInfo.off_dates;
 
-            if (mode === 'vanilla' && isObject(tripInfo)) {
-                const time = getTimeFromName(tripInfo.trip_name);
-                //util.log(`- time: ${time}`);
-                const dow = util.getDayOfWeek();
-                //util.log(`- dow: ${dow}`);
-                const date = (testDate ? testDate : util.getTodayYYYYMMDD());
-                const lat = tripInfo.departure_pos.lat;
-                // util.log(`- lat: ${lat}`);
-                const lon = tripInfo.departure_pos.long;
-                // util.log(`- lon: ${lon}`);
-                const timeDelta = util.getTimeDelta(time);
-                // util.log(`- timeDelta: ${timeDelta}`);
-                const distance = getHaversineDistance(lat, lon, startLat, startLon);
-                // util.log(`- distance: ${distance}`);
-                let holidayOn = false;
-                let holidayOff = false;
-                const onDates = tripInfo.on_dates;
-                const offDates = tripInfo.off_dates;
-
-                // Check whether array of numbers (ie [20220101,20221225] contains string date (ie "20221225")
-                if(!util.isNull(onDates) && onDates.includes(parseInt(date,10))){
-                    holidayOn = true;
-                }
-                if(!util.isNull(offDates) && offDates.includes(parseInt(date,10))){
-                    holidayOff = true;
-                }
-                // 4 conditions need to be met for inclusion...
-                if (
-                        // 1. meets time parameters
-                        (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
-                        &&
-                        // 2. meets day-of-week parameters or has holiday exception
+            // Check whether array of numbers (ie [20220101,20221225] contains string date (ie "20221225")
+            if(!util.isNull(onDates) && onDates.includes(parseInt(date,10))){
+                holidayOn = true;
+            }
+            if(!util.isNull(offDates) && offDates.includes(parseInt(date,10))){
+                holidayOff = true;
+            }
+            // 4 conditions need to be met for inclusion...
+            if (
+                    // 1. meets time parameters
+                    (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                    &&
+                    // 2. meets day-of-week parameters or has holiday exception
+                    (
+                        holidayOn  ||
                         (
-                            holidayOn  ||
-                            (
-                                (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
-                                && !holidayOff
-                            )
+                            (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
+                            && !holidayOff
                         )
-                        &&
-                        // 3. meets distance parameters:
-                        (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
-                        &&
-                        // 4. Falls between start_date and end_date
-                        (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
                     )
-                    {
-                        util.log(`+ adding ${tripInfo["trip_name"]}`);
-                        tripIDLookup[tripInfo["trip_name"]] = tripInfo;
-                    }
-                }
-                else {
-                    tripIDLookup[tripInfo["trip_name"]] = tripInfo;
-                }
+                    &&
+                    // 3. meets distance parameters:
+                    (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                    &&
+                    // 4. Falls between start_date and end_date
+                    (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
+                )
+            {
+                // util.log(`+ adding ${tripInfo["trip_name"]}`);
+                tripIDLookup[tripInfo["trip_name"]] = tripInfo;
             }
     }
+
     lastTripLoadMillis = Date.now()
     return tripIDLookup;
 }
