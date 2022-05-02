@@ -1029,12 +1029,13 @@ function loadTrips() {
                         &&
                         // 4. Falls between start_date and end_date
                         (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
-                    ){
+                    )
+                    {
                         util.log(`+ adding ${tripInfo["trip_name"]}`);
                         tripIDLookup[tripInfo["trip_name"]] = tripInfo;
                     }
                 }
-                 else {
+                else {
                     tripIDLookup[tripInfo["trip_name"]] = tripInfo;
                 }
             }
