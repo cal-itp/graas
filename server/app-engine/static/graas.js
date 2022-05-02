@@ -978,7 +978,7 @@ function loadTrips() {
 
     for (let i = 0; i < trips.length; i++) {
         // util.log(`- trips.length: ${trips.length}`);
-        if (!Array.isArray(trips) || !isObject(tripInfo)) continue;
+        if (!Array.isArray(trips) || !isObject(trips[i])) continue;
             // util.log(`-- trips[i]: ${trips[i]}`);
             const tripInfo = trips[i];
             const time = getTimeFromName(tripInfo["trip_name"]);
