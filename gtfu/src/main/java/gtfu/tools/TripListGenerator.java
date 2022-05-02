@@ -199,11 +199,9 @@ public class TripListGenerator {
                 List<String> dateList = dateMap.get(cd.getServiceID());
                 if (dateList == null){
                     dateList = new ArrayList();
-                    dateList.add(cd.getDate());
-                    dateMap.put(cd.getServiceID(),dateList);
-                } else{
-                    dateMap.get(cd.getServiceID()).add(cd.getDate());
+                    dateMap.put(cd.getServiceID(), dateList);
                 }
+                dateList.add(cd.getDate());
             }
         }
         return dateMap;
