@@ -1000,10 +1000,10 @@ function loadTrips() {
             const offDates = tripInfo.off_dates;
 
             // Check whether array of numbers (ie [20220101,20221225] contains string date (ie "20221225")
-            if(!util.isNull(onDates) && onDates.includes(parseInt(date,10))){
+            if(!util.isNullOrUndefined(onDates) && onDates.includes(parseInt(date,10))){
                 holidayOn = true;
             }
-            if(!util.isNull(offDates) && offDates.includes(parseInt(date,10))){
+            if(!util.isNullOrUndefined(offDates) && offDates.includes(parseInt(date,10))){
                 holidayOff = true;
             }
             // 4 conditions need to be met for inclusion...

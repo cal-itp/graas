@@ -173,8 +173,8 @@ if (!fetch) {
         return Math.floor(millis / 1000);
     }
 
-    exports.isNull = function(object) {
-        if(object === null || object === "null"){
+    exports.isNullOrUndefined = function(object) {
+        if(object === null || typeof object === 'undefined'){
             return true;
         } else return false;
     }
