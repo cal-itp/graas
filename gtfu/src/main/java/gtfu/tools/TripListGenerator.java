@@ -194,8 +194,8 @@ public class TripListGenerator {
 
     private static Map<String, List<String>> createServiceIDMap(int exception, CalendarDateCollection calendarDates){
         Map<String, List<String>> dateMap = new HashMap();
-
         CalendarDate currentCalDate = null;
+
         for(int i = 0; i < calendarDates.getSize(); i++){
             currentCalDate = calendarDates.get(i);
             if(currentCalDate.getExceptionType() == exception){
@@ -208,6 +208,7 @@ public class TripListGenerator {
                 }
             }
         }
+
         return dateMap;
     }
 
