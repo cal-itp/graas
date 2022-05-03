@@ -87,7 +87,7 @@ public class UpdateTripNames {
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
                     String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
-                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
+                    // gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
                     prCount++;
                 }
                 else{
