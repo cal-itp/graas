@@ -38,6 +38,8 @@ import javax.net.ssl.X509TrustManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class Util {
     public static final String[] GTFS_FILE_LIST = {
@@ -969,4 +971,14 @@ public class Util {
         HttpsURLConnection.setDefaultHostnameVerifier(validHosts);
     }
 
+    public static boolean isValidJSON(String jsonString){
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+        } catch(JsonProcessingException e){
+            Debug.log("exception: " + e);
+            return false;
+        }
+        return true;
+    }
 }
