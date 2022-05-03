@@ -856,11 +856,20 @@ public class Util {
 
         Map<String, Object> collections = new HashMap<String, Object>();
 
+        Timer t = new Timer("calendars");
         CalendarCollection calendarCollection = new CalendarCollection(path);
         collections.put("calendars", calendarCollection);
+        t.dumpLap();
+        Debug.log("- calendarCollection.getSize(): " + calendarCollection.getSize());
+
+        t = new Timer("calendar_dates");
+        CalendarDateCollection calendarDateCollection = new CalendarDateCollection(path);
+        collections.put("calendar_dates", calendarDateCollection);
+        t.dumpLap();
+        Debug.log("- calendarDateCollection.getSize(): " + calendarDateCollection.getSize());
 
         //Debug.log("shapes:");
-        Timer t = new Timer("shapes");
+        t = new Timer("shapes");
         ShapeCollection shapeCollection = new ShapeCollection(path, po);
         collections.put("shapes", shapeCollection);
         t.dumpLap();
