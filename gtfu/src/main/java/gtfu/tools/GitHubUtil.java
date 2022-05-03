@@ -85,8 +85,8 @@ public class GitHubUtil {
         GHRef branch = repo.createRef("refs/heads/" + branchName, commit.getSHA1());
     }
 
-    private void createPR(String title, String branchName, String description) throws Exception {
-        GHPullRequest pr = repo.createPullRequest(title, branchName, MAIN_BRANCH_NAME, description);
+    private GHPullRequest createPR(String title, String branchName, String description) throws Exception {
+        return repo.createPullRequest(title, branchName, MAIN_BRANCH_NAME, description);
     }
 
     /**
@@ -99,8 +99,12 @@ public class GitHubUtil {
     * @param message        Commit message
     * @param branchName     Name for new branch
     */
-    public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
+    public GHPullRequest createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
         createCommit(branchName, message, path, file);
-        createPR(title, branchName, description);
+        return createPR(title, branchName, description);
+    }
+
+    public void mergePR(GHPullRequest pr, String message) throws Exception {
+        pr.merge(message);
     }
 }

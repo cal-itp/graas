@@ -14,11 +14,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
+import org.kohsuke.github.GHPullRequest;
+
 /**
  * Creates PR's to update each active agency's trip-names.json file, if needed.
  */
 public class UpdateTripNames {
-
+    private static final double LENGTH_DIVERGENCE_MAX = 0.10;
     /**
      * Runs UpdateTripNames for a single agency
      * @param agencyID The agencyiD
@@ -76,13 +78,34 @@ public class UpdateTripNames {
                     Debug.log("Relevant changes detected. Creating a PR to update the file");
 
                     // Consider linking the URL for the PR. This requires some updates to Sendgrid.java, to send HTML.
-                    reporter.addLine(agencyID);
+                    String reportLine = agencyID + ": ";
+                    double lengthDiverence  = Math.abs((currentFile.length - newFile.length) / currentFile.length);
+                    Debug.log("lengthDiverence: " + lengthDiverence);
+
+                    boolean autoMerge = lengthDiverence < LENGTH_DIVERGENCE_MAX;
 
                     String title = ":robot: updates to " + agencyID + " triplist";
-                    String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS. This PR was automatically generated, so please review and make updates if necessary before merging";
+                    String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS.";
+
+                    if(autoMerge) {
+                        description += "This PR merged automatically because the file changed by less than " + (LENGTH_DIVERGENCE_MAX * 100) + "%";
+                        reportLine += "Automerged PR";
+                    } else {
+                        description += "This PR was automatically generated, so please review and make updates if necessary before merging";
+                        reportLine += "Please review PR";
+                    }
+
                     String message = "Update trip-names.json to reflect static GTFS updates";
                     String branchName = agencyID + "-triplist-update-" + Util.now();
-                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
+
+                    GHPullRequest pr = gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
+
+                    if(autoMerge){
+                        Debug.log("Auto-merging PR");
+                        gh.mergePR(pr,"Auto-merging PR");
+                    }
+
+                    reporter.addLine(reportLine);
                     prCount++;
                 }
                 else{
