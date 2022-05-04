@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
  * Creates PR's to update each active agency's trip-names.json file, if needed.
  */
 public class UpdateTripNames {
-    private static final double LENGTH_DIVERGENCE_MAX = 0.10;
+    private static final double LENGTH_DIVERGENCE_MAX = 0.05;
     /**
      * Runs UpdateTripNames for a single agency
      * @param agencyID The agencyiD
