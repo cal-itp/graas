@@ -71,6 +71,11 @@ public class UpdateTripNames {
                     continue;
                 }
                 byte[] newFile = baos.toByteArray();
+                String json = baos.toString(utf8);
+                if(!Util.isValidJSON(json)){
+                    reporter.addLine("   * failed to generate tripList for agency " + agencyID + " because JSON was not valid");
+                    continue;
+                }
 
                 if(!Arrays.equals(currentFile, newFile)){
                     Debug.log("Relevant changes detected. Creating a PR to update the file");
