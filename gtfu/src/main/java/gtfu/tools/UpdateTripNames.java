@@ -14,8 +14,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import org.kohsuke.github.GHPullRequest;
-
 /**
  * Creates PR's to update each active agency's trip-names.json file, if needed.
  */
@@ -85,26 +83,21 @@ public class UpdateTripNames {
                     boolean autoMerge = lengthDiverence < LENGTH_DIVERGENCE_MAX;
 
                     String title = ":robot: updates to " + agencyID + " triplist";
+                    String message = "Update trip-names.json to reflect static GTFS updates";
+                    String branchName = agencyID + "-triplist-update-" + Util.now();
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS.";
 
                     if(autoMerge) {
                         description += "This PR merged automatically because the file changed by less than " + (LENGTH_DIVERGENCE_MAX * 100) + "%";
                         reportLine += "Automerged PR";
+                        Debug.log("Automerging PR");
                     } else {
                         description += "This PR was automatically generated, so please review and make updates if necessary before merging";
                         reportLine += "Please review PR";
+
                     }
 
-                    String message = "Update trip-names.json to reflect static GTFS updates";
-                    String branchName = agencyID + "-triplist-update-" + Util.now();
-
-                    GHPullRequest pr = gh.createCommitAndPR(title, description, filePath, newFile, message, branchName);
-
-                    if(autoMerge){
-                        Debug.log("Auto-merging PR");
-                        gh.mergePR(pr,"Auto-merging PR");
-                    }
-
+                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
                     reporter.addLine(reportLine);
                     prCount++;
                 }

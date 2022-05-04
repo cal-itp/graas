@@ -98,13 +98,11 @@ public class GitHubUtil {
     * @param file           Byte array representation of file
     * @param message        Commit message
     * @param branchName     Name for new branch
+    * @param autoMerge      Whether or not the PR should be merged automatically
     */
-    public GHPullRequest createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName) throws Exception {
+    public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName, Boolean autoMerge) throws Exception {
         createCommit(branchName, message, path, file);
-        return createPR(title, branchName, description);
-    }
-
-    public void mergePR(GHPullRequest pr, String message) throws Exception {
-        pr.merge(message);
+        GHPullRequest pr = createPR(title, branchName, description);
+        if(autoMerge) pr.merge(message);
     }
 }
