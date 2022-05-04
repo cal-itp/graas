@@ -22,17 +22,19 @@ public class UpdateTripNames {
     /**
      * Runs UpdateTripNames for a single agency
      * @param agencyID The agencyiD
+     * @param regenerateAll A true value will run the comparison even if there is no recent update detected
      */
-    public static void UpdateTripNames(String agencyID) throws Exception {
+    public static void UpdateTripNames(String agencyID, boolean regenerateAll) throws Exception {
         String[] agencyIDList = {agencyID};
-        UpdateTripNames(agencyIDList);
+        UpdateTripNames(agencyIDList, regenerateAll);
     }
 
     /**
-     * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, compares the new trip with the old one, and creates a PR if the new one differs.
+     * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, regenerateAlls the new trip with the old one, and creates a PR if the new one differs.
      * @param agencyIDList A list of agencyIDs
+     * @param regenerateAll     A true value will run the comparison even if there is no recent update detected
      */
-    public static void UpdateTripNames(String[] agencyIDList) throws Exception {
+    public static void UpdateTripNames(String[] agencyIDList, boolean regenerateAll) throws Exception {
         GitHubUtil gh = new GitHubUtil();
         AgencyYML yml = new AgencyYML();
 
@@ -55,7 +57,7 @@ public class UpdateTripNames {
             long lastModifiedLRemote = Util.getLastModifiedRemote(gtfsURL);
             Debug.log("- lastModifiedLRemote: " + lastModifiedLRemote);
 
-            if(lastModifiedLRemote > lastUpdatedTripList){
+            if(lastModifiedLRemote > lastUpdatedTripList || regenerateAll ){
                 Debug.log("Static GTFS has been updated since trip-names.json was last updated. Re-running TripListGenerator now to check whether this impacts trip-names.json");
 
                 String fileURL = "https://raw.githubusercontent.com/cal-itp/graas/main/" + filePath;
@@ -88,7 +90,7 @@ public class UpdateTripNames {
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS.";
 
                     if(autoMerge) {
-                        description += "This PR merged automatically because the file changed by less than " + (LENGTH_DIVERGENCE_MAX * 100) + "%";
+                        description += "This PR merged automatically because the file's length was changed by less than " + (LENGTH_DIVERGENCE_MAX * 100) + "%";
                         reportLine += "Automerged PR";
                         Debug.log("Automerging PR");
                     } else {
@@ -128,7 +130,8 @@ public class UpdateTripNames {
      */
     public static void main(String[] arg) throws Exception {
         String url = null;
-        String agencyID = null;;
+        String agencyID = null;
+        boolean regenerateAll = false;
 
         for (int i=0; i<arg.length; i++) {
 
@@ -139,6 +142,10 @@ public class UpdateTripNames {
             if ((arg[i].equals("-a") || arg[i].equals("--agency-id")) && i < arg.length - 1) {
                 agencyID = arg[i + 1];
             }
+
+            if (arg[i].equals("-r") || arg[i].equals("--regenerate-all")) {
+                regenerateAll = true;
+            }
         }
 
         if (agencyID == null && url == null) usage();
@@ -147,10 +154,10 @@ public class UpdateTripNames {
             ProgressObserver po = new ConsoleProgressObserver(40);
             String context = Util.getURLContent(url, po);
             String[] agencyIDList = context.split("\n");
-            UpdateTripNames(agencyIDList);
+            UpdateTripNames(agencyIDList, regenerateAll);
         }
         else{
-            UpdateTripNames(agencyID);
+            UpdateTripNames(agencyID, regenerateAll);
         }
     }
 }
