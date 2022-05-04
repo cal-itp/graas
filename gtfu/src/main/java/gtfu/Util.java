@@ -976,7 +976,8 @@ public class Util {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(jsonString);
         } catch(JsonProcessingException e){
-            Debug.log("* Invalid JSON detected. Error message: " + e);
+            Debug.log("* Invalid JSON detected. Stack trace:");
+            e.printStackTrace();
             return false;
         }
         return true;
