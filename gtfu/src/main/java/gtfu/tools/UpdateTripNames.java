@@ -101,7 +101,6 @@ public class UpdateTripNames {
                     } else {
                         description += "This PR was automatically generated, so please review and make updates if necessary before merging";
                         reportLine += "Please review PR";
-
                     }
 
                     gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
