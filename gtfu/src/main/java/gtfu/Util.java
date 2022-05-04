@@ -976,6 +976,8 @@ public class Util {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(jsonString);
         } catch(JsonProcessingException e){
+            // TODO: Using something like printStackTrace(PrintStream) instead, for option of printing elsewhere besides stout
+            // see https://github.com/cal-itp/graas/pull/273#discussion_r865250870
             Debug.log("* Invalid JSON detected. Stack trace:");
             e.printStackTrace();
             return false;
