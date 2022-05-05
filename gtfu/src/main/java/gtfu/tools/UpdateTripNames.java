@@ -30,7 +30,7 @@ public class UpdateTripNames {
     }
 
     /**
-     * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, regenerateAlls the new trip with the old one, and creates a PR if the new one differs.
+     * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, compares the new trip with the old one, and creates a PR if the new one differs.
      * @param agencyIDList A list of agencyIDs
      * @param regenerateAll     A true value will run the comparison even if there is no recent update detected
      */
