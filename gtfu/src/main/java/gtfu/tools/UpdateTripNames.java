@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
  * Creates PR's to update each active agency's trip-names.json file, if needed.
  */
 public class UpdateTripNames {
-    private static final double LENGTH_DIVERGENCE_MAX = 0.05;
+    private static final double MAX_LENGTH_CHANGE = 0.05;
     /**
      * Runs UpdateTripNames for a single agency
      * @param agencyID The agencyiD
@@ -63,6 +63,7 @@ public class UpdateTripNames {
                 String fileURL = "https://raw.githubusercontent.com/cal-itp/graas/main/" + filePath;
                 ProgressObserver po = new ConsoleProgressObserver(40);
                 byte[] currentFile = Util.getURLContentBytes(fileURL, po);
+                int currentFileLength = currentFile.length;
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 String utf8 = StandardCharsets.UTF_8.name();
@@ -74,6 +75,7 @@ public class UpdateTripNames {
                 }
                 byte[] newFile = baos.toByteArray();
                 String json = baos.toString(utf8);
+                int newFileLength = newFile.length;
                 if(!Util.isValidJSON(json)){
                     reporter.addLine("   * failed to generate tripList for agency " + agencyID + " because JSON was not valid");
                     continue;
@@ -84,10 +86,10 @@ public class UpdateTripNames {
 
                     // Consider linking the URL for the PR. This requires some updates to Sendgrid.java, to send HTML.
                     String reportLine = agencyID + ": ";
-                    double lengthDiverence  = Math.abs((currentFile.length - newFile.length) / currentFile.length);
-                    Debug.log("lengthDiverence: " + lengthDiverence);
+                    double lengthChange  = Math.abs((double) (currentFileLength - newFileLength) / currentFileLength);
+                    Debug.log("lengthChange: " + lengthChange);
 
-                    boolean autoMerge = lengthDiverence < LENGTH_DIVERGENCE_MAX;
+                    boolean autoMerge = lengthChange < MAX_LENGTH_CHANGE;
 
                     String title = ":robot: updates to " + agencyID + " triplist";
                     String message = "Update trip-names.json to reflect static GTFS updates";
@@ -95,7 +97,7 @@ public class UpdateTripNames {
                     String description = "Our automated daily check detected that changes were made to " + agencyID + "'s static GTFS.";
 
                     if(autoMerge) {
-                        description += "This PR merged automatically because the file's length was changed by less than " + (LENGTH_DIVERGENCE_MAX * 100) + "%";
+                        description += "This PR merged automatically because the file's length was changed by less than " + (MAX_LENGTH_CHANGE * 100) + "%";
                         reportLine += "Automerged PR";
                         Debug.log("Automerging PR");
                     } else {
@@ -103,7 +105,7 @@ public class UpdateTripNames {
                         reportLine += "Please review PR";
                     }
 
-                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
+                    // gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
                     reporter.addLine(reportLine);
                     prCount++;
                 }
@@ -122,10 +124,11 @@ public class UpdateTripNames {
     }
 
     private static void usage() {
-        System.err.println("usage: UpdateTripNames -u|--url <live-agencies-url> -a|--agency-id <agency-id>");
+        System.err.println("usage: UpdateTripNames -u|--url <live-agencies-url> -a|--agency-id <agency-id> [-r|--regenerate-all]");
         System.err.println("    <live-agencies-url> is assumed to point to a plain text document that has an agency ID per line");
         System.err.println("    <agency-id> is the id of the single agency you'd like to update");
         System.err.println("    You must supply <live-agencies-url> or <agency-id>. If you supply both, <agency-id> will be ignored");
+        System.err.println("    Use the '-r' flag to regenerate all files, rather than just the ones that were modified recently");
         System.exit(1);
     }
 
