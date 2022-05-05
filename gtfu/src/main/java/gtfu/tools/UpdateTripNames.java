@@ -105,7 +105,7 @@ public class UpdateTripNames {
                         reportLine += "Please review PR";
                     }
 
-                    // gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
+                    gh.createCommitAndPR(title, description, filePath, newFile, message, branchName, autoMerge);
                     reporter.addLine(reportLine);
                     prCount++;
                 }
