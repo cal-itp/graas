@@ -85,7 +85,7 @@ public class GitHubUtil {
         GHRef branch = repo.createRef("refs/heads/" + branchName, commit.getSHA1());
     }
 
-    private void createPR(String title, String branchName, String description, Boolean autoMerge) throws Exception {
+    private void createPR(String title, String branchName, String description, boolean autoMerge) throws Exception {
         GHPullRequest pr = repo.createPullRequest(title, branchName, MAIN_BRANCH_NAME, description);
         if(autoMerge) pr.merge("Merging automatically");
     }
@@ -101,7 +101,7 @@ public class GitHubUtil {
     * @param branchName     Name for new branch
     * @param autoMerge      Whether or not the PR should be merged automatically
     */
-    public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName, Boolean autoMerge) throws Exception {
+    public void createCommitAndPR(String title, String description, String path, byte[] file, String message, String branchName, boolean autoMerge) throws Exception {
         createCommit(branchName, message, path, file);
         createPR(title, branchName, description, autoMerge);
     }
