@@ -645,10 +645,9 @@ public class GraphicReport {
     }
 
     private static void usage() {
-        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email] [-gp|--gcloud-path] [-a|--agency-id] <agency-id>");
+        System.err.println("usage: GraphicReport -c|--cache-dir <cache-dir> [-s|--save-path <save-path>] [-d|--date <mm/dd/yy>] [-ne|--no-email] [-gp|--gcloud-path]");
         System.err.println("    <mm/dd/yy> is a data spefified as numeric month/day/year, e.g. 6/29/21 for June 29 2021");
         System.err.println("    <save-path> (if given) is the path to a folder where to save position logs & reports");
-        System.err.println("    <agency-id> (if given) is the ID of the single agency to run the report for");
         System.err.println("    Using -ne prevents an email report from being sent");
         System.err.println("    Using -t runs as a test and doesn't save results to production GCloudStorage");
         System.exit(1);
