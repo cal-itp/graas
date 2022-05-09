@@ -130,6 +130,7 @@ public class GraphicReport {
         for (String key : logs.keySet()) {
             // converts <agency-id>-yyyy-mm-dd.txt to <agency-id>
             String agencyID = key.substring(0, key.length() - 15);
+
             String gtfsUrl = a.getURL(agencyID);
             String name = a.getName(agencyID);
 
