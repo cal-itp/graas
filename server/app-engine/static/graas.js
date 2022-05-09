@@ -341,6 +341,7 @@ function handleStartStop() {
         configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
 
+        vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
         if(vehicleIDCookie){
             assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
             handleBusChoice();
