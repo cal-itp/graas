@@ -83,4 +83,4 @@ If you would like to make an edit or request a new feature, send a pull request 
 Contributing
 ------------
 
-We are still working on contribution guidelines as this is a new project. We expect to accept suggestions and edits, which adhere to a code of conduct, but are still refining the process.
+See our [contributing guidelines](CONTRIBUTING.md).
