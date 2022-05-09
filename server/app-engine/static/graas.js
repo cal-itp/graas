@@ -1142,6 +1142,7 @@ function configComplete() {
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
     if(vehicleIDCookie && useBulkAssignmentMode){
+        assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
         handleOkay()
     }
     // If bulk assignment mode and vehicleID is NOT cached, present vehicleID dropdown
