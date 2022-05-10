@@ -58,8 +58,8 @@ jobs:
       - name: Get block assignments
         working-directory: server/tests/
         run: |
-          NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e ${{ secrets.UNITRANS_ID_ECDSA }} -u https://lat-long-prototype.wl.r.appspot.com
-          NODE_PATH=../node/node_modules node get-block-assignments.js -a clean-air-express -e ${{ secrets.CLEAN_AIR_EXPRESS_ID_ECDSA }} -u https://lat-long-prototype.wl.r.appspot.com
+          NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e UNITRANS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com
+          NODE_PATH=../node/node_modules node get-block-assignments.js -a clean-air-express -e CLEAN_AIR_EXPRESS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com
         env:
           UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
           CLEAN_AIR_EXPRESS_ID_ECDSA: ${{ secrets.CLEAN_AIR_EXPRESS_ID_ECDSA }}
