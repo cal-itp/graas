@@ -1,8 +1,8 @@
 name: Daily Static GTFS Processes
-on:
+on: [push]
   # Daily at 10PM pacific
-  schedule:
-    - cron: '0 5 * * *'
+  # schedule:
+  #   - cron: '0 5 * * *'
 jobs:
   Run-tests:
     runs-on: ubuntu-latest
@@ -26,6 +26,13 @@ jobs:
           # but this method is continuing to be supported. More info: https://github.com/google-github-actions/auth#setup
           service_account: 'lat-long-prototype@appspot.gserviceaccount.com'
           credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.1.0'
+      - name: Install node packages
+        working-directory: server/node/
+        run: npm install
       - name: Load agency data
         working-directory: gtfu
         run: java -cp build/classes/java/test:build/libs/gtfu.jar gtfu.test.LoadAgencyDataTest -c src/main/resources/conf/cache -u ${{ secrets.LIVE_AGENCIES_URL }}
@@ -48,3 +55,11 @@ jobs:
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 0 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 1 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 2 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
+      - name: Get block assignments
+        working-directory: server/tests/
+        run: |
+          NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e ${{ secrets.UNITRANS_ID_ECDSA }} -u https://lat-long-prototype.wl.r.appspot.com
+          NODE_PATH=../node/node_modules node get-block-assignments.js -a clean-air-express -e ${{ secrets.CLEAN_AIR_EXPRESS_ID_ECDSA }} -u https://lat-long-prototype.wl.r.appspot.com
+        env:
+          UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
+          CLEAN_AIR_EXPRESS_ID_ECDSA: ${{ secrets.CLEAN_AIR_EXPRESS_ID_ECDSA }}
