@@ -30,3 +30,10 @@ indexes:
   - name: timestamp
     direction: desc
 
+- kind: stop-time
+  properties:
+  - name: trip_id
+    direction: asc
+  - name: stop_sequence
+    direction: asc
+

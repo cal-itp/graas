@@ -58,6 +58,10 @@ Consumers can retrieve current vehicle positions for an agency through the follo
 
     /vehicle-positions.pb?agency=MY-AGENCY-ID
 
+Consumers can retrieve current trip updates for an agency through the following endpoints:
+
+    /trip-updates.pb?agency=MY-AGENCY-ID
+
 A web-based client for collecting and submitting vehicle position updates is available at this endpoint:
 
     /
@@ -96,16 +100,21 @@ app = Flask(__name__)
 
 verified_map = {}
 verified_map_millis = 0
-alert_lock = threading.Lock()
 
 @app.route('/service-alerts.pb')
 def service_alerts():
     print('/service-alerts.pb')
     agency = request.args.get('agency')
     print('- agency: ' + agency)
-    alert_lock.acquire()
-    feed = gtfsrt.get_alert_feed(util.datastore_client, agency)
-    alert_lock.release()
+
+    if agency is None:
+        return 'No agency given', 400
+
+    feed = gtfsrt.get_alert_feed(
+        util.datastore_client,
+        agency
+    )
+
     return Response(feed, mimetype='application/octet-stream')
 
 @app.route('/vehicle-positions.pb')
@@ -118,6 +127,22 @@ def vehicle_positions():
         return 'No agency given', 400
 
     feed = gtfsrt.get_position_feed(
+        util.datastore_client,
+        agency
+    )
+
+    return Response(feed, mimetype='application/octet-stream')
+
+@app.route('/trip-updates.pb')
+def trip_updates():
+    print('/trip-updates.pb')
+    agency = request.args.get('agency', None)
+    print('- agency: ' + str(agency))
+
+    if agency is None:
+        return 'No agency given', 400
+
+    feed = gtfsrt.get_trip_updates_feed(
         util.datastore_client,
         agency
     )
@@ -309,7 +334,24 @@ def get_assignments():
         data
     )
 
-    return Response(f'{{"command": "block-collection", "assignments": {assignments}, "status": "ok"}}', mimetype='application/json')
+    return Response(f'{{"command": "get-assignments", "assignments": {assignments}, "status": "ok"}}', mimetype='application/json')
+
+@app.route('/new-stop-entities', methods=['POST'])
+def new_stop_entities():
+    print('/new-stop-entities')
+
+    result = verify_request(request, 'new-stop-entities')
+    if not result['verified']:
+        return result['response']
+
+    data = request.json['data']
+
+    result = gtfsrt.handle_stop_entities(
+        util.datastore_client,
+        data
+    )
+
+    return Response(f'{{"command": "block-collection", "assignments": {assignments}, "status": "{result}"}}', mimetype='application/json')
 
 @app.route('/new-pos-sig', methods=['POST'])
 def new_pos_sig():

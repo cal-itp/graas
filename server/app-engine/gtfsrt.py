@@ -47,6 +47,14 @@ effect_map = {
     'Stop Moved':         gtfs_realtime_pb2.Alert.Effect.STOP_MOVED
 }
 
+stop_time_required_properties = ['agency_id', 'trip_id', 'stop_sequence', 'delay', 'vehicle_id', 'timestamp']
+
+def obj_has_properties(obj, properties):
+    for p in properties:
+        if not p in obj:
+            return False
+    return True
+
 def make_translated_string(text):
     translation = gtfs_realtime_pb2.TranslatedString.Translation()
     translation.text = text
@@ -131,6 +139,16 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     entity.vehicle.CopyFrom(vp)
 
     return entity
+
+def make_trip_update(data):
+    ### IMPLEMENT ME!
+
+    entity = gtfs_realtime_pb2.FeedEntity()
+    entity.id = data['trip_id']
+    entity.trip_update.CopyFrom(tu)
+
+    return entity
+
 
 def alert_is_current(alert):
     print('alert_is_current()')
@@ -262,6 +280,54 @@ def get_position_feed(datastore_client, agency):
         cache.add(name, pos_feed, 3)
 
     return pos_feed
+
+def get_trip_updates_feed(datastore_client, agency):
+    """Assemble trip updates feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        agency (str): an agency ID.
+
+    Returns:
+        obj: trip updates feed in protobuf format
+
+    """
+    name = agency + '-trip-updates-feed'
+    feed = cache.get(name)
+
+    if feed is None:
+        header = gtfs_realtime_pb2.FeedHeader()
+        header.gtfs_realtime_version = '2.0'
+        header.timestamp = int(time.time())
+
+        feed = gtfs_realtime_pb2.FeedMessage()
+        feed.header.CopyFrom(header)
+
+        query = datastore_client.query(kind='stop-time')
+        query.add_filter('agency_id', '=', agency)
+        query.order = ['trip_id', 'stop_sequence']
+
+        results = list(query.fetch())
+        print(f'- results: {results}')
+
+        key_list = []
+
+        for st in results:
+            ts = int(st['timestamp'])
+            now = int(time.time())
+            delta = now - ts
+
+            if delta >= MAX_LIFE:
+                key_list.append(st.key)
+            else:
+                feed.entity.append(make_trip_update(st));
+
+        datastore_client.delete_multi(key_list)
+
+        feed = feed.SerializeToString()
+        cache.add(name, feed, 60)
+
+    return feed
 
 def add_alert(datastore_client, alert):
     print('add_alert()')
@@ -468,6 +534,62 @@ def handle_get_assignments(datastore_client, data):
         return []
 
     return assignment_summary['data']
+
+def handle_stop_entities(datastore_client, data):
+    """Process a list of stop time entities sent by a client. Upon passing checks, entities will be added to DB and subsequently used to generate trip update feed messages.
+
+    Args:
+        datastore_client (obj): reference to google cloud datastore instance.
+        data (obj): JSON data containing `agency_id` and `stop_time_entities` fields.
+
+    Returns:
+        string: status indicating success of operation
+
+    """
+    print(f'handle_stop_entities()')
+    print(f'- data: {data}')
+
+    entities = data.get('stop_time_entities', [])
+
+    for e in entities:
+        if not obj_has_properties(e, stop_time_required_properties):
+            print(f'* stop time entity {e} has missing required fields, discarding')
+            continue
+
+        trip_id = e['trip_id']
+        stop_sequence = e['stop_sequence']
+        name = trip_id + '-' + stop_sequence + '-stop-time'
+        entity_key = entity_key_cache.get(name)
+
+        if entity_key is None:
+            query = datastore_client.query(kind='stop-time')
+            query.add_filter('trip_id', '=', trip_id)
+            query.add_filter('stop_sequence-id', '=', stop_sequence)
+            query.order = ['-timestamp']
+
+            results = list(query.fetch())
+
+            if len(results) == 0:
+                entity = datastore.Entity(key=datastore_client.key('stop-time'))
+                #entity['timestamp'] = 0
+                datastore_client.put(entity)
+                entity_key_cache.add(name, entity.key)
+                entity_key = entity.key
+            else:
+                entity_key_cache.add(name, results[0].key)
+                entity_key = results[0].key
+
+        entity = datastore_client.get(entity_key)
+
+        if entity is None:
+                print(f'* invalid entity key: {entity_key}, discarding stop time entity and key')
+                entity_key_cache.remove(name)
+                return
+
+        entity.update(e)
+        datastore_client.put(entity)
+
+    return 'ok'
 
 def handle_block_collection(datastore_client, data):
     """Handle an incoming block collection. A collection has metadata like the associated agency ID, the date it is valid for, and the actual list of blocks, each of which has an ID and a list of contained trip IDs. The function checks if the collection contains the required data and discards it with an error message if it doesn't. Otherwise the data is structured for efficient access through caching and database and written to said database:
