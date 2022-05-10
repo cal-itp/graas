@@ -1137,8 +1137,6 @@ function configComplete() {
     util.log("configComplete()");
 
     vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
-    util.log("vehicle ID cookie value: " + vehicleID);
-    util.log("useBulkAssignmentMode: " + useBulkAssignmentMode);
     hideElement(LOADING_TEXT_ELEMENT);
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
