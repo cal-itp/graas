@@ -16,12 +16,12 @@ async function test(agencyID, url, ecdsaVarName) {
     const signatureKey = await testutil.getSignatureKey(ecdsaVarName);
     util.log(`- signatureKey: ${JSON.stringify(signatureKey)}`);
 
-    let agencyDate = {
+    let agencyData = {
         agency_id: agencyID,
         date: util.getYYYYMMDD(util.getMidnightDate())
     };
 
-    let json = await util.getJSONResponse(url + '/get-assignments', agencyDate, signatureKey);
+    let json = await util.getJSONResponse(url + '/get-assignments', agencyData, signatureKey);
     //util.log('- json: ' + json);
     let assignments = json.assignments;
 
