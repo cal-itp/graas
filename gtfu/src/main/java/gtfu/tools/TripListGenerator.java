@@ -91,14 +91,17 @@ public class TripListGenerator {
 
         Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, progressObserver);
         CalendarCollection calendars = (CalendarCollection)collections.get("calendars");
+        CalendarDateCollection calendarDates = (CalendarDateCollection)collections.get("calendar_dates");
         TripCollection trips = (TripCollection)collections.get("trips");
         RouteCollection routes = (RouteCollection)collections.get("routes");
         DirectionCollection directions = (DirectionCollection)collections.get("directions");
 
+        Map<String, List<String>> dateOnMap = createServiceIDMap(1, calendarDates);
+        Map<String, List<String>> dateOffMap = createServiceIDMap(2, calendarDates);
+
         if(useDirection && directions == null){
             customDirectionMap = createCustomDirectionMap();
         }
-
         List<TripListEntry> list = new ArrayList<TripListEntry>();
         for(int i = 0; i < trips.getSize(); i++){
 
@@ -128,20 +131,32 @@ public class TripListGenerator {
             int startTimeSecs = trip.getStartTime();
             String startTimeString = Time.getHMForSeconds(trip.getStartTime(), true);
             String tripID = trip.getID();
+
             Calendar calendar = calendars.get(trip.getServiceID());
-            if(calendar == null){
-                continue;
+            String calendarString = null;
+            String startDate = null;
+            String endDate = null;
+
+            if(calendar != null){
+                calendarString = calendar.toArrayString();
+                startDate = calendar.getStartDate();
+                endDate = calendar.getEndDate();
             }
-            String calendarString = calendar.toArrayString();
+
+            String onDates = null;
+            if(dateOnMap.get(trip.getServiceID()) != null){
+                onDates = dateOnMap.get(trip.getServiceID()).toString();
+            }
+            String offDates = null;
+            if(dateOffMap.get(trip.getServiceID()) != null){
+                offDates = dateOffMap.get(trip.getServiceID()).toString();
+            }
 
             Stop firstStop = trip.getStop(0);
             Float lat = firstStop.getLat();
             Float lon = firstStop.getLong();
 
-            String startDate = calendar.getStartDate();
-            String endDate = calendar.getEndDate();
-
-            list.add(new TripListEntry(name, startTimeSecs, startTimeString, tripID, calendarString, lat, lon, startDate, endDate));
+            list.add(new TripListEntry(name, startTimeSecs, startTimeString, tripID, calendarString, lat, lon, startDate, endDate, onDates, offDates));
         }
         Collections.sort(list);
 
@@ -175,6 +190,21 @@ public class TripListGenerator {
         directionMap.put("0", "Outbound");
         directionMap.put("1", "Inbound");
         return directionMap;
+    }
+
+    private static Map<String, List<String>> createServiceIDMap(int exception, CalendarDateCollection calendarDates){
+        Map<String, List<String>> dateMap = new HashMap();
+        for (CalendarDate cd : calendarDates){
+            if(cd.getExceptionType() == exception){
+                List<String> dateList = dateMap.get(cd.getServiceID());
+                if (dateList == null){
+                    dateList = new ArrayList();
+                    dateMap.put(cd.getServiceID(), dateList);
+                }
+                dateList.add(cd.getDate());
+            }
+        }
+        return dateMap;
     }
 
     private static void usage() {
@@ -243,8 +273,10 @@ class TripListEntry implements Comparable<TripListEntry> {
     Float lon;
     String startDate;
     String endDate;
+    String onDates;
+    String offDates;
 
-    public TripListEntry(String name, int startTimeSecs, String startTimeString, String tripID, String calendarString, Float lat, Float lon, String startDate, String endDate) {
+    public TripListEntry(String name, int startTimeSecs, String startTimeString, String tripID, String calendarString, Float lat, Float lon, String startDate, String endDate, String onDates, String offDates) {
 
         this.name = name;
         this.startTimeSecs = startTimeSecs;
@@ -255,6 +287,8 @@ class TripListEntry implements Comparable<TripListEntry> {
         this.lon = lon;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.onDates = onDates;
+        this.offDates = offDates;
     }
 
     public int compareTo(TripListEntry o) {
@@ -264,7 +298,7 @@ class TripListEntry implements Comparable<TripListEntry> {
     }
 
     public String toString() {
-        return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": {\"lat\": %s, \"long\": %s}, \"start_date\": %s, \"end_date\": %s}",
+        return String.format("{\"trip_name\": \"%s @ %s\", \"trip_id\": \"%s\", \"calendar\": %s, \"departure_pos\": {\"lat\": %s, \"long\": %s}, \"start_date\": %s, \"end_date\": %s, \"on_dates\": %s, \"off_dates\": %s}",
                                 name,
                                 startTimeString,
                                 tripID,
@@ -272,7 +306,9 @@ class TripListEntry implements Comparable<TripListEntry> {
                                 lat,
                                 lon,
                                 startDate,
-                                endDate
+                                endDate,
+                                onDates,
+                                offDates
                             );
     }
 }

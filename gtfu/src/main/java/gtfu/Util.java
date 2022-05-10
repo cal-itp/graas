@@ -38,6 +38,8 @@ import javax.net.ssl.X509TrustManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class Util {
     public static final String[] GTFS_FILE_LIST = {
@@ -856,11 +858,20 @@ public class Util {
 
         Map<String, Object> collections = new HashMap<String, Object>();
 
+        Timer t = new Timer("calendars");
         CalendarCollection calendarCollection = new CalendarCollection(path);
         collections.put("calendars", calendarCollection);
+        t.dumpLap();
+        Debug.log("- calendarCollection.getSize(): " + calendarCollection.getSize());
+
+        t = new Timer("calendar_dates");
+        CalendarDateCollection calendarDateCollection = new CalendarDateCollection(path);
+        collections.put("calendar_dates", calendarDateCollection);
+        t.dumpLap();
+        Debug.log("- calendarDateCollection.getSize(): " + calendarDateCollection.getSize());
 
         //Debug.log("shapes:");
-        Timer t = new Timer("shapes");
+        t = new Timer("shapes");
         ShapeCollection shapeCollection = new ShapeCollection(path, po);
         collections.put("shapes", shapeCollection);
         t.dumpLap();
@@ -960,4 +971,17 @@ public class Util {
         HttpsURLConnection.setDefaultHostnameVerifier(validHosts);
     }
 
+    public static boolean isValidJSON(String jsonString){
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+        } catch(JsonProcessingException e){
+            // TODO: Using something like printStackTrace(PrintStream) instead, for option of printing elsewhere besides stout
+            // see https://github.com/cal-itp/graas/pull/273#discussion_r865250870
+            Debug.log("* Invalid JSON detected. Stack trace:");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 }

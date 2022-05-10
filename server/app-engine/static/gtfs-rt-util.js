@@ -31,6 +31,7 @@ if (!fetch) {
     exports.SECONDS_PER_HOUR   = 60 * exports.SECONDS_PER_MINUTE;
     exports.SECONDS_PER_DAY    = 24 * exports.SECONDS_PER_HOUR;
     exports.SECONDS_PER_WEEK   =  7 * exports.SECONDS_PER_DAY;
+    exports.SECONDS_PER_YEAR   =  365 * exports.SECONDS_PER_DAY;
 
     exports.MILLIS_PER_SECOND = 1000;
     exports.MILLIS_PER_MINUTE =   60 * exports.MILLIS_PER_SECOND;
@@ -99,9 +100,7 @@ if (!fetch) {
 
     // returns 0 for Monday...and 6 for Sunday
     exports.getDayOfWeek = function() {
-        if (testDow) {
-            return testDow;
-        } else return ((new Date()).getDay() + 6) % 7;
+        return ((new Date()).getDay() + 6) % 7;
     }
 
     // returns date as an 8-character string (ie 20220317 for 3/17/22)
@@ -171,6 +170,10 @@ if (!fetch) {
 
     exports.millisToSeconds = function(millis) {
         return Math.floor(millis / 1000);
+    }
+
+    exports.isNullOrUndefined = function(object) {
+        return object === null || typeof object === 'undefined';
     }
 
     exports.sign = function(msg, signatureKey) {

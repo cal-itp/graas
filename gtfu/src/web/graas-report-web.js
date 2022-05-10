@@ -183,11 +183,11 @@ function processTripJSON(object){
                     device: object.trips[i].device,
                     uuid_tail: object.trips[i].uuidTail,
                     os: object.trips[i].os,
-                    trip_id: object.trips[i].tripId,
+                    trip_id: object.trips[i].tripID,
                     max_update_interval: object.trips[i].maxUpdateInterval,
                     avg_update_interval: object.trips[i].avgUpdateInterval,
                     min_update_interval: object.trips[i].minUpdateInterval,
-                    vehicle_id: object.trips[i].vehicleId,
+                    vehicle_id: object.trips[i].vehicleID,
                     map: map,
                     timeline: timeline,
                     points: points
