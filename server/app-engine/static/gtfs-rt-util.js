@@ -31,6 +31,7 @@ if (!fetch) {
     exports.SECONDS_PER_HOUR   = 60 * exports.SECONDS_PER_MINUTE;
     exports.SECONDS_PER_DAY    = 24 * exports.SECONDS_PER_HOUR;
     exports.SECONDS_PER_WEEK   =  7 * exports.SECONDS_PER_DAY;
+    exports.SECONDS_PER_YEAR   =  365 * exports.SECONDS_PER_DAY;
 
     exports.MILLIS_PER_SECOND = 1000;
     exports.MILLIS_PER_MINUTE =   60 * exports.MILLIS_PER_SECOND;

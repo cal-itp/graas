@@ -46,9 +46,9 @@ const UUID_NAME = 'lat_long_id';
 const VEHICLE_ID_COOKIE_NAME = 'vehicle_id';
 var vehicleIDCookie = null;
 const MSG_NO = 'msg_no';
-const MAX_AGE_SECS = 10 * 60 * 60 * 24 * 365;
-const MAX_LIFE_MILLIS = 1000 * 60 * 60 * 24 * 7;
-const MAX_VEHICLE_ID_AGE_SECS = 60 * 60 * 4;
+const MAX_AGE_SECS = util.SECONDS_PER_YEAR * 10;
+const MAX_LIFE_MILLIS = util.MILLIS_PER_DAY * 7;
+const MAX_VEHICLE_ID_AGE_SECS = util.SECONDS_PER_YEAR * 10;
 
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
@@ -342,10 +342,8 @@ function handleStartStop() {
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
 
         vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
-
         if(vehicleIDCookie){
-            let p = document.getElementById(BUS_SELECT_DROPDOWN);
-            p.value = vehicleIDCookie;
+            assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
             handleBusChoice();
         }
 
@@ -1082,8 +1080,7 @@ function populateList(id, str, list) {
 }
 
 function disableElement(id) {
-    let p = document.getElementById(id);
-    p.value = 'disabled'
+    assignValue(id, 'disabled');
 }
 
 function disableElements(list) {
@@ -1106,6 +1103,11 @@ function changeDisplay(id,display) {
 function changeText(id,text) {
     let p = document.getElementById(id);
     p.textContent = text;
+}
+
+function assignValue(id, value){
+    let p = document.getElementById(id);
+    p.value = value;
 }
 
 // Populates dropdown, and then shows all dropdowns
@@ -1133,8 +1135,24 @@ function setupListHeader(listElem) {
 
 function configComplete() {
     util.log("configComplete()");
+
+    vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
     hideElement(LOADING_TEXT_ELEMENT);
-    showElement(START_STOP_BUTTON);
+
+    // If bulk assignment mode and vehicleID is already cached, simply start tracking
+    if(vehicleIDCookie && useBulkAssignmentMode){
+        assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
+        handleOkay()
+    }
+    // If bulk assignment mode and vehicleID is NOT cached, present vehicleID dropdown
+    else if(useBulkAssignmentMode){
+        handleStartStop()
+    }
+    // If not bulk assignment mode, present the "Load trips" button.
+    else{
+        showElement(START_STOP_BUTTON);
+    }
+
     setInterval(function() {
         if (!running) {
             util.log("checking for updated version..");
