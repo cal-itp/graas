@@ -10,7 +10,8 @@ from cache import Cache
 from entity_key_cache import EntityKeyCache
 import util
 
-MAX_LIFE = 30 * 60 # 30 minutes in seconds
+STOP_UPDATE_MAX_LIFE = 3 * 60 # 3 minutes in seconds
+POS_MAX_LIFE = 30 * 60 # 30 minutes in seconds
 MAX_BLOCK_STALE_MILLIS = 60 * 1000
 WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000
 DAY_SECONDS = 24 * 60 * 60
@@ -141,14 +142,33 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     return entity
 
 def make_trip_update(data):
-    ### IMPLEMENT ME!
+    ### test me separately before including in real-lif scenarios,
+    ### e.g. call gtfsrt.make_trip_update(fake_data) from main() at startups
+
+    trip = gtfs_realtime_pb2.TripDescriptor()
+    trip.trip_id = data['trip_id']
+
+    vehicle = gtfs_realtime_pb2.VehicleDescriptor()
+    vehicle.label = data['vehicle_id']
+
+    stop_time_event = gtfs_realtime_pb2.TripUpdate.StopTimeEvent()
+    stop_time_event.delay = data['delay']
+
+    stop_time_update = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate()
+    stop_stop.stop_sequence = data['stop_sequence']
+    stop_stop.arrival.CopyFrom(stop_time_event)
+
+    tu = gtfs_realtime_pb2.TripUpdate();
+    tu.timestamp = data['timestamp']
+    tu.trip.CopyFrom(trip)
+    tu.vehicle.CopyFrom(vehicle)
+    tu.stop_time_update.CopyFrom(stop_time_update)
 
     entity = gtfs_realtime_pb2.FeedEntity()
     entity.id = data['trip_id']
     entity.trip_update.CopyFrom(tu)
 
     return entity
-
 
 def alert_is_current(alert):
     print('alert_is_current()')
@@ -263,7 +283,7 @@ def get_position_feed(datastore_client, agency):
             now = int(time.time())
             delta = now - vts
 
-            if delta >= MAX_LIFE:
+            if delta >= POS_MAX_LIFE:
                 datastore_client.delete(pos.key)
             else:
                 feed.entity.append(make_position(
@@ -317,7 +337,7 @@ def get_trip_updates_feed(datastore_client, agency):
             now = int(time.time())
             delta = now - ts
 
-            if delta >= MAX_LIFE:
+            if delta >= STOP_UPDATE_MAX_LIFE:
                 key_list.append(st.key)
             else:
                 feed.entity.append(make_trip_update(st));
