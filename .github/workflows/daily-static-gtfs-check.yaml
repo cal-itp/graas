@@ -63,7 +63,7 @@ jobs:
           UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
       - name: Send Unitrans output
         working-directory: gtfu
-        run: java -cp build/libs/gtfu.jar gtfu.tools.SendGrid -r scott.owades@dot.ca.gov -s "Unitrans Block Output" -b ${{steps.unitrans-get-block-assignments.outputs.*}}
+        run: java -cp build/libs/gtfu.jar gtfu.tools.SendGrid -r scott.owades@dot.ca.gov -s "Unitrans Block Output" -b ${{join(steps.unitrans-get-block-assignments.outputs.*, '\n')}}
         env:
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Get Clean Air Express block assignments
