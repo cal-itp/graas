@@ -141,9 +141,11 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 
     return entity
 
-def make_trip_update(data):
-    ### test me separately before including in real-lif scenarios,
-    ### e.g. call gtfsrt.make_trip_update(fake_data) from main() at startups
+### test me separately before including in real-lif scenarios,
+### e.g. call gtfsrt.make_trip_update(fake_data) from main() at startups
+def make_trip_update(list):
+
+    data = list[0]
 
     trip = gtfs_realtime_pb2.TripDescriptor()
     trip.trip_id = data['trip_id']
@@ -151,18 +153,20 @@ def make_trip_update(data):
     vehicle = gtfs_realtime_pb2.VehicleDescriptor()
     vehicle.label = data['vehicle_id']
 
-    stop_time_event = gtfs_realtime_pb2.TripUpdate.StopTimeEvent()
-    stop_time_event.delay = data['delay']
-
-    stop_time_update = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate()
-    stop_stop.stop_sequence = data['stop_sequence']
-    stop_stop.arrival.CopyFrom(stop_time_event)
-
     tu = gtfs_realtime_pb2.TripUpdate();
     tu.timestamp = data['timestamp']
     tu.trip.CopyFrom(trip)
     tu.vehicle.CopyFrom(vehicle)
-    tu.stop_time_update.CopyFrom(stop_time_update)
+
+    for elem in list:
+        ste = gtfs_realtime_pb2.TripUpdate.StopTimeEvent()
+        ste.delay = data['delay']
+
+        stu = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate()
+        stu.stop_sequence = data['stop_sequence']
+        stu.arrival.CopyFrom(ste)
+
+        tu.stop_time_update.append(stu)
 
     entity = gtfs_realtime_pb2.FeedEntity()
     entity.id = data['trip_id']
@@ -331,18 +335,22 @@ def get_trip_updates_feed(datastore_client, agency):
         print(f'- results: {results}')
 
         key_list = []
+        i = 0
 
-        for st in results:
+        while i < len(results):
+            st = results[i]
             ts = int(st['timestamp'])
             now = int(time.time())
             delta = now - ts
 
             if delta >= STOP_UPDATE_MAX_LIFE:
                 key_list.append(st.key)
+                results.pop(i)
             else:
-                feed.entity.append(make_trip_update(st));
+                i += 1
 
         datastore_client.delete_multi(key_list)
+        feed.entity.append(make_trip_update(results));
 
         feed = feed.SerializeToString()
         cache.add(name, feed, 60)

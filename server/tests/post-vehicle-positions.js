@@ -62,7 +62,7 @@ async function postUpdates(signatureKey, agencyID, url) {
 }
 
 async function test(url, agencyID, ecdsaVarName) {
-    util.log(`test()`);
+    util.log('starting vehicle position test...');
     util.log(`- url: ${url}`);
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
