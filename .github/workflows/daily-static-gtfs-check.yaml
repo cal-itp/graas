@@ -57,7 +57,7 @@ jobs:
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 2 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
       - name: Get Unitrans block assignments
         working-directory: server/tests/
-        run: echo "::set-output name=get-block-assignments::$(NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e UNITRANS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com)\n"
+        run: echo "::set-output name=get-block-assignments::${{NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e UNITRANS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com}}"
         id: unitrans-get-block-assignments
         env:
           UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
