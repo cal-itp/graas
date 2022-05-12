@@ -118,5 +118,33 @@ public class SendGrid {
         responseCode = HTTPClient.post("https://api.sendgrid.com/v3/mail/send", urlData, headers);
         return responseCode;
     }
-}
 
+    private static void usage() {
+      System.err.println("usage: SendGrid -r <recipients> -s <subject> -b <body>");
+      System.exit(0);
+    }
+
+    public static void main(String[] arg) throws Exception {
+        String recipients = null;
+        String subject = null;
+        String body = null;
+
+        for (int i=0; i<arg.length; i++) {
+            if (arg[i].equals("-r") && i < arg.length - 1) {
+                recipients = arg[i + 1];
+            }
+            if (arg[i].equals("-s") && i < arg.length - 1) {
+                subject = arg[i + 1];
+            }
+            if (arg[i].equals("-b") && i < arg.length - 1) {
+                body = arg[i + 1];
+            }
+        }
+        if ((recipients == null) || (subject == null) || (body == null)){
+          usage();
+        }
+
+        SendGrid sg = new SendGrid(recipients.split(","), subject, body, null);
+        sg.send();
+    }
+}

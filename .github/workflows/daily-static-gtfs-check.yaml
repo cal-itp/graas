@@ -58,6 +58,7 @@ jobs:
       - name: Get Unitrans block assignments
         working-directory: server/tests/
         run: NODE_PATH=../node/node_modules node get-block-assignments.js -a unitrans -e UNITRANS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com
+        id: unitrans-get-assignments
         env:
           UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
       - name: Get Clean Air Express block assignments
