@@ -61,9 +61,11 @@ jobs:
         id: unitrans-get-block-assignments
         env:
           UNITRANS_ID_ECDSA: ${{ secrets.UNITRANS_ID_ECDSA }}
-      -name: Send Unitrans output
-       working-directory: gtfu
-       run: java -cp build/libs/gtfu.jar gtfu.tools.SendGrid -r scott.owades@dot.ca.gov -s "Unitrans Block Output" -b steps.unitrans-get-block-assignments.outputs.*
+      - name: Send Unitrans output
+        working-directory: gtfu
+        run: java -cp build/libs/gtfu.jar gtfu.tools.SendGrid -r scott.owades@dot.ca.gov -s "Unitrans Block Output" -b steps.unitrans-get-block-assignments.outputs.*
+        env:
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
       - name: Get Clean Air Express block assignments
         working-directory: server/tests/
         run: NODE_PATH=../node/node_modules node get-block-assignments.js -a clean-air-express -e CLEAN_AIR_EXPRESS_ID_ECDSA -u https://lat-long-prototype.wl.r.appspot.com
