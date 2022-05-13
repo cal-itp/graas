@@ -45,7 +45,7 @@ public class StaticGTFSToBucket {
         GCloudStorage gcs = new GCloudStorage();
         String[] recipients = r.get("error_report");
 
-        FailureReporter reporter = new EmailFailureReporter(recipients, "Update Trip Names Report");
+        FailureReporter reporter = new EmailFailureReporter(recipients, "Static GTFS File Update");
         Util.setReporter(reporter);
 
         File file = new File(cacheDir);
@@ -54,7 +54,7 @@ public class StaticGTFSToBucket {
             file.mkdir();
         }
 
-        reporter.addLine("Uploaded GTFS data for:");
+        reporter.addLine("Uploaded static GTFS files for:");
 
         for (String agencyID : agencyIDList) {
             reporter.addLine("- " + agencyID);
