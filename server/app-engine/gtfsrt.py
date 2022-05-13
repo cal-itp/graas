@@ -141,10 +141,7 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 
     return entity
 
-### test me separately before including in real-lif scenarios,
-### e.g. call gtfsrt.make_trip_update(fake_data) from main() at startups
 def make_trip_update(list):
-
     data = list[0]
 
     trip = gtfs_realtime_pb2.TripDescriptor()
@@ -160,10 +157,10 @@ def make_trip_update(list):
 
     for elem in list:
         ste = gtfs_realtime_pb2.TripUpdate.StopTimeEvent()
-        ste.delay = data['delay']
+        ste.delay = elem['delay']
 
         stu = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate()
-        stu.stop_sequence = data['stop_sequence']
+        stu.stop_sequence = elem['stop_sequence']
         stu.arrival.CopyFrom(ste)
 
         tu.stop_time_update.append(stu)
