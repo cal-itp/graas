@@ -101,34 +101,6 @@ app = Flask(__name__)
 verified_map = {}
 verified_map_millis = 0
 
-"""
-### TEST CODE, REMOVE ME!
-list = [
-    {
-        'trip_id': 'trip_id_1',
-        'stop_sequence': 2,
-        'delay': -1,
-        'vehicle_id': 'pr-test-vehicle-id-1',
-        'timestamp': int(time.time()),
-    },
-    {
-        'trip_id': 'trip_id_1',
-        'stop_sequence': 1,
-        'delay': 0,
-        'vehicle_id': 'pr-test-vehicle-id-1',
-        'timestamp': int(time.time()),
-    },
-    {
-        'trip_id': 'trip_id_1',
-        'stop_sequence': 0,
-        'delay': 2,
-        'vehicle_id': 'pr-test-vehicle-id-1',
-        'timestamp': int(time.time()),
-    }
-]
-gtfsrt.make_trip_update(list)
-"""
-
 @app.route('/service-alerts.pb')
 def service_alerts():
     print('/service-alerts.pb')
@@ -379,7 +351,7 @@ def new_stop_entities():
         data
     )
 
-    return Response(f'{{"command": "block-collection", "assignments": {assignments}, "status": "{result}"}}', mimetype='application/json')
+    return Response(f'{{"command": "new-stop-entities", "status": "{result}"}}', mimetype='application/json')
 
 @app.route('/new-pos-sig', methods=['POST'])
 def new_pos_sig():

@@ -32,8 +32,16 @@ indexes:
 
 - kind: stop-time
   properties:
+  - name: agency_id
   - name: trip_id
     direction: asc
   - name: stop_sequence
     direction: asc
+
+- kind: stop-time
+  properties:
+  - name: stop_sequence
+  - name: trip_id
+  - name: timestamp
+    direction: desc
 

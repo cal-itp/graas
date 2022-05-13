@@ -53,16 +53,22 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
         let ste = reader.getNextLine();
         if (ste == null) break;
 
+        ste.delay = parseInt(ste.delay);
+        ste.stop_sequence = parseInt(ste.stop_sequence);
+
         //util.log(`-- ste: ${JSON.stringify(ste)}`);
 
         now = Math.round(Date.now() / 1000);
 
         ste['timestamp'] = now;
+        ste['agency_id'] = agencyID;
 
         stlist.push(ste);
         //updates.push(serialize(ste, SER_FIELDS).toLowerCase());
         map[ste.trip_id + '-' + ste.stop_sequence] = ste;
     }
+
+    //util.log(`- map: ${JSON.stringify(map, null, 4)}`);
 
     const data = {
         agency_id: agencyID,
@@ -74,9 +80,15 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
     await testutil.sleep(5000);
     util.log(`done.`);
 
-    const update = Object.values(map);
+    const updates = Object.values(map);
+    //util.log(`- updates: ${JSON.stringify(updates, null, 4)}`);
+
+    for (let i=0; i<updates.length; i++) {
+        updates[i] = serialize(updates[i], SER_FIELDS);
+    }
+
     updates.sort();
-    util.log(`- updates: ${JSON.stringify(updates)}`);
+    util.log(`- updates: ${JSON.stringify(updates, null, 4)}`);
 
     const body = await testutil.getResponseBody(baseUrl + '/trip-updates.pb?agency=' + agencyID);
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
@@ -84,7 +96,7 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
     let entries = [];
 
     feed.entity.forEach(function(entity) {
-        //util.log(entity);
+        util.log(`-- entity: ${JSON.stringify(entity)}`);
 
         let trip_id = null;
         let vehicle_id = null;

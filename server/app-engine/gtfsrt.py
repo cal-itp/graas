@@ -142,6 +142,9 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     return entity
 
 def make_trip_update(list):
+    print(f'make_trip_update()')
+    print(f'- list: {list}')
+
     data = list[0]
 
     trip = gtfs_realtime_pb2.TripDescriptor()
@@ -302,6 +305,35 @@ def get_position_feed(datastore_client, agency):
 
     return pos_feed
 
+def split_list(array, attr_name):
+    """Split a list into a list of list segmented by attribute 'attr_name'.
+
+    Args:
+        array (list): list of elements containing attribute with name 'attr_name'.
+        attr_name (str): name of segmenting attribute.
+
+    Returns:
+        list: list of lists segmented by attribute 'attr_name'
+
+    """
+
+    last_value = array[0][attr_name]
+    result = []
+    segment = []
+
+    for elem in array:
+        value = elem[attr_name]
+        if value != last_value:
+            result.append(segment)
+            segment = []
+        segment.append(elem)
+        last_value = value
+
+    if len(segment) > 0:
+        result.append(segment)
+
+    return result
+
 def get_trip_updates_feed(datastore_client, agency):
     """Assemble trip updates feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers), or return a recent cached instance.
 
@@ -332,13 +364,16 @@ def get_trip_updates_feed(datastore_client, agency):
         print(f'- results: {results}')
 
         key_list = []
+        now = int(time.time())
+        #print(f'- now: {now}')
         i = 0
 
         while i < len(results):
             st = results[i]
             ts = int(st['timestamp'])
-            now = int(time.time())
-            delta = now - ts
+            #print(f'-- ts: {ts}')
+            delta = abs(now - ts)
+            #print(f'-- delta: {delta}')
 
             if delta >= STOP_UPDATE_MAX_LIFE:
                 key_list.append(st.key)
@@ -346,8 +381,14 @@ def get_trip_updates_feed(datastore_client, agency):
             else:
                 i += 1
 
+        #print(f'- results: {results}')
+        #print(f'- key_list: {key_list}')
         datastore_client.delete_multi(key_list)
-        feed.entity.append(make_trip_update(results));
+
+        list_of_lists = split_list(results, 'trip_id')
+
+        for ll in list_of_lists:
+            feed.entity.append(make_trip_update(ll));
 
         feed = feed.SerializeToString()
         cache.add(name, feed, 60)
@@ -583,13 +624,13 @@ def handle_stop_entities(datastore_client, data):
 
         trip_id = e['trip_id']
         stop_sequence = e['stop_sequence']
-        name = trip_id + '-' + stop_sequence + '-stop-time'
+        name = trip_id + '-' + str(stop_sequence) + '-stop-time'
         entity_key = entity_key_cache.get(name)
 
         if entity_key is None:
             query = datastore_client.query(kind='stop-time')
             query.add_filter('trip_id', '=', trip_id)
-            query.add_filter('stop_sequence-id', '=', stop_sequence)
+            query.add_filter('stop_sequence', '=', stop_sequence)
             query.order = ['-timestamp']
 
             results = list(query.fetch())
