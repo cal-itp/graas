@@ -345,4 +345,38 @@ if (!fetch) {
             });
         });
     };
+
+     exports.addSelectOption = function(sel, text, disabled) {
+        let opt = document.createElement('option');
+
+        opt.appendChild(document.createTextNode(text));
+        opt.disabled = disabled;
+        sel.appendChild(opt);
+    }
+
+
+     exports.clearSelectOptions = function(sel) {
+        let l = sel.options.length - 1;
+        this.log('- l: ' + l);
+
+        for(let i = l; i >= 0; i--) {
+            sel.remove(i);
+        }
+    }
+     exports.populateList = function(id, str, list) {
+        this.log("populateList()");
+        // this.log("str: " + str);
+        let p = document.getElementById(id);
+        this.addSelectOption(p, str, true);
+
+        list.forEach(el => this.addSelectOption(p, el, false));
+
+        this.setupListHeader(p);
+    }
+    exports.setupListHeader = function(listElem) {
+        listElem.selectedIndex = 0;
+        listElem.options[0].value = "disabled";
+        listElem.options[0].disabled = true;
+    }
+
 }(typeof exports === 'undefined' ? this.util = {} : exports));
