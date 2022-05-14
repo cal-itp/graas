@@ -96,41 +96,41 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
     let entries = [];
 
     feed.entity.forEach(function(entity) {
-        util.log(`-- entity: ${JSON.stringify(entity)}`);
+        //util.log(`-- entity: ${JSON.stringify(entity)}`);
 
         let trip_id = null;
         let vehicle_id = null;
         let timestamp = null;
 
-        if (!entity.trip_update) return;
+        if (!entity.tripUpdate) return;
 
-        if (entity.trip_update.trip && entity.trip_update.trip.trip_id) {
-            trip_id = entity.trip_update.trip.trip_id;
+        if (entity.tripUpdate.trip && entity.tripUpdate.trip.tripId) {
+            trip_id = entity.tripUpdate.trip.tripId;
         }
 
-        if (entity.trip_update.vehicle && entity.trip_update.vehicle.id) {
-            vehicle_id = entity.trip_update.vehicle.id;
+        if (entity.tripUpdate.vehicle && entity.tripUpdate.vehicle.label) {
+            vehicle_id = entity.tripUpdate.vehicle.label;
 
             if (vehicle_id && !vehicle_id.startsWith('pr-test-vehicle-id-')) {
                 return;
             }
         }
 
-        if (entity.trip_update.timestamp) {
-            timestamp = entity.trip_update.timestamp;
+        if (entity.tripUpdate.timestamp) {
+            timestamp = entity.tripUpdate.timestamp;
 
             if (timestamp && Math.abs(now - timestamp) > 60) {
                 return;
             }
         }
 
-        if (entity.trip_update.stop_time_update) {
-            for (let stu of entity.trip_update.stop_time_update) {
+        if (entity.tripUpdate.stopTimeUpdate) {
+            for (let stu of entity.tripUpdate.stopTimeUpdate) {
                 let stop_sequence = null;
                 let delay = null;
 
-                if (stu.stop_sequence) {
-                    stop_sequence = stu.stop_sequence;
+                if (stu.stopSequence) {
+                    stop_sequence = stu.stopSequence;
                 }
 
                 if (stu.arrival && stu.arrival.delay) {
@@ -155,10 +155,7 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
     });
 
     entries.sort();
-    util.log(`- entries: ${JSON.stringify(entries)}`);
-
-    /*
-    ### UNCOMMENT ME!
+    util.log(`- entries: ${JSON.stringify(entries, null, 4)}`);
 
     if (updates.length !== entries.length) {
         throw `expected ${updates.length} feed entries but got ${entries.length}`;
@@ -166,12 +163,11 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
 
     for (let i=0; i<updates.length; i++) {
         if (updates[i] !== entries[i]) {
-            throw `expected alert data '${updates[i]}' but got '${entries[i]}'`;
+            throw `expected trip update data '${updates[i]}' but got '${entries[i]}'`;
         }
     }
 
     util.log('---> test succeeded');
-    */
 }
 
 const args = process.argv.slice(2);
