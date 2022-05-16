@@ -1,11 +1,27 @@
 <html>
     <head>
 
+        <link type="text/css" rel="stylesheet" href="../static/service-alert-ui.css">
     </head>
     <body>
-        <select id="category-select" onchange="handleCategoryChoice()"> </select>
-        <select id="item-select"> </select>
-        <script src="./gtfs-rt-util.js"></script>
-        <script src="./service-alert-ui.js"></script>
+        <div id="keyEntryModal" class="modal">
+          <div class="modal-content">
+            <p id="key-title" style="text-align: center">Enter Key</p>
+            <textarea id="keyTextArea" rows="5"></textarea>
+            <button id="key-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="background-color: blue">Okay</button>
+          </div>
+        </div>
+        <div id="form">
+            <select id="entity-select" onchange="handleEntityChoice()"> </select>
+            <select id="item-select"> </select>
+            <input type="text" id="description">
+            <input type="text" id="header">
+            <input type="text" id="url">
+            <select id="cause-select"> </select>
+            <select id="effect-select"> </select>
+            <button type="submit" id="submit" onclick="postServiceAlert()"> Submit </button>
+        </div>
+        <script src="../static/gtfs-rt-util.js"></script>
+        <script src="../static/service-alert-ui.js"></script>
     </body>
 </html>

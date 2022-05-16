@@ -146,6 +146,16 @@ def dispatch_ui():
     resp.headers['Last-Modified'] = util.get_mtime(fn);
     return resp
 
+@app.route('/service-alert-ui')
+def service_alert_ui():
+    print(f'{request.path}')
+
+    fn = 'static/service-alert-ui.html'
+    content = util.get_file(fn, 'r')
+    resp = Response(content, mimetype='text/html')
+    resp.headers['Last-Modified'] = util.get_mtime(fn);
+    return resp
+
 @app.route('/test')
 def test():
     fn = 'static/device-test.html'

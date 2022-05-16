@@ -379,4 +379,42 @@ if (!fetch) {
         listElem.options[0].disabled = true;
     }
 
+    exports.parseAgencyData = function(str) {
+        util.log("parseAgencyData()");
+        util.log("- str: " + str);
+
+        let aID = null;
+        let pem = null;
+
+        let i1 = str.indexOf(PEM_HEADER);
+        util.log("- i1: " + i1);
+
+        if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
+            aID = str.substring(0, i1).trim();
+            pem = str.substring(i1);
+        }
+
+        return {
+            id: aID,
+            pem: pem
+        };
+    }
+
+    exports.handleModal = function(name) {
+        util.log("handleModal()");
+        util.log("- name: " + name);
+
+        currentModal = document.getElementById(name);
+        currentModal.style.display = "block";
+    }
+
+    exports.dismissModal = function() {
+        util.log("dismissModal()");
+        util.log("- currentModal: " + currentModal);
+
+        if (currentModal) {
+            currentModal.style.display = "none";
+            currentModal = undefined;
+        }
+    }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

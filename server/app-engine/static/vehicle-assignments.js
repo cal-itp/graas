@@ -87,24 +87,6 @@ function showToast(text) {
     }, 2000);
 }
 
-function handleModal(name) {
-    util.log("handleModal()");
-    util.log("- name: " + name);
-
-    currentModal = document.getElementById(name);
-    currentModal.style.display = "block";
-}
-
-function dismissModal() {
-    util.log("dismissModal()");
-    util.log("- currentModal: " + currentModal);
-
-    if (currentModal) {
-        currentModal.style.display = "none";
-        currentModal = undefined;
-    }
-}
-
 function getAssignedVehicle(assignments, blockID) {
     util.log('getAssignedVehicle()');
     util.log('- assignments: ' + assignments);
@@ -241,41 +223,20 @@ function initialize() {
     if (!str) {
         if (!isMobile()) {
             // ios WKWebView doesn't support camera access :[
-            handleModal("keyEntryModal");
+            util.handleModal("keyEntryModal");
         } else {
             // ### TODO add QR code scanning once
             // we're past the initial implementation
             //scanQRCode();
-            handleModal("keyEntryModal");
+            util.handleModal("keyEntryModal");
         }
     } else {
-        completeInitialization(parseAgencyData(str));
+        completeInitialization(util.parseAgencyData(str));
     }
-}
-
-function parseAgencyData(str) {
-    util.log("parseAgencyData()");
-    util.log("- str: " + str);
-
-    let aID = null;
-    let pem = null;
-
-    let i1 = str.indexOf(PEM_HEADER);
-    util.log("- i1: " + i1);
-
-    if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
-        aID = str.substring(0, i1).trim();
-        pem = str.substring(i1);
-    }
-
-    return {
-        id: aID,
-        pem: pem
-    };
 }
 
 async function handleDeploy(data) {
-    handleModal('infiniteProgressModal');
+    util.handleModal('infiniteProgressModal');
     let json = await util.getJSONResponse('/block-collection', data, signatureKey);
     util.log('- json: ' + JSON.stringify(json));
     util.log('- json.status: ' + json);
@@ -301,8 +262,8 @@ async function handleDeploy(data) {
         updateDeploymentIndicator();
     }
 
-    dismissModal();
-    handleModal('confirmationModal');
+    util.dismissModal();
+    util.handleModal('confirmationModal');
 }
 
 function handleKey(id) {
@@ -330,11 +291,11 @@ function handleKey(id) {
             return;
         }
 
-        dismissModal();
+        util.dismissModal();
         p.value = "";
 
         localStorage.setItem('app-data', value);
-        completeInitialization(parseAgencyData(value));
+        completeInitialization(util.parseAgencyData(value));
     } else if (id === 'key-deploy') {
         let blockData = [];
         let toDate = util.nextDay(fromDate);
@@ -374,17 +335,17 @@ function handleKey(id) {
         dateStr = util.getYYYYMMDD(fromDate);
         util.log('- dateStr: ' + dateStr);
 
-        dismissModal();
+        util.dismissModal();
         loadBlockData(dateStr);
     } else if (id === 'key-select-tomorrow') {
         fromDate = util.nextDay(util.getMidnightDate());
         dateStr = util.getYYYYMMDD(fromDate);
         util.log('- dateStr: ' + dateStr);
 
-        dismissModal();
+        util.dismissModal();
         loadBlockData(dateStr);
     } else if (id === 'key-confirm-okay') {
-        dismissModal();
+        util.dismissModal();
     }
 }
 
@@ -438,7 +399,7 @@ async function completeInitialization(agencyData) {
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mousemove', handleMouseMove);
 
-    handleModal('dateSelectModal');
+    util.handleModal('dateSelectModal');
 }
 
 function handleTouchStart(e) {
@@ -567,7 +528,7 @@ async function loadBlockData(dateString) {
     util.log('loadBlockData()');
     util.log('- dateString: ' + dateString);
 
-    handleModal('infiniteProgressModal');
+    util.handleModal('infiniteProgressModal');
     let name = `blocks-${dateString}.json`;
     // util.log('- name: ' + name);
     let blocks = await getGithubData(agencyID, name);
@@ -596,7 +557,7 @@ async function loadBlockData(dateString) {
 
     layout(bidList, vidList, assignments);
 
-    dismissModal();
+    util.dismissModal();
     let deployButton = document.getElementById('key-deploy');
     deployButton.style.display = readOnlyAccess ? 'none' : 'inline-block';
 }
