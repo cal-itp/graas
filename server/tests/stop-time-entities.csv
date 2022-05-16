@@ -1,0 +1,8 @@
+trip_id,stop_sequence,delay,vehicle_id
+trip_id_1,1,-5,pr-test-vehicle-id-1
+trip_id_1,2,-1,pr-test-vehicle-id-1
+trip_id_1,4,15,pr-test-vehicle-id-1
+trip_id_1,3,-3,pr-test-vehicle-id-1
+trip_id_1,1,4,pr-test-vehicle-id-1
+trip_id_2,1,0,pr-test-vehicle-id-2
+trip_id_2,1,4,pr-test-vehicle-id-2
