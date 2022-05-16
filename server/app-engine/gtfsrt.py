@@ -768,9 +768,14 @@ def handle_pos_update(datastore_client, data):
     vehicleID = data.get('vehicle-id', None)
     timestamp = data.get('timestamp', None)
 
+    result = {
+        'status': 'ok'
+    }
+
     if agencyID is None or vehicleID is None or timestamp is None:
         print(f'* position update has no agency ID or vehicle ID or timestamp, discarding: {data}')
-        return
+        result['status'] = 'missing agency id, vehicle id or timestamp'
+        return result
 
     data['rcv-timestamp'] = int(time.time())
 
@@ -784,9 +789,11 @@ def handle_pos_update(datastore_client, data):
 
         if trip_id is None:
             print(f'* discarding position update without trip ID: {data}')
-            return
+            result['status'] = 'missing trip id'
+            return result
 
         data['trip_id'] = trip_id
+        result['backfilled_trip_id'] = trip_id
 
     if data['uuid'] != 'replay':
         add_position(datastore_client, data)
@@ -817,7 +824,8 @@ def handle_pos_update(datastore_client, data):
     if entity is None:
             print(f'* invalid entity key: {entity_key}, discarding pos update and key')
             entity_key_cache.remove(name)
-            return
+            result['status'] = 'invalid entity key'
+            return result
 
     if timestamp <= entity['timestamp']:
             print(f'* pos update not newer than last update, discarding')
@@ -825,3 +833,5 @@ def handle_pos_update(datastore_client, data):
 
     entity.update(data)
     datastore_client.put(entity)
+
+    return result
