@@ -481,6 +481,8 @@ def load_block_metadata(datastore_client, agency_id, date_string = None):
     if date_string is None:
         date_string = util.get_yyyymmdd()
 
+    print(f'- date_string: {date_string}')
+
     query = datastore_client.query(kind='block-metadata')
     query.add_filter('agency_id', '=', agency_id)
     query.add_filter('valid_date', '=', date_string)
@@ -507,7 +509,9 @@ def get_current_block_collection(datastore_client, agency_id):
 
     """
     block_collection = block_map.get(agency_id, None)
-    print(f'- block_collection: {block_collection}')
+
+    if block_collection is not None:
+        print(f'- len(block_collection): {len(block_collection)}')
     now = util.get_current_time_millis()
     yyymmdd = util.get_yyyymmdd()
 
@@ -525,6 +529,8 @@ def get_current_block_collection(datastore_client, agency_id):
             print(f'+ block collection IS stale, reloading from DB')
             load_block_collection(datastore_client, block_metadata)
             block_collection = block_map.get(agency_id, None)
+        else:
+            block_collection['last_refresh'] = util.get_current_time_millis()
 
     return block_collection
 
@@ -557,11 +563,12 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
 
     day_seconds = util.get_seconds_since_midnight()
     for trip in block['trips']:
-        print(f'++++++++++++++++++++++++++++')
-        print(f'++ secs : {day_seconds}')
-        print(f'++ start: {trip["start_time"]}')
-        print(f'++ end  : {trip["end_time"]}')
+        #print(f'++++++++++++++++++++++++++++')
+        #print(f'++ secs : {day_seconds}')
+        #print(f'++ start: {trip["start_time"]}')
+        #print(f'++ end  : {trip["end_time"]}')
         if day_seconds >= trip['start_time'] and day_seconds < trip['end_time']:
+            print(f'-- found matching trip "{trip}" in block "{block["id"]}"')
             return trip['id']
 
     return None

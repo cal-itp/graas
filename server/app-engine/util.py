@@ -195,7 +195,7 @@ def get_yyyymmdd(date = None):
         date = datetime.now()
 
     date = PACIFIC_TZ.localize(date)
-    return f'{date.year}-{date.month}-{date.day}'
+    return f'{date.year:04}-{date.month:02}-{date.day:02}'
 
 
 # For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
