@@ -10,25 +10,6 @@ const fetch = require('node-fetch');
         else return s.substring(index + 1);
     }
 
-    exports.getBaseName = async function getResponseBody(url) {
-        const requestSettings = {
-            method: 'GET'
-        };
-
-        const response = await fetch(url, requestSettings);
-
-        const blob = await response.blob();
-        //util.log(`- blob: ${blob}`);
-
-        const arrayBuf = await blob.arrayBuffer();
-        //util.log(`- arrayBuf.byteLength: ${arrayBuf.byteLength}`);
-
-        const body = Buffer.from(arrayBuf);
-        //util.log(`- body: ${JSON.stringify(body)}`);
-
-        return body;
-    }
-
     exports.getResponseBody = async function(url) {
         const requestSettings = {
             method: 'GET'

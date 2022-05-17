@@ -363,6 +363,7 @@ def new_pos_sig():
 
     data = request.json['data']
     lat = data.get('lat', None)
+    ret = {}
 
     # lat/long values of 9999 indicate client inability to
     # retrieve actual position. Keep such updates out of
@@ -370,12 +371,20 @@ def new_pos_sig():
     if lat == INVALID_GPS:
         print('+ ignoring missing GPS update')
     else:
-        gtfsrt.handle_pos_update(
+        ret = gtfsrt.handle_pos_update(
             util.datastore_client,
             data
         )
 
-    return Response('{"command": "new-pos", "status": "ok"}', mimetype='application/json')
+    obj = {
+        'command': 'new-pos',
+        'status': ret.get('status', 'ok')
+    }
+
+    if 'backfilled_trip_id' in ret:
+        obj['backfilled_trip_id'] = ret['backfilled_trip_id']
+
+    return Response(json.dumps(obj), mimetype='application/json')
 
 if __name__ == '__main__':
     argc = len(sys.argv)
