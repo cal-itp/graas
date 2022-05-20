@@ -59,16 +59,19 @@ def make_translated_string(text):
 def make_entity_selector(item):
     selector = gtfs_realtime_pb2.EntitySelector()
 
-    if 'agency_id' in item:
+    if 'agency_id' in item and item['agency_id'] != None:
         selector.agency_id = item['agency_id']
 
-    if 'route_id' in item:
+    if 'route_id' in item and item['route_id'] != None:
         selector.route_id = item['route_id']
 
-    if 'stop_id' in item:
+    if 'stop_id' in item and item['stop_id'] != None:
         selector.stop_id = item['stop_id']
 
-    if 'trip_id' in item:
+    if 'route_type' in item and item['route_type'] != None:
+        selector.route_type = item['route_type']
+
+    if 'trip_id' in item and item['trip_id'] != None:
         trip = gtfs_realtime_pb2.TripDescriptor()
         trip.trip_id = item['trip_id']
         selector.trip.CopyFrom(trip)
@@ -271,11 +274,12 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have associated agency, discarding')
         return
 
-    if not('time_start' in alert and 'time_stop' in alert):
-        print('alert doesn\'t have valid time range, discarding')
-        return
+    # Per the spec, alerts without a time range will just live forever until removed
+    # if not('time_start' in alert and 'time_stop' in alert):
+    #     print('alert doesn\'t have valid time range, discarding')
+    #     return
 
-    if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert):
+    if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert  or 'route_type' in alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
 

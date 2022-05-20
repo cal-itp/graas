@@ -335,8 +335,8 @@ function handleStartStop() {
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
 
-        hideElement(ALL_DROPDOWNS);
-        showElement(LOADING_TEXT_ELEMENT);
+        util.hideElement(ALL_DROPDOWNS);
+        util.showElement(LOADING_TEXT_ELEMENT);
 
         configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
@@ -356,8 +356,8 @@ function handleStartStop() {
                 populateTripList(loadTrips());
             }
         } else {
-            hideElement(LOADING_TEXT_ELEMENT);
-            showElement(ALL_DROPDOWNS);
+            util.hideElement(LOADING_TEXT_ELEMENT);
+            util.showElement(ALL_DROPDOWNS);
         }
 
         if (millis - startMillis >= MAX_LIFE_MILLIS) {
@@ -370,7 +370,7 @@ function handleStartStop() {
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
     else {
         clearWakeLock();
-        hideElement(TRIP_STATS_ELEMENT);
+        util.hideElement(TRIP_STATS_ELEMENT);
         util.log('- stopping position updates');
         running = false;
         let dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN];
@@ -456,8 +456,8 @@ function handleOkay() {
     let tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
-    hideElement(ALL_DROPDOWNS);
-    showElement(TRIP_STATS_ELEMENT);
+    util.hideElement(ALL_DROPDOWNS);
+    util.showElement(TRIP_STATS_ELEMENT);
     changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
@@ -886,8 +886,8 @@ function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    showElement(LOADING_TEXT_ELEMENT);
-    hideElement(QR_READER_ELEMENT);
+    util.showElement(LOADING_TEXT_ELEMENT);
+    util.hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -946,14 +946,14 @@ function gotConfigData(data, agencyID, arg) {
     else if (name === CONFIG_TRIP_NAMES) {
         if (useBulkAssignmentMode){
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
-            hideElement(TRIP_SELECT_DROPDOWN);
+            util.hideElement(TRIP_SELECT_DROPDOWN);
         } else {
             trips = data;
             loadTrips();
         }
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
-        populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
+        util.populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
     }
 
     configMatrix.setLoaded(name, true);
@@ -1068,36 +1068,12 @@ function gpsInterval(millis) {
     setTimeout(gpsInterval, 3000, Date.now());
 }
 
-function populateList(id, str, list) {
-    util.log("populateList()");
-    // util.log("str: " + str);
-    let p = document.getElementById(id);
-    addSelectOption(p, str, true);
-
-    list.forEach(el => addSelectOption(p, el, false));
-
-    setupListHeader(p);
-}
-
 function disableElement(id) {
     assignValue(id, 'disabled');
 }
 
 function disableElements(list) {
     list.forEach(el => disableElement(el));
-}
-
-function hideElement(id) {
-    changeDisplay(id,"none");
-}
-
-function showElement(id) {
-    changeDisplay(id,"block");
-}
-
-function changeDisplay(id,display) {
-    let p = document.getElementById(id);
-    p.style.display = display;
 }
 
 function changeText(id,text) {
@@ -1123,8 +1099,8 @@ function populateTripList(tripIDMap = tripIDLookup) {
 
     setupListHeader(p);
 
-    hideElement(LOADING_TEXT_ELEMENT);
-    showElement(ALL_DROPDOWNS);
+    util.hideElement(LOADING_TEXT_ELEMENT);
+    util.showElement(ALL_DROPDOWNS);
 }
 
 function setupListHeader(listElem) {
@@ -1137,7 +1113,7 @@ function configComplete() {
     util.log("configComplete()");
 
     vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
-    hideElement(LOADING_TEXT_ELEMENT);
+    util.hideElement(LOADING_TEXT_ELEMENT);
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
     if(vehicleIDCookie && useBulkAssignmentMode){
@@ -1150,7 +1126,7 @@ function configComplete() {
     }
     // If not bulk assignment mode, present the "Load trips" button.
     else{
-        showElement(START_STOP_BUTTON);
+        util.showElement(START_STOP_BUTTON);
     }
 
     setInterval(function() {

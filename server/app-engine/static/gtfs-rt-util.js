@@ -354,6 +354,13 @@ if (!fetch) {
         sel.appendChild(opt);
     }
 
+    exports.resetDropdownSelection = function(id) {
+        document.getElementById(id).selectedIndex = 0;
+    }
+
+    exports.resetFieldValue = function(id) {
+        document.getElementById(id).value = "";
+    }
 
      exports.clearSelectOptions = function(sel) {
         let l = sel.options.length - 1;
@@ -405,6 +412,7 @@ if (!fetch) {
         util.log("- name: " + name);
 
         currentModal = document.getElementById(name);
+        this.showElement(name)
         currentModal.style.display = "block";
     }
 
@@ -416,5 +424,18 @@ if (!fetch) {
             currentModal.style.display = "none";
             currentModal = undefined;
         }
+    }
+
+    exports.hideElement = function(id) {
+        this.changeDisplay(id,"none");
+    }
+
+    exports.showElement = function(id) {
+        this.changeDisplay(id,"block");
+    }
+
+    exports.changeDisplay = function(id,display) {
+        let p = document.getElementById(id);
+        p.style.display = display;
     }
 }(typeof exports === 'undefined' ? this.util = {} : exports));
