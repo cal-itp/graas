@@ -412,13 +412,14 @@ if (!fetch) {
         util.log("- name: " + name);
 
         currentModal = document.getElementById(name);
+        util.log("- current modal id: " + currentModal.id);
         this.showElement(name)
         currentModal.style.display = "block";
     }
 
     exports.dismissModal = function() {
         util.log("dismissModal()");
-        util.log("- currentModal: " + currentModal);
+        util.log("- dismissed modal id: " + currentModal.id);
 
         if (currentModal) {
             currentModal.style.display = "none";

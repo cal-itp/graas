@@ -2,9 +2,16 @@
 const serverURL = "https://127.0.0.1:8080/";
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+ctx.canvas.width = window.innerWidth;
+ctx.canvas.height = window.innerHeight;
+var alerts = [];
 var signatureKey = null;
 var currentModal = null;
 var agencyID = null;
+// Var not const since it needs to be set when the feed view modal is visible
+var feedViewHeaderHeight;
 const fileMap = new Map();
 const files = ["trips", "routes", "stops", "agency"];
 const dropdownsIDs = [
@@ -56,6 +63,12 @@ const optionalFields = [
   "route_type",
   "stop_id"
 ]
+const FONT_SIZE = 12;
+const BOX_HEIGHT = FONT_SIZE * 6;
+const VERT_GAP = 10;
+const BOX_WIDTH = 150;
+ctx.textBaseline = "top";
+
 
 initialize();
 
@@ -84,6 +97,7 @@ function loadFiles(){
         util.log('*** fetch() error: ' + error);
     });
   }
+  loadAlerts();
 }
 
 function initialize(){
@@ -137,6 +151,7 @@ async function completeInitialization(agencyData) {
     util.handleModal("menuModal");
 }
 
+// Thanks to https://gavinr.com/protocol-buffers-protobuf-browser/
 async function getPB(url){
   let response = await fetch(url);
   if (response.ok) {
@@ -149,14 +164,12 @@ async function getPB(url){
   }
 }
 
-async function loadFeed(){
+async function loadAlerts(){
   let rtFeed = serverURL + "service-alerts.pb?agency=" + agencyID;
-    util.log("rtFeed: " + rtFeed);
   feed = await getPB(rtFeed);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
-  // util.log("feed[0].alert.active_period.start:" + feed[0].alert.active_period.start);
     // Add all the locations to the map:
-  const alertMap = feed.map(feedObject => {
+  alerts = await feed.map(feedObject => {
     let alert = feedObject.alert;
 
     return new Object({
@@ -175,18 +188,36 @@ async function loadFeed(){
       url: (alert.url !== null ? alert.url.translation[0].text : null)
     });
   });
-  util.log(alertMap);
 }
 
-function handleNavigation(id){
+function menu(){
+  util.log("menu()");
   util.dismissModal();
-  if(id === "create-alert-button"){
-    util.handleModal("alertCreateModal");
-  } else if(id === "view-alerts-button"){
-    loadFeed();
-  } else if(id === "menu"){
-    util.handleModal("menuModal");
-  }
+  util.handleModal("menuModal");
+}
+
+function createAlert(){
+  util.log("createAlert()");
+  util.dismissModal();
+  util.handleModal("alertCreateModal");
+}
+
+function viewAlerts(){
+  util.log("viewAlerts()");
+  util.dismissModal();
+  util.handleModal("viewFeedModal");
+  feedView();
+}
+
+function deleteAlert(){
+  util.log("deleteAlert()");
+  viewAlerts();
+}
+
+function alertDetailView(){
+  util.log("alertDetailView()");
+  util.dismissModal();
+  util.handleModal("alertDetailModal");
 }
 
 function handleKey(id) {
@@ -322,7 +353,8 @@ function postServiceAlert() {
 
     // Consider actually confirming send status
     alert("Alert posted successfully");
-    handleNavigation("menu");
+    util.handleModal("menuModal");
+    loadAlerts();
     resetFields();
 }
 
@@ -333,6 +365,75 @@ function resetFields(){
   for (let textfield of textFieldIDs){
     util.resetFieldValue(textfield);
   }
+}
+
+function createLayout(){
+  var yy = VERT_GAP;
+  for (alert of alerts){
+    alert.y = yy;
+    alert.x = VERT_GAP;
+    yy += (BOX_HEIGHT + VERT_GAP);
+  }
+}
+
+async function feedView(){
+  feedViewHeaderHeight = document.getElementById('feed-view-header').offsetHeight;
+  if(alerts.length > 0){
+    if(util.isNullOrUndefined(alerts[0].y)){
+      createLayout();
+    }
+    drawAlerts();
+  } else{
+    // There are no alerts - communicate this somehow
+  }
+}
+
+function drawAlerts(){
+  for (alert of alerts){
+    ctx.beginPath();
+    ctx.strokeStyle = "black";
+    ctx.fillStyle = "white";
+    ctx.fillRect(alert.x, alert.y, BOX_WIDTH, BOX_HEIGHT);
+    ctx.rect(alert.x, alert.y, BOX_WIDTH, BOX_HEIGHT);
+    ctx.stroke();
+
+    ctx.fillStyle = "black";
+    ctx.font = `${FONT_SIZE}px ARIAL`;
+
+    ctx.fillText(`Header: ${alert.header}`, alert.x, alert.y + FONT_SIZE * 0)
+    ctx.fillText(`Description: ${alert.description}`, alert.x, alert.y + FONT_SIZE * 1)
+    ctx.fillText(`time_start: ${alert.time_start}`, alert.x, alert.y + FONT_SIZE * 2)
+    ctx.fillText(`time_stop: ${alert.time_stop}`, alert.x, alert.y + FONT_SIZE * 3)
+    ctx.fillText(`cause: ${alert.cause}`, alert.x, alert.y + FONT_SIZE * 4)
+    ctx.fillText(`effect: ${alert.effect}`, alert.x, alert.y + FONT_SIZE * 5)
+    // add entities
+  }
+}
+
+document.body.addEventListener('click', function(event) {
+  // console.log(event);
+  event.stopPropagation();
+  event.preventDefault();
+
+  if (currentModal.id === "viewFeedModal"){
+    util.log("current modal is viewFeedModal");
+    let searchX = event.pageX;
+    let searchY = event.pageY - feedViewHeaderHeight;
+
+    for (alert of alerts){
+      util.log("searching...");
+      if(objectContainsPoint(alert, searchX, searchY)){
+        alertDetailView();
+      }
+    }
+  }
+});
+
+function objectContainsPoint(object, x, y){
+    return (x > object.x
+          && x < object.x + BOX_WIDTH
+          && y > object.y
+          && y < object.y + BOX_HEIGHT)
 }
 
 // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm

@@ -15,8 +15,8 @@
         </div>
         <div id="menuModal" class="modal">
             <div class="modal-content">
-                <button id="create-alert-button" onclick="handleNavigation(this.id)"> Create alert</button>
-                <button id="view-alerts-button" onclick="handleNavigation(this.id)"> View/edit alerts</button>
+                <button id="create-alert-button" onclick="createAlert()"> Create alert</button>
+                <button id="view-alerts-button" onclick="viewAlerts()"> View/edit alerts</button>
             </div>
         </div>
         <div id="alertCreateModal" class="modal">
@@ -69,8 +69,26 @@
                 <select id="cause-select"> </select> <br>
                 <a> Effect: </a>
                 <select id="effect-select"> </select> <br>
-                <button type="submit" id="submit" onclick="postServiceAlert()"> Submit </button>
-                <button type="submit" id="menu" onclick="handleNavigation(this.id)"> Menu </button> <br>
+                <button type="submit" id="submit-alert-button" onclick="postServiceAlert()"> Submit </button>
+                <button type="submit" id="alert-create-menu" onclick="menu()"> Menu </button> <br>
+            </div>
+        </div>
+        <div id="viewFeedModal" class="modal">
+            <a id="feed-view-header"> Click an alert to see detail or delete </a>
+            <canvas id="canvas"> </canvas>
+        </div>
+        <div id="alertDetailModal" class="modal">
+            <div class="modal-content">
+                <!-- <a id="alert-detail-header"> Alert Detail </a> -->
+                <a id="header-detail"> </a>
+                <a id="description-detail"> </a>
+                <a id="start-time-detail"> </a>
+                <a id="stop-time-detail"> </a>
+                <div id="alert-detail-buttons">
+                    <button type="submit" onclick="viewAlerts()"> Delete alert </button>
+                    <button type="submit" onclick="menu()"> Menu </button>
+                    <button type="submit" onclick="viewAlerts()"> Back to feed </button>
+                </div>
             </div>
         </div>
         <script src="../static/gtfs-rt-util.js"></script>
