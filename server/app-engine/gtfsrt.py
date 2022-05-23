@@ -290,6 +290,31 @@ def add_alert(datastore_client, alert):
     datastore_client.put(entity)
     print('+ wrote alert')
 
+def delete_alert(datastore_client, alert):
+    print('delete_alert()')
+    print('- alert: ' + str(alert))
+
+    query = datastore_client.query(kind='alert')
+    # We need to filter for all fields, since a unique ID isn't passed into the protobuf
+    # query.add_filter('agency_key', '=', alert["agency_key"])
+    query.add_filter('cause', '=', alert["cause"])
+    # query.add_filter('effect', '=', alert["effect"])
+    # query.add_filter('description', '=', alert["description"])
+    query.add_filter('time_start', '=', alert["time_start"])
+    query.add_filter('time_stop', '=', alert["time_stop"])
+    # add filter for all fields
+    results = list(query.fetch(limit=20))
+    key_list = []
+
+    for alert in results:
+        print('-- alert to delete: ' + str(alert))
+        key_list.append(alert.key)
+
+    print('- key_list: ' + str(key_list))
+
+    datastore_client.delete_multi(key_list)
+    print('+ deleted alert')
+
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)

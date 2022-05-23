@@ -22,6 +22,7 @@
         <div id="alertCreateModal" class="modal">
             <div id="form" class="modal-content">
                 <a> Select at least one entity</a><br>
+                <div id="route">
                     <input type="checkbox" id="route-checkbox" name="route-checkbox" value="Route" onclick="handleEntitySelection(this, this.id)">
                     <label for="route-checkbox"> Route</label>
                     <select id="route-select" class="entity-select" > </select>
@@ -74,21 +75,26 @@
             </div>
         </div>
         <div id="viewFeedModal" class="modal">
-            <a id="feed-view-header"> Click an alert to see detail or delete </a>
-            <canvas id="canvas"> </canvas>
+            <div class="modal-content">
+                <button type="submit" onclick="menu()"> Main Menu </button> <br>
+                <a id="feed-view-header"> Click an alert to see detail or delete </a>
+                <canvas id="canvas"> </canvas>
+            </div>
         </div>
         <div id="alertDetailModal" class="modal">
             <div class="modal-content">
-                <!-- <a id="alert-detail-header"> Alert Detail </a> -->
-                <a id="header-detail"> </a>
-                <a id="description-detail"> </a>
-                <a id="start-time-detail"> </a>
-                <a id="stop-time-detail"> </a>
                 <div id="alert-detail-buttons">
-                    <button type="submit" onclick="viewAlerts()"> Delete alert </button>
-                    <button type="submit" onclick="menu()"> Menu </button>
+                    <button type="submit" onclick="menu()"> Main Menu </button>
+                    <button type="submit" onclick="deleteAlert()"> Delete alert </button>
                     <button type="submit" onclick="viewAlerts()"> Back to feed </button>
                 </div>
+                <!-- <a id="alert-detail-header"> Alert Detail </a> -->
+                <a id="header-detail"> </a> <br>
+                <a id="description-detail"> </a> <br>
+                <a id="cause-detail"> </a> <br>
+                <a id="effect-detail"> </a> <br>
+                <a id="start-time-detail"> </a> <br>
+                <a id="stop-time-detail"> </a> <br>
             </div>
         </div>
         <script src="../static/gtfs-rt-util.js"></script>

@@ -10,6 +10,7 @@ var alerts = [];
 var signatureKey = null;
 var currentModal = null;
 var agencyID = null;
+var selectedAlert = null;
 // Var not const since it needs to be set when the feed view modal is visible
 var feedViewHeaderHeight;
 const fileMap = new Map();
@@ -165,6 +166,7 @@ async function getPB(url){
 }
 
 async function loadAlerts(){
+  util.log("loadAlerts()");
   let rtFeed = serverURL + "service-alerts.pb?agency=" + agencyID;
   feed = await getPB(rtFeed);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
@@ -206,11 +208,30 @@ function viewAlerts(){
   util.log("viewAlerts()");
   util.dismissModal();
   util.handleModal("viewFeedModal");
+  selectedAlert = null;
   feedView();
 }
 
 function deleteAlert(){
   util.log("deleteAlert()");
+
+  let data = {
+    agency_key: agencyID,
+    time_start: selectedAlert.time_start,
+    time_stop: selectedAlert.time_stop,
+    agency_id: selectedAlert.agency_id,
+    trip_id: selectedAlert.trip_id,
+    stop_id: selectedAlert.stop_id,
+    route_id: selectedAlert.route_id,
+    route_type: selectedAlert.route_type,
+    cause: selectedAlert.cause,
+    effect: selectedAlert.effect,
+    header: selectedAlert.header,
+    description: selectedAlert.description
+  };
+
+  util.signAndPost(data, signatureKey, '/delete-alert', document);
+  loadAlerts();
   viewAlerts();
 }
 
@@ -218,6 +239,13 @@ function alertDetailView(){
   util.log("alertDetailView()");
   util.dismissModal();
   util.handleModal("alertDetailModal");
+
+  util.setElementText("header-detail", `Header: ${selectedAlert.header}`);
+  util.setElementText("description-detail", `Description: ${selectedAlert.description}`);
+  util.setElementText("cause-detail", `Cause: ${selectedAlert.cause}`);
+  util.setElementText("effect-detail", `Effect: ${selectedAlert.effect}`);
+  util.setElementText("start-time-detail", `Start time: ${selectedAlert.time_start}`);
+  util.setElementText("stop-time-detail", `Stop time: ${selectedAlert.time_stop}`);
 }
 
 function handleKey(id) {
@@ -275,10 +303,14 @@ function getItems(type, columnName){
 }
 
 function handleEntitySelection(checkbox, entityID){
+  util.log("handleEntitySelection()");
   let dropdownName = entityID.slice(0,-8) + "select";
   if(checkbox.checked){
+    util.log("checkbox.checked: " + checkbox.checked);
     util.showElement(dropdownName);
+    util.log("checkbox.checked: " + checkbox.checked);
   } else {
+    util.log("not checked");
     util.hideElement(dropdownName);
     util.resetDropdownSelection(dropdownName);
   }
@@ -328,6 +360,11 @@ function postServiceAlert() {
       return;
     }
 
+    if(startTime < 0 || stopTime < 0){
+      alert("Please select start and stop dates that are in the future");
+      return;
+    }
+
     let data = {
       agency_key: agencyID,
       timestamp: timestamp,
@@ -353,9 +390,10 @@ function postServiceAlert() {
 
     // Consider actually confirming send status
     alert("Alert posted successfully");
-    util.handleModal("menuModal");
     loadAlerts();
-    resetFields();
+    util.dismissModal();
+    util.handleModal("menuModal");
+    // resetFields();
 }
 
 function resetFields(){
@@ -423,7 +461,8 @@ document.body.addEventListener('click', function(event) {
     for (alert of alerts){
       util.log("searching...");
       if(objectContainsPoint(alert, searchX, searchY)){
-        alertDetailView();
+        selectedAlert = alert;
+        alertDetailView(alert);
       }
     }
   }

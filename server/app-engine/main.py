@@ -216,6 +216,32 @@ def post_alert():
 
     return Response('{"command": "post-alert", "status": "ok"}', mimetype='application/json')
 
+@app.route('/delete-alert', methods=['POST'])
+def delete_alert():
+    print('/post-alert')
+    #print('- request.data: ' + str(request.data))
+    #print('- request.json: ' + json.dumps(request.json))
+
+    data = request.json['data'];
+    sig = request.json['sig'];
+
+    data_str = json.dumps(data,separators=(',',':'))
+    print('- data_str: ' + data_str)
+
+    agency = data['agency_key'];
+    print('- agency: ' + agency)
+
+    verified = util.verify_signature(agency, data_str, sig)
+    print('- verified: ' + str(verified))
+
+    if not verified:
+        print('*** could not verify signature for delete request, discarding')
+        return Response('{"command": "delete-alert", "status": "unverified"}', mimetype='application/json')
+
+    gtfsrt.delete_alert(util.datastore_client, data)
+
+    return Response('{"command": "delete-alert", "status": "ok"}', mimetype='application/json')
+
 """
 Determine whether or not to accept an incoming user request.
 Requests can be accepted one of two ways:

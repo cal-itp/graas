@@ -362,6 +362,10 @@ if (!fetch) {
         document.getElementById(id).value = "";
     }
 
+    exports.setElementText = function(id, text) {
+        document.getElementById(id).innerHTML = text;
+    }
+
      exports.clearSelectOptions = function(sel) {
         let l = sel.options.length - 1;
         this.log('- l: ' + l);
