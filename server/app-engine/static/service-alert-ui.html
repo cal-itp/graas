@@ -16,38 +16,39 @@
         <div id="menuModal" class="modal">
             <div class="modal-content">
                 <button id="create-alert-button" onclick="createAlert()"> Create alert</button>
-                <button id="view-alerts-button" onclick="viewAlerts()"> View/edit alerts</button>
+                <button id="view-alerts-button" onclick="viewAlerts()"> View/delete alerts</button>
             </div>
         </div>
         <div id="alertCreateModal" class="modal">
             <div id="form" class="modal-content">
-                <a> Select at least one entity</a><br>
+                <button type="submit" id="alert-create-menu" onclick="menu()"> Menu </button> <br>
+                <a> Select at least one entity:</a><br>
                 <div id="route">
-                    <input type="checkbox" id="route-checkbox" name="route-checkbox" value="Route" onclick="handleEntitySelection(this, this.id)">
+                    <input type="checkbox" id="route-checkbox" name="route-checkbox" value="Route" onclick="handleEntitySelection(this)">
                     <label for="route-checkbox"> Route</label>
                     <select id="route-select" class="entity-select" > </select>
                     <br>
                 </div>
                 <div id="trip">
-                    <input type="checkbox" id="trip-checkbox" name="trip-checkbox" value="Trip" onclick="handleEntitySelection(this, this.id)">
+                    <input type="checkbox" id="trip-checkbox" name="trip-checkbox" value="Trip" onclick="handleEntitySelection(this)">
                     <label for="trip-checkbox"> Trip</label>
                     <select id="trip-select" class="entity-select"> </select>
                     <br>
                 </div>
                 <div id="stop">
-                    <input type="checkbox" id="stop-checkbox" name="stop-checkbox" value="Stop" onclick="handleEntitySelection(this, this.id)">
+                    <input type="checkbox" id="stop-checkbox" name="stop-checkbox" value="Stop" onclick="handleEntitySelection(this)">
                     <label for="stop-checkbox"> Stop</label>
                     <select id="stop-select" class="entity-select" style=""> </select>
                     <br>
                 </div>
                 <div id="route-type">
-                    <input type="checkbox" id="route-type-checkbox" name="route-type-checkbox" value="Route type" onclick="handleEntitySelection(this, this.id)">
+                    <input type="checkbox" id="route-type-checkbox" name="route-type-checkbox" value="Route type" onclick="handleEntitySelection(this)">
                     <label for="route-type-checkbox"> Route type</label>
                     <select id="route-type-select" class="entity-select"> </select>
                     <br>
                 </div>
                 <div id="agency">
-                    <input type="checkbox" id="agency-checkbox" name="agency-checkbox" value="Agency" onclick="handleEntitySelection(this, this.id)">
+                    <input type="checkbox" id="agency-checkbox" name="agency-checkbox" value="Agency" onclick="handleEntitySelection(this)">
                     <label for="agency-checkbox"> Agency</label>
                     <select id="agency-select" class="entity-select"> </select>
                     <br>
@@ -59,42 +60,43 @@
                 <a> URL: </a>
                 <input type="text" id="url" placeholder="Optional URL with more info"> <br>
                 <label for="start-time">Start time:</label>
-                <input type="datetime-local" id="start-time"
-                       name="start-time"
-                       min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
+                <input type="datetime-local" id="start-time" name="start-time" value="2022-01-01T08:00" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
                 <label for="stop-time">End time:</label>
-                <input type="datetime-local" id="stop-time"
-                       name="stop-time"
-                       min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
+                <input type="datetime-local" id="stop-time" value="2023-01-01T08:00" name="stop-time" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
                 <a> Cause: </a>
                 <select id="cause-select"> </select> <br>
                 <a> Effect: </a>
                 <select id="effect-select"> </select> <br>
                 <button type="submit" id="submit-alert-button" onclick="postServiceAlert()"> Submit </button>
-                <button type="submit" id="alert-create-menu" onclick="menu()"> Menu </button> <br>
             </div>
         </div>
         <div id="viewFeedModal" class="modal">
             <div class="modal-content">
-                <button type="submit" onclick="menu()"> Main Menu </button> <br>
+                <button type="submit" onclick="menu()"> Menu </button> <br>
                 <a id="feed-view-header"> Click an alert to see detail or delete </a>
                 <canvas id="canvas"> </canvas>
             </div>
         </div>
         <div id="alertDetailModal" class="modal">
             <div class="modal-content">
-                <div id="alert-detail-buttons">
-                    <button type="submit" onclick="menu()"> Main Menu </button>
-                    <button type="submit" onclick="deleteAlert()"> Delete alert </button>
-                    <button type="submit" onclick="viewAlerts()"> Back to feed </button>
-                </div>
+                <button type="submit" onclick="menu()"> Menu </button>
+                <button type="submit" onclick="viewAlerts()"> Back to feed </button> <br>
                 <!-- <a id="alert-detail-header"> Alert Detail </a> -->
-                <a id="header-detail"> </a> <br>
-                <a id="description-detail"> </a> <br>
-                <a id="cause-detail"> </a> <br>
-                <a id="effect-detail"> </a> <br>
-                <a id="start-time-detail"> </a> <br>
-                <a id="stop-time-detail"> </a> <br>
+                <ul style="list-style-type:none;">
+                    <li> Affected entities: </li>
+                    <li id="agency-id-detail" class="entity-detail"> </li>
+                    <li id="route-id-detail" class="entity-detail"> </li>
+                    <li id="trip-id-detail" class="entity-detail"> </li>
+                    <li id="stop-id-detail" class="entity-detail"> </li>
+                    <li id="route-type-detail" class="entity-detail"> </li>
+                    <li id="header-detail"> </li>
+                    <li id="description-detail"> </li>
+                    <li id="cause-detail"> </li>
+                    <li id="effect-detail"> </li>
+                    <li id="start-time-detail"> </li>
+                    <li id="stop-time-detail"> </li>
+                </ul>
+                <button type="submit" onclick="deleteAlert()"> Delete alert </button>
             </div>
         </div>
         <script src="../static/gtfs-rt-util.js"></script>

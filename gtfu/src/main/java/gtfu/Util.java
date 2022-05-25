@@ -864,11 +864,14 @@ public class Util {
         t.dumpLap();
         Debug.log("- calendarCollection.getSize(): " + calendarCollection.getSize());
 
-        t = new Timer("calendar_dates");
-        CalendarDateCollection calendarDateCollection = new CalendarDateCollection(path);
-        collections.put("calendar_dates", calendarDateCollection);
-        t.dumpLap();
-        Debug.log("- calendarDateCollection.getSize(): " + calendarDateCollection.getSize());
+        File cd = new File(path + "/calendar_dates.txt");
+        if (cd.exists()) {
+            t = new Timer("calendar_dates");
+            CalendarDateCollection calendarDateCollection = new CalendarDateCollection(path);
+            collections.put("calendar_dates", calendarDateCollection);
+            t.dumpLap();
+            Debug.log("- calendarDateCollection.getSize(): " + calendarDateCollection.getSize());
+        }
 
         //Debug.log("shapes:");
         t = new Timer("shapes");

@@ -4,8 +4,9 @@ const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-ctx.canvas.width = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+var canvasWidth = window.innerWidth;
+var canvasHeight = window.innerHeight;
+var alertsPerRow;
 var alerts = [];
 var signatureKey = null;
 var currentModal = null;
@@ -44,14 +45,14 @@ const causes = new Map([
   [12,'Medical Emergency']
 ]);
 const effects = new Map([
-  [1,'Unknown Effect'],
-  [2,'No Service'],
-  [3,'Reduced Service'],
-  [4,'Significant Delays'],
-  [5,'Detour'],
-  [6,'Additional Service'],
-  [7,'Modified Service'],
-  [8,'Other Effect'],
+  [1,'No Service'],
+  [2,'Reduced Service'],
+  [3,'Significant Delays'],
+  [4,'Detour'],
+  [5,'Additional Service'],
+  [6,'Modified Service'],
+  [7,'Other Effect'],
+  [8,'Unknown Effect'],
   [9,'Stop Moved']
 ]);
 
@@ -65,11 +66,11 @@ const optionalFields = [
   "stop_id"
 ]
 const FONT_SIZE = 12;
-const BOX_HEIGHT = FONT_SIZE * 6;
-const VERT_GAP = 10;
-const BOX_WIDTH = 150;
-ctx.textBaseline = "top";
-
+const FONT_NORMAL = `${FONT_SIZE}px ARIAL`;
+const FONT_BOLD = `bold ${FONT_SIZE}px ARIAL`;
+const ALERT_ROWS = 8;
+const SPACING = 10;
+const BOX_WIDTH = 200;
 
 initialize();
 
@@ -149,6 +150,7 @@ async function completeInitialization(agencyData) {
 
     util.log("- signatureKey.type: " + signatureKey.type);
     loadFiles();
+    resetCanvas();
     util.handleModal("menuModal");
 }
 
@@ -167,19 +169,19 @@ async function getPB(url){
 
 async function loadAlerts(){
   util.log("loadAlerts()");
-  let rtFeed = serverURL + "service-alerts.pb?agency=" + agencyID;
-  feed = await getPB(rtFeed);
+  let rtFeedURL = `${serverURL}service-alerts.pb?agency=${agencyID}&include_future_alerts=True&nocache=${(new Date()).getTime()}`;
+  util.log("url: " + rtFeedURL)
+  feed = await getPB(rtFeedURL);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
     // Add all the locations to the map:
   alerts = await feed.map(feedObject => {
     let alert = feedObject.alert;
-
-    return new Object({
+    let alertObject = new Object({
       id: feedObject.id,
       time_start: alert.active_period[0].start,
       time_stop: alert.active_period[0].end,
       agency_id: alert.informed_entity[0].agency_id,
-      trip_id: alert.informed_entity[0].trip_id,
+      trip_id: (alert.informed_entity[0].trip !== null ? alert.informed_entity[0].trip.trip_id: null),
       stop_id: alert.informed_entity[0].stop_id,
       route_id: alert.informed_entity[0].route_id,
       route_type: alert.informed_entity[0].route_type,
@@ -189,6 +191,12 @@ async function loadAlerts(){
       description: alert.description_text.translation[0].text,
       url: (alert.url !== null ? alert.url.translation[0].text : null)
     });
+
+    alertObject.time_start_formatted = (new Date(alertObject.time_start * 1000)).toLocaleString();
+    alertObject.time_stop_formatted = (new Date(alertObject.time_stop * 1000)).toLocaleString();
+    alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== null) + (alertObject.route_type !== 0)
+
+    return alertObject;
   });
 }
 
@@ -204,12 +212,22 @@ function createAlert(){
   util.handleModal("alertCreateModal");
 }
 
-function viewAlerts(){
+async function viewAlerts(){
   util.log("viewAlerts()");
   util.dismissModal();
   util.handleModal("viewFeedModal");
   selectedAlert = null;
+  await loadAlerts();
   feedView();
+}
+
+function resetCanvas(){
+  ctx.canvas.height = canvasHeight;
+  ctx.canvas.width = canvasWidth;
+  alertsPerRow = Math.floor(canvasWidth / (BOX_WIDTH + SPACING));
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 }
 
 function deleteAlert(){
@@ -231,21 +249,41 @@ function deleteAlert(){
   };
 
   util.signAndPost(data, signatureKey, '/delete-alert', document);
-  loadAlerts();
-  viewAlerts();
+  resetCanvas();
+  menu();
 }
 
 function alertDetailView(){
   util.log("alertDetailView()");
   util.dismissModal();
   util.handleModal("alertDetailModal");
+  if(selectedAlert.agency_id !== ""){
+    util.setElementText("agency-id-detail", ` - AgencyID: ${selectedAlert.agency_id}`);
+    util.showElement("agency-id-detail");
+  }
+  if(selectedAlert.trip_id !== null){
+    util.setElementText("trip-id-detail", ` - TripID: ${selectedAlert.trip_id}`);
+    util.showElement("trip-id-detail");
+  }
+  if(selectedAlert.stop_id !== ""){
+    util.setElementText("stop-id-detail", ` - StopID: ${selectedAlert.stop_id}`);
+    util.showElement("stop-id-detail");
+  }
+  if(selectedAlert.route_id !== ""){
+    util.setElementText("route-id-detail", ` - RouteID: ${selectedAlert.route_id}`);
+    util.showElement("route-id-detail");
+  }
+  if(selectedAlert.route_type !== 0){
+    util.setElementText("route-type-detail", ` - Route type: ${selectedAlert.route_type}`);
+    util.showElement("route-type-detail");
+  }
 
   util.setElementText("header-detail", `Header: ${selectedAlert.header}`);
   util.setElementText("description-detail", `Description: ${selectedAlert.description}`);
   util.setElementText("cause-detail", `Cause: ${selectedAlert.cause}`);
   util.setElementText("effect-detail", `Effect: ${selectedAlert.effect}`);
-  util.setElementText("start-time-detail", `Start time: ${selectedAlert.time_start}`);
-  util.setElementText("stop-time-detail", `Stop time: ${selectedAlert.time_stop}`);
+  util.setElementText("start-time-detail", `Start time: ${selectedAlert.time_start_formatted}`);
+  util.setElementText("stop-time-detail", `Stop time: ${selectedAlert.time_stop_formatted}`);
 }
 
 function handleKey(id) {
@@ -302,9 +340,9 @@ function getItems(type, columnName){
   return fileMap.get(type).map(function (el) { return el[columnName]; })
 }
 
-function handleEntitySelection(checkbox, entityID){
+function handleEntitySelection(checkbox){
   util.log("handleEntitySelection()");
-  let dropdownName = entityID.slice(0,-8) + "select";
+  let dropdownName = checkbox.id.slice(0,-8) + "select";
   if(checkbox.checked){
     util.log("checkbox.checked: " + checkbox.checked);
     util.showElement(dropdownName);
@@ -322,7 +360,7 @@ function getValue(id){
   else return value;
 }
 
-function postServiceAlert() {
+async function postServiceAlert() {
     util.log('handleGPSUpdate()');
     let timestamp = Math.floor(Date.now() / 1000);
     let cause = getValue("cause-select");
@@ -341,27 +379,27 @@ function postServiceAlert() {
     let url = getValue("url");
 
     if(agency_id === null && route_id === null && stop_id === null && trip_id === null && route_type === null){
-      alert("Please select at least one entity for your alert");
+      await alert("Please select at least one entity for your alert");
       return;
     }
 
     if(cause === null || effect === null){
-      alert("Please select both a cause and an effect for your alert");
+      await alert("Please select both a cause and an effect for your alert");
       return;
     }
 
     if(cause === null || effect === null){
-      alert("Please assign both a cause and an effect");
+      await alert("Please assign both a cause and an effect");
       return;
     }
 
     if(header === null || description === null){
-      alert("Please write both a header and a description");
+      await alert("Please write both a header and a description");
       return;
     }
 
     if(startTime < 0 || stopTime < 0){
-      alert("Please select start and stop dates that are in the future");
+      await alert("Please select start and stop dates that are in the future");
       return;
     }
 
@@ -389,11 +427,12 @@ function postServiceAlert() {
     util.signAndPost(data, signatureKey, '/post-alert', document);
 
     // Consider actually confirming send status
-    alert("Alert posted successfully");
+    await alert("Alert posted successfully");
     loadAlerts();
     util.dismissModal();
     util.handleModal("menuModal");
     // resetFields();
+    resetCanvas();
 }
 
 function resetFields(){
@@ -406,23 +445,41 @@ function resetFields(){
 }
 
 function createLayout(){
-  var yy = VERT_GAP;
+  let yy = SPACING;
+  let xx = SPACING;
+  let colNum = 1;
   for (alert of alerts){
     alert.y = yy;
-    alert.x = VERT_GAP;
-    yy += (BOX_HEIGHT + VERT_GAP);
+    alert.x = xx;
+    let textRows = ALERT_ROWS + alert.num_entities;
+    let box_height = textRows * FONT_SIZE;
+    if(colNum < alertsPerRow){
+      xx += BOX_WIDTH + SPACING;
+      colNum +=1;
+    } else{
+      yy += box_height + SPACING;
+      colNum = 1;
+      xx = SPACING;
+    }
   }
+
+  canvasHeight = Math.max(yy, window.innerHeight);
+  ctx.canvas.height = canvasHeight;
+  util.log("canvasHeight: " + canvasHeight);
+  util.log("window.innerHeight: " + window.innerHeight);
+  resetCanvas();
 }
 
 async function feedView(){
   feedViewHeaderHeight = document.getElementById('feed-view-header').offsetHeight;
   if(alerts.length > 0){
+    util.setElementText("feed-view-header", "Click an alert to see detail or delete");
     if(util.isNullOrUndefined(alerts[0].y)){
       createLayout();
     }
     drawAlerts();
   } else{
-    // There are no alerts - communicate this somehow
+    util.setElementText("feed-view-header", "There are currently no alerts in your feed");
   }
 }
 
@@ -431,29 +488,49 @@ function drawAlerts(){
     ctx.beginPath();
     ctx.strokeStyle = "black";
     ctx.fillStyle = "white";
-    ctx.fillRect(alert.x, alert.y, BOX_WIDTH, BOX_HEIGHT);
-    ctx.rect(alert.x, alert.y, BOX_WIDTH, BOX_HEIGHT);
+
+    let rows = ALERT_ROWS + alert.num_entities;
+    let box_height = rows * FONT_SIZE;
+    ctx.fillRect(alert.x, alert.y, BOX_WIDTH, box_height);
+    ctx.rect(alert.x, alert.y, BOX_WIDTH, box_height);
     ctx.stroke();
 
     ctx.fillStyle = "black";
-    ctx.font = `${FONT_SIZE}px ARIAL`;
+    ctx.textBaseline = "top";
+    ctx.font = FONT_BOLD;
 
-    ctx.fillText(`Header: ${alert.header}`, alert.x, alert.y + FONT_SIZE * 0)
-    ctx.fillText(`Description: ${alert.description}`, alert.x, alert.y + FONT_SIZE * 1)
-    ctx.fillText(`time_start: ${alert.time_start}`, alert.x, alert.y + FONT_SIZE * 2)
-    ctx.fillText(`time_stop: ${alert.time_stop}`, alert.x, alert.y + FONT_SIZE * 3)
-    ctx.fillText(`cause: ${alert.cause}`, alert.x, alert.y + FONT_SIZE * 4)
-    ctx.fillText(`effect: ${alert.effect}`, alert.x, alert.y + FONT_SIZE * 5)
-    // add entities
+    let i = -1;
+    ctx.fillText("This alert applies to:", alert.x, alert.y + FONT_SIZE * ++i);
+    ctx.font = FONT_NORMAL;
+    if(alert.agency_id !== ""){
+      ctx.fillText(` - AgencyID: ${alert.agency_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    }
+    if(alert.trip_id !== null){
+      ctx.fillText(` - TripID: ${alert.trip_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    }
+    if(alert.stop_id !== ""){
+      ctx.fillText(` - StopID: ${alert.stop_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    }
+    if(alert.route_id !== ""){
+      ctx.fillText(` - RouteID: ${alert.route_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    }
+    if(alert.route_type !== 0){
+      ctx.fillText(` - Route type: ${alert.route_type}`, alert.x, alert.y + FONT_SIZE * ++i)
+    }
+    ctx.font = FONT_BOLD;
+    ctx.fillText("Alert details:", alert.x, alert.y + FONT_SIZE * ++i);
+    ctx.font = FONT_NORMAL;
+    ctx.fillText(`Header: ${alert.header}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Description: ${alert.description}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Start time: ${alert.time_start_formatted}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Stop time: ${alert.time_stop_formatted}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Cause: ${alert.cause}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Effect: ${alert.effect}`, alert.x, alert.y + FONT_SIZE * ++i)
   }
 }
 
 document.body.addEventListener('click', function(event) {
-  // console.log(event);
-  event.stopPropagation();
-  event.preventDefault();
-
-  if (currentModal.id === "viewFeedModal"){
+  if (currentModal !== null && currentModal.id === "viewFeedModal"){
     util.log("current modal is viewFeedModal");
     let searchX = event.pageX;
     let searchY = event.pageY - feedViewHeaderHeight;
@@ -472,7 +549,8 @@ function objectContainsPoint(object, x, y){
     return (x > object.x
           && x < object.x + BOX_WIDTH
           && y > object.y
-          && y < object.y + BOX_HEIGHT)
+          && y < object.y + (ALERT_ROWS + alert.num_entities) * FONT_SIZE
+          )
 }
 
 // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm

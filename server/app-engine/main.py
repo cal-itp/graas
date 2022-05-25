@@ -103,8 +103,10 @@ def service_alerts():
     print('/service-alerts.pb')
     agency = request.args.get('agency')
     print('- agency: ' + agency)
+    include_future_alerts = request.args.get("include_future_alerts") or "False"
+    print('- include_future_alerts: ' + include_future_alerts)
     alert_lock.acquire()
-    feed = gtfsrt.get_alert_feed(util.datastore_client, agency)
+    feed = gtfsrt.get_alert_feed(util.datastore_client, agency, include_future_alerts)
     alert_lock.release()
     return Response(feed, mimetype='application/octet-stream')
 
