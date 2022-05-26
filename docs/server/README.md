@@ -25,10 +25,12 @@ Deployment
 3. Run the following two commands from graas/server/test:
     - `NODE_PATH=../node/node_modules node test-position-updates.js -u https://<version-id>-dot-lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
     - `NODE_PATH=../node/node_modules node post-service-alerts.js -u https://<version-id>-dot-lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
+    - `NODE_PATH=../node/node_modules node post-stop-time-entities.js -u https://<version-id>-dot-lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
 4. Go to the [Versions Console](https://console.cloud.google.com/appengine/versions) and direct all traffic to the new version. Select the latest version, click the 3-dot "hamburger menu" and then click "migrate."
 5. Run the same tests as above, this time on the production server, from graas/server/test:
     - `NODE_PATH=../node/node_modules node test-position-updates.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
     - `NODE_PATH=../node/node_modules node post-service-alerts.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
+    - `NODE_PATH=../node/node_modules node post-stop-time-entities.js -u https://lat-long-prototype.wl.r.appspot.com -a pr-test -e PR_TEST_ID_ECDSA`
 6. From the app-engine directory, run a server stress test with this command: `python stress-test.py ../tests/stress-test-config.json`
 
 Generate Weekly Reports
