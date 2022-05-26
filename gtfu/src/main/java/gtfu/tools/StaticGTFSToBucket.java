@@ -7,27 +7,33 @@ import gtfu.Debug;
 import gtfu.EmailFailureReporter;
 import gtfu.FailureReporter;
 import gtfu.Recipients;
+import gtfu.Time;
 
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
+import java.util.Date;
 
 /**
  * Uploads agency static GTFS files to GCloud Bucket
  */
 public class StaticGTFSToBucket {
+
+    private static GCloudStorage gcs = new GCloudStorage();
+
     /**
      * Uploads static GTFS for a single agency to the specified bucket
      * @param agencyID   Agency
      * @param bucketName GCloud bucket name
      * @param cacheDir   Cache location for storing zip files
      */
-    public static void StaticGTFSToBucket(String agencyID, String bucketName, String cacheDir) {
+    public static void StaticGTFSToBucket(String agencyID, String bucketName, String cacheDir) throws IOException {
         String[] agencyIDList = {agencyID};
         StaticGTFSToBucket(agencyIDList, bucketName, cacheDir);
     }
@@ -38,11 +44,10 @@ public class StaticGTFSToBucket {
      * @param bucketName   GCloud bucket name
      * @param cacheDir     Cache location for storing zip files
      */
-    public static void StaticGTFSToBucket(String[] agencyIDList, String bucketName, String cacheDir) {
+    public static void StaticGTFSToBucket(String[] agencyIDList, String bucketName, String cacheDir) throws IOException {
         AgencyYML yml = new AgencyYML();
 
         Recipients r = new Recipients();
-        GCloudStorage gcs = new GCloudStorage();
         String[] recipients = r.get("error_report");
 
         FailureReporter reporter = new EmailFailureReporter(recipients, "Static GTFS File Update");
@@ -54,21 +59,22 @@ public class StaticGTFSToBucket {
             file.mkdir();
         }
 
-        reporter.addLine("Uploaded static GTFS files for:");
+        reporter.addLine("Updated Gcloud static GTFS files:");
 
         for (String agencyID : agencyIDList) {
-            reporter.addLine("- " + agencyID);
             String name = cacheDir + "/" + agencyID;
+            String gtfsURL = yml.getURL(agencyID);
             file = new File(name);
 
             if (!file.exists()) {
                 file.mkdir();
             }
 
-            long lastModifiedGcloud = getLastModifiedGcloud(name);
-            long lastModifiedRemote = getLastModifiedRemote(gtfsURL);
+            long lastModifiedGcloud = getLastModifiedGcloud(bucketName, agencyID);
+            long lastModifiedRemote = Util.getLastModifiedRemote(gtfsURL);
+            ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
 
-            if (lastModifiedRemote <= lastModifiedLocal) {
+            if (lastModifiedRemote <= lastModifiedGcloud) {
                 if (progressObserver != null) {
                     progressObserver.setMax(1);
                     progressObserver.update(1);
@@ -76,10 +82,8 @@ public class StaticGTFSToBucket {
                 continue;
             }
 
-            Debug.log("+ remote GTFS zip is newer than cached version, updating...");
+            Debug.log("+ remote GTFS zip is newer than the version on gcloud, updating...");
             setLastModifiedGcloud(bucketName, agencyID, lastModifiedRemote);
-
-            String gtfsURL = yml.getURL(agencyID);
 
             try {
                 String cl = Util.getResponseHeader(gtfsURL, "Content-Length");
@@ -90,7 +94,6 @@ public class StaticGTFSToBucket {
 
                 int contentLength = Integer.parseInt(cl);
                 Debug.log("- contentLength: " + contentLength);
-                ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
                 progressObserver.setMax(contentLength);
 
                 File zf = new File(name + "/gtfs.zip");
@@ -108,6 +111,7 @@ public class StaticGTFSToBucket {
                     byte[] bytes = Util.readInput(zip.getInputStream(e), null);
                     gcs.uploadObject(bucketName, "gtfs-archive/" + agencyID + "/", e.getName(), bytes);
                 }
+                reporter.addLine("- " + agencyID);
 
             } catch (IOException e) {
                 Debug.error("couldn't upload agency zip from URL: " + e);
@@ -117,13 +121,21 @@ public class StaticGTFSToBucket {
     }
 
     private static long getLastModifiedGcloud(String bucket, String agency){
-
-
+        try{
+            byte[] bytes = gcs.getObject(bucket, "gtfs-archive/" + agency + "/last-modified.txt");
+            String gcloudModified = new String(bytes);
+            Debug.log("- gcloudModified: " + gcloudModified);
+            return Time.parseDateAsLong(Util.HTTP_DATE_FORMAT, gcloudModified);
+        } catch(Exception e) {
+            Debug.log("File does not exist. Returning last modified time of 0");
+            return 0;
+        }
     }
 
-    private static void setLastModifiedGcloud(String bucket, String agency, long lastModified){
-
-
+    private static void setLastModifiedGcloud(String bucket, String agency, long lastModified) throws IOException {
+        String s = Time.formatDate(Util.HTTP_DATE_FORMAT, new Date(lastModified)) + '\n';
+        byte[] bytes = s.getBytes();
+        gcs.uploadObject(bucket, "gtfs-archive/" + agency + "/", "last-modified.txt", bytes);
     }
 
     private static void usage() {
