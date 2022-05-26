@@ -160,11 +160,9 @@ public class StaticGTFSToBucket {
             if ((arg[i].equals("-u") || arg[i].equals("--url")) && i < arg.length - 1) {
                 url = arg[i + 1];
             }
-
             if ((arg[i].equals("-a") || arg[i].equals("--agency-id")) && i < arg.length - 1) {
                 agencyID = arg[i + 1];
             }
-
             if ((arg[i].equals("-b") || arg[i].equals("--bucket-name")) && i < arg.length - 1) {
                 bucketName = arg[i + 1];
             }
