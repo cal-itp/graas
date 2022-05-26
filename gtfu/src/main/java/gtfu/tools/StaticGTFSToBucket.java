@@ -65,6 +65,20 @@ public class StaticGTFSToBucket {
                 file.mkdir();
             }
 
+            long lastModifiedGcloud = getLastModifiedGcloud(name);
+            long lastModifiedRemote = getLastModifiedRemote(gtfsURL);
+
+            if (lastModifiedRemote <= lastModifiedLocal) {
+                if (progressObserver != null) {
+                    progressObserver.setMax(1);
+                    progressObserver.update(1);
+                }
+                continue;
+            }
+
+            Debug.log("+ remote GTFS zip is newer than cached version, updating...");
+            setLastModifiedGcloud(bucketName, agencyID, lastModifiedRemote);
+
             String gtfsURL = yml.getURL(agencyID);
 
             try {
@@ -100,6 +114,16 @@ public class StaticGTFSToBucket {
             }
         }
         reporter.send();
+    }
+
+    private static long getLastModifiedGcloud(String bucket, String agency){
+
+
+    }
+
+    private static void setLastModifiedGcloud(String bucket, String agency, long lastModified){
+
+
     }
 
     private static void usage() {
