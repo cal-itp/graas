@@ -140,12 +140,27 @@ def alert_is_current(alert, include_future_alerts):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
-    if(include_future_alerts == 'True'):
-        print("include_future_alerts: " + str(include_future_alerts))
-        return now < int(alert['time_stop'])
+    # No start or stop time listed. Alert lives until deleted
+    if(alert['time_stop'] == 0 and (alert['time_stop'] == 0)):
+        return True
+    # Alert started in the past
+    if(int(alert['time_start']) <= now):
+        # Started in the past, no stop time. Alert lives until deleted
+        if(int(alert['time_stop']) == 0):
+            return True
+        # Started in the past, hasn't ended
+        if(int(alert['time_stop']) > now):
+            return True
+        # Started and ended in the past
+        if(int(alert['time_stop']) < now):
+            return False
+    # Alert starts in the future
     else:
-        print("include_future_alerts: " + str(include_future_alerts))
-        return now >= int(alert['time_start']) and now < int(alert['time_stop'])
+        # Include in feed if specifically requested
+        if(include_future_alerts == 'True'):
+            return True
+        else:
+            return False
 
 def purge_old_alerts(datastore_client):
     global last_alert_purge
@@ -312,7 +327,7 @@ def delete_alert(datastore_client, alert):
     if(alert["stop_id"] != ""):
         print("filtering for stop_id...")
         query.add_filter('stop_id', '=', alert["stop_id"])
-    if(alert["trip_id"] != None):
+    if(alert["trip_id"] != ""):
         print("filtering for trip_id...")
         query.add_filter('trip_id', '=', alert["trip_id"])
     if(alert["route_id"] != ""):
@@ -321,7 +336,7 @@ def delete_alert(datastore_client, alert):
     if(alert["agency_id"] != ""):
         print("filtering for agency_id...")
         query.add_filter('agency_id', '=', alert["agency_id"])
-    if(alert["route_type"] != 0):
+    if(alert["route_type"] != ""):
         print("filtering for route_type...")
         query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))

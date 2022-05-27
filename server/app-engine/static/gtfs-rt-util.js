@@ -423,7 +423,7 @@ if (!fetch) {
 
     exports.dismissModal = function() {
         util.log("dismissModal()");
-        util.log("- dismissed modal id: " + currentModal.id);
+        // util.log("- dismissed modal id: " + currentModal.id);
 
         if (currentModal) {
             currentModal.style.display = "none";

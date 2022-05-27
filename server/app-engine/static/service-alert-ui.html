@@ -61,7 +61,7 @@
                 <input type="text" id="url" placeholder="Optional URL with more info"> <br>
                 <label for="start-time">Start time:</label>
                 <input type="datetime-local" id="start-time" name="start-time" value="2022-01-01T08:00" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
-                <label for="stop-time">End time:</label>
+                <label for="stop-time">Stop time:</label>
                 <input type="datetime-local" id="stop-time" value="2023-01-01T08:00" name="stop-time" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
                 <a> Cause: </a>
                 <select id="cause-select"> </select> <br>
@@ -82,19 +82,10 @@
                 <button type="submit" onclick="menu()"> Menu </button>
                 <button type="submit" onclick="viewAlerts()"> Back to feed </button> <br>
                 <!-- <a id="alert-detail-header"> Alert Detail </a> -->
-                <ul style="list-style-type:none;">
-                    <li> Affected entities: </li>
-                    <li id="agency-id-detail" class="entity-detail"> </li>
-                    <li id="route-id-detail" class="entity-detail"> </li>
-                    <li id="trip-id-detail" class="entity-detail"> </li>
-                    <li id="stop-id-detail" class="entity-detail"> </li>
-                    <li id="route-type-detail" class="entity-detail"> </li>
-                    <li id="header-detail"> </li>
-                    <li id="description-detail"> </li>
-                    <li id="cause-detail"> </li>
-                    <li id="effect-detail"> </li>
-                    <li id="start-time-detail"> </li>
-                    <li id="stop-time-detail"> </li>
+                <a> Affected entities: </a>
+                <ul id="affected-entities">
+                </ul>
+                <ul id="alert-detail-list" style="list-style-type:none; padding-left: 0;">
                 </ul>
                 <button type="submit" onclick="deleteAlert()"> Delete alert </button>
             </div>

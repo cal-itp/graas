@@ -12,24 +12,28 @@ var signatureKey = null;
 var currentModal = null;
 var agencyID = null;
 var selectedAlert = null;
-// Var not const since it needs to be set when the feed view modal is visible
 var feedViewHeaderHeight;
 const fileMap = new Map();
-const files = ["trips", "routes", "stops", "agency"];
+const files = [
+  "trips",
+  "routes",
+  "stops",
+  "agency"
+  ];
 const dropdownsIDs = [
   "route-select",
   "trip-select",
   "stop-select",
   "route-type-select",
   "agency-select"
-]
+];
 const textFieldIDs = [
   "header",
   "description",
   "url",
   "start-time",
   "stop-time"
-]
+];
 const causes = new Map([
   [1,'Unknown Cause'],
   [2,'Other Cause'],
@@ -56,15 +60,23 @@ const effects = new Map([
   [9,'Stop Moved']
 ]);
 
-// May end up removing this array:
-const optionalFields = [
-  "url",
-  "agency_id",
-  "trip_id",
-  "route_id",
-  "route_type",
-  "stop_id"
-]
+const alertEntities = new Map([
+  ['agency_id','AgencyID'],
+  ['trip_id','TripID'],
+  ['stop_id','StopID'],
+  ['route_id','RouteID'],
+  ['route_type','Route type']
+]);
+
+const alertFields = new Map([
+  ['cause','Cause'],
+  ['effect','Effect'],
+  ['header','Header'],
+  ['description','Description'],
+  ['start_time','Start time'],
+  ['stop_time','Stop time'],
+]);
+
 const FONT_SIZE = 12;
 const FONT_NORMAL = `${FONT_SIZE}px ARIAL`;
 const FONT_BOLD = `bold ${FONT_SIZE}px ARIAL`;
@@ -173,7 +185,6 @@ async function loadAlerts(){
   util.log("url: " + rtFeedURL)
   feed = await getPB(rtFeedURL);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
-    // Add all the locations to the map:
   alerts = await feed.map(feedObject => {
     let a = feedObject.alert;
     let alertObject = new Object({
@@ -181,39 +192,48 @@ async function loadAlerts(){
       time_start: a.active_period[0].start,
       time_stop: a.active_period[0].end,
       agency_id: a.informed_entity[0].agency_id,
-      trip_id: (a.informed_entity[0].trip !== null ? a.informed_entity[0].trip.trip_id: null),
+      trip_id: (a.informed_entity[0].trip !== null ? a.informed_entity[0].trip.trip_id : ""),
       stop_id: a.informed_entity[0].stop_id,
       route_id: a.informed_entity[0].route_id,
-      route_type: a.informed_entity[0].route_type,
+      route_type: (a.informed_entity[0].route_type !== 0 ? a.informed_entity[0].route_type !== 0 : ""),
       cause: causes.get(a.cause),
       effect: effects.get(a.effect),
       header: a.header_text.translation[0].text,
       description: a.description_text.translation[0].text,
-      url: (a.url !== null ? a.url.translation[0].text : null)
+      url: (a.url !== null ? a.url.translation[0].text : "")
     });
-
-    alertObject.time_start_formatted = (new Date(alertObject.time_start * 1000)).toLocaleString();
-    alertObject.time_stop_formatted = (new Date(alertObject.time_stop * 1000)).toLocaleString();
-    alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== null) + (alertObject.route_type !== 0)
+    if(alertObject.time_start === 0){
+      alertObject.start_time = "None";
+    }
+    else{
+      alertObject.start_time = (new Date(alertObject.time_start * 1000)).toLocaleString();
+    }
+    if(alertObject.time_stop === 0){
+      alertObject.stop_time = "None";
+    }
+    else{
+      alertObject.stop_time = (new Date(alertObject.time_stop * 1000)).toLocaleString();
+    }
+    alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== "") + (alertObject.route_type !== 0)
 
     return alertObject;
   });
 }
 
 function menu(){
-  util.log("menu()");
+  // util.log("menu()");
   util.dismissModal();
   util.handleModal("menuModal");
 }
 
 function createAlert(){
-  util.log("createAlert()");
+  // util.log("createAlert()");
   util.dismissModal();
   util.handleModal("alertCreateModal");
 }
 
 async function viewAlerts(){
-  util.log("viewAlerts()");
+  // util.log("viewAlerts()");
   util.dismissModal();
   util.handleModal("viewFeedModal");
   selectedAlert = null;
@@ -231,7 +251,7 @@ function resetCanvas(){
 }
 
 function deleteAlert(){
-  util.log("deleteAlert()");
+  // util.log("deleteAlert()");
 
   let data = {
     agency_key: agencyID,
@@ -255,36 +275,29 @@ function deleteAlert(){
 }
 
 function alertDetailView(){
-  util.log("alertDetailView()");
+  // util.log("alertDetailView()");
   util.dismissModal();
   util.handleModal("alertDetailModal");
-  if(selectedAlert.agency_id !== ""){
-    util.setElementText("agency-id-detail", ` - AgencyID: ${selectedAlert.agency_id}`);
-    util.showElement("agency-id-detail");
-  }
-  if(selectedAlert.trip_id !== null){
-    util.setElementText("trip-id-detail", ` - TripID: ${selectedAlert.trip_id}`);
-    util.showElement("trip-id-detail");
-  }
-  if(selectedAlert.stop_id !== ""){
-    util.setElementText("stop-id-detail", ` - StopID: ${selectedAlert.stop_id}`);
-    util.showElement("stop-id-detail");
-  }
-  if(selectedAlert.route_id !== ""){
-    util.setElementText("route-id-detail", ` - RouteID: ${selectedAlert.route_id}`);
-    util.showElement("route-id-detail");
-  }
-  if(selectedAlert.route_type !== 0){
-    util.setElementText("route-type-detail", ` - Route type: ${selectedAlert.route_type}`);
-    util.showElement("route-type-detail");
-  }
 
-  util.setElementText("header-detail", `Header: ${selectedAlert.header}`);
-  util.setElementText("description-detail", `Description: ${selectedAlert.description}`);
-  util.setElementText("cause-detail", `Cause: ${selectedAlert.cause}`);
-  util.setElementText("effect-detail", `Effect: ${selectedAlert.effect}`);
-  util.setElementText("start-time-detail", `Start time: ${selectedAlert.time_start_formatted}`);
-  util.setElementText("stop-time-detail", `Stop time: ${selectedAlert.time_stop_formatted}`);
+  let ul = document.getElementById("affected-entities");
+  alertEntities.forEach((value, key) => {
+    if(selectedAlert[key] !== ""){
+      let str = `${value}: ${selectedAlert[key]}`
+      let li = document.createElement("li");
+      li.appendChild(document.createTextNode(str));
+      ul.appendChild(li);
+    }
+  });
+
+  ul = document.getElementById("alert-detail-list");
+  alertFields.forEach((value, key) => {
+    if(selectedAlert[key] !== ""){
+      let str = `${value}: ${selectedAlert[key]}`
+      let li = document.createElement("li");
+      li.appendChild(document.createTextNode(str));
+      ul.appendChild(li);
+    }
+  });
 }
 
 function handleKey(id) {
@@ -319,7 +332,7 @@ function handleKey(id) {
 }
 
 function populateDropdowns(){
-  util.log(fileMap);
+  // util.log(fileMap);
   if(fileMap.get("route_types").length === 1){
     util.hideElement("route-type");
   } else {
@@ -345,11 +358,8 @@ function handleEntitySelection(checkbox){
   util.log("handleEntitySelection()");
   let dropdownName = checkbox.id.slice(0,-8) + "select";
   if(checkbox.checked){
-    util.log("checkbox.checked: " + checkbox.checked);
     util.showElement(dropdownName);
-    util.log("checkbox.checked: " + checkbox.checked);
   } else {
-    util.log("not checked");
     util.hideElement(dropdownName);
     util.resetDropdownSelection(dropdownName);
   }
@@ -380,27 +390,27 @@ async function postServiceAlert() {
     let url = getValue("url");
 
     if(agency_id === null && route_id === null && stop_id === null && trip_id === null && route_type === null){
-      await alert("Please select at least one entity for your alert");
+      alert("Please select at least one entity for your alert");
       return;
     }
 
     if(cause === null || effect === null){
-      await alert("Please select both a cause and an effect for your alert");
-      return;
-    }
-
-    if(cause === null || effect === null){
-      await alert("Please assign both a cause and an effect");
+      alert("Please select both a cause and an effect for your alert");
       return;
     }
 
     if(header === null || description === null){
-      await alert("Please write both a header and a description");
+      alert("Please write both a header and a description");
       return;
     }
 
     if(startTime < 0 || stopTime < 0){
-      await alert("Please select start and stop dates that are in the future");
+      alert("Please select start and stop dates that are in the future");
+      return;
+    }
+
+    if(stopTime < startTime){
+      alert("Start time must be before stop time");
       return;
     }
 
@@ -505,33 +515,37 @@ function drawAlerts(){
     ctx.textBaseline = "top";
     ctx.font = FONT_BOLD;
 
+
+    let entityLines = [];
+    alertEntities.forEach((value, key) => {
+      if(a[key] !== ""){
+        entityLines.push(` - ${value}: ${a[key]}`);
+      }
+    });
+
+    let attributeLines = [];
+    alertFields.forEach((value, key) => {
+      if(a[key] !== ""){
+        let str = attributeLines.push(`${value}: ${a[key]}`);
+      }
+    });
+
     let i = -1;
     ctx.fillText("This alert applies to:", a.x, a.y + FONT_SIZE * ++i);
     ctx.font = FONT_NORMAL;
-    if(a.agency_id !== ""){
-      ctx.fillText(` - AgencyID: ${a.agency_id}`, a.x, a.y + FONT_SIZE * ++i)
+
+    for(let line of entityLines){
+      ctx.fillText(line, a.x, a.y + FONT_SIZE * ++i)
     }
-    if(a.trip_id !== null){
-      ctx.fillText(` - TripID: ${a.trip_id}`, a.x, a.y + FONT_SIZE * ++i)
-    }
-    if(a.stop_id !== ""){
-      ctx.fillText(` - StopID: ${a.stop_id}`, a.x, a.y + FONT_SIZE * ++i)
-    }
-    if(a.route_id !== ""){
-      ctx.fillText(` - RouteID: ${a.route_id}`, a.x, a.y + FONT_SIZE * ++i)
-    }
-    if(a.route_type !== 0){
-      ctx.fillText(` - Route type: ${a.route_type}`, a.x, a.y + FONT_SIZE * ++i)
-    }
+
     ctx.font = FONT_BOLD;
     ctx.fillText("Alert details:", a.x, a.y + FONT_SIZE * ++i);
     ctx.font = FONT_NORMAL;
-    ctx.fillText(`Header: ${a.header}`, a.x, a.y + FONT_SIZE * ++i)
-    ctx.fillText(`Description: ${a.description}`, a.x, a.y + FONT_SIZE * ++i)
-    ctx.fillText(`Start time: ${a.time_start_formatted}`, a.x, a.y + FONT_SIZE * ++i)
-    ctx.fillText(`Stop time: ${a.time_stop_formatted}`, a.x, a.y + FONT_SIZE * ++i)
-    ctx.fillText(`Cause: ${a.cause}`, a.x, a.y + FONT_SIZE * ++i)
-    ctx.fillText(`Effect: ${a.effect}`, a.x, a.y + FONT_SIZE * ++i)
+
+    for(let line of attributeLines){
+      ctx.fillText(line, a.x, a.y + FONT_SIZE * ++i)
+    }
+
   }
 }
 
