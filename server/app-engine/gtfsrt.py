@@ -309,7 +309,21 @@ def delete_alert(datastore_client, alert):
     query.add_filter('description', '=', alert["description"])
     query.add_filter('time_start', '=', alert["time_start"])
     query.add_filter('time_stop', '=', alert["time_stop"])
-    # add filter for all fields
+    if(alert["stop_id"] != ""):
+        print("filtering for stop_id...")
+        query.add_filter('stop_id', '=', alert["stop_id"])
+    if(alert["trip_id"] != None):
+        print("filtering for trip_id...")
+        query.add_filter('trip_id', '=', alert["trip_id"])
+    if(alert["route_id"] != ""):
+        print("filtering for route_id...")
+        query.add_filter('route_id', '=', alert["route_id"])
+    if(alert["agency_id"] != ""):
+        print("filtering for agency_id...")
+        query.add_filter('agency_id', '=', alert["agency_id"])
+    if(alert["route_type"] != 0):
+        print("filtering for route_type...")
+        query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))
     key_list = []
 
@@ -318,9 +332,10 @@ def delete_alert(datastore_client, alert):
         key_list.append(alert.key)
 
     print('- key_list: ' + str(key_list))
-
+    alerts_to_delete = len(key_list)
     datastore_client.delete_multi(key_list)
-    print('+ deleted alert')
+
+    print(f'+ deleted {str(alerts_to_delete)} alerts')
 
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))

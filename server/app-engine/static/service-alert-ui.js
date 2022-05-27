@@ -175,21 +175,21 @@ async function loadAlerts(){
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
     // Add all the locations to the map:
   alerts = await feed.map(feedObject => {
-    let alert = feedObject.alert;
+    let a = feedObject.alert;
     let alertObject = new Object({
       id: feedObject.id,
-      time_start: alert.active_period[0].start,
-      time_stop: alert.active_period[0].end,
-      agency_id: alert.informed_entity[0].agency_id,
-      trip_id: (alert.informed_entity[0].trip !== null ? alert.informed_entity[0].trip.trip_id: null),
-      stop_id: alert.informed_entity[0].stop_id,
-      route_id: alert.informed_entity[0].route_id,
-      route_type: alert.informed_entity[0].route_type,
-      cause: causes.get(alert.cause),
-      effect: effects.get(alert.effect),
-      header: alert.header_text.translation[0].text,
-      description: alert.description_text.translation[0].text,
-      url: (alert.url !== null ? alert.url.translation[0].text : null)
+      time_start: a.active_period[0].start,
+      time_stop: a.active_period[0].end,
+      agency_id: a.informed_entity[0].agency_id,
+      trip_id: (a.informed_entity[0].trip !== null ? a.informed_entity[0].trip.trip_id: null),
+      stop_id: a.informed_entity[0].stop_id,
+      route_id: a.informed_entity[0].route_id,
+      route_type: a.informed_entity[0].route_type,
+      cause: causes.get(a.cause),
+      effect: effects.get(a.effect),
+      header: a.header_text.translation[0].text,
+      description: a.description_text.translation[0].text,
+      url: (a.url !== null ? a.url.translation[0].text : null)
     });
 
     alertObject.time_start_formatted = (new Date(alertObject.time_start * 1000)).toLocaleString();
@@ -249,6 +249,7 @@ function deleteAlert(){
   };
 
   util.signAndPost(data, signatureKey, '/delete-alert', document);
+  alert("Alert deleted");
   resetCanvas();
   menu();
 }
@@ -448,16 +449,21 @@ function createLayout(){
   let yy = SPACING;
   let xx = SPACING;
   let colNum = 1;
-  for (alert of alerts){
-    alert.y = yy;
-    alert.x = xx;
-    let textRows = ALERT_ROWS + alert.num_entities;
+  let maxBoxHeight = 0;
+  for (let i=0; i<alerts.length; i++){
+    alerts[i].y = yy;
+    alerts[i].x = xx;
+    let textRows = ALERT_ROWS + alerts[i].num_entities;
     let box_height = textRows * FONT_SIZE;
+    maxBoxHeight = Math.max(box_height, maxBoxHeight);
     if(colNum < alertsPerRow){
       xx += BOX_WIDTH + SPACING;
       colNum +=1;
+      if(i === alerts.length-1){
+        yy += maxBoxHeight + SPACING;
+      }
     } else{
-      yy += box_height + SPACING;
+      yy += maxBoxHeight + SPACING;
       colNum = 1;
       xx = SPACING;
     }
@@ -484,15 +490,15 @@ async function feedView(){
 }
 
 function drawAlerts(){
-  for (alert of alerts){
+  for (let a of alerts){
     ctx.beginPath();
     ctx.strokeStyle = "black";
     ctx.fillStyle = "white";
 
-    let rows = ALERT_ROWS + alert.num_entities;
+    let rows = ALERT_ROWS + a.num_entities;
     let box_height = rows * FONT_SIZE;
-    ctx.fillRect(alert.x, alert.y, BOX_WIDTH, box_height);
-    ctx.rect(alert.x, alert.y, BOX_WIDTH, box_height);
+    ctx.fillRect(a.x, a.y, BOX_WIDTH, box_height);
+    ctx.rect(a.x, a.y, BOX_WIDTH, box_height);
     ctx.stroke();
 
     ctx.fillStyle = "black";
@@ -500,32 +506,32 @@ function drawAlerts(){
     ctx.font = FONT_BOLD;
 
     let i = -1;
-    ctx.fillText("This alert applies to:", alert.x, alert.y + FONT_SIZE * ++i);
+    ctx.fillText("This alert applies to:", a.x, a.y + FONT_SIZE * ++i);
     ctx.font = FONT_NORMAL;
-    if(alert.agency_id !== ""){
-      ctx.fillText(` - AgencyID: ${alert.agency_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    if(a.agency_id !== ""){
+      ctx.fillText(` - AgencyID: ${a.agency_id}`, a.x, a.y + FONT_SIZE * ++i)
     }
-    if(alert.trip_id !== null){
-      ctx.fillText(` - TripID: ${alert.trip_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    if(a.trip_id !== null){
+      ctx.fillText(` - TripID: ${a.trip_id}`, a.x, a.y + FONT_SIZE * ++i)
     }
-    if(alert.stop_id !== ""){
-      ctx.fillText(` - StopID: ${alert.stop_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    if(a.stop_id !== ""){
+      ctx.fillText(` - StopID: ${a.stop_id}`, a.x, a.y + FONT_SIZE * ++i)
     }
-    if(alert.route_id !== ""){
-      ctx.fillText(` - RouteID: ${alert.route_id}`, alert.x, alert.y + FONT_SIZE * ++i)
+    if(a.route_id !== ""){
+      ctx.fillText(` - RouteID: ${a.route_id}`, a.x, a.y + FONT_SIZE * ++i)
     }
-    if(alert.route_type !== 0){
-      ctx.fillText(` - Route type: ${alert.route_type}`, alert.x, alert.y + FONT_SIZE * ++i)
+    if(a.route_type !== 0){
+      ctx.fillText(` - Route type: ${a.route_type}`, a.x, a.y + FONT_SIZE * ++i)
     }
     ctx.font = FONT_BOLD;
-    ctx.fillText("Alert details:", alert.x, alert.y + FONT_SIZE * ++i);
+    ctx.fillText("Alert details:", a.x, a.y + FONT_SIZE * ++i);
     ctx.font = FONT_NORMAL;
-    ctx.fillText(`Header: ${alert.header}`, alert.x, alert.y + FONT_SIZE * ++i)
-    ctx.fillText(`Description: ${alert.description}`, alert.x, alert.y + FONT_SIZE * ++i)
-    ctx.fillText(`Start time: ${alert.time_start_formatted}`, alert.x, alert.y + FONT_SIZE * ++i)
-    ctx.fillText(`Stop time: ${alert.time_stop_formatted}`, alert.x, alert.y + FONT_SIZE * ++i)
-    ctx.fillText(`Cause: ${alert.cause}`, alert.x, alert.y + FONT_SIZE * ++i)
-    ctx.fillText(`Effect: ${alert.effect}`, alert.x, alert.y + FONT_SIZE * ++i)
+    ctx.fillText(`Header: ${a.header}`, a.x, a.y + FONT_SIZE * ++i)
+    ctx.fillText(`Description: ${a.description}`, a.x, a.y + FONT_SIZE * ++i)
+    ctx.fillText(`Start time: ${a.time_start_formatted}`, a.x, a.y + FONT_SIZE * ++i)
+    ctx.fillText(`Stop time: ${a.time_stop_formatted}`, a.x, a.y + FONT_SIZE * ++i)
+    ctx.fillText(`Cause: ${a.cause}`, a.x, a.y + FONT_SIZE * ++i)
+    ctx.fillText(`Effect: ${a.effect}`, a.x, a.y + FONT_SIZE * ++i)
   }
 }
 
@@ -535,11 +541,11 @@ document.body.addEventListener('click', function(event) {
     let searchX = event.pageX;
     let searchY = event.pageY - feedViewHeaderHeight;
 
-    for (alert of alerts){
+    for (let a of alerts){
       util.log("searching...");
-      if(objectContainsPoint(alert, searchX, searchY)){
-        selectedAlert = alert;
-        alertDetailView(alert);
+      if(objectContainsPoint(a, searchX, searchY)){
+        selectedAlert = a;
+        alertDetailView(a);
       }
     }
   }
@@ -549,7 +555,7 @@ function objectContainsPoint(object, x, y){
     return (x > object.x
           && x < object.x + BOX_WIDTH
           && y > object.y
-          && y < object.y + (ALERT_ROWS + alert.num_entities) * FONT_SIZE
+          && y < object.y + (ALERT_ROWS + object.num_entities) * FONT_SIZE
           )
 }
 
