@@ -770,6 +770,7 @@ def handle_pos_update(datastore_client, data):
         datastore_client (obj): reference to google cloud datastore instance.
         data (dict): details of the position update (lat, long, speed, heading, etc).
     """
+    then = 0
 
     agencyID = data.get('agency-id', None)
     vehicleID = data.get('vehicle-id', None)
@@ -787,11 +788,13 @@ def handle_pos_update(datastore_client, data):
     data['rcv-timestamp'] = int(time.time())
 
     if data.get('trip-id', None) is None:
+        then = time.time()
         trip_id = get_trip_id(
             datastore_client,
             agencyID,
             vehicleID
         )
+        print(f'- profile get_trip_id(): {time.time() - then} ms')
         print(f'- trip_id: {trip_id}')
 
         if trip_id is None:
@@ -814,7 +817,10 @@ def handle_pos_update(datastore_client, data):
         query.add_filter('vehicle-id', '=', vehicleID)
         query.order = ['-timestamp']
 
+
+        then = time.time()
         results = list(query.fetch())
+        print(f'- profile query.fetch(): {time.time() - then} ms')
 
         if len(results) == 0:
             entity = datastore.Entity(key=datastore_client.key('current-position'))
@@ -826,7 +832,9 @@ def handle_pos_update(datastore_client, data):
             entity_key_cache.add(name, results[0].key)
             entity_key = results[0].key
 
+    then = time.time()
     entity = datastore_client.get(entity_key)
+    print(f'- profile datastore_client.get(): {time.time() - then} ms')
 
     if entity is None:
             print(f'* invalid entity key: {entity_key}, discarding pos update and key')
@@ -836,9 +844,12 @@ def handle_pos_update(datastore_client, data):
 
     if timestamp <= entity['timestamp']:
             print(f'* pos update not newer than last update, discarding')
-            return
+            result['status'] = 'stale timestamp'
+            return result
 
     entity.update(data)
+    then = time.time()
     datastore_client.put(entity)
+    print(f'- profile datastore_client.put(): {time.time() - then} ms')
 
     return result

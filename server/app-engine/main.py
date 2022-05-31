@@ -371,10 +371,13 @@ def new_pos_sig():
     if lat == INVALID_GPS:
         print('+ ignoring missing GPS update')
     else:
+        then = time.time()
         ret = gtfsrt.handle_pos_update(
             util.datastore_client,
             data
         )
+        delta = time.time() - then
+        print(f'- profile handle_pos_update(): {delta:.3f} ms')
 
     obj = {
         'command': 'new-pos',
