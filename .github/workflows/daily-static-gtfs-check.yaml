@@ -48,3 +48,8 @@ jobs:
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 0 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 1 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
           java -cp build/libs/gtfu.jar gtfu.tools.BlockDataGenerator -a test -d 2 -U https://unitrans.ucdavis.edu/media/gtfs/Unitrans_GTFS.zip -u
+      - name: Save GTFS files to Gcloud
+        working-directory: gtfu
+        run: java -cp build/libs/gtfu.jar gtfu.tools.StaticGTFSToBucket -u ${{ secrets.LIVE_AGENCIES_URL }} -b graas-resources -c src/main/resources/conf/cache
+        env:
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}

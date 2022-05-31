@@ -43,7 +43,7 @@ function normalize(s) {
 }
 
 async function test(baseUrl, agencyID, ecdsaVarName) {
-    util.log('starting test...');
+    util.log('starting service alert test...');
     util.log(`- baseUrl: ${baseUrl}`);
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";

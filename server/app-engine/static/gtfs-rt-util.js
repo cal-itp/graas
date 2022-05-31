@@ -342,6 +342,7 @@ if (!fetch) {
                 }
 
                 that.log('server response: ok');
+                //that.log(`- response: ${JSON.stringify(response)}`);
             });
         });
     };

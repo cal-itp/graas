@@ -25,6 +25,7 @@ Agency prerequisites
 Create service data for agency
 ------------------------------
 - Go to [agencies.yml](https://github.com/cal-itp/data-infra/blob/main/airflow/data/agencies.yml), a Cal-ITP source-of-truth, in order to determine the agency-id for this agency.
+- Create a new branch
 - From `graas/server/agency-config/gtfs`, run the command `./setup-agency-templates.sh <id>`. This will create a directory for the agency at `graas/server/agency-config/gtfs/gtfs-aux/<agency-id>`, containing 3 files:
     - agency-params.json
     - trip-names.json
@@ -42,6 +43,7 @@ Create service data for agency
     - route_short_name
     - route_long_name
     - shape_id
+- Create a new pull request containing updates to agency-params.json & vehicle-ids.json. Agency-params.json needs to be updated on the main branch in order to run the following command.
 - Within the gtfu directory, run the command `java -cp build/libs/gtfu.jar gtfu.tools.TripListGenerator -a <agency-id> -v`. You can try different values for `triplist-generator-namefield` and `triplist-generator-use-direction` until the output looks good. Once the output is satisfactory, run the same command with the "-l" flag to update the trip-names.json file directly. The file will look something like this.
 ```
 [

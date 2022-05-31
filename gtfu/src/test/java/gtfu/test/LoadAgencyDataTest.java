@@ -94,7 +94,7 @@ public class LoadAgencyDataTest {
             try {
                 new LoadAgencyDataTest(cacheDir, agencyID);
             } catch (Exception e) {
-                Debug.error("* test failed: " + e);
+                Util.fail("* test failed: " + e, false);
             }
         } else {
             ProgressObserver po = new ConsoleProgressObserver(40);
@@ -109,7 +109,7 @@ public class LoadAgencyDataTest {
                 try {
                     new LoadAgencyDataTest(cacheDir, id);
                 } catch (Exception e) {
-                    Debug.error("* test failed: " + e);
+                    Util.fail("* test failed: " + e, false);
                 }
             }
         }
