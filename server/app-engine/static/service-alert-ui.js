@@ -345,9 +345,9 @@ function populateDropdowns(){
   }
   util.populateList("cause-select", "Select an alert cause", Array.from(causes.values()));
   util.populateList("effect-select", "Select an alert effect", Array.from(effects.values()));
-  util.populateList("route-select", "Select a route", getItems("routes", "route_id"));
-  util.populateList("trip-select", "Select a trip", getItems("trips", "trip_id"));
-  util.populateList("stop-select", "Select a stop", getItems("stops", "stop_id"));
+  util.populateList("route-select", "Select a Route ID", getItems("routes", "route_id"));
+  util.populateList("trip-select", "Select a Trip ID", getItems("trips", "trip_id"));
+  util.populateList("stop-select", "Select a Stop ID", getItems("stops", "stop_id"));
 }
 
 function getItems(type, columnName){
@@ -519,14 +519,16 @@ function drawAlerts(){
     let entityLines = [];
     alertEntities.forEach((value, key) => {
       if(a[key] !== ""){
-        entityLines.push(` - ${value}: ${a[key]}`);
+        let str = ` - ${value}: ${a[key]}`
+        entityLines.push(str);
       }
     });
 
     let attributeLines = [];
     alertFields.forEach((value, key) => {
       if(a[key] !== ""){
-        let str = attributeLines.push(`${value}: ${a[key]}`);
+        let str = `${value}: ${a[key]}`;
+        attributeLines.push(str);
       }
     });
 
@@ -535,7 +537,7 @@ function drawAlerts(){
     ctx.font = FONT_NORMAL;
 
     for(let line of entityLines){
-      ctx.fillText(line, a.x, a.y + FONT_SIZE * ++i)
+      ctx.fillText(shortenFeedStringIfNeeded(line), a.x, a.y + FONT_SIZE * ++i)
     }
 
     ctx.font = FONT_BOLD;
@@ -543,7 +545,7 @@ function drawAlerts(){
     ctx.font = FONT_NORMAL;
 
     for(let line of attributeLines){
-      ctx.fillText(line, a.x, a.y + FONT_SIZE * ++i)
+      ctx.fillText(shortenFeedStringIfNeeded(line), a.x, a.y + FONT_SIZE * ++i)
     }
 
   }
@@ -565,6 +567,17 @@ document.body.addEventListener('click', function(event) {
   }
 });
 
+function shortenFeedStringIfNeeded(string){
+  if(ctx.measureText(string).width > BOX_WIDTH){
+    return shortenFeedString(string) + "...";
+  } else return string;
+}
+
+function shortenFeedString(string){
+  if(ctx.measureText(string + "...").width > BOX_WIDTH){
+    return shortenFeedString(string.slice(0,-1))
+  } else return string;
+}
 function objectContainsPoint(object, x, y){
     return (x > object.x
           && x < object.x + BOX_WIDTH

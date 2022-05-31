@@ -140,23 +140,23 @@ def alert_is_current(alert, include_future_alerts):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
-    # No start or stop time listed. Alert lives until deleted
+    # No start or stop time listed. Is current until deleted.
     if(alert['time_stop'] == 0 and (alert['time_stop'] == 0)):
         return True
-    # Alert started in the past
+    # Alert started in the past...
     if(int(alert['time_start']) <= now):
-        # Started in the past, no stop time. Alert lives until deleted
+        # ...with no stop time. Is current until deleted.
         if(int(alert['time_stop']) == 0):
             return True
-        # Started in the past, hasn't ended
+        # ...and hasn't hasn't ended yet. Is current until stop time.
         if(int(alert['time_stop']) > now):
             return True
-        # Started and ended in the past
+        # ...and ended in the past. Is not current.
         if(int(alert['time_stop']) < now):
             return False
-    # Alert starts in the future
+    # Alert starts in the future...
     else:
-        # Include in feed if specifically requested
+        # ...is current only if include_future_alerts passed as true (for service-alert ui)
         if(include_future_alerts == 'True'):
             return True
         else:
