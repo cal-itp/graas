@@ -428,11 +428,6 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have associated agency, discarding')
         return
 
-    # Per the spec, alerts without a time range will just live forever until removed
-    # if not('time_start' in alert and 'time_stop' in alert):
-    #     print('alert doesn\'t have valid time range, discarding')
-    #     return
-
     if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert  or 'route_type' in alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
