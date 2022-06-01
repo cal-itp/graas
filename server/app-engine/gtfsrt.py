@@ -144,9 +144,6 @@ def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
 
     return entity
 
-<<<<<<< HEAD
-def alert_is_current(alert, include_future_alerts):
-=======
 def make_trip_update(list):
     print(f'make_trip_update()')
     print(f'- list: {list}')
@@ -180,7 +177,7 @@ def make_trip_update(list):
 
     return entity
 
-def alert_is_current(alert):
+def alert_is_current(alert, include_future_alerts):
     print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False

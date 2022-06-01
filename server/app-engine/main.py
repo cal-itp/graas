@@ -104,10 +104,12 @@ verified_map_millis = 0
 @app.route('/service-alerts.pb')
 def service_alerts():
     print('/service-alerts.pb')
+
     agency = request.args.get('agency')
+    print('- agency: ' + agency)
     if agency is None:
         return 'No agency given', 400
-    print('- agency: ' + agency)
+
     include_future_alerts = request.args.get("include_future_alerts") or "False"
     print('- include_future_alerts: ' + include_future_alerts)
 

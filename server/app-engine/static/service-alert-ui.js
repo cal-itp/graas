@@ -59,7 +59,6 @@ const effects = new Map([
   [8,'Unknown Effect'],
   [9,'Stop Moved']
 ]);
-
 const alertEntities = new Map([
   ['agency_id','AgencyID'],
   ['trip_id','TripID'],
@@ -67,7 +66,6 @@ const alertEntities = new Map([
   ['route_id','RouteID'],
   ['route_type','Route type']
 ]);
-
 const alertFields = new Map([
   ['cause','Cause'],
   ['effect','Effect'],
@@ -100,7 +98,7 @@ function loadFiles(){
         response.text().then(function(text){
           fileMap.set(fileName,csvToArray(text));
           if(fileName === "routes"){
-            // Manually create route-types category from routes
+            // Create route-types category by getting unique route_types from routes
             let routeTypes = getItems("routes","route_type");
             fileMap.set("route_types", [...new Set(routeTypes)]);
           }
@@ -161,9 +159,9 @@ async function completeInitialization(agencyData) {
     );
 
     util.log("- signatureKey.type: " + signatureKey.type);
+    menu();
     loadFiles();
     resetCanvas();
-    util.handleModal("menuModal");
 }
 
 // Thanks to https://gavinr.com/protocol-buffers-protobuf-browser/
@@ -221,7 +219,7 @@ async function loadAlerts(){
 }
 
 function menu(){
-  // util.log("menu()");
+  util.log("menu()");
   util.dismissModal();
   util.handleModal("menuModal");
 }
@@ -438,10 +436,9 @@ async function postServiceAlert() {
     util.signAndPost(data, signatureKey, '/post-alert', document);
 
     // Consider actually confirming send status
-    await alert("Alert posted successfully");
+    alert("Alert posted successfully");
     loadAlerts();
-    util.dismissModal();
-    util.handleModal("menuModal");
+    menu();
     // resetFields();
     resetCanvas();
 }
