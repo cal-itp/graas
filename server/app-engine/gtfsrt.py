@@ -8,6 +8,7 @@ import time
 import traceback
 from cache import Cache
 from entity_key_cache import EntityKeyCache
+from batch_writer import BatchWriter
 import util
 
 STOP_UPDATE_MAX_LIFE = 3 * 60 # 3 minutes in seconds
@@ -19,9 +20,8 @@ DAY_SECONDS = 24 * 60 * 60
 last_alert_purge = 0
 block_map = {}
 cache = Cache()
+batch_writer = BatchWriter(util.datastore_client, 1.0, 1000)
 entity_key_cache = EntityKeyCache()
-pos_batch_list = []
-pos_batch_list_ts = 0
 
 cause_map = {
     'Unknown Cause':     gtfs_realtime_pb2.Alert.Cause.UNKNOWN_CAUSE,
@@ -423,7 +423,7 @@ def add_alert(datastore_client, alert):
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)
-    datastore_client.put(entity)
+    batch_writer.add(entity)
 
 def load_block_collection(datastore_client, block_metadata):
     global block_map
@@ -646,7 +646,6 @@ def handle_stop_entities(datastore_client, data):
 
             if len(results) == 0:
                 entity = datastore.Entity(key=datastore_client.key('stop-time'))
-                #entity['timestamp'] = 0
                 datastore_client.put(entity)
                 entity_key_cache.add(name, entity.key)
                 entity_key = entity.key
@@ -654,15 +653,15 @@ def handle_stop_entities(datastore_client, data):
                 entity_key_cache.add(name, results[0].key)
                 entity_key = results[0].key
 
-        entity = datastore_client.get(entity_key)
-
-        if entity is None:
-                print(f'* invalid entity key: {entity_key}, discarding stop time entity and key')
+        if entity_key is None:
+                print(f'* no entity key, discarding stop time entity and key')
                 entity_key_cache.remove(name)
-                return
+                continue
+
+        entity = datastore.Entity(key=entity_key)
 
         entity.update(e)
-        datastore_client.put(entity)
+        batch_writer.add(entity)
 
     return 'ok'
 
@@ -843,13 +842,7 @@ def handle_pos_update(datastore_client, data):
     entity.update(data)
 
     #then = time.time()
-    global pos_batch_list, pos_batch_list_ts
-    pos_batch_list.append(entity)
-
-    if time.time() - pos_batch_list_ts >= 1:
-        datastore_client.put_multi(pos_batch_list)
-        pos_batch_list = []
-        pos_batch_list_ts = time.time()
+    batch_writer.add(entity)
 
     #print(f'- profile datastore_client.put(): {time.time() - then} seconds')
 

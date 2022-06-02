@@ -35,6 +35,32 @@ function serialize(obj, fields) {
     return s;
 }
 
+async function postVehiclePosition(signatureKey, agencyID, vehicleID, url) {
+    let data = {
+        uuid: 'test',
+        agent: 'node',
+        timestamp: 0,
+        lat: 0,
+        long: 0,
+        speed: 0,
+        heading: 0,
+        accuracy: 0,
+        version: 'test'
+    };
+
+    data['trip-id'] = 'test';
+    data['agency-id'] = agencyID;
+    data['pos-timestamp'] = 'test';
+
+    data['vehicle-id'] = vehicleID;
+
+    data['timestamp'] = testutil.getEpochSeconds();
+
+    util.log('- data: ' + JSON.stringify(data));
+
+    await util.signAndPost(data, signatureKey, url + '/new-pos-sig');
+}
+
 async function test(baseUrl, agencyID, ecdsaVarName) {
     util.log('starting trip updates test...');
     util.log(`- baseUrl: ${baseUrl}`);
@@ -77,8 +103,9 @@ async function test(baseUrl, agencyID, ecdsaVarName) {
 
     util.signAndPost(data, signatureKey, baseUrl + '/new-stop-entities');
     util.log(`+ posted stop time entities, sleeping for a few...`);
-    await testutil.sleep(5000);
-    util.log(`done.`);
+    await testutil.verboseSleep(5);
+    await postVehiclePosition(signatureKey, agencyID, 'flush', baseUrl);
+    await testutil.verboseSleep(2);
 
     const updates = Object.values(map);
     //util.log(`- updates: ${JSON.stringify(updates, null, 4)}`);

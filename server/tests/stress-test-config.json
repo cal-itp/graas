@@ -1,9 +1,8 @@
 {
-"use-production-server": false,
-"production-server-url": "https://127.0.0.1:8080/",
-"agency-count": 5,
-"vehicle-count": 5,
-"interval-time": 3,
-"interval-variation": 1,
-"num-repeats": 3
+    "server-url": "https://127.0.0.1:8080/",
+    "agency-count": 5,
+    "vehicle-count": 5,
+    "interval-time": 3,
+    "interval-variation": 1,
+    "num-repeats": 3
 }

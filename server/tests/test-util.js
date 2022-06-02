@@ -57,6 +57,15 @@ const fetch = require('node-fetch');
         });
     }
 
+    exports.verboseSleep = async function(seconds) {
+        console.log(`sleeping for ${seconds} seconds...`);
+
+        for (let i=0; i<seconds; i++) {
+            await this.sleep(1000);
+            console.log('.');
+        }
+    }
+
     exports.getEpochSeconds = function() {
         return Math.floor(Date.now() / 1000);
     }

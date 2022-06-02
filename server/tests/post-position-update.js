@@ -42,6 +42,8 @@ async function test(url, agencyID, ecdsaVarName) {
     util.log('- data: ' + JSON.stringify(data));
 
     util.signAndPost(data, signatureKey, url + '/new-pos-sig');
+    await testutil.verboseSleep(2);
+    util.signAndPost(data, signatureKey, url + '/new-pos-sig');
 }
 
 const args = process.argv.slice(2);

@@ -28,7 +28,7 @@ const VEHICLE_IDS = [
     'pr-test-vehicle-id-6', 'pr-test-vehicle-id-7'
 ];
 
-async function postUpdates(signatureKey, agencyID, url) {
+async function post(signatureKey, agencyID, vehicleID, url) {
     let data = {
         uuid: 'test',
         agent: 'node',
@@ -43,20 +43,20 @@ async function postUpdates(signatureKey, agencyID, url) {
 
     data['trip-id'] = 'test';
     data['agency-id'] = agencyID;
-    data['vehicle-id'] = 'test';
     data['pos-timestamp'] = 'test';
 
-    util.log('- signatureKey: ' + signatureKey);
+    data['vehicle-id'] = vehicleID;
+
+    data['timestamp'] = testutil.getEpochSeconds();
+
     util.log('- data: ' + JSON.stringify(data));
 
+    await util.signAndPost(data, signatureKey, url + '/new-pos-sig');
+}
+
+async function postUpdates(signatureKey, agencyID, url) {
     for (let vid of VEHICLE_IDS) {
-        data['vehicle-id'] = vid;
-        util.log(`-- vid: ${vid}`);
-
-        data['timestamp'] = testutil.getEpochSeconds();
-        util.log(`++ timestamp: ${data.timestamp}`);
-
-        await util.signAndPost(data, signatureKey, url);
+        await post(signatureKey, agencyID, vid, url);
         await testutil.sleep(1000);
     }
 }
@@ -70,15 +70,11 @@ async function test(url, agencyID, ecdsaVarName) {
     const signatureKey = await testutil.getSignatureKey(ecdsaVarName);
     util.log(`- signatureKey: ${JSON.stringify(signatureKey)}`);
 
-    await postUpdates(signatureKey, agencyID, url + '/new-pos-sig');
+    await postUpdates(signatureKey, agencyID, url);
 
-    const sleepCount = 30;
-    console.log(`sleeping for ${sleepCount} seconds before accessing vehicle position feed...`);
-
-    for (let i=0; i<sleepCount; i++) {
-        await testutil.sleep(1000);
-        console.log('.');
-    }
+    await testutil.verboseSleep(15);
+    await post(signatureKey, agencyID, 'flush', url);
+    await testutil.verboseSleep(15);
 
     console.log('done');
 

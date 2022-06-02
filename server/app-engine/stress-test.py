@@ -22,6 +22,7 @@ import keygen
 
 LOCAL_SERVER_URL = 'https://127.0.0.1:8080/'
 thread_lock = threading.Lock()
+datastore_client = datastore.Client()
 
 class agency(ndb.Model):
     agencyid = ndb.StringProperty('agency-id')
@@ -63,14 +64,15 @@ class test_agency:
 		global post_metadata_list
 
 		time.sleep(intervalTime * random.uniform(0, 1))
-		### create requests.Session
 		session = requests.Session()
 
 		for i in range(numRepeats):
-			data = self.post(session, domain, vehicleid)
-			thread_lock.acquire()
-			post_metadata_list.append(data)
-			thread_lock.release()
+			data = self.post(session, domain, vehicleid, util.get_current_time_millis())
+
+			if data.startTime != 0:
+				thread_lock.acquire()
+				post_metadata_list.append(data)
+				thread_lock.release()
 
 			self.variable_sleep(intervalTime, intervalVariation)
 
@@ -87,11 +89,11 @@ class test_agency:
 		for t in threads:
 			t.join()
 
-	def post(self, session, domain, vehicleid):
+	def post(self, session, domain, vehicleid, timestamp):
 		print('post()')
 		endpoint = 'new-pos-sig'
 		url = domain + endpoint
-		postTime = util.get_current_time_millis()
+		postTime = timestamp
 		post_data = {
 	        "uuid": "stresstest",
 	        "agent":
@@ -178,18 +180,7 @@ def main(argv):
 	data = json.load(f)
 	f.close()
 
-	if data.get('use-production-server', False):
-		productionServerURL = data.get('production-server-url', None)
-
-		if productionServerURL != None:
-			domain = productionServerURL
-
-		else:
-			print('* error: no production URL provided')
-			exit(1)
-
-	else:
-		domain = LOCAL_SERVER_URL
+	domain = data.get('server-url', LOCAL_SERVER_URL)
 
 	# Load attributes from json. If absent, use default values defined above
 	agencyCount = data.get('agency-count', agencyCount)
@@ -239,9 +230,21 @@ def main(argv):
 		x.join()
 	totalNetRuntime = time.time() - then
 
-	# 4. Clean up file tree & remove keys from gcloud
+	# 4. Clean up file tree & remove agency data from gcloud
+	keys = []
+	session = requests.Session()
+
 	for agency in agencyList:
+		agency.post(session, domain, "x", 0)
 		agency.clean()
+
+		query = datastore_client.query(kind='current-position')
+		query.add_filter('agency-id', '=', agency.id)
+		positions = query.fetch()
+		for pos in positions:
+			keys.append(pos.key)
+
+	datastore_client.delete_multi(keys)
 	shutil.rmtree(dirName)
 
 	# Reporting from local logging. The process of looping through logs and incrementing values is a little janky. Could be improved with a better data stracture.
@@ -292,7 +295,6 @@ def main(argv):
 	gcloudUpdates = 0
 	# Reporting from gcloud
 	for agency in agencyList:
-		datastore_client = datastore.Client()
 		query = datastore_client.query(kind='position')
 		query.add_filter('agency-id', '=', agency.id)
 		query.add_filter('timestamp', '>=', startTime)
