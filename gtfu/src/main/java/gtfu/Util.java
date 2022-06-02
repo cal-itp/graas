@@ -455,9 +455,9 @@ public class Util {
         }
 
         long lastModifiedLocal = getLastModified(name);
-        long lastModifiedLRemote = getLastModifiedRemote(gtfsURL);
+        long lastModifiedRemote = getLastModifiedRemote(gtfsURL);
 
-        if (lastModifiedLRemote <= lastModifiedLocal) {
+        if (lastModifiedRemote <= lastModifiedLocal) {
             if (progressObserver != null) {
                 progressObserver.setMax(1);
                 progressObserver.update(1);
@@ -467,7 +467,7 @@ public class Util {
         }
 
         Debug.log("+ remote GTFS zip is newer than cached version, updating...");
-        writeLastModifiedFile(name, lastModifiedLRemote);
+        writeLastModifiedFile(name, lastModifiedRemote);
 
         try {
             String cl = Util.getResponseHeader(gtfsURL, "Content-Length");
