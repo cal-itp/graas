@@ -183,23 +183,23 @@ def alert_is_current(alert, include_future_alerts):
         return False
     now = int(time.time())
     # No start or stop time listed. Is current until deleted.
-    if(alert['time_stop'] == 0 and (alert['time_stop'] == 0)):
+    if alert['time_start'] == 0 and (alert['time_stop'] == 0):
         return True
     # Alert started in the past...
-    if(int(alert['time_start']) <= now):
+    if int(alert['time_start']) <= now:
         # ...with no stop time. Is current until deleted.
-        if(int(alert['time_stop']) == 0):
+        if int(alert['time_stop']) == 0:
             return True
         # ...and hasn't hasn't ended yet. Is current until stop time.
-        if(int(alert['time_stop']) > now):
+        if int(alert['time_stop']) > now:
             return True
         # ...and ended in the past. Is not current.
-        if(int(alert['time_stop']) < now):
+        if int(alert['time_stop']) < now:
             return False
     # Alert starts in the future...
     else:
         # ...is current only if include_future_alerts passed as true (for service-alert ui)
-        if(include_future_alerts == 'True'):
+        if include_future_alerts == 'True':
             return True
         else:
             return False
@@ -451,19 +451,19 @@ def delete_alert(datastore_client, alert):
     query.add_filter('description', '=', alert["description"])
     query.add_filter('time_start', '=', alert["time_start"])
     query.add_filter('time_stop', '=', alert["time_stop"])
-    if(alert["stop_id"] != ""):
+    if alert["stop_id"] != "":
         print("filtering for stop_id...")
         query.add_filter('stop_id', '=', alert["stop_id"])
-    if(alert["trip_id"] != ""):
+    if alert["trip_id"] != "":
         print("filtering for trip_id...")
         query.add_filter('trip_id', '=', alert["trip_id"])
-    if(alert["route_id"] != ""):
+    if alert["route_id"] != "":
         print("filtering for route_id...")
         query.add_filter('route_id', '=', alert["route_id"])
-    if(alert["agency_id"] != ""):
+    if alert["agency_id"] != "":
         print("filtering for agency_id...")
         query.add_filter('agency_id', '=', alert["agency_id"])
-    if(alert["route_type"] != ""):
+    if alert["route_type"] != "":
         print("filtering for route_type...")
         query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))
@@ -477,7 +477,7 @@ def delete_alert(datastore_client, alert):
     alerts_to_delete = len(key_list)
     datastore_client.delete_multi(key_list)
 
-    print(f'+ deleted {str(alerts_to_delete)} alerts')
+    print(f'+ deleted {alerts_to_delete} alerts')
 
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))

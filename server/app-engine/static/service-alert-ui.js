@@ -75,6 +75,7 @@ const alertFields = new Map([
   ['stop_time','Stop time'],
 ]);
 
+const BASE_URL = 'https://storage.googleapis.com/graas-resources/gtfs-archive'
 const FONT_SIZE = 12;
 const FONT_NORMAL = `${FONT_SIZE}px ARIAL`;
 const FONT_BOLD = `bold ${FONT_SIZE}px ARIAL`;
@@ -84,30 +85,23 @@ const BOX_WIDTH = 200;
 
 initialize();
 
-function loadFiles(){
-  const baseURL = `https://storage.googleapis.com/graas-resources/gtfs-archive/${agencyID}/`;
+async function loadFiles(){
+  const agencyURL = `${BASE_URL}/${agencyID}/`;
 
   for (let i = 0; i < files.length; i++) {
     let fileName = files[i];
-    let url = baseURL + fileName + ".txt";
+    let url = agencyURL + fileName + ".txt";
     util.log('- fetching from ' + url);
-    util.timedFetch(url, {
-        method: 'GET'
-    })
-    .then(function(response) {
-        response.text().then(function(text){
-          fileMap.set(fileName,csvToArray(text));
-          if(fileName === "routes"){
-            // Create route-types category by getting unique route_types from routes
-            let routeTypes = getItems("routes","route_type");
-            fileMap.set("route_types", [...new Set(routeTypes)]);
-          }
-          if(fileMap.size === files.length + 1) populateDropdowns();
-        })
-    })
-    .catch((error) => {
-        util.log('*** fetch() error: ' + error);
-    });
+    let response = await util.timedFetch(url, {method: 'GET'});
+    let text = await response.text();
+    fileMap.set(fileName,csvToArray(text));
+
+    if(fileName === "routes"){
+      // Create route-types category by getting unique route_types from routes
+      let routeTypes = getItems("routes","route_type");
+      fileMap.set("route_types", [...new Set(routeTypes)]);
+    }
+    if(fileMap.size === files.length + 1) populateDropdowns();
   }
   loadAlerts();
 }

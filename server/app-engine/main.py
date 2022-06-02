@@ -110,6 +110,8 @@ def service_alerts():
     if agency is None:
         return 'No agency given', 400
 
+    # By default the endpoint will only provide alerts that are in affect now.
+    # For the agency-facing service alert UI, we have this option to include future alerts as well
     include_future_alerts = request.args.get("include_future_alerts") or "False"
     print('- include_future_alerts: ' + include_future_alerts)
 
@@ -247,7 +249,7 @@ def post_alert():
 
 @app.route('/delete-alert', methods=['POST'])
 def delete_alert():
-    print('/post-alert')
+    print('/delete-alert')
     #print('- request.data: ' + str(request.data))
     #print('- request.json: ' + json.dumps(request.json))
 
