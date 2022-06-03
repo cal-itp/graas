@@ -51,6 +51,10 @@ if (!fetch) {
         }
     };
 
+    exports.now = function() {
+        return (new Date()).getTime();
+    }
+
     exports.getYYYYMMDD = function(date) {
         if (date === null) {
             date = new Date();
@@ -308,9 +312,8 @@ if (!fetch) {
         return await that.apiCall(msg, url);
     };
 
-     exports.addSelectOption = function(sel, text, disabled) {
+    exports.addSelectOption = function(sel, text, disabled) {
         let opt = document.createElement('option');
-
         opt.appendChild(document.createTextNode(text));
         opt.disabled = disabled;
         sel.appendChild(opt);
