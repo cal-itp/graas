@@ -51,6 +51,10 @@ if (!fetch) {
         }
     };
 
+    exports.now = function() {
+        return (new Date()).getTime();
+    }
+
     exports.getYYYYMMDD = function(date) {
         if (date === null) {
             date = new Date();
@@ -319,7 +323,10 @@ if (!fetch) {
 
             that.log('- msg: ' + JSON.stringify(msg));
 
+            const then = that.now();
             that.apiCall(msg, url, function(response) {
+                const millis = that.now() - then;
+                that.log('- millis: ' + millis);
                 if (document) {
                     try {
                         let p = document.getElementById('last-update');

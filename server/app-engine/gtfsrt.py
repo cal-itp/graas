@@ -8,6 +8,7 @@ import time
 import traceback
 from cache import Cache
 from entity_key_cache import EntityKeyCache
+from batch_writer import BatchWriter
 import util
 
 STOP_UPDATE_MAX_LIFE = 3 * 60 # 3 minutes in seconds
@@ -19,6 +20,7 @@ DAY_SECONDS = 24 * 60 * 60
 last_alert_purge = 0
 block_map = {}
 cache = Cache()
+batch_writer = BatchWriter(util.datastore_client, 1.0, 1000)
 entity_key_cache = EntityKeyCache()
 
 cause_map = {
@@ -421,7 +423,7 @@ def add_alert(datastore_client, alert):
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)
-    datastore_client.put(entity)
+    batch_writer.add(entity)
 
 def load_block_collection(datastore_client, block_metadata):
     global block_map
@@ -644,7 +646,6 @@ def handle_stop_entities(datastore_client, data):
 
             if len(results) == 0:
                 entity = datastore.Entity(key=datastore_client.key('stop-time'))
-                #entity['timestamp'] = 0
                 datastore_client.put(entity)
                 entity_key_cache.add(name, entity.key)
                 entity_key = entity.key
@@ -652,15 +653,15 @@ def handle_stop_entities(datastore_client, data):
                 entity_key_cache.add(name, results[0].key)
                 entity_key = results[0].key
 
-        entity = datastore_client.get(entity_key)
-
-        if entity is None:
-                print(f'* invalid entity key: {entity_key}, discarding stop time entity and key')
+        if entity_key is None:
+                print(f'* no entity key, discarding stop time entity and key')
                 entity_key_cache.remove(name)
-                return
+                continue
+
+        entity = datastore.Entity(key=entity_key)
 
         entity.update(e)
-        datastore_client.put(entity)
+        batch_writer.add(entity)
 
     return 'ok'
 
@@ -770,6 +771,7 @@ def handle_pos_update(datastore_client, data):
         datastore_client (obj): reference to google cloud datastore instance.
         data (dict): details of the position update (lat, long, speed, heading, etc).
     """
+    #then = 0
 
     agencyID = data.get('agency-id', None)
     vehicleID = data.get('vehicle-id', None)
@@ -787,11 +789,13 @@ def handle_pos_update(datastore_client, data):
     data['rcv-timestamp'] = int(time.time())
 
     if data.get('trip-id', None) is None:
+        #then = time.time()
         trip_id = get_trip_id(
             datastore_client,
             agencyID,
             vehicleID
         )
+        #print(f'- profile get_trip_id(): {time.time() - then} ms')
         print(f'- trip_id: {trip_id}')
 
         if trip_id is None:
@@ -814,7 +818,9 @@ def handle_pos_update(datastore_client, data):
         query.add_filter('vehicle-id', '=', vehicleID)
         query.order = ['-timestamp']
 
+        #then = time.time()
         results = list(query.fetch())
+        #print(f'- profile query.fetch(): {time.time() - then} seconds')
 
         if len(results) == 0:
             entity = datastore.Entity(key=datastore_client.key('current-position'))
@@ -826,19 +832,18 @@ def handle_pos_update(datastore_client, data):
             entity_key_cache.add(name, results[0].key)
             entity_key = results[0].key
 
-    entity = datastore_client.get(entity_key)
-
-    if entity is None:
-            print(f'* invalid entity key: {entity_key}, discarding pos update and key')
+    if entity_key is None:
+            print(f'* no entity key, discarding pos update and key')
             entity_key_cache.remove(name)
-            result['status'] = 'invalid entity key'
+            result['status'] = 'no entity key'
             return result
 
-    if timestamp <= entity['timestamp']:
-            print(f'* pos update not newer than last update, discarding')
-            return
-
+    entity = datastore.Entity(key=entity_key)
     entity.update(data)
-    datastore_client.put(entity)
+
+    #then = time.time()
+    batch_writer.add(entity)
+
+    #print(f'- profile datastore_client.put(): {time.time() - then} seconds')
 
     return result

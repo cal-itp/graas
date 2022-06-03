@@ -13,11 +13,16 @@ from google.cloud import datastore
 from elliptic import elliptic_curve
 from google.cloud import ndb
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # local imports
 import util
 import keygen
 
 LOCAL_SERVER_URL = 'https://127.0.0.1:8080/'
+thread_lock = threading.Lock()
+datastore_client = datastore.Client()
 
 class agency(ndb.Model):
     agencyid = ndb.StringProperty('agency-id')
@@ -49,25 +54,46 @@ class test_agency:
 		print(f'id_ecdsa: {id_ecdsa}')
 		self.id_ecdsa = id_ecdsa
 
-	def startService(self, domain, intervalTime, intervalVariation, numRepeats):
-		print(f'starting thread for agency {self.id}')
+	def variable_sleep(self, intervalTime, intervalVariation):
+		intervalFloor = intervalTime - intervalVariation
+		intervalCeiling = intervalTime + intervalVariation
+		sleepTime = random.uniform(intervalFloor, intervalCeiling)
+		time.sleep(sleepTime)
+
+	def startVehicle(self, domain, intervalTime, intervalVariation, numRepeats, vehicleid):
 		global post_metadata_list
 
+		time.sleep(intervalTime * random.uniform(0, 1))
+		session = requests.Session()
+
 		for i in range(numRepeats):
+			data = self.post(session, domain, vehicleid, util.get_current_time_millis())
 
-			for vehicleid in self.vehicleList:
-				post_metadata_list.append(self.post(domain, vehicleid))
+			if data.startTime != 0:
+				thread_lock.acquire()
+				post_metadata_list.append(data)
+				thread_lock.release()
 
-			intervalFloor = intervalTime - intervalVariation
-			intervalCeiling = intervalTime + intervalVariation
-			sleepTime = random.uniform(intervalFloor, intervalCeiling)
-			time.sleep(sleepTime)
+			self.variable_sleep(intervalTime, intervalVariation)
 
-	def post(self, domain, vehicleid):
+	def startService(self, domain, intervalTime, intervalVariation, numRepeats):
+		print(f'starting thread for agency {self.id}')
+
+		threads = list()
+
+		for vehicleid in self.vehicleList:
+			t = threading.Thread(target=self.startVehicle, args=(domain, intervalTime, intervalVariation, numRepeats, vehicleid))
+			t.start()
+			threads.append(t)
+
+		for t in threads:
+			t.join()
+
+	def post(self, session, domain, vehicleid, timestamp):
 		print('post()')
 		endpoint = 'new-pos-sig'
 		url = domain + endpoint
-		postTime = util.get_current_time_millis()
+		postTime = timestamp
 		post_data = {
 	        "uuid": "stresstest",
 	        "agent":
@@ -94,15 +120,18 @@ class test_agency:
 			'sig': base64
 		}
 		print(f'posting update for: {self.id}')
-		response = requests.post(url, json = message, verify=False)
-		responseTime = response.elapsed.total_seconds()
+		then = time.time()
+		response = session.post(url, json = message, verify=False)
+		# 'elapsed' only measures time until response headers are parsed, per https://stackoverflow.com/a/30445723/7396017
+		# responseTime = response.elapsed.total_seconds()
+		responseTime = time.time() - then
 		statusCode = response.status_code
 		responseJson = response.json()
 		status = responseJson['status']
 		print(json.dumps(responseJson))
 		print(f'status: {status}')
-		print(f'response time: {str(responseTime)}')
-		print(f'status code: {str(statusCode)}')
+		print(f'response time: {responseTime}')
+		print(f'status code: {statusCode}')
 		return post_metadata(self.id, vehicleid, postTime, responseTime, statusCode, status)
 
 	def clean(self):
@@ -151,18 +180,7 @@ def main(argv):
 	data = json.load(f)
 	f.close()
 
-	if data.get('use-production-server', False):
-		productionServerURL = data.get('production-server-url', None)
-
-		if productionServerURL != None:
-			domain = productionServerURL
-
-		else:
-			print('* error: no production URL provided')
-			exit(1)
-
-	else:
-		domain = LOCAL_SERVER_URL
+	domain = data.get('server-url', LOCAL_SERVER_URL)
 
 	# Load attributes from json. If absent, use default values defined above
 	agencyCount = data.get('agency-count', agencyCount)
@@ -203,16 +221,30 @@ def main(argv):
 		threads.append(x)
 
 	#    Start each thread
+	then = time.time()
 	for x in threads:
 		x.start()
 
 	#    Wait for all of them to finish
 	for x in threads:
 		x.join()
+	totalNetRuntime = time.time() - then
 
-	# 4. Clean up file tree & remove keys from gcloud
+	# 4. Clean up file tree & remove agency data from gcloud
+	keys = []
+	session = requests.Session()
+
 	for agency in agencyList:
+		agency.post(session, domain, "x", 0)
 		agency.clean()
+
+		query = datastore_client.query(kind='current-position')
+		query.add_filter('agency-id', '=', agency.id)
+		positions = query.fetch()
+		for pos in positions:
+			keys.append(pos.key)
+
+	datastore_client.delete_multi(keys)
 	shutil.rmtree(dirName)
 
 	# Reporting from local logging. The process of looping through logs and incrementing values is a little janky. Could be improved with a better data stracture.
@@ -263,7 +295,6 @@ def main(argv):
 	gcloudUpdates = 0
 	# Reporting from gcloud
 	for agency in agencyList:
-		datastore_client = datastore.Client()
 		query = datastore_client.query(kind='position')
 		query.add_filter('agency-id', '=', agency.id)
 		query.add_filter('timestamp', '>=', startTime)
@@ -271,14 +302,15 @@ def main(argv):
 		gcloudUpdates += len(list(positions))
 
 	print("------Summary------")
-	print(f'- Initiated: {str(len(post_metadata_list))}')
-	print(f'- Accepted: {str(successes)}')
-	print(f'- In gcloud: {str(gcloudUpdates)}')
-	print(f'- Verification issues: {str(verificationIssues)}')
-	print(f'- HTTP issues: {str(httpIssues)}')
-	print(f'- Avg response time: {str(round(totalResponseTime/updates,3))} secs')
-	print(f'- Min response time: {str(round(minResponseTime,3))} secs')
-	print(f'- Max response time: {str(round(maxResponseTime,3))} secs')
+	print(f'- Initiated: {len(post_metadata_list)}')
+	print(f'- Accepted: {successes}')
+	print(f'- In gcloud: {gcloudUpdates}')
+	print(f'- Verification issues: {verificationIssues}')
+	print(f'- HTTP issues: {httpIssues}')
+	print(f'- Avg response time: {totalResponseTime/updates:.3f} secs')
+	print(f'- Min response time: {minResponseTime:.3f} secs')
+	print(f'- Max response time: {maxResponseTime:.3f} secs')
+	print(f'- Total net runtime (updates only, not including setup and teardown:\n{totalNetRuntime:.3f} secs')
 
 if __name__ == '__main__':
    main(sys.argv[1:])
