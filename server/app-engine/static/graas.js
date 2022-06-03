@@ -736,7 +736,7 @@ function positionCallback() {
     }
 }
 
-function handleGPSUpdate(position) {
+async function handleGPSUpdate(position) {
     util.log('handleGPSUpdate()');
     let uuid = getUUID();
     let lat = 0;
@@ -801,10 +801,32 @@ function handleGPSUpdate(position) {
     //var data_str = JSON.stringify(data);
     //util.log('- data_str: ' + data_str);
 
-    util.signAndPost(data, signatureKey, '/new-pos-sig', document);
+    let response = await util.signAndPost(data, signatureKey, '/new-pos-sig');
+
+    if (!response.ok) {
+        let p = document.getElementById('server-response');
+        p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
+        util.log('server response: ' + response.status + ' ' + response.statusText);
+    } else {
+
+        let p = document.getElementById('last-update');
+        let now = new Date();
+        let hour = now.getHours();
+        let ampm = hour >= 12 ? "PM" : "AM";
+
+        if (hour > 12) hour -= 12;
+        if (hour === 0) hour = 12;
+
+        let time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
+
+        p.innerHTML = 'Last update: ' + time;
+
+        p = document.getElementById('server-response');
+        p.innerHTML = 'Server response: ok';
+    }
 }
 
-function initializeCallback(agencyData) {
+async function initializeCallback(agencyData) {
     let pem = agencyData.pem;
 
     let i1 = pem.indexOf(PEM_HEADER);
@@ -831,55 +853,59 @@ function initializeCallback(agencyData) {
     util.log("- keyType: " + keyType);
     // util.log("- keyLength: " + keyLength);
 
-    let key = atob(b64);
+    let b = atob(b64);
     // util.log("- key.length: " + key.length);
 
-    const binaryDer = util.str2ab(key);
+    const binaryDer = util.str2ab(b);
+    try{
+        let key = await crypto.subtle.importKey(
+            "pkcs8",
+            binaryDer,
+            keyType === "RSA"
+            ? {
+                name: "RSASSA-PKCS1-v1_5",
+                modulusLength: keyLength,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256",
+            }
+            : {
+                name: "ECDSA",
+                namedCurve: "P-256"
+            },
+            false,
+            ["sign"]
+        )
 
-    crypto.subtle.importKey(
-        "pkcs8",
-        binaryDer,
-        keyType === "RSA"
-        ? {
-            name: "RSASSA-PKCS1-v1_5",
-            modulusLength: keyLength,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: "SHA-256",
-        }
-        : {
-            name: "ECDSA",
-            namedCurve: "P-256"
-        },
-        false,
-        ["sign"]
-    ).then(function(key) {
         util.log("- key.type: " + key.type);
         signatureKey = key;
 
         let str = 'hello ' + Math.floor(Date.now() / 1000);
 
-        util.sign(str, signatureKey).then(function(buf) {
-            let sig = btoa(util.ab2str(buf));
+        let buf = await util.sign(str, signatureKey)
 
-            let hello = {
-                msg: str,
-                sig: sig
-            };
+        let sig = btoa(util.ab2str(buf));
 
-            if (agencyData.id) {
-                hello.id = agencyData.id;
-            }
+        let hello = {
+            msg: str,
+            sig: sig
+        };
 
-            util.log("- hello: " + JSON.stringify(hello));
+        if (agencyData.id) {
+            hello.id = agencyData.id;
+        }
 
-            util.apiCall(hello, '/hello', agencyIDCallback);
-        });
-    }).catch(function(e) {
-      util.log('*** initializeCallback() error: ' + e.message);
-      localStorage.removeItem("lat-long-pem");
-      alert("We've experienced an error and are refreshing the page. Please scan again");
-      window.location.reload();
-  });
+        // util.log("- hello: " + JSON.stringify(hello));
+
+        let response = await util.apiCall(hello, '/hello');
+        util.log("- response: " + JSON.stringify(response));
+        agencyIDCallback(response);
+
+    } catch(e){
+          util.log('*** initializeCallback() error: ' + e.message);
+          localStorage.removeItem("lat-long-pem");
+          alert("We've experienced an error and are refreshing the page. Please scan again");
+          window.location.reload();
+    }
 }
 
 function agencyIDCallback(response) {

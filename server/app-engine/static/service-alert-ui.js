@@ -242,7 +242,7 @@ function resetCanvas(){
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 }
 
-function deleteAlert(){
+async function deleteAlert(){
   // util.log("deleteAlert()");
 
   let data = {
@@ -260,8 +260,13 @@ function deleteAlert(){
     description: selectedAlert.description
   };
 
-  util.signAndPost(data, signatureKey, '/delete-alert', document);
-  alert("Alert deleted");
+  let response = await util.signAndPost(data, signatureKey, '/delete-alert');
+  util.log("response: " + JSON.stringify(response));
+    if (response.status === 'ok') {
+    alert("Alert deleted");
+  } else {
+    alert("Alert failed to delete");
+  }
   resetCanvas();
   menu();
 }
@@ -427,10 +432,15 @@ async function postServiceAlert() {
       Object.assign(data, urlData)
     }
 
-    util.signAndPost(data, signatureKey, '/post-alert', document);
+    let response = await util.signAndPost(data, signatureKey, '/post-alert');
+    util.log("response: " + JSON.stringify(response));
 
-    // Consider actually confirming send status
-    alert("Alert posted successfully");
+    if (response.status === 'ok') {
+      alert("Alert posted successfully");
+    } else {
+      alert("Alert failed to post");
+    }
+
     loadAlerts();
     menu();
     // resetFields();

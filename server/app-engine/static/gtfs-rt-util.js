@@ -265,86 +265,47 @@ if (!fetch) {
         return json;
     }
 
-    exports.apiCall = function(data, url, callback, document) {
-        //this.log("apiCall()");
+    exports.apiCall = async function(data, url) {
+        // this.log("apiCall()");
 
         let body = JSON.stringify(data);
         // this.log("- body: " + body);
 
         let that = this;
-
-        this.timedFetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: body
-        })
-        .then(function(response) {
-            if (!response.ok) {
-                if (document) {
-                    try {
-                        let p = document.getElementById('server-response');
-                        p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
-                    } catch(e) {
-                        console.log(e.message);
-                    }
-                }
-                that.log('server response: ' + response.status + ' ' + response.statusText);
-            } else {
-                response.json().then(callback);
-            }
-        })
-        .catch((error) => {
+        try{
+            let response = await this.timedFetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            });
+            return await response.json();
+        } catch(error){
             that.log('*** fetch() error: ' + error);
-        });
+        }
     };
 
-    exports.signAndPost = function(data, signatureKey, url, document) {
-        this.log("util.signAndPost()");
+    exports.signAndPost = async function(data, signatureKey, url) {
+        // this.log("util.signAndPost()");
         let data_str = JSON.stringify(data);
         // this.log('- data_str: ' + data_str);
         // this.log('- document: ' + document);
 
         let that = this;
 
-        this.sign(data_str, signatureKey).then(function(buf) {
-            let sig = btoa(that.ab2str(buf));
-            // that.log('- sig: ' + sig);
+        let buf = await this.sign(data_str, signatureKey)
+        let sig = btoa(that.ab2str(buf));
+        // that.log('- sig: ' + sig);
 
-            let msg = {
-                data: data,
-                sig: sig
-            };
+        let msg = {
+            data: data,
+            sig: sig
+        };
 
-            that.log('- msg: ' + JSON.stringify(msg));
+        that.log('- msg: ' + JSON.stringify(msg));
 
-            that.apiCall(msg, url, function(response) {
-                if (document) {
-                    try {
-                        let p = document.getElementById('last-update');
-                        let now = new Date();
-                        let hour = now.getHours();
-                        let ampm = hour >= 12 ? "PM" : "AM";
-
-                        if (hour > 12) hour -= 12;
-                        if (hour === 0) hour = 12;
-
-                        let time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
-
-                        p.innerHTML = 'Last update: ' + time;
-
-                        p = document.getElementById('server-response');
-                        p.innerHTML = 'Server response: ok';
-                    } catch(e) {
-                        console.log(e.message);
-                    }
-                }
-
-                that.log('server response: ok');
-                //that.log(`- response: ${JSON.stringify(response)}`);
-            });
-        });
+        return await that.apiCall(msg, url);
     };
 
      exports.addSelectOption = function(sel, text, disabled) {
