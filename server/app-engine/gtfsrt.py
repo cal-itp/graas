@@ -268,7 +268,7 @@ def get_alert_feed(datastore_client, agency, include_future_alerts):
         feed.header.CopyFrom(header)
 
         count = 1
-
+        print('- alerts to add:')
         for item in results:
             if alert_is_current(item, include_future_alerts):
                 print('-- ' + str(item))

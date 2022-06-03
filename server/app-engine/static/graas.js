@@ -894,7 +894,7 @@ async function initializeCallback(agencyData) {
             hello.id = agencyData.id;
         }
 
-        // util.log("- hello: " + JSON.stringify(hello));
+        util.log("- hello: " + JSON.stringify(hello));
 
         let response = await util.apiCall(hello, '/hello');
         util.log("- response: " + JSON.stringify(response));
