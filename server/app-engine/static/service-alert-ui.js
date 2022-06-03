@@ -1,5 +1,5 @@
 
-const serverURL = "https://127.0.0.1:8080/";
+const serverURL = document.location.origin;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
 const canvas = document.getElementById('canvas');
@@ -106,15 +106,16 @@ async function loadFiles(){
   loadAlerts();
 }
 
-function initialize(){
+async function initialize(){
   util.log("initialize()");
   let str = localStorage.getItem("app-data") || "";
 
   if (!str) {
-    util.showElement("keyEntryModal");
+    util.handleModal("keyEntryModal");
   }
   else {
-    completeInitialization(util.parseAgencyData(str));
+    let agencyData = await util.parseAgencyData(str);
+    completeInitialization(agencyData);
   }
 }
 
@@ -173,7 +174,7 @@ async function getPB(url){
 
 async function loadAlerts(){
   util.log("loadAlerts()");
-  let rtFeedURL = `${serverURL}service-alerts.pb?agency=${agencyID}&include_future_alerts=True&nocache=${(new Date()).getTime()}`;
+  let rtFeedURL = `${serverURL}/service-alerts.pb?agency=${agencyID}&include_future_alerts=True&nocache=${(new Date()).getTime()}`;
   util.log("url: " + rtFeedURL)
   feed = await getPB(rtFeedURL);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
@@ -297,7 +298,7 @@ function alertDetailView(){
   });
 }
 
-function handleKey(id) {
+async function handleKey(id) {
   util.log('handleKey()');
   util.log('- id: ' + id);
 
@@ -321,11 +322,12 @@ function handleKey(id) {
       return;
   }
 
-  util.dismissModal();
+  // util.dismissModal();
   p.value = "";
 
   localStorage.setItem('app-data', value);
-  completeInitialization(util.parseAgencyData(value));
+  let agencyData = await util.parseAgencyData(value);
+  completeInitialization(agencyData);
 }
 
 function populateDropdowns(){
