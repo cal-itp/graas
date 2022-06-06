@@ -179,7 +179,7 @@ def make_trip_update(list):
 
     return entity
 
-def alert_is_current(alert, include_future_alerts):
+def alert_is_current(alert, service_alert_ui):
     print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False
@@ -200,8 +200,8 @@ def alert_is_current(alert, include_future_alerts):
             return False
     # Alert starts in the future...
     else:
-        # ...is current only if include_future_alerts passed as true (for service-alert ui)
-        if include_future_alerts == 'True':
+        # ...is current only if service_alert_ui passed as true
+        if service_alert_ui == 'True':
             return True
         else:
             return False
@@ -234,13 +234,13 @@ def purge_old_alerts(datastore_client):
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
 
-def get_alert_feed(datastore_client, agency, include_future_alerts):
+def get_alert_feed(datastore_client, agency, service_alert_ui):
     """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
 
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
-        include_future_alerts: whether or not to include alerts that are not yet in affect. Defaults to false.
+        service_alert_ui: whether service alert ui is being used. defaults to false.
 
     Returns:
         obj: alert feed in protobuf format
@@ -250,8 +250,10 @@ def get_alert_feed(datastore_client, agency, include_future_alerts):
     print('- agency: ' + agency)
 
     name = agency + '-alert-feed'
-    # alert_feed = cache.get(name)
-    alert_feed = None
+    if not service_alert_ui:
+        alert_feed = cache.get(name)
+    else:
+        alert_feed = None
 
     if alert_feed is None:
         purge_old_alerts(datastore_client)
@@ -272,7 +274,7 @@ def get_alert_feed(datastore_client, agency, include_future_alerts):
         count = 1
         print('- alerts to add:')
         for item in results:
-            if alert_is_current(item, include_future_alerts):
+            if alert_is_current(item, service_alert_ui):
                 print('-- ' + str(item))
                 feed.entity.append(make_alert(count, item))
                 count += 1

@@ -112,13 +112,13 @@ def service_alerts():
 
     # By default the endpoint will only provide alerts that are in affect now.
     # For the agency-facing service alert UI, we have this option to include future alerts as well
-    include_future_alerts = request.args.get("include_future_alerts") or "False"
-    print('- include_future_alerts: ' + include_future_alerts)
+    service_alert_ui = request.args.get("service_alert_ui") or "False"
+    print('- service_alert_ui: ' + service_alert_ui)
 
     feed = gtfsrt.get_alert_feed(
         util.datastore_client,
         agency,
-        include_future_alerts
+        service_alert_ui
     )
 
     return Response(feed, mimetype='application/octet-stream')

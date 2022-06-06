@@ -339,20 +339,30 @@ if (!fetch) {
             sel.remove(i);
         }
     }
-     exports.populateList = function(id, str, list) {
-        this.log("populateList()");
+     exports.populateSelectOptions = function(id, str, list) {
+        this.log("populateSelectOptions()");
         // this.log("str: " + str);
         let p = document.getElementById(id);
         this.addSelectOption(p, str, true);
 
         list.forEach(el => this.addSelectOption(p, el, false));
 
-        this.setupListHeader(p);
+        this.setupSelectHeader(p);
     }
-    exports.setupListHeader = function(listElem) {
+    exports.setupSelectHeader = function(listElem) {
         listElem.selectedIndex = 0;
         listElem.options[0].value = "disabled";
         listElem.options[0].disabled = true;
+    }
+
+    exports.addToUL = function(ul, str){
+      let li = document.createElement("li");
+      li.appendChild(document.createTextNode(str));
+      ul.appendChild(li);
+    }
+
+    exports.clearUL = function(ul){
+        ul.innerHTML = '';
     }
 
     exports.parseAgencyData = function(str) {

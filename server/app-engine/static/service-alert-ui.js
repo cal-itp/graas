@@ -174,7 +174,7 @@ async function getPB(url){
 
 async function loadAlerts(){
   util.log("loadAlerts()");
-  let rtFeedURL = `${serverURL}/service-alerts.pb?agency=${agencyID}&include_future_alerts=True&nocache=${(new Date()).getTime()}`;
+  let rtFeedURL = `${serverURL}/service-alerts.pb?agency=${agencyID}&service_alert_ui=True&nocache=${(new Date()).getTime()}`;
   util.log("url: " + rtFeedURL)
   feed = await getPB(rtFeedURL);
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
@@ -278,22 +278,20 @@ function alertDetailView(){
   util.handleModal("alertDetailModal");
 
   let ul = document.getElementById("affected-entities");
+  util.clearUL(ul);
   alertEntities.forEach((value, key) => {
     if(selectedAlert[key] !== ""){
       let str = `${value}: ${selectedAlert[key]}`
-      let li = document.createElement("li");
-      li.appendChild(document.createTextNode(str));
-      ul.appendChild(li);
+      util.addToUL(ul, str);
     }
   });
 
   ul = document.getElementById("alert-detail-list");
+  util.clearUL(ul);
   alertFields.forEach((value, key) => {
     if(selectedAlert[key] !== ""){
       let str = `${value}: ${selectedAlert[key]}`
-      let li = document.createElement("li");
-      li.appendChild(document.createTextNode(str));
-      ul.appendChild(li);
+      util.addToUL(ul, str);
     }
   });
 }
@@ -335,18 +333,18 @@ function populateDropdowns(){
   if(fileMap.get("route_types").length === 1){
     util.hideElement("route-type");
   } else {
-    util.populateList("route-type-select", "Select a route type", fileMap.get("route_types"));
+    util.populateSelectOptions("route-type-select", "Select a route type", fileMap.get("route_types"));
   }
   if(fileMap.get("agency").length === 1){
     util.hideElement("agency");
   } else {
-    util.populateList("agency-select", "Select an agency", getItems("agency", "agency_id"));
+    util.populateSelectOptions("agency-select", "Select an agency", getItems("agency", "agency_id"));
   }
-  util.populateList("cause-select", "Select an alert cause", Array.from(causes.values()));
-  util.populateList("effect-select", "Select an alert effect", Array.from(effects.values()));
-  util.populateList("route-select", "Select a Route ID", getItems("routes", "route_id"));
-  util.populateList("trip-select", "Select a Trip ID", getItems("trips", "trip_id"));
-  util.populateList("stop-select", "Select a Stop ID", getItems("stops", "stop_id"));
+  util.populateSelectOptions("cause-select", "Select an alert cause", Array.from(causes.values()));
+  util.populateSelectOptions("effect-select", "Select an alert effect", Array.from(effects.values()));
+  util.populateSelectOptions("route-select", "Select a Route ID", getItems("routes", "route_id"));
+  util.populateSelectOptions("trip-select", "Select a Trip ID", getItems("trips", "trip_id"));
+  util.populateSelectOptions("stop-select", "Select a Stop ID", getItems("stops", "stop_id"));
 }
 
 function getItems(type, columnName){

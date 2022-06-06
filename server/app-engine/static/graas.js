@@ -979,7 +979,7 @@ function gotConfigData(data, agencyID, arg) {
         }
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
-        util.populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
+        util.populateSelectOptions(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
     }
 
     configMatrix.setLoaded(name, true);
@@ -1123,16 +1123,9 @@ function populateTripList(tripIDMap = tripIDLookup) {
         addSelectOption(p, key, !value);
     }
 
-    setupListHeader(p);
-
+    util.setupSelectHeader(p);
     util.hideElement(LOADING_TEXT_ELEMENT);
     util.showElement(ALL_DROPDOWNS);
-}
-
-function setupListHeader(listElem) {
-    listElem.selectedIndex = 0;
-    listElem.options[0].value = "disabled";
-    listElem.options[0].disabled = true;
 }
 
 function configComplete() {
