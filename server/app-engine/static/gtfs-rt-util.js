@@ -353,4 +353,13 @@ if (!fetch) {
             });
         });
     };
+    exports.hhmmssToSeconds = function(str){
+        this.log("str: " + str);
+        arr = str.split(':');
+        seconds = arr[0] * 60 * 60;
+        seconds += arr[1] * 60;
+        seconds += arr[2];
+        this.log("seconds: " + seconds);
+        return seconds;
+    }
 }(typeof exports === 'undefined' ? this.util = {} : exports));
