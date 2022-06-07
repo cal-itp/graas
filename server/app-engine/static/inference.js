@@ -11,7 +11,7 @@ var stops;
 var calendarMap;
 var lastCandidateFlush;
 var stopTimeMap;
-
+var shapeMap;
 
 function initialize() {
     util.log("initialize()")
@@ -33,13 +33,14 @@ function initialize() {
     stops = getStops();
     util.log(`-- stops: ${stops}`);
     preloadStopTimes();
-
+    preloadShapes();
     //     self.preload_shapes()
 
     //     self.compute_shape_lengths()
     //     self.block_map = {}
+    const tripSet = new Set();
 
-    //     trip_set = set()
+
     // set up area and grid
     // self.area = Area()
     // self.populateBoundingBox(self.area)
@@ -122,49 +123,57 @@ async function preloadStopTimes(){
 
         let slist = stopTimeMap[trip_id];
 
-        if (slist === null){
+        if (util.isNullOrUndefined(slist)){
             slist = [];
             stopTimeMap[trip_id] = slist;
         }
 
         let entry = {'arrival_time': util.hhmmssToSeconds(arrival_time), 'stop_id': stop_id, 'stop_sequence': stop_sequence}
-        sdt = r.get('shape_dist_traveled')
 
-        if (sdt !== null && sdt.length > 0){
+        let sdt = r['shape_dist_traveled'];
+
+        if (!util.isNullOrUndefined(sdt) && sdt.length > 0){
             entry['traveled'] = sdt;
         }
-        print(`- entry: ${entry}`)
-        slist.push(entry)
+        util.log(`- entry: ${entry}`)
+        sxlist.push(entry)
     }
 }
-// def __init__(self, path, url, subdivisions, dow = -1, epoch_seconds = -1):
-//     if path[-1] != '/':
-//         path += '/'
 
-//     self.trip_candidates = {}
-//     self.last_candidate_flush = time.time()
+async function preloadShapes(){
+    util.log('preloadShapes()');
+    let shapeMap = {};
+    rows = await getFile("shapes.txt");
 
+    for (let r of rows){
+        // util.log("JSON.stringify(r): " + JSON.stringify(r));
 
+        let shape_id = r['shape_id'];
+        let lat = r['shape_pt_lat'];
+        let lon = r['shape_pt_lon'];
 
+        let plist = shapeMap[shape_id];
 
-//     if dow < 0:
-//         dow = datetime.datetime.today().weekday()
-//     util.debug(f'- dow: {dow}')
+        if (util.isNullOrUndefined(plist)){
+            plist = [];
+            shapeMap[shape_id] = plist;
+        }
+        let file_offset = null;
+        let entry = {'lat': lat, 'lon': lon, 'file_offset': file_offset}
+        let sdt = r['shape_dist_traveled'];
 
-//     if epoch_seconds < 0:
-//         epoch_seconds = util.get_epoch_seconds()
-//     util.debug(f'+ epoch_seconds: {datetime.datetime.fromtimestamp(epoch_seconds)}')
+        if (util.isNullOrUndefined(sdt)){
+            entry['traveled'] = sdt;
+        }
+        util.log(`- entry: ${entry}`)
+        plist.push(entry)
+    }
+}
 
-//     self.stops = self.get_stops()
-//     #util.debug(f'-- stops: {stops}')
-
-//     self.preload_stop_times()
-//     self.preload_shapes()
 
 //     self.compute_shape_lengths()
 //     self.block_map = {}
 
-//     trip_set = set()
 
 //     with platform.get_text_file_contents(path + '/trips.txt') as f:
 //         reader = csv.DictReader(f)
