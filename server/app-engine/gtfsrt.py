@@ -453,20 +453,17 @@ def delete_alert(datastore_client, alert):
     query.add_filter('description', '=', alert["description"])
     query.add_filter('time_start', '=', alert["time_start"])
     query.add_filter('time_stop', '=', alert["time_stop"])
+    if not util.is_null_or_empty(alert["url"]):
+        query.add_filter('url', '=', alert["url"])
     if not util.is_null_or_empty(alert["stop_id"]):
-        print("filtering for stop_id...")
         query.add_filter('stop_id', '=', alert["stop_id"])
     if not util.is_null_or_empty(alert["trip_id"]):
-        print("filtering for trip_id...")
         query.add_filter('trip_id', '=', alert["trip_id"])
     if not util.is_null_or_empty(alert["route_id"]):
-        print("filtering for route_id...")
         query.add_filter('route_id', '=', alert["route_id"])
     if not util.is_null_or_empty(alert["agency_id"]):
-        print("filtering for agency_id...")
         query.add_filter('agency_id', '=', alert["agency_id"])
     if not util.is_null_or_empty(alert["route_type"]):
-        print("filtering for route_type...")
         query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))
     key_list = []

@@ -73,13 +73,15 @@ const alertFields = new Map([
   ['description','Description'],
   ['start_time','Start time'],
   ['stop_time','Stop time'],
+  ['url','URL']
 ]);
 
 const BASE_URL = 'https://storage.googleapis.com/graas-resources/gtfs-archive'
 const FONT_SIZE = 12;
 const FONT_NORMAL = `${FONT_SIZE}px ARIAL`;
 const FONT_BOLD = `bold ${FONT_SIZE}px ARIAL`;
-const ALERT_ROWS = 8;
+const ALERT_HEADERS = 1;
+const REQUIRED_ALERT_FIELDS = 6;
 const SPACING = 10;
 const BOX_WIDTH = 200;
 
@@ -208,7 +210,7 @@ async function loadAlerts(){
       alertObject.stop_time = (new Date(alertObject.time_stop * 1000)).toLocaleString();
     }
     alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== "") + (alertObject.route_type !== 0)
-
+    alertObject.num_fields = REQUIRED_ALERT_FIELDS + (alertObject.url !== "")
     return alertObject;
   });
 }
@@ -264,7 +266,7 @@ async function deleteAlert(){
   let response = await util.signAndPost(data, signatureKey, '/delete-alert');
   let responseJson = await response.json();
   util.log("responseJson: " + JSON.stringify(responseJson));
-    if (responseJson.status === 'ok') {
+    if (response.ok) {
     alert("Alert deleted");
   } else {
     alert("Alert failed to delete");
@@ -433,7 +435,8 @@ async function postServiceAlert() {
       cause: cause,
       effect: effect,
       header: header,
-      description: description
+      description: description,
+      url: url
     };
 
     if(url !== null){
@@ -445,7 +448,7 @@ async function postServiceAlert() {
     let responseJson = await response.json();
     util.log("responseJson: " + JSON.stringify(responseJson));
 
-    if (responseJson.status === 'ok') {
+    if (response.ok) {
       alert("Alert posted successfully");
     } else {
       alert("Alert failed to post");
@@ -474,7 +477,7 @@ function createLayout(){
   for (let i=0; i<alerts.length; i++){
     alerts[i].y = yy;
     alerts[i].x = xx;
-    let textRows = ALERT_ROWS + alerts[i].num_entities;
+    let textRows = ALERT_HEADERS + alerts[i].num_entities + alerts[i].num_fields;
     let box_height = textRows * FONT_SIZE;
     maxBoxHeight = Math.max(box_height, maxBoxHeight);
     if(colNum < alertsPerRow){
@@ -516,7 +519,7 @@ function drawAlerts(){
     ctx.strokeStyle = "black";
     ctx.fillStyle = "white";
 
-    let rows = ALERT_ROWS + a.num_entities;
+    let rows = ALERT_HEADERS + a.num_entities + a.num_fields;
     let box_height = rows * FONT_SIZE;
     ctx.fillRect(a.x, a.y, BOX_WIDTH, box_height);
     ctx.rect(a.x, a.y, BOX_WIDTH, box_height);
@@ -525,7 +528,6 @@ function drawAlerts(){
     ctx.fillStyle = "black";
     ctx.textBaseline = "top";
     ctx.font = FONT_BOLD;
-
 
     let entityLines = [];
     alertEntities.forEach((value, key) => {
@@ -593,7 +595,7 @@ function objectContainsPoint(object, x, y){
     return (x > object.x
           && x < object.x + BOX_WIDTH
           && y > object.y
-          && y < object.y + (ALERT_ROWS + object.num_entities) * FONT_SIZE
+          && y < object.y + (ALERT_HEADERS + object.num_entities + object.num_fields) * FONT_SIZE
           )
 }
 
