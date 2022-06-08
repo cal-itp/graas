@@ -23,7 +23,15 @@ Clients can submit alert updates for individual feeds through the following endp
             "header": ...,      # summary
             "time_stamp": ...,  # when the message was created
             "time_start": ...,  # start of valid time period
-            "time_stop": ...    # end of valid time period
+            "time_stop": ...,   # end of valid time period
+            "url": ...,         # optional url containing more info on alert
+        # At least one of the following 5 must be included, to specify which "entities" the alert applies to:
+        # In order to omit, pass a null value or don't include at all
+            "agency_id": ...,   # specific sub-agency the alert applies to
+            "trip_id": ...,     # which trip the alert applies to
+            "stop_id": ...,     # which stop the alert applies to
+            "route_id": ...,    # which route the alert applies to
+            "route_type": ...   # which route type the alert applies to
         },
         "sig": ...              # base-64 encoded ECDSA signature of "data" object
     }
@@ -54,6 +62,9 @@ Consumers can retrieve current service alerts for an agency through the followin
 
     /service-alerts.pb?agency=MY-AGENCY-ID
 
+Authenticated agencies can retrieve current service alerts, without caching, through the following endpoint:
+    /service-alert-ui.pb
+
 Consumers can retrieve current vehicle positions for an agency through the following endpoints:
 
     /vehicle-positions.pb?agency=MY-AGENCY-ID
@@ -72,7 +83,13 @@ A web-based client for bulk-assigning GTFS blocks to vehicles is available at th
 
     /dispatch-ui
 
-*Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
+*Note that at first ever startup, client needs to be initialized by entering the agency ID and private key.*
+
+A web-based client for viewing, creating and deleting service alerts is available at this endpoint:
+
+    /service-alert-ui
+
+*Note that at first ever startup, client needs to be initialized by entering the agency ID and private key.*
 
 See how-to-run.txt in this folder for details on how to run the server both locally and in the cloud.
 
@@ -110,15 +127,38 @@ def service_alerts():
     if agency is None:
         return 'No agency given', 400
 
-    # By default the endpoint will only provide alerts that are in affect now.
-    # For the agency-facing service alert UI, we have this option to include future alerts as well
-    service_alert_ui = request.args.get("service_alert_ui") or "False"
-    print('- service_alert_ui: ' + service_alert_ui)
+    feed = gtfsrt.get_alert_feed(
+        util.datastore_client,
+        agency,
+        False
+    )
+
+    return Response(feed, mimetype='application/octet-stream')
+
+@app.route('/service-alert-ui.pb', methods=['POST'])
+def service_alerts_no_cache():
+    print('//service-alert-ui.pb')
+
+    data = request.json['data'];
+    sig = request.json['sig'];
+
+    data_str = json.dumps(data,separators=(',',':'))
+    print('- data_str: ' + data_str)
+
+    agency = data['agency_key'];
+    print('- agency: ' + agency)
+
+    verified = util.verify_signature(agency, data_str, sig)
+    print('- verified: ' + str(verified))
+
+    if not verified:
+        print('*** could not verify signature for new alert, discarding')
+        return Response('{"command": "/service-alert-ui.pb", "status": "unverified"}', mimetype='application/json')
 
     feed = gtfsrt.get_alert_feed(
         util.datastore_client,
         agency,
-        service_alert_ui
+        True
     )
 
     return Response(feed, mimetype='application/octet-stream')

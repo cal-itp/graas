@@ -798,15 +798,13 @@ async function handleGPSUpdate(position) {
     data['pos-timestamp'] = posTimestamp;
     data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
 
-    //var data_str = JSON.stringify(data);
-    //util.log('- data_str: ' + data_str);
-
     let response = await util.signAndPost(data, signatureKey, '/new-pos-sig');
+    let responseJson = await response.json();
 
     if (!response.ok) {
         let p = document.getElementById('server-response');
-        p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
-        util.log('server response: ' + response.status + ' ' + response.statusText);
+        p.innerHTML = 'Server response: ' + responseJson.status + ' ' + responseJson.statusText;
+        util.log('server response: ' + responseJson.status + ' ' + responseJson.statusText);
     } else {
 
         let p = document.getElementById('last-update');
@@ -897,8 +895,9 @@ async function initializeCallback(agencyData) {
         util.log("- hello: " + JSON.stringify(hello));
 
         let response = await util.apiCall(hello, '/hello');
-        util.log("- response: " + JSON.stringify(response));
-        agencyIDCallback(response);
+        let responseJson = await response.json();
+        util.log("- responseJson: " + JSON.stringify(responseJson));
+        agencyIDCallback(responseJson);
 
     } catch(e){
           util.log('*** initializeCallback() error: ' + e.message);

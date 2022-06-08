@@ -160,8 +160,10 @@ async function completeInitialization(agencyData) {
 }
 
 // Thanks to https://gavinr.com/protocol-buffers-protobuf-browser/
-async function getPB(url){
-  let response = await fetch(url);
+async function getPB(){
+  let data = {agency_key: agencyID};
+  let response = await util.signAndPost(data, signatureKey, `/service-alert-ui.pb`);
+
   if (response.ok) {
     const bufferRes = await response.arrayBuffer();
     const pbf = new Pbf(new Uint8Array(bufferRes));
@@ -174,9 +176,7 @@ async function getPB(url){
 
 async function loadAlerts(){
   util.log("loadAlerts()");
-  let rtFeedURL = `${serverURL}/service-alerts.pb?agency=${agencyID}&service_alert_ui=True&nocache=${(new Date()).getTime()}`;
-  util.log("url: " + rtFeedURL)
-  feed = await getPB(rtFeedURL);
+  feed = await getPB();
   util.log("JSON.stringify(feed): " + JSON.stringify(feed));
   alerts = await feed.map(feedObject => {
     let a = feedObject.alert;
@@ -262,8 +262,9 @@ async function deleteAlert(){
   };
 
   let response = await util.signAndPost(data, signatureKey, '/delete-alert');
-  util.log("response: " + JSON.stringify(response));
-    if (response.status === 'ok') {
+  let responseJson = await response.json();
+  util.log("responseJson: " + JSON.stringify(responseJson));
+    if (responseJson.status === 'ok') {
     alert("Alert deleted");
   } else {
     alert("Alert failed to delete");
@@ -369,7 +370,7 @@ function getValue(id){
 }
 
 async function postServiceAlert() {
-    util.log('handleGPSUpdate()');
+    util.log('postServiceAlert()');
     let timestamp = Math.floor(Date.now() / 1000);
     let cause = getValue("cause-select");
     let effect = getValue("effect-select");
@@ -411,6 +412,14 @@ async function postServiceAlert() {
       return;
     }
 
+    if(startTime === null){
+      startTime = 0;
+    }
+
+    if(stopTime === null){
+      stopTime = Number.MAX_VALUE;
+    }
+
     let data = {
       agency_key: agencyID,
       timestamp: timestamp,
@@ -433,9 +442,10 @@ async function postServiceAlert() {
     }
 
     let response = await util.signAndPost(data, signatureKey, '/post-alert');
-    util.log("response: " + JSON.stringify(response));
+    let responseJson = await response.json();
+    util.log("responseJson: " + JSON.stringify(responseJson));
 
-    if (response.status === 'ok') {
+    if (responseJson.status === 'ok') {
       alert("Alert posted successfully");
     } else {
       alert("Alert failed to post");

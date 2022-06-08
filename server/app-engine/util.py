@@ -262,3 +262,5 @@ def memory(obj):
 
     return size
 
+def is_null_or_empty(obj):
+    return obj == None or obj == '';

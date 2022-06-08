@@ -284,7 +284,7 @@ if (!fetch) {
                 },
                 body: body
             });
-            return await response.json();
+            return await response;
         } catch(error){
             that.log('*** fetch() error: ' + error);
         }

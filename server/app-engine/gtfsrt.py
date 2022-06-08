@@ -184,9 +184,7 @@ def alert_is_current(alert, service_alert_ui):
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
-    # No start or stop time listed. Is current until deleted.
-    if alert['time_start'] == 0 and (alert['time_stop'] == 0):
-        return True
+
     # Alert started in the past...
     if int(alert['time_start']) <= now:
         # ...with no stop time. Is current until deleted.
@@ -201,7 +199,7 @@ def alert_is_current(alert, service_alert_ui):
     # Alert starts in the future...
     else:
         # ...is current only if service_alert_ui passed as true
-        if service_alert_ui == 'True':
+        if service_alert_ui:
             return True
         else:
             return False
@@ -240,7 +238,7 @@ def get_alert_feed(datastore_client, agency, service_alert_ui):
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
-        service_alert_ui: whether service alert ui is being used. defaults to false.
+        service_alert_ui: whether service alert ui is being used.
 
     Returns:
         obj: alert feed in protobuf format
@@ -455,19 +453,19 @@ def delete_alert(datastore_client, alert):
     query.add_filter('description', '=', alert["description"])
     query.add_filter('time_start', '=', alert["time_start"])
     query.add_filter('time_stop', '=', alert["time_stop"])
-    if alert["stop_id"] != "":
+    if not util.is_null_or_empty(alert["stop_id"]):
         print("filtering for stop_id...")
         query.add_filter('stop_id', '=', alert["stop_id"])
-    if alert["trip_id"] != "":
+    if not util.is_null_or_empty(alert["trip_id"]):
         print("filtering for trip_id...")
         query.add_filter('trip_id', '=', alert["trip_id"])
-    if alert["route_id"] != "":
+    if not util.is_null_or_empty(alert["route_id"]):
         print("filtering for route_id...")
         query.add_filter('route_id', '=', alert["route_id"])
-    if alert["agency_id"] != "":
+    if not util.is_null_or_empty(alert["agency_id"]):
         print("filtering for agency_id...")
         query.add_filter('agency_id', '=', alert["agency_id"])
-    if alert["route_type"] != "":
+    if not util.is_null_or_empty(alert["route_type"]):
         print("filtering for route_type...")
         query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))
