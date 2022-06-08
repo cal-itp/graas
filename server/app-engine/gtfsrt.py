@@ -70,16 +70,16 @@ def make_translated_string(text):
 def make_entity_selector(item):
     selector = gtfs_realtime_pb2.EntitySelector()
 
-    if 'agency_id' in item:
+    if 'agency_id' in item and isinstance(item['agency_id'], str):
         selector.agency_id = item['agency_id']
 
-    if 'route_id' in item:
+    if 'route_id' in item and isinstance(item['route_id'], str):
         selector.route_id = item['route_id']
 
-    if 'stop_id' in item:
+    if 'stop_id' in item and isinstance(item['stop_id'], str):
         selector.stop_id = item['stop_id']
 
-    if 'trip_id' in item:
+    if 'trip_id' in item and isinstance(item['trip_id'], str):
         trip = gtfs_realtime_pb2.TripDescriptor()
         trip.trip_id = item['trip_id']
         selector.trip.CopyFrom(trip)
