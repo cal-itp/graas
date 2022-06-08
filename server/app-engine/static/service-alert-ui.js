@@ -260,7 +260,8 @@ async function deleteAlert(){
     cause: selectedAlert.cause,
     effect: selectedAlert.effect,
     header: selectedAlert.header,
-    description: selectedAlert.description
+    description: selectedAlert.description,
+    url: selectedAlert.url
   };
 
   let response = await util.signAndPost(data, signatureKey, '/delete-alert');
