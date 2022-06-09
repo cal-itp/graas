@@ -24,7 +24,6 @@ const dropdownsIDs = [
   "route-select",
   "trip-select",
   "stop-select",
-  "route-type-select",
   "agency-select"
 ];
 const textFieldIDs = [
@@ -63,8 +62,7 @@ const alertEntities = new Map([
   ['agency_id','AgencyID'],
   ['trip_id','TripID'],
   ['stop_id','StopID'],
-  ['route_id','RouteID'],
-  ['route_type','Route type']
+  ['route_id','RouteID']
 ]);
 const alertFields = new Map([
   ['cause','Cause'],
@@ -80,7 +78,7 @@ const BASE_URL = 'https://storage.googleapis.com/graas-resources/gtfs-archive'
 const FONT_SIZE = 12;
 const FONT_NORMAL = `${FONT_SIZE}px ARIAL`;
 const FONT_BOLD = `bold ${FONT_SIZE}px ARIAL`;
-const ALERT_HEADERS = 1;
+const ALERT_HEADERS = 2;
 const REQUIRED_ALERT_FIELDS = 6;
 const SPACING = 10;
 const BOX_WIDTH = 200;
@@ -98,12 +96,7 @@ async function loadFiles(){
     let text = await response.text();
     fileMap.set(fileName,csvToArray(text));
 
-    if(fileName === "routes"){
-      // Create route-types category by getting unique route_types from routes
-      let routeTypes = getItems("routes","route_type");
-      fileMap.set("route_types", [...new Set(routeTypes)]);
-    }
-    if(fileMap.size === files.length + 1) populateDropdowns();
+    if(fileMap.size === files.length) populateDropdowns();
   }
   loadAlerts();
 }
@@ -190,7 +183,6 @@ async function loadAlerts(){
       trip_id: (a.informed_entity[0].trip !== null ? a.informed_entity[0].trip.trip_id : ""),
       stop_id: a.informed_entity[0].stop_id,
       route_id: a.informed_entity[0].route_id,
-      route_type: (a.informed_entity[0].route_type !== 0 ? a.informed_entity[0].route_type !== 0 : ""),
       cause: causes.get(a.cause),
       effect: effects.get(a.effect),
       header: a.header_text.translation[0].text,
@@ -209,7 +201,7 @@ async function loadAlerts(){
     else{
       alertObject.stop_time = (new Date(alertObject.time_stop * 1000)).toLocaleString();
     }
-    alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== "") + (alertObject.route_type !== 0)
+    alertObject.num_entities = (alertObject.agency_id !== "") + (alertObject.route_id !== "") + (alertObject.stop_id !== "") + (alertObject.trip_id !== "")
     alertObject.num_fields = REQUIRED_ALERT_FIELDS + (alertObject.url !== "")
     return alertObject;
   });
@@ -256,7 +248,6 @@ async function deleteAlert(){
     trip_id: selectedAlert.trip_id,
     stop_id: selectedAlert.stop_id,
     route_id: selectedAlert.route_id,
-    route_type: selectedAlert.route_type,
     cause: selectedAlert.cause,
     effect: selectedAlert.effect,
     header: selectedAlert.header,
@@ -334,11 +325,6 @@ async function handleKey(id) {
 
 function populateDropdowns(){
   // util.log(fileMap);
-  if(fileMap.get("route_types").length === 1){
-    util.hideElement("route-type");
-  } else {
-    util.populateSelectOptions("route-type-select", "Select a route type", fileMap.get("route_types"));
-  }
   if(fileMap.get("agency").length === 1){
     util.hideElement("agency");
   } else {
@@ -386,11 +372,10 @@ async function postServiceAlert() {
     let agency_id = getValue("agency-select");
     let route_id = getValue("route-select");
     let trip_id = getValue("trip-select");
-    let route_type = getValue("route-type-select");
     let stop_id = getValue("stop-select");
     let url = getValue("url");
 
-    if(agency_id === null && route_id === null && stop_id === null && trip_id === null && route_type === null){
+    if(agency_id === null && route_id === null && stop_id === null && trip_id === null){
       alert("Please select at least one entity for your alert");
       return;
     }
@@ -432,7 +417,6 @@ async function postServiceAlert() {
       trip_id: trip_id,
       stop_id: stop_id,
       route_id: route_id,
-      route_type: route_type,
       cause: cause,
       effect: effect,
       header: header,

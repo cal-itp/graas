@@ -79,9 +79,6 @@ def make_entity_selector(item):
     if 'stop_id' in item and isinstance(item['stop_id'], str):
         selector.stop_id = item['stop_id']
 
-    if 'route_type' in item and isinstance(item['route_type'], str):
-        selector.stop_id = item['route_type']
-
     if 'trip_id' in item and isinstance(item['trip_id'], str):
         trip = gtfs_realtime_pb2.TripDescriptor()
         trip.trip_id = item['trip_id']
@@ -430,7 +427,7 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have associated agency, discarding')
         return
 
-    if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert  or 'route_type' in alert):
+    if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
 
@@ -463,8 +460,6 @@ def delete_alert(datastore_client, alert):
         query.add_filter('route_id', '=', alert["route_id"])
     if not util.is_null_or_empty(alert["agency_id"]):
         query.add_filter('agency_id', '=', alert["agency_id"])
-    if not util.is_null_or_empty(alert["route_type"]):
-        query.add_filter('route_type', '=', alert["route_type"])
     results = list(query.fetch(limit=20))
     key_list = []
 
