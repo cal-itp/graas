@@ -4,4 +4,4 @@ node_modules is no longer checked in, but can be regenerated with 'npm install' 
 
 Run tests:
 `NODE_PATH=../node/node_modules node test-position-update.js -u <server-url> -a <agency-name> -e <agency-key-env-variable-name>`
-`NODE_PATH=../node/node_modules node post-service-alert.js -u <server-url> -a <agency-name> -e <agency-key-env-variable-name>`
+`NODE_PATH=../node/node_modules node post-service-alerts.js -u <server-url> -a <agency-name> -e <agency-key-env-variable-name>`

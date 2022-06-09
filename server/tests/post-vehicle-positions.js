@@ -110,7 +110,7 @@ async function test(url, agencyID, ecdsaVarName) {
                 if (delta < 60) {
                     current = true;
                 } else {
-                    util.log(`** excessive delta: ${delta}, discarding entity ${entity.vehicle}`);
+                    util.log(`** excessive delta: ${delta}, discarding entity ${JSON.stringify(entity.vehicle)}`);
                 }
             }
 
