@@ -2,6 +2,7 @@
 const serverURL = document.location.origin;
 const PEM_HEADER = "-----BEGIN TOKEN-----";
 const PEM_FOOTER = "-----END TOKEN-----";
+const MAX_TIME_VALUE = 32503679999; // 12/31/2999
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 var canvasWidth = window.innerWidth;
@@ -24,7 +25,8 @@ const dropdownsIDs = [
   "route-select",
   "trip-select",
   "stop-select",
-  "agency-select"
+  "cause-select",
+  "effect-select"
 ];
 const textFieldIDs = [
   "header",
@@ -32,6 +34,12 @@ const textFieldIDs = [
   "url",
   "start-time",
   "stop-time"
+];
+const checkboxIDs = [
+  "route-checkbox",
+  "trip-checkbox",
+  "stop-checkbox",
+  "agency-checkbox"
 ];
 const causes = new Map([
   [1,'Unknown Cause'],
@@ -343,13 +351,17 @@ function getItems(type, columnName){
 
 function handleEntitySelection(checkbox){
   util.log("handleEntitySelection()");
-  let dropdownName = checkbox.id.slice(0,-8) + "select";
+  let dropdownName = getDropdownNameFromCheckbox(checkbox.id);
   if(checkbox.checked){
     util.showElement(dropdownName);
   } else {
     util.hideElement(dropdownName);
     util.resetDropdownSelection(dropdownName);
   }
+}
+
+function getDropdownNameFromCheckbox(checkbox){
+  return checkbox.slice(0,-8) + "select";
 }
 
 function getValue(id){
@@ -395,17 +407,17 @@ async function postServiceAlert() {
       return;
     }
 
-    if(stopTime < startTime){
+    if(stopTimeSecs < startTimeSecs){
       alert("Start time must be before stop time");
       return;
     }
 
-    if(startTime === null){
-      startTime = 0;
+    if(startTimeSecs === null){
+      startTimeSecs = 0;
     }
 
-    if(stopTime === null){
-      stopTime = Number.MAX_VALUE;
+    if(stopTimeSecs === null || stopTimeSecs === 0){
+      stopTimeSecs = MAX_TIME_VALUE;
     }
 
     let data = {
@@ -451,6 +463,11 @@ function resetFields(){
   }
   for (let textfield of textFieldIDs){
     util.resetFieldValue(textfield);
+  }
+  for (let checkbox of checkboxIDs){
+    util.resetCheckbox(checkbox);
+    let d = getDropdownNameFromCheckbox(checkbox)
+    util.hideElement(d);
   }
 }
 

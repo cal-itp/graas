@@ -327,6 +327,10 @@ if (!fetch) {
         document.getElementById(id).value = "";
     }
 
+    exports.resetCheckbox = function(id) {
+        document.getElementById(id).checked = false;
+    }
+
     exports.setElementText = function(id, text) {
         document.getElementById(id).innerHTML = text;
     }

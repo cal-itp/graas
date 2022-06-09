@@ -127,10 +127,14 @@ def service_alerts():
     if agency is None:
         return 'No agency given', 400
 
+    use_cache = True;
+    include_future_alerts = False;
+
     feed = gtfsrt.get_alert_feed(
         util.datastore_client,
         agency,
-        False
+        use_cache,
+        include_future_alerts
     )
 
     return Response(feed, mimetype='application/octet-stream')
@@ -155,10 +159,14 @@ def service_alerts_no_cache():
         print('*** could not verify signature for new alert, discarding')
         return Response('{"command": "/service-alert-ui.pb", "status": "unverified"}', mimetype='application/json')
 
+    use_cache = False;
+    include_future_alerts = True;
+
     feed = gtfsrt.get_alert_feed(
         util.datastore_client,
         agency,
-        True
+        use_cache,
+        include_future_alerts
     )
 
     return Response(feed, mimetype='application/octet-stream')
