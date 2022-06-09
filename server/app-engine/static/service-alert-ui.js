@@ -457,7 +457,7 @@ async function postServiceAlert() {
 
     loadAlerts();
     menu();
-    // resetFields();
+    resetFields();
     resetCanvas();
 }
 

@@ -112,7 +112,7 @@ def make_alert(id, item):
     if 'description' in item:
         alert.description_text.CopyFrom(make_translated_string(item['description']))
 
-    if 'url' in item:
+    if 'url' in item and not util.is_null_or_empty(item['url']):
         alert.url.CopyFrom(make_translated_string(item['url']))
 
     entity = gtfs_realtime_pb2.FeedEntity()
