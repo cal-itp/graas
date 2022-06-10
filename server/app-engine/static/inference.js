@@ -8,15 +8,17 @@ var epochSeconds = -1;
 var tripCandidates;
 var lastCandidateFlush;
 var stops;
-var calendarMap;
 var lastCandidateFlush;
+var calendarMap;
 var stopTimeMap;
 var shapeMap;
+var routeMap;
+var shapeLengthMap;
 
-function initialize() {
+async function initialize() {
     util.log("initialize()")
-    calendarMap = getCalendarMap();
-    routeMap = getRouteMap();
+    calendarMap = await getCalendarMap();
+    routeMap = await getRouteMap();
 
     tripCandidates = [];
     lastCandidateFlush = Date.now();
@@ -32,11 +34,10 @@ function initialize() {
 
     stops = getStops();
     util.log(`-- stops: ${stops}`);
-    preloadStopTimes();
-    preloadShapes();
-    //     self.preload_shapes()
+    stopTimeMap = await preloadStopTimes();
+    shapeMap = await preloadShapes();
 
-    //     self.compute_shape_lengths()
+    shapeLengthMap = await computeShapeLengths();
     //     self.block_map = {}
     const tripSet = new Set();
 
@@ -59,8 +60,7 @@ async function getFile(fileName){
 async function getCalendarMap(){
     util.log('get_calendar_map()');
     rows = await getFile("calendar.txt");
-    calendarMap = {}
-
+    let tempCalendarMap = {};
     let dow = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
     for (let r of rows){
@@ -68,30 +68,28 @@ async function getCalendarMap(){
         util.log(`-- service id: ${service_id}`)
         let cal = [];
         for (let d of dow){
-            util.log(`row[d]: ${r[d]}`);
             cal.push(r[d]);
-            util.log(`-- cal: ${cal}`);
+            // util.log(`-- cal: ${cal}`);
         }
-        calendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
+        tempCalendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
     }
-    return calendarMap
+    return tempCalendarMap
 }
 
 async function getRouteMap(){
     util.log('getRouteMap()');
     rows = await getFile("routes.txt");
-    routeMap = {}
-
+    let tempRouteMap = {};
     for (let r of rows){
         let route_id = r['route_id'];
-        util.log(`-- route_id id: ${route_id}`)
+        util.log(`-- route_id: ${route_id}`)
         short_name = r['route_short_name'];
         long_name = r['route_long_name']
         name = (short_name.length > 0 ? short_name : long_name)
 
-        routeMap[route_id] = {'name': name}
+        tempRouteMap[route_id] = {'name': name}
     }
-    return routeMap
+    return tempRouteMap;
 }
 
 async function getStops(){
@@ -109,8 +107,8 @@ async function getStops(){
 
 async function preloadStopTimes(){
     util.log('preloadStopTimes()');
-    let stopTimeMap = {};
     rows = await getFile("stops.txt");
+    let tempStopTimeMap = {};
 
     for (let r of rows){
         // util.log("JSON.stringify(r): " + JSON.stringify(r));
@@ -121,11 +119,11 @@ async function preloadStopTimes(){
         let stop_id = r['stop_id'];
         let stop_sequence = r['stop_sequence'];
 
-        let slist = stopTimeMap[trip_id];
+        let slist = tempStopTimeMap[trip_id];
 
         if (util.isNullOrUndefined(slist)){
             slist = [];
-            stopTimeMap[trip_id] = slist;
+            tempStopTimeMap[trip_id] = slist;
         }
 
         let entry = {'arrival_time': util.hhmmssToSeconds(arrival_time), 'stop_id': stop_id, 'stop_sequence': stop_sequence}
@@ -138,12 +136,13 @@ async function preloadStopTimes(){
         util.log(`- entry: ${entry}`)
         sxlist.push(entry)
     }
+    return tempStopTimeMap;
 }
 
 async function preloadShapes(){
     util.log('preloadShapes()');
-    let shapeMap = {};
     rows = await getFile("shapes.txt");
+    let tempShapeMap = {};
 
     for (let r of rows){
         // util.log("JSON.stringify(r): " + JSON.stringify(r));
@@ -152,11 +151,11 @@ async function preloadShapes(){
         let lat = r['shape_pt_lat'];
         let lon = r['shape_pt_lon'];
 
-        let plist = shapeMap[shape_id];
+        let plist = tempShapeMap[shape_id];
 
         if (util.isNullOrUndefined(plist)){
             plist = [];
-            shapeMap[shape_id] = plist;
+            tempShapeMap[shape_id] = plist;
         }
         let file_offset = null;
         let entry = {'lat': lat, 'lon': lon, 'file_offset': file_offset}
@@ -165,11 +164,51 @@ async function preloadShapes(){
         if (util.isNullOrUndefined(sdt)){
             entry['traveled'] = sdt;
         }
-        util.log(`- entry: ${entry}`)
+        // util.log(`- entry: ${entry}`)
         plist.push(entry)
+    }
+    return tempShapeMap;
+}
+
+function computeShapeLengths() {
+    tempShapeLengthMap = {};
+    util.log("shapeMap: " + JSON.stringify(shapeMap));
+    for (let [key, value] of Object.entries(shapeMap)){
+        util.log("shapeID: " + key);
+        let pointList = value;
+        let length = 0;
+
+        for (let i = 0; i < pointList.length - 1; i++){
+            util.log("pointList[i]: " + pointList[i]);
+            let p1 = pointList[i];
+            let p2 = pointList[i+1];
+            length += util.haversineDistance(p1.lat, p1.long, p2.lat, p2.long);
+        }
+        tempShapeLengthMap[key] = length;
+        util.long(`++ length for shape ${key}: ${length}`);
     }
 }
 
+//     def compute_shape_lengths(self):
+//         self.shape_length_map = {}
+
+//         for shape_id in self.shape_map:
+//             #util.debug(f'-- shape_id: {shape_id}')
+//             point_list = self.shape_map[shape_id]
+//             #util.debug(f'-- point_list: {point_list}')
+//             length = 0
+
+//             for i in range(len(point_list) - 1):
+//                 p1 = point_list[i];
+//                 #util.debug(f'--- p1: {p1}')
+//                 p2 = point_list[i + 1]
+//                 #util.debug(f'--- p2: {p2}')
+
+//                 length += util.haversine_distance(p1['lat'], p1['long'], p2['lat'], p2['long'])
+
+//             self.shape_length_map[shape_id] = length
+//             util.debug(f'++ length for shape {shape_id}: {util.get_display_distance(length)}')
+// }
 
 //     self.compute_shape_lengths()
 //     self.block_map = {}
