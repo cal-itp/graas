@@ -8,8 +8,6 @@ An implementation for Trip Updates is underway. For authentication, updates have
 for an agency. Public agency keys need to be added to the system database. The server will read public keys from
 the database at startup.
 
-There is a proof-of-concept implementation for a Service Alert UI called AlertUI in the gtfu folder. Alerts can
-also be submitted through 3rd party tools using HTTP POST and the /post-alert endpoint below.
 
 Clients can submit alert updates for individual feeds through the following endpoint:
 
@@ -25,13 +23,13 @@ Clients can submit alert updates for individual feeds through the following endp
             "time_start": ...,  # start of valid time period
             "time_stop": ...,   # end of valid time period
             "url": ...,         # optional url containing more info on alert
-        # At least one of the following 5 must be included, to specify which "entities" the alert applies to:
+        # At least one of the following 4 must be included, to specify which "entities" the alert applies to:
         # In order to omit, pass a null value or don't include at all
+        # Note that route_type is not currently offerred as an entity option
             "agency_id": ...,   # specific sub-agency the alert applies to
             "trip_id": ...,     # which trip the alert applies to
             "stop_id": ...,     # which stop the alert applies to
             "route_id": ...,    # which route the alert applies to
-            "route_type": ...   # which route type the alert applies to
         },
         "sig": ...              # base-64 encoded ECDSA signature of "data" object
     }
