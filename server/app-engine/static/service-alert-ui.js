@@ -203,7 +203,7 @@ async function loadAlerts(){
     else{
       alertObject.start_time = (new Date(alertObject.time_start * 1000)).toLocaleString();
     }
-    if(alertObject.time_stop === 0){
+    if(alertObject.time_stop === MAX_TIME_VALUE){
       alertObject.stop_time = "None";
     }
     else{

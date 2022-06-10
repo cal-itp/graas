@@ -218,7 +218,8 @@ def get_alert_feed(datastore_client, agency, use_cache, include_future_alerts):
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
-        service_alert_ui: whether service alert ui is being used.
+        use_cache: whether to load feed from cache or re-generate from server
+        include_future_alerts: whether to include alerts with a start time in the future
 
     Returns:
         obj: alert feed in protobuf format
