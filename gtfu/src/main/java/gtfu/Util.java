@@ -864,8 +864,8 @@ public class Util {
         t.dumpLap();
         Debug.log("- calendarCollection.getSize(): " + calendarCollection.getSize());
 
-        File file = new File(path + "/calendar_dates.txt");
-        if (file.exists()) {
+        File cd = new File(path + "/calendar_dates.txt");
+        if (cd.exists()) {
             t = new Timer("calendar_dates");
             CalendarDateCollection calendarDateCollection = new CalendarDateCollection(path);
             collections.put("calendar_dates", calendarDateCollection);

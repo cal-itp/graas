@@ -269,88 +269,157 @@ if (!fetch) {
         return json;
     }
 
-    exports.apiCall = function(data, url, callback, document) {
-        //this.log("apiCall()");
+    exports.apiCall = async function(data, url) {
+        // this.log("apiCall()");
 
         let body = JSON.stringify(data);
         // this.log("- body: " + body);
 
         let that = this;
-
-        this.timedFetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: body
-        })
-        .then(function(response) {
-            if (!response.ok) {
-                if (document) {
-                    try {
-                        let p = document.getElementById('server-response');
-                        p.innerHTML = 'Server response: ' + response.status + ' ' + response.statusText;
-                    } catch(e) {
-                        console.log(e.message);
-                    }
-                }
-                that.log('server response: ' + response.status + ' ' + response.statusText);
-            } else {
-                response.json().then(callback);
-            }
-        })
-        .catch((error) => {
+        try{
+            let response = await this.timedFetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            });
+            return await response;
+        } catch(error){
             that.log('*** fetch() error: ' + error);
-        });
+        }
     };
 
-    exports.signAndPost = function(data, signatureKey, url, document) {
-        this.log("util.signAndPost()");
+    exports.signAndPost = async function(data, signatureKey, url) {
+        // this.log("util.signAndPost()");
         let data_str = JSON.stringify(data);
         // this.log('- data_str: ' + data_str);
         // this.log('- document: ' + document);
 
         let that = this;
 
-        this.sign(data_str, signatureKey).then(function(buf) {
-            let sig = btoa(that.ab2str(buf));
-            // that.log('- sig: ' + sig);
+        let buf = await this.sign(data_str, signatureKey)
+        let sig = btoa(that.ab2str(buf));
+        // that.log('- sig: ' + sig);
 
-            let msg = {
-                data: data,
-                sig: sig
-            };
+        let msg = {
+            data: data,
+            sig: sig
+        };
 
-            that.log('- msg: ' + JSON.stringify(msg));
+        that.log('- msg: ' + JSON.stringify(msg));
 
-            const then = that.now();
-            that.apiCall(msg, url, function(response) {
-                const millis = that.now() - then;
-                that.log('- millis: ' + millis);
-                if (document) {
-                    try {
-                        let p = document.getElementById('last-update');
-                        let now = new Date();
-                        let hour = now.getHours();
-                        let ampm = hour >= 12 ? "PM" : "AM";
-
-                        if (hour > 12) hour -= 12;
-                        if (hour === 0) hour = 12;
-
-                        let time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
-
-                        p.innerHTML = 'Last update: ' + time;
-
-                        p = document.getElementById('server-response');
-                        p.innerHTML = 'Server response: ok';
-                    } catch(e) {
-                        console.log(e.message);
-                    }
-                }
-
-                that.log('server response: ok');
-                //that.log(`- response: ${JSON.stringify(response)}`);
-            });
-        });
+        return await that.apiCall(msg, url);
     };
+
+    exports.addSelectOption = function(sel, text, disabled) {
+        let opt = document.createElement('option');
+        opt.appendChild(document.createTextNode(text));
+        opt.disabled = disabled;
+        sel.appendChild(opt);
+    }
+
+    exports.resetDropdownSelection = function(id) {
+        document.getElementById(id).selectedIndex = 0;
+    }
+
+    exports.resetFieldValue = function(id) {
+        document.getElementById(id).value = "";
+    }
+
+    exports.resetCheckbox = function(id) {
+        document.getElementById(id).checked = false;
+    }
+
+    exports.setElementText = function(id, text) {
+        document.getElementById(id).innerHTML = text;
+    }
+
+     exports.clearSelectOptions = function(sel) {
+        let l = sel.options.length - 1;
+        this.log('- l: ' + l);
+
+        for(let i = l; i >= 0; i--) {
+            sel.remove(i);
+        }
+    }
+     exports.populateSelectOptions = function(id, str, list) {
+        this.log("populateSelectOptions()");
+        // this.log("str: " + str);
+        let p = document.getElementById(id);
+        this.addSelectOption(p, str, true);
+
+        list.forEach(el => this.addSelectOption(p, el, false));
+
+        this.setupSelectHeader(p);
+    }
+    exports.setupSelectHeader = function(listElem) {
+        listElem.selectedIndex = 0;
+        listElem.options[0].value = "disabled";
+        listElem.options[0].disabled = true;
+    }
+
+    exports.addToUL = function(ul, str){
+      let li = document.createElement("li");
+      li.appendChild(document.createTextNode(str));
+      ul.appendChild(li);
+    }
+
+    exports.clearUL = function(ul){
+        ul.innerHTML = '';
+    }
+
+    exports.parseAgencyData = function(str) {
+        util.log("parseAgencyData()");
+        util.log("- str: " + str);
+
+        let aID = null;
+        let pem = null;
+
+        let i1 = str.indexOf(PEM_HEADER);
+        util.log("- i1: " + i1);
+
+        if (i1 > 0 && str.substring(0, i1).trim().length > 0) {
+            aID = str.substring(0, i1).trim();
+            pem = str.substring(i1);
+        }
+
+        return {
+            id: aID,
+            pem: pem
+        };
+    }
+
+    exports.handleModal = function(name) {
+        util.log("handleModal()");
+        util.log("- name: " + name);
+
+        currentModal = document.getElementById(name);
+        util.log("- current modal id: " + currentModal.id);
+        this.showElement(name)
+        currentModal.style.display = "block";
+    }
+
+    exports.dismissModal = function() {
+        util.log("dismissModal()");
+        // util.log("- dismissed modal id: " + currentModal.id);
+
+        if (currentModal) {
+            currentModal.style.display = "none";
+            currentModal = undefined;
+        }
+    }
+
+    exports.hideElement = function(id) {
+        this.changeDisplay(id,"none");
+    }
+
+    exports.showElement = function(id) {
+        this.changeDisplay(id,"block");
+    }
+
+    exports.changeDisplay = function(id,display) {
+        let p = document.getElementById(id);
+        p.style.display = display;
+    }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

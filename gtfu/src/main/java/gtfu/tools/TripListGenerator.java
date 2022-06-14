@@ -47,10 +47,11 @@ public class TripListGenerator {
             System.exit(1);
         }
 
-        byte[] bytes = GCloudStorage.getObject("graas-resources","gtfs-aux/" + agencyID + "/agency-params.json");
+        String fileURL = "https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/" + agencyID + "/agency-params.json";
+        ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
+        byte[] bytes = Util.getURLContentBytes(fileURL, progressObserver);
         JSONParser parser = new JSONParser();
         JSONObject agencyParams = (JSONObject) parser.parse(new String(bytes, StandardCharsets.UTF_8));
-
 
         Boolean useDirection = (Boolean) agencyParams.get("triplist-generator-use-direction");
 
@@ -85,8 +86,6 @@ public class TripListGenerator {
                 in.close();
             }
         }
-
-        ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
         Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsURL, progressObserver);
 
         Map<String, Object> collections = Util.loadCollections(cacheFolder, agencyID, progressObserver);

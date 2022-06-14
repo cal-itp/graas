@@ -109,7 +109,7 @@ def make_alert(id, item):
     if 'description' in item:
         alert.description_text.CopyFrom(make_translated_string(item['description']))
 
-    if 'url' in item:
+    if 'url' in item and not util.is_null_or_empty(item['url']):
         alert.url.CopyFrom(make_translated_string(item['url']))
 
     entity = gtfs_realtime_pb2.FeedEntity()
@@ -176,12 +176,13 @@ def make_trip_update(list):
 
     return entity
 
-def alert_is_current(alert):
+def alert_is_current(alert, include_future_alerts):
     print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
-    return now >= int(alert['time_start']) and now < int(alert['time_stop'])
+
+    return (now >= alert['time_start'] or include_future_alerts) and now < alert['time_stop']
 
 def purge_old_alerts(datastore_client):
     global last_alert_purge
@@ -211,12 +212,14 @@ def purge_old_alerts(datastore_client):
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
 
-def get_alert_feed(datastore_client, agency):
+def get_alert_feed(datastore_client, agency, use_cache, include_future_alerts):
     """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
 
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
+        use_cache: whether to load feed from cache or re-generate from server
+        include_future_alerts: whether to include alerts with a start time in the future
 
     Returns:
         obj: alert feed in protobuf format
@@ -226,7 +229,8 @@ def get_alert_feed(datastore_client, agency):
     print('- agency: ' + agency)
 
     name = agency + '-alert-feed'
-    alert_feed = cache.get(name)
+
+    alert_feed = cache.get(name) if use_cache else None;
 
     if alert_feed is None:
         purge_old_alerts(datastore_client)
@@ -245,9 +249,9 @@ def get_alert_feed(datastore_client, agency):
         feed.header.CopyFrom(header)
 
         count = 1
-
+        print('- alerts to add:')
         for item in results:
-            if alert_is_current(item):
+            if alert_is_current(item, include_future_alerts):
                 print('-- ' + str(item))
                 feed.entity.append(make_alert(count, item))
                 count += 1
@@ -405,10 +409,6 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have associated agency, discarding')
         return
 
-    if not('time_start' in alert and 'time_stop' in alert):
-        print('alert doesn\'t have valid time range, discarding')
-        return
-
     if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
@@ -419,6 +419,41 @@ def add_alert(datastore_client, alert):
     entity.update(alert)
     datastore_client.put(entity)
     print('+ wrote alert')
+
+def delete_alert(datastore_client, alert):
+    print('delete_alert()')
+    print('- alert: ' + str(alert))
+
+    query = datastore_client.query(kind='alert')
+    # We need to filter for all fields, since a unique ID isn't passed into the protobuf
+    query.add_filter('agency_key', '=', alert["agency_key"])
+    query.add_filter('cause', '=', alert["cause"])
+    query.add_filter('effect', '=', alert["effect"])
+    query.add_filter('description', '=', alert["description"])
+    query.add_filter('time_start', '=', alert["time_start"])
+    query.add_filter('time_stop', '=', alert["time_stop"])
+    if not util.is_null_or_empty(alert["url"]):
+        query.add_filter('url', '=', alert["url"])
+    if not util.is_null_or_empty(alert["stop_id"]):
+        query.add_filter('stop_id', '=', alert["stop_id"])
+    if not util.is_null_or_empty(alert["trip_id"]):
+        query.add_filter('trip_id', '=', alert["trip_id"])
+    if not util.is_null_or_empty(alert["route_id"]):
+        query.add_filter('route_id', '=', alert["route_id"])
+    if not util.is_null_or_empty(alert["agency_id"]):
+        query.add_filter('agency_id', '=', alert["agency_id"])
+    results = list(query.fetch(limit=20))
+    key_list = []
+
+    for alert in results:
+        print('-- alert to delete: ' + str(alert))
+        key_list.append(alert.key)
+
+    print('- key_list: ' + str(key_list))
+    alerts_to_delete = len(key_list)
+    datastore_client.delete_multi(key_list)
+
+    print(f'+ deleted {alerts_to_delete} alerts')
 
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))
