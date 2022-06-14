@@ -46,7 +46,7 @@ public class RouteCollection implements Iterable<Route>, Serializable {
             String hexRGB = r.get("route_color");
             //Debug.log("- hexRGB: " + hexRGB);
 
-            if (hexRGB.length() == 0) {
+            if (hexRGB == null || hexRGB.length() == 0) {
                 hexRGB = "ffffff";
             }
 
