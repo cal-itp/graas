@@ -335,8 +335,8 @@ function handleStartStop() {
         util.log("- startMillis: " + startMillis);
         util.log("+ delta: " + (millis - startMillis));
 
-        hideElement(ALL_DROPDOWNS);
-        showElement(LOADING_TEXT_ELEMENT);
+        util.hideElement(ALL_DROPDOWNS);
+        util.showElement(LOADING_TEXT_ELEMENT);
 
         configMatrix.setSelected(CONFIG_TRIP_NAMES, false);
         configMatrix.setSelected(CONFIG_VEHICLE_IDS, false);
@@ -356,8 +356,8 @@ function handleStartStop() {
                 populateTripList(loadTrips());
             }
         } else {
-            hideElement(LOADING_TEXT_ELEMENT);
-            showElement(ALL_DROPDOWNS);
+            util.hideElement(LOADING_TEXT_ELEMENT);
+            util.showElement(ALL_DROPDOWNS);
         }
 
         if (millis - startMillis >= MAX_LIFE_MILLIS) {
@@ -370,7 +370,7 @@ function handleStartStop() {
     // Driver taps "stop", sends app to blank screen with only "Load trips" button
     else {
         clearWakeLock();
-        hideElement(TRIP_STATS_ELEMENT);
+        util.hideElement(TRIP_STATS_ELEMENT);
         util.log('- stopping position updates');
         running = false;
         let dropdowns = [TRIP_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN];
@@ -456,8 +456,8 @@ function handleOkay() {
     let tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
-    hideElement(ALL_DROPDOWNS);
-    showElement(TRIP_STATS_ELEMENT);
+    util.hideElement(ALL_DROPDOWNS);
+    util.showElement(TRIP_STATS_ELEMENT);
     changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
@@ -736,7 +736,7 @@ function positionCallback() {
     }
 }
 
-function handleGPSUpdate(position) {
+async function handleGPSUpdate(position) {
     util.log('handleGPSUpdate()');
     let uuid = getUUID();
     let lat = 0;
@@ -798,13 +798,33 @@ function handleGPSUpdate(position) {
     data['pos-timestamp'] = posTimestamp;
     data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
 
-    //var data_str = JSON.stringify(data);
-    //util.log('- data_str: ' + data_str);
+    let response = await util.signAndPost(data, signatureKey, '/new-pos-sig');
+    let responseJson = await response.json();
 
-    util.signAndPost(data, signatureKey, '/new-pos-sig', document);
+    if (!response.ok) {
+        let p = document.getElementById('server-response');
+        p.innerHTML = 'Server response: ' + responseJson.status + ' ' + responseJson.statusText;
+        util.log('server response: ' + responseJson.status + ' ' + responseJson.statusText);
+    } else {
+
+        let p = document.getElementById('last-update');
+        let now = new Date();
+        let hour = now.getHours();
+        let ampm = hour >= 12 ? "PM" : "AM";
+
+        if (hour > 12) hour -= 12;
+        if (hour === 0) hour = 12;
+
+        let time = hour + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " " + ampm;
+
+        p.innerHTML = 'Last update: ' + time;
+
+        p = document.getElementById('server-response');
+        p.innerHTML = 'Server response: ok';
+    }
 }
 
-function initializeCallback(agencyData) {
+async function initializeCallback(agencyData) {
     let pem = agencyData.pem;
 
     let i1 = pem.indexOf(PEM_HEADER);
@@ -831,63 +851,68 @@ function initializeCallback(agencyData) {
     util.log("- keyType: " + keyType);
     // util.log("- keyLength: " + keyLength);
 
-    let key = atob(b64);
+    let b = atob(b64);
     // util.log("- key.length: " + key.length);
 
-    const binaryDer = util.str2ab(key);
+    const binaryDer = util.str2ab(b);
+    try{
+        let key = await crypto.subtle.importKey(
+            "pkcs8",
+            binaryDer,
+            keyType === "RSA"
+            ? {
+                name: "RSASSA-PKCS1-v1_5",
+                modulusLength: keyLength,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256",
+            }
+            : {
+                name: "ECDSA",
+                namedCurve: "P-256"
+            },
+            false,
+            ["sign"]
+        )
 
-    crypto.subtle.importKey(
-        "pkcs8",
-        binaryDer,
-        keyType === "RSA"
-        ? {
-            name: "RSASSA-PKCS1-v1_5",
-            modulusLength: keyLength,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: "SHA-256",
-        }
-        : {
-            name: "ECDSA",
-            namedCurve: "P-256"
-        },
-        false,
-        ["sign"]
-    ).then(function(key) {
         util.log("- key.type: " + key.type);
         signatureKey = key;
 
         let str = 'hello ' + Math.floor(Date.now() / 1000);
 
-        util.sign(str, signatureKey).then(function(buf) {
-            let sig = btoa(util.ab2str(buf));
+        let buf = await util.sign(str, signatureKey)
 
-            let hello = {
-                msg: str,
-                sig: sig
-            };
+        let sig = btoa(util.ab2str(buf));
 
-            if (agencyData.id) {
-                hello.id = agencyData.id;
-            }
+        let hello = {
+            msg: str,
+            sig: sig
+        };
 
-            util.log("- hello: " + JSON.stringify(hello));
+        if (agencyData.id) {
+            hello.id = agencyData.id;
+        }
 
-            util.apiCall(hello, '/hello', agencyIDCallback);
-        });
-    }).catch(function(e) {
-      util.log('*** initializeCallback() error: ' + e.message);
-      localStorage.removeItem("lat-long-pem");
-      alert("We've experienced an error and are refreshing the page. Please scan again");
-      window.location.reload();
-  });
+        util.log("- hello: " + JSON.stringify(hello));
+
+        let response = await util.apiCall(hello, '/hello');
+        let responseJson = await response.json();
+        util.log("- responseJson: " + JSON.stringify(responseJson));
+        agencyIDCallback(responseJson);
+
+    } catch(e){
+          util.log('*** initializeCallback() error: ' + e.message);
+          localStorage.removeItem("lat-long-pem");
+          alert("We've experienced an error and are refreshing the page. Please scan again");
+          window.location.reload();
+    }
 }
 
 function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    showElement(LOADING_TEXT_ELEMENT);
-    hideElement(QR_READER_ELEMENT);
+    util.showElement(LOADING_TEXT_ELEMENT);
+    util.hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
@@ -946,14 +971,14 @@ function gotConfigData(data, agencyID, arg) {
     else if (name === CONFIG_TRIP_NAMES) {
         if (useBulkAssignmentMode){
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
-            hideElement(TRIP_SELECT_DROPDOWN);
+            util.hideElement(TRIP_SELECT_DROPDOWN);
         } else {
             trips = data;
             loadTrips();
         }
     } else if (name === CONFIG_VEHICLE_IDS) {
         vehicleList = data;
-        populateList(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
+        util.populateSelectOptions(BUS_SELECT_DROPDOWN, BUS_SELECT_DROPDOWN_TEXT, vehicleList);
     }
 
     configMatrix.setLoaded(name, true);
@@ -1068,36 +1093,12 @@ function gpsInterval(millis) {
     setTimeout(gpsInterval, 3000, Date.now());
 }
 
-function populateList(id, str, list) {
-    util.log("populateList()");
-    // util.log("str: " + str);
-    let p = document.getElementById(id);
-    addSelectOption(p, str, true);
-
-    list.forEach(el => addSelectOption(p, el, false));
-
-    setupListHeader(p);
-}
-
 function disableElement(id) {
     assignValue(id, 'disabled');
 }
 
 function disableElements(list) {
     list.forEach(el => disableElement(el));
-}
-
-function hideElement(id) {
-    changeDisplay(id,"none");
-}
-
-function showElement(id) {
-    changeDisplay(id,"block");
-}
-
-function changeDisplay(id,display) {
-    let p = document.getElementById(id);
-    p.style.display = display;
 }
 
 function changeText(id,text) {
@@ -1121,23 +1122,16 @@ function populateTripList(tripIDMap = tripIDLookup) {
         addSelectOption(p, key, !value);
     }
 
-    setupListHeader(p);
-
-    hideElement(LOADING_TEXT_ELEMENT);
-    showElement(ALL_DROPDOWNS);
-}
-
-function setupListHeader(listElem) {
-    listElem.selectedIndex = 0;
-    listElem.options[0].value = "disabled";
-    listElem.options[0].disabled = true;
+    util.setupSelectHeader(p);
+    util.hideElement(LOADING_TEXT_ELEMENT);
+    util.showElement(ALL_DROPDOWNS);
 }
 
 function configComplete() {
     util.log("configComplete()");
 
     vehicleIDCookie = getCookie(VEHICLE_ID_COOKIE_NAME);
-    hideElement(LOADING_TEXT_ELEMENT);
+    util.hideElement(LOADING_TEXT_ELEMENT);
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
     if(vehicleIDCookie && useBulkAssignmentMode){
@@ -1150,7 +1144,7 @@ function configComplete() {
     }
     // If not bulk assignment mode, present the "Load trips" button.
     else{
-        showElement(START_STOP_BUTTON);
+        util.showElement(START_STOP_BUTTON);
     }
 
     setInterval(function() {
