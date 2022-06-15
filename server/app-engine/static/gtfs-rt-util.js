@@ -38,6 +38,10 @@ if (!fetch) {
     exports.MILLIS_PER_HOUR   =   60 * exports.MILLIS_PER_MINUTE;
     exports.MILLIS_PER_DAY    =   24 * exports.MILLIS_PER_HOUR;
 
+    exports.EARTH_RADIUS_IN_FEET = 20902231;
+    exports.FEET_PER_LAT_DEGREE = 364000;
+    exports.FEET_PER_LONG_DEGREE = 288200;
+
     exports.log = function(s) {
         console.log(s);
 
@@ -65,6 +69,14 @@ if (!fetch) {
         return '' + date.getFullYear() + '-' + month + '-' + day;
     }
 
+    exports.getEpochSeconds = function(date) {
+        if(date === null){
+            return Date.now();
+        } else {
+            let d = new Date(date);
+            return Date.seconds();
+        }
+    }
     exports.getShortDate = function(date) {
         if (date === null) {
             date = new Date();
@@ -362,4 +374,57 @@ if (!fetch) {
         this.log("seconds: " + seconds);
         return seconds;
     }
+    exports.degreesToRadians = function(degrees){
+        return degrees * (Math.PI/180);
+    }
+
+    exports.haversineDistance = function(lat1, lon1, lat2, lon2){
+        let phi1 = this.degreesToRadians(lat1)
+        let phi2 = this.degreesToRadians(lat2)
+        let delta_phi = this.degreesToRadians(lat2 - lat1)
+        let delta_lam = this.degreesToRadians(lon2 - lon1)
+
+        let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
+            + Math.cos(phi1) * Math.cos(phi2)
+            * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+        return c & this.EARTH_RADIUS_IN_FEET;
+    }
+
+    exports.getFeetAsLatDegrees = function(feet){
+        return feet / FEET_PER_LAT_DEGREE;
+    }
+
+    exports.getFeetAsLongDegrees = function(feet){
+        return feet / FEET_PER_LONG_DEGREE;
+    }
+
+// Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
+    exports.csvToArray = function(str, delimiter = ",") {
+      // slice from start of text to the first \n index
+      // use split to create an array from string by delimiter
+      const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+
+      // slice from \n index + 1 to the end of the text
+      // use split to create an array of each csv value row
+      const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+      // Map the rows
+      // split values from each row into an array
+      // use headers.reduce to create an object
+      // object properties derived from headers:values
+      // the object passed as an element of the array
+      const arr = rows.map(function (row) {
+        const values = row.split(delimiter);
+        const el = headers.reduce(function (object, header, index) {
+          object[header] = values[index];
+          return object;
+        }, {});
+        return el;
+      });
+
+      // return the array (hacky fix for null last row added)
+      return arr.slice(0,-1);
+    }
+
 }(typeof exports === 'undefined' ? this.util = {} : exports));
