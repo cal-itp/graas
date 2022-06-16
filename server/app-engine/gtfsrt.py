@@ -458,7 +458,7 @@ def delete_alert(datastore_client, alert):
 def add_position(datastore_client, pos):
     entity = datastore.Entity(key=datastore_client.key('position'))
     entity.update(pos)
-    batch_writer.add(entity)
+    batch_writer.add(entity, 'position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
 
 def load_block_collection(datastore_client, block_metadata):
     global block_map
@@ -599,6 +599,9 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
         return None
 
     day_seconds = util.get_seconds_since_midnight()
+    print(f'- day_seconds: {day_seconds}')
+    day_hours = int(day_seconds / 3600)
+    print(f'- day_hours: {day_hours}')
     for trip in block['trips']:
         #print(f'++++++++++++++++++++++++++++')
         #print(f'++ secs : {day_seconds}')
@@ -696,7 +699,7 @@ def handle_stop_entities(datastore_client, data):
         entity = datastore.Entity(key=entity_key)
 
         entity.update(e)
-        batch_writer.add(entity)
+        batch_writer.add(entity, 'stop-time-' + e['agency_id'] + '-' + e['vehicle_id'] + str(e['stop_sequence']))
 
     return 'ok'
 
@@ -877,7 +880,7 @@ def handle_pos_update(datastore_client, data):
     entity.update(data)
 
     #then = time.time()
-    batch_writer.add(entity)
+    batch_writer.add(entity, 'current-position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
 
     #print(f'- profile datastore_client.put(): {time.time() - then} seconds')
 
