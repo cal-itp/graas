@@ -120,7 +120,7 @@ def make_alert(id, item):
 
 def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     trip = gtfs_realtime_pb2.TripDescriptor()
-    trip.trip_id = trip_id
+    trip.trip_id = 'missing' if trip_id is None else trip_id
 
     vehicle = gtfs_realtime_pb2.VehicleDescriptor()
     vehicle.label = id
@@ -841,7 +841,7 @@ def handle_pos_update(datastore_client, data):
             result['status'] = 'missing trip id'
             return result
 
-        data['trip_id'] = trip_id
+        data['trip-id'] = trip_id
         result['backfilled_trip_id'] = trip_id
 
     if data['uuid'] != 'replay':
