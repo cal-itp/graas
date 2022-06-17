@@ -114,7 +114,7 @@ class TripInference {
             util.log(`-- wayPoints.length: ${wayPoints.length}`)
 
             if (wayPoints.length === 0){
-                util.debug(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
+                util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
                 continue;
             }
 
@@ -144,27 +144,29 @@ class TripInference {
                 }
             }
             util.log(timer);
-            util.debug(`-- stopTimes: ${stopTimes}`);
-            util.debug(`-- len(stopTimes): ${stopTimes.length}`);
+            util.log(`-- stopTimes: ${stopTimes}`);
+            util.log(`-- len(stopTimes): ${stopTimes.length}`);
             timer = Timer('interpolate');
             this.interpolateWayPointTimes(wayPoints, stopTimes, this.stops);
             util.log(timer);
 
             // // trip_name = route_map[route_id]['name'] + ' @ ' + util.seconds_to_ampm_hhmm(stopTimes[0]['arrival_time'])
-            // trip_name = trip_id + ' @ ' + util.seconds_to_ampm_hhmm(stopTimes[0]['arrival_time'])
-            // util.debug(f'-- trip_name: {trip_name}')
-            // shape_length = self.shape_length_map[shape_id]
+            let tripName = trip_id + ' @ ' + util.getHMForSeconds(stopTimes[0]['arrival_time'], true);
+            util.log(`-- tripName: ${tripName}`);
+            let shapeLength = this.shapeLengthMap[shape_id];
 
-            // if shape_length is None:
-            //     segment_length = 2 * util.FEET_PER_MILE
-            // else:
-            //     segment_length = int(shape_length / 30)
+            if (shape_length === null){
+                let segmentLength = 2 * util.FEET_PER_MILE;
+            }
+            else{
+                let segmentLength = shape_length;
+            }
 
-            // // util.debug(f'-- segment_length: {segment_length}')
-            // timer = Timer('segments')
-            // self.make_trip_segments(trip_id, trip_name, stopTimes[0], wayPoints, segment_length)
-            // // util.debug(timer)
-            // // util.debug(loop_timer)
+            // util.log(f'-- segmentLength: {segmentLength}')
+            timer = Timer('segments')
+            this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength);
+            // util.log(timer)
+            // util.log(loop_timer)
         }
     }
 
@@ -333,60 +335,64 @@ class TripInference {
     // - search n neighbors on either side of points with attr and move attr to neighbor if closer
     // - repeat until stable
 
-    interpolateWayPointTimes(wayPoints, stopTimes, stops):
-        anchorList = this.createAnchorList(wayPoints, stopTimes, stops)
-        firstStop = True
+    interpolateWayPointTimes(wayPoints, stopTimes, stops) {
+        let anchorList = this.createAnchorList(wayPoints, stopTimes, stops);
+        let firstStop = true;
 
-        // print(f'interpolateWayPointTimes()')
-        // util.debug(f'- len(wayPoints): {len(wayPoints)}')
-        // util.debug(f'- len(stopTimes): {len(stopTimes)}')
+        // util.log(`interpolateWayPointTimes()``);
+        // util.log(`- wayPoints.length: ${wayPoints.length}`);
+        // util.log(`- stopTimes.length: ${stopTimes.length}`);
 
-        for st in stopTimes:
-            sp = stops[st['stop_id']]
+        for(let st of stopTimes){
+            let sp = stops[st['stop_id']];
 
-            if firstStop:
-                sp['first_stop'] = True
-                firstStop = False
+            if (firstStop){
+                sp['first_stop'] = true;
+                 firstStop = false;
+            }
+        }
+        util.log(`- anchorList: ${anchorList}`);
+        // util.log(`- anchorList.length: ${anchorList.length}`)
 
-        util.debug(f'- anchorList: {anchorList}')
-        // util.debug(f'- len(anchorList): {len(anchorList)}')
+        for (let i=0; i<anchorList.length - 1; i++){
+            let start = anchorList[i];
+            let end = anchorList[i + 1];
+            let tdelta = end['time'] - start['time'];
+            let idelta = end['index'] - start['index'];
 
-        for i in range(len(anchorList) - 1):
-            start = anchorList[i]
-            end = anchorList[i + 1]
-            tdelta = end['time'] - start['time']
-            idelta = end['index'] - start['index']
+            // util.log('--------------------------')
 
-            // util.debug('--------------------------')
+            for (let j=0; j<idelta; j++){
+                let fraction = j / idelta;
+                let time = start['time'] + int(fraction * tdelta);
+                wayPoints[start['index'] + j]['time'] = time;
+                let hhmmss = util.seconds_to_hhmmss(time);
+                // util.log(`--- ${hhmmss}`);
+            }
+        }
+        // util.log('--------------------------')
 
-            for j in range(idelta):
-                fraction = j / idelta
-                time = start['time'] + int(fraction * tdelta)
-                wayPoints[start['index'] + j]['time'] = time
-                hhmmss = util.seconds_to_hhmmss(time)
-                // util.debug(f'--- {hhmmss}')
+        let index = anchorList[0]['index']
+        let time = anchorList[0]['time']
 
-        // util.debug('--------------------------')
+        while (index >= 0){
+            index -= 1;
+            wayPoints[index]['time'] = time;
+        }
+        index = anchorList[-1]['index'];
+        time = anchorList[-1]['time'];
 
-        index = anchorList[0]['index']
-        time = anchorList[0]['time']
-
-        while index >= 0:
-            index -= 1
-            wayPoints[index]['time'] = time
-
-        index = anchorList[-1]['index']
-        time = anchorList[-1]['time']
-
-        while index < len(wayPoints):
-            wayPoints[index]['time'] = time
-            index += 1
-
+        while (index < wayPoints.length){
+            wayPoints[index]['time'] = time;
+            index += 1;
+        }
         // // //  REMOVE ME: for testing only
-        for i in range(len(wayPoints)):
-            if not 'time' in wayPoints[i]:
-                util.debug(f'.. {i}')
-
+        for (let i=0; i<wayPoints.length; i++){
+            if (!('time' in wayPoints[i])){
+                util.log(`.. ${i}`);
+            }
+        }
+    }
 
     // For simpler trips `shape_dist_traveled` is optional. If the attribute is missing, we can take the following approach:
     // - for each stop, assign a fraction of arrival time at that stop to total trip time -> fractions list
@@ -397,83 +403,86 @@ class TripInference {
     // - repeat until stable (current anchor list equals pevious anchor list) of max tries reached
 
     createAnchorListIteratively(wayPoints, stopTimes, stops){
-        startSeconds = stopTimes[0]['arrival_time']
-        stopSeconds = stopTimes[-1]['arrival_time']
-        totalSeconds = float(stopSeconds - startSeconds)
+        let startSeconds = stopTimes[0]['arrival_time'];
+        let stopSeconds = stopTimes[-1]['arrival_time'];
+        let totalSeconds = stopSeconds - startSeconds;
         // print(f'- totalSeconds: {totalSeconds}')
-        anchorList = []
+        let anchorList = [];
 
-        for i in range(stopTimes.length):
-            // print(f'-- i: {i}')
-            seconds = stopTimes[i]['arrival_time'] - startSeconds
-            // print(f'-- seconds: {seconds}')
-            frac = seconds / totalSeconds
-            // print(f'-- frac: {frac}')
-            j = int(frac * (len(wayPoints) - 1))
-            // print(f'-- j: {j}')
-            anchorList.append({'index': j, 'time': stopTimes[i]['arrival_time']})
+        for (let i=0; i<stopTimes.length; i++){
+            // print(`-- i: ${i}`);
+            let seconds = stopTimes[i]['arrival_time'] - startSeconds;
+            // print(`-- seconds: ${seconds}`);
+            let frac = seconds / totalSeconds;
+            // print(`-- frac: ${frac}`);
+            let j = frac * (wayPoints.length - 1);
+            // print(`-- j: ${j}`);
+            anchorList.append({'index': j, 'time': stopTimes[i]['arrival_time']});
+        }
+        for (let i=0; i<20; i++){
+            let lastAnchorList = JSON.parse(JSON.stringify(anchorList));
 
-        for i in range(20):
-            last_anchorList = copy.deepcopy(anchorList)
-            // print(f'-- last_anchorList: {last_anchorList}')
+            // print(`-- lastAnchorList: ${lastAnchorList}`)
 
             // explore neighbors in anchorList, potentially changing index fields
-            for j in range(len(last_anchorList)):
-                // print(f'-- j: {j}')
-                c = last_anchorList[j]
-                // print(f'-- c: {c}')
+            for (j=0; j<lastAnchorList.length; j++){
+                // print(`-- j: ${j}`)
+                let c = lastAnchorList[j];
+                // print(`-- c: ${c}`)
 
-                p = c
-                if j > 0:
-                    p = last_anchorList[j - 1]
+                let p = c;
+                if (j > 0){
+                    p = lastAnchorList[j - 1];
+                }
+                let n = c;
+                if (j < lastAnchorList.length - 1){
+                    let n = lastAnchorList[j + 1];
+                }
 
-                n = c
-                if j < len(last_anchorList) - 1:
-                    n = last_anchorList[j + 1]
+                let p1 = stops[stopTimes[j]['stop_id']];
+                let p2 = wayPoints[c['index']];
+                let min_diff = util.haversine_distance(p1['lat'], p1['long'], p2['lat'], p2['long']);
+                let min_index = c['index'];
+                // print(`-- min_index: ${min_index}`)
 
-                p1 = stops[stopTimes[j]['stop_id']]
-                p2 = wayPoints[c['index']]
-                min_diff = util.haversine_distance(p1['lat'], p1['long'], p2['lat'], p2['long'])
-                min_index = c['index']
-                // print(f'-- min_index: {min_index}')
+                // print(`-- c["index"]: ${c["index"]}`)
+                // print(`-- p["index"]: ${p["index"]}`)
+                // print(`-- n["index"]: ${n["index"]}`)
 
-                // print(f'-- c["index"]: {c["index"]}')
-                // print(f'-- p["index"]: {p["index"]}')
-                // print(f'-- n["index"]: {n["index"]}')
+                let kf = int(p['index'] + math.ceil((c['index'] - p['index']) / 2));
+                let kt = int(c['index'] + (n['index'] - c['index']) / 2);
 
-                kf = int(p['index'] + math.ceil((c['index'] - p['index']) / 2))
-                kt = int(c['index'] + (n['index'] - c['index']) / 2)
+                // print(`-- kf: ${kf}, kt: ${kt}`)
 
-                // print(f'-- kf: {kf}, kt: {kt}')
+                for (let k=kf; k<kt; k++){
+                    p2 = wayPoints[k];
+                    diff = util.haversineDistance(p1['lat'], p1['long'], p2['lat'], p2['long']);
 
-                for k in range(kf, kt):
-                    p2 = wayPoints[k]
-                    diff = util.haversine_distance(p1['lat'], p1['long'], p2['lat'], p2['long'])
+                    if (diff < min_diff){
+                        min_diff = diff;
+                        min_index = k;
+                    }
+                }
+                // print(`++ min_index: ${min_index}``)
+                anchorList[j]['index'] = min_index;
+            }
+            // print(`-- anchorList     : ${anchorList}``)
 
-                    if diff < min_diff:
-                        min_diff = diff
-                        min_index = k
+            let stable = true;
 
-                // print(f'++ min_index: {min_index}')
-                anchorList[j]['index'] = min_index
+            for (let j=0; j<anchorList.length; j++){
+                i1 = anchorList[j]['index'];
+                i2 = lastAnchorList[j]['index'];
 
-            // print(f'-- anchorList     : {anchorList}')
-
-            stable = True
-
-            for j in range(len(anchorList)):
-                i1 = anchorList[j]['index']
-                i2 = last_anchorList[j]['index']
-
-                if i1 != i2:
-                    // print(f'* {i1} != {i2}')
-                    stable = False
-                    break
-
-            if stable:
-                break
-
-        // print(f'++ anchorList     : {anchorList}')
+                if (i1 != i2){
+                    // print(`* ${i1} != ${i2}``);
+                    stable = False;
+                    break;
+                }
+            }
+            if (stable) break;
+        }
+        // print(`++ anchorList     : ${anchorList}``)
 
         return anchorList;
     }
@@ -487,45 +496,134 @@ class TripInference {
     // shape.txt and stopTimes.txt entries. This allows for straight-forward finding of shape points close to stops.
 
     createAnchorList(wayPoints, stopTimes, stops){
-        // print(f' - len(wayPoints): {len(wayPoints)}')
-        // print(f' - len(stopTimes): {len(stopTimes)}')
-        // print(f' - len(stops): {len(stops)}')
+        // print(` - wayPoints.length: ${wayPoints.length}`);
+        // print(` - stopTimes.length: ${stopTimes.length}`);
+        // print(` - stops.length: ${stops.length}`);
 
-        annotated = True
+        let annotated = true;
 
-        for i in range(len(stopTimes)):
-            if not stopTimes[i].get('traveled', False):
-                annotated = False
+        for (let i=0; i<stopTimes.length; i++){
+            if (stopTimes[i]['traveled'] === null){
+                annotated = false;
                 break;
+            }
+        }
 
-        if annotated:
-            for i in range(len(wayPoints)):
-                if not wayPoints[i].get('traveled', False):
-                    annotated = False
+        if (annotated){
+            for (let i=0; i<wayPoints.length; i++){
+                if (wayPoints[i]['traveled'] === null){
+                    annotated = false;
                     break;
+                }
+            }
+        }
 
-        if not annotated:
-            return self.createAnchorListIteratively(wayPoints, stopTimes, stops)
+        if (!annotated){
+            return this.createAnchorListIteratively(wayPoints, stopTimes, stops);
+        }
+        anchorList = [];
 
-        anchorList = []
+        for (i=0; i<stopTimes.length; i++){
+            let traveled = stopTimes[i]['traveled'];
+            let time = stopTimes[i]['arrival_time'];
+            // what does this mean?
+            let min_difference = float('inf');
+            let min_index = -1;
 
-        for i in range(len(stopTimes)):
-            traveled = stopTimes[i]['traveled']
-            time = stopTimes[i]['arrival_time']
+            for (j=0; i< wayPoints.length; j++){
+                let t = wayPoints[j]['traveled'];
+                let diff = Math.abs(traveled - t);
 
-            min_difference = float('inf')
-            min_index = -1
-
-            for j in range(len(wayPoints)):
-                t = wayPoints[j]['traveled']
-                diff = math.abs(traveled - t)
-
-                if diff < min_difference:
-                    min_difference = diff
-                    min_index = j
-
+                if (diff < min_difference){
+                    let min_difference = diff;
+                    let min_index = j;
+                }
+            }
             anchorList.append({'index': min_index, 'time': time})
+        }
+        return anchorList;
+    }
 
-        return anchorList
+    makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
+        util.log(`- make_trip_segments()`);
+        util.log(`- maxSegmentLength: ${maxSegmentLength}`);
+        util.log(`- wayPoints: ${wayPoints}`);
+
+        let segmentStart = 0;
+        let index = segmentStart;
+        lastIndex = index;
+        segmentLength = 0;
+        firstSegment = True;
+        segmentCount = 1;
+
+        // let area = Area()
+        indexList = [];
+        segmentList = [];
+
+        skirtSize = max(int(maxSegmentLength / 10), 500)
+        util.log(`- skirtSize: ${skirtSize}`);
+
+        while (index < wayPoints.length){
+            let lp = wayPoints[lastIndex];
+            let p = wayPoints[index];
+
+            this.area.update(p['lat'], p['long']);
+
+            let gridIndex = this.grid.get_index(p['lat'], p['long']);
+            if  (!(gridIndex in indexList)){
+                indexList.append(gridIndex);
+            }
+
+            letdistance = util.haversineDistance(lp['lat'], lp['long'], p['lat'], p['long']);
+            segmentLength += distance;
+
+            if segmentLength >= maxSegmentLength or index == len(wayPoints) - 1:
+                this.area.extend(skirtSize)
+
+                if segmentStart === 0 and wayPoints[segmentStart]['time'] === wayPoints[index]['time']:
+                    util.error(f'0 duration first segment for trip {trip_id}')
+
+                stop_id = None
+                if firstSegment:
+                    firstSegment = False
+                    stop_id = firstStop['stop_id']
+
+                segment = Segment(
+                    segmentCount,
+                    trip_id,
+                    trip_name,
+                    firstStop['arrival_time'],
+                    stop_id,
+                    this.area,
+                    wayPoints[segmentStart]['time'],
+                    wayPoints[index]['time'],
+                    wayPoints[segmentStart]['file_offset'],
+                    wayPoints[index]['file_offset']
+                )
+
+                segmentList.append(segment)
+                segmentCount += 1
+
+                for i in indexList:
+                    self.grid.add_segment(segment, i)
+
+                segmentLength = 0
+                // area = Area()
+                indexList = []
+
+                index += 1
+                lastIndex = index
+                segmentStart = index
+
+                p = wayPoints[max(segmentStart - 1, 0)]
+                this.area.update(p['lat'], p['long'])
+
+                continue
+
+            lastIndex = index
+            index += 1
+        }
+        for s in segmentList:
+            s.set_segments_per_trip(segmentCount - 1)
     }
 }
