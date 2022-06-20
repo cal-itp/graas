@@ -25,6 +25,7 @@ final class WebView : NSObject, UIViewRepresentable, WKScriptMessageHandler {
         let date = Date(timeIntervalSince1970: 0)
         WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes as! Set<String>, modifiedSince: date, completionHandler:{ })
 
+        // ### TODO: in a loop in the background, check connectivity and load url when connected
         webview.load(request)
         return webview
     }
