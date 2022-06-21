@@ -19,8 +19,24 @@ class BatchWriter:
         self.last_write = time.time()
         self.map = {}
 
-    def add(self, entity):
-        self.map[entity.key] = entity
+    """
+    Queue an entity for writing to DB. See class commment for important caveat.
+
+    Args:
+        entity (datastore entity): the data to queue for writing to the DB
+        key (str): a key for identifying entities of the same "type". When
+           multiple entities with the same key are queued in between flushes,
+           newer versions overwrite older versions, e.g. of two updates with
+           key `position-agencyfoo-vehicle123` only the last one persists
+    """
+    def add(self, entity, key):
+        if key is None:
+            print(f'* missing key arg for BatchWriter.add(), discarding: {entity}')
+            return
+
+        print(f'- key: {key}')
+
+        self.map[key] = entity
 
         if time.time() - self.last_write > self.max_time_delta or len(self.map) > self.max_queue_size:
             self.flush()
