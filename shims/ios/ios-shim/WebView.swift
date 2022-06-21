@@ -25,8 +25,24 @@ final class WebView : NSObject, UIViewRepresentable, WKScriptMessageHandler {
         let date = Date(timeIntervalSince1970: 0)
         WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes as! Set<String>, modifiedSince: date, completionHandler:{ })
 
-        // ### TODO: in a loop in the background, check connectivity and load url when connected
-        webview.load(request)
+        DispatchQueue.global(qos: .userInitiated).async {
+            var done = false
+
+            while !done {
+                Thread.sleep(forTimeInterval: 1)
+
+                if Reachability.isConnectedToNetwork() {
+                    DispatchQueue.main.async {
+                        print("loading request...")
+                        webview.load(self.request)
+                    }
+                    done = true
+               } else {
+                   print("waiting for connectivity...")
+               }
+            }
+        }
+
         return webview
     }
 

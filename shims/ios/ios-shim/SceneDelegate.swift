@@ -110,57 +110,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("*** location manager error: \(error)")
     }
-
-    func derToRaw(der: Data) -> Data {
-        let raw = Data()
-
-        // ### copy r, s from der to raw
-
-        return raw
-    }
-
-    func sign(msg: String) -> String? {
-        let der = Data(base64Encoded: "")
-        let raw = derToRaw(der: der!)
-
-        do {
-            let key = try P256.Signing.PrivateKey(rawRepresentation: raw)
-            let sign = try key.signature(for: msg.data(using: .utf8)!)
-            return sign.derRepresentation.base64EncodedString()
-        } catch {
-            print("sign() failed")
-            return nil
-        }
-    }
-
-    func post(msg: Data) {
-        /*
-         let json: [String: Any] = ["title": "ABC",
-                                    "dict": ["1":"First", "2":"Second"]]
-
-         let jsonData = try? JSONSerialization.data(withJSONObject: json)
-
-         // create post request
-         let url = URL(string: "http://httpbin.org/post")!
-         var request = URLRequest(url: url)
-         request.httpMethod = "POST"
-
-         // insert json data to the request
-         request.httpBody = jsonData
-
-         let task = URLSession.shared.dataTask(with: request) { data, response, error in
-             guard let data = data, error == nil else {
-                 print(error?.localizedDescription ?? "No data")
-                 return
-             }
-             let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
-             if let responseJSON = responseJSON as? [String: Any] {
-                 print(responseJSON)
-             }
-         }
-
-         task.resume()
-        */
-    }
 }
 
