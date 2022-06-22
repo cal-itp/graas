@@ -25,7 +25,7 @@ _db_mode = _DB_CLOUD_MODE
 try:
     from google.cloud import datastore
 except ImportError:
-    _db_mode = _DB_CLOUD_MODE
+    _db_mode = _DB_LOCAL_MODE
 
 class Client:
     def __init__(self):
@@ -162,10 +162,22 @@ class Query:
         for key, reverse in reversed(specs):
             xs.sort(key=attrgetter(key), reverse=reverse)
         return xs
-    """
-    >>> multisort(list(student_objects), (('grade', True), ('age', False)))
-    [('dave', 'B', 10), ('jane', 'B', 12), ('john', 'A', 15)]
-    """
+
+    def _matches(self, entity, filter):
+        v = entity[filter['field']]
+
+        if not isinstance(v, (int, long, float, str)):
+            raise ValueError(f'entity type error: {type(v)}')
+
+        if not isinstance(filter['value'], (int, long, float, str)):
+            raise ValueError(f'filter type error: {type(filter["value"])}')
+
+        if field['operand'] == '=':
+            return v == filter['value']
+        elif field['operand'] == '<':
+            return v < filter['value']
+        else:
+            raise ValueError(f'unsupported operand: {field["operand"]}')
 
     def fetch(self, limit):
         self.ret = []
@@ -201,12 +213,8 @@ class Query:
 
         return self.ret
 
-    def add_filter(self, prop, op, v):
-        """
-        e.g. add_filter('time_stop', '<', seconds):
-        # property, operand, value
-        """
-        self.filters.append((prop, op, v))
+    def add_filter(self, field, operand, value):
+        self.filters.append({'field': field, 'operand': operand, 'value': value})
 
 
 e = Entity(Key('position'))
