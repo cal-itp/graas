@@ -158,19 +158,16 @@ class Query:
         self.order = []
         self.filters = []
 
+    def _multisort(xs, specs):
+        for key, reverse in reversed(specs):
+            xs.sort(key=attrgetter(key), reverse=reverse)
+        return xs
+    """
+    >>> multisort(list(student_objects), (('grade', True), ('age', False)))
+    [('dave', 'B', 10), ('jane', 'B', 12), ('john', 'A', 15)]
+    """
+
     def fetch(self, limit):
-        """
-        limit: max number of results
-        returns Iterator
-
-        - results = []
-        - iterate over db file entries
-        -- if kind == self.kind and entry matches filters, add to results
-        - if orders is not None:
-        -     results.sort(order)
-        - return iter(results)
-        """
-
         self.ret = []
 
         for e in self.client.entities:
@@ -187,7 +184,20 @@ class Query:
             if matched:
                 self.ret.append(e)
 
-        # sort by self.order
+        args = []
+        for o in self.order:
+            reverse = False
+
+            if o.startswith('-'):
+                o = o[1: -1]
+                reverse = True
+
+            if o.startswith('+'):
+                o = o[1: -1]
+
+            args.append((o, reverse))
+
+        self.ret = _multisort(self.ret, tuple(args))
 
         return self.ret
 
