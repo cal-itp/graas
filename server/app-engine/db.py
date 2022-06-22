@@ -8,6 +8,7 @@ to do:
   + replace 'from google.cloud import datastore' with 'import from db import db'
   + 'datastore_client = datastore.Client()' -> 'datastore_client = db.Client()'
 """
+import operator
 import os
 import random
 import json
@@ -203,5 +204,17 @@ e['foo'] = 'bar'
 
 print(f'e: {e}')
 print(f'json.dumps(e): {json.dumps(e)}')
+
+s = [
+    [12, 'tall', 'green', 1],
+    [2, 'short', 'red', 9],
+    [4, 'tall', 'blue', 13]
+]
+
+s = sorted(s, key = operator.itemgetter(1))
+print(f'- s: {s}')
+
+s = sorted(s, key = operator.itemgetter(2))
+print(f'- s: {s}')
 
 
