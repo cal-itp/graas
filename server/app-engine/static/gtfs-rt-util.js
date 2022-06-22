@@ -192,6 +192,10 @@ if (!fetch) {
         return object === null || typeof object === 'undefined';
     }
 
+    exports.isNullUndefinedOrBlank = function(object) {
+        return object === null || typeof object === 'undefined' || object === '';
+    }
+
     exports.sign = function(msg, signatureKey) {
         //this.log("sign()");
         //this.log("- msg: " + msg);
@@ -366,12 +370,10 @@ if (!fetch) {
         });
     };
     exports.hhmmssToSeconds = function(str){
-        this.log("str: " + str);
         arr = str.split(':');
         seconds = arr[0] * 60 * 60;
         seconds += arr[1] * 60;
         seconds += arr[2];
-        this.log("seconds: " + seconds);
         return seconds;
     }
     exports.degreesToRadians = function(degrees){
@@ -379,17 +381,24 @@ if (!fetch) {
     }
 
     exports.haversineDistance = function(lat1, lon1, lat2, lon2){
+        util.log("lat1: "+ lat1);
+        util.log("lon1: "+ lon1);
+        util.log("lat2: "+ lat2);
+        util.log("lon2: "+ lon2);
         let phi1 = this.degreesToRadians(lat1)
         let phi2 = this.degreesToRadians(lat2)
         let delta_phi = this.degreesToRadians(lat2 - lat1)
         let delta_lam = this.degreesToRadians(lon2 - lon1)
-
+        util.log("phi1: "+ phi1);
         let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
             + Math.cos(phi1) * Math.cos(phi2)
             * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
+        util.log("a: "+ a);
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-        return c & this.EARTH_RADIUS_IN_FEET;
+        util.log("c: "+ c);
+        let dist = c * this.EARTH_RADIUS_IN_FEET;
+        util.log("dist: " + dist);
+        return dist;
     }
 
     exports.getFeetAsLatDegrees = function(feet){
@@ -402,19 +411,21 @@ if (!fetch) {
 
 // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
     exports.csvToArray = function(str, delimiter = ",") {
+      //  replace \r\n with \n, to ensure consistent newline characters
+        str = str.replace(/\r\n/g,"\n");
       // slice from start of text to the first \n index
       // use split to create an array from string by delimiter
-      const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+        const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
 
       // slice from \n index + 1 to the end of the text
       // use split to create an array of each csv value row
-      const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+        const rows = str.slice(str.indexOf("\n") + 1).split("\n");
       // Map the rows
       // split values from each row into an array
       // use headers.reduce to create an object
       // object properties derived from headers:values
       // the object passed as an element of the array
-      const arr = rows.map(function (row) {
+        const arr = rows.map(function (row) {
         const values = row.split(delimiter);
         const el = headers.reduce(function (object, header, index) {
           object[header] = values[index];

@@ -1,5 +1,5 @@
 {
-    "server-url": "https://127.0.0.1:8080/",
+    "server-url": "https://lat-long-prototype.wl.r.appspot.com/",
     "agency-count": 5,
     "vehicle-count": 5,
     "interval-time": 3,

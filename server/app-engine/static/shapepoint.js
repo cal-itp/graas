@@ -9,6 +9,7 @@ class ShapePoint {
         if (this.lat === null || lat < this.lat){
             this.lat = lat;
         }
+        // util.log("this.lat: " + this.lat);
     }
 
     setLatIfGreater(lat){
