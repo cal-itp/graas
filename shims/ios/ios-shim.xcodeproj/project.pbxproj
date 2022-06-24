@@ -10,10 +10,10 @@
 		C644F4452862729D00821E89 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = C644F4442862729D00821E89 /* Reachability.swift */; };
 		C69D8B40264C66A400F651AE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69D8B3F264C66A400F651AE /* AppDelegate.swift */; };
 		C69D8B42264C66A400F651AE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69D8B41264C66A400F651AE /* SceneDelegate.swift */; };
-		C69D8B44264C66A400F651AE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69D8B43264C66A400F651AE /* ContentView.swift */; };
 		C69D8B46264C66A400F651AE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C69D8B45264C66A400F651AE /* Assets.xcassets */; };
 		C69D8B49264C66A400F651AE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C69D8B48264C66A400F651AE /* Preview Assets.xcassets */; };
 		C69D8B4C264C66A400F651AE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C69D8B4A264C66A400F651AE /* LaunchScreen.storyboard */; };
+		C6D9D9F828667F480040F7D0 /* NavigatorGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D9D9F728667F480040F7D0 /* NavigatorGeolocation.swift */; };
 		C6F6FD3E264F199200068CDF /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F6FD3D264F199200068CDF /* WebView.swift */; };
 /* End PBXBuildFile section */
 
@@ -22,11 +22,11 @@
 		C69D8B3C264C66A400F651AE /* ios-shim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-shim.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C69D8B3F264C66A400F651AE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C69D8B41264C66A400F651AE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		C69D8B43264C66A400F651AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C69D8B45264C66A400F651AE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C69D8B48264C66A400F651AE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		C69D8B4B264C66A400F651AE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C69D8B4D264C66A400F651AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C6D9D9F728667F480040F7D0 /* NavigatorGeolocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigatorGeolocation.swift; sourceTree = "<group>"; };
 		C6F6FD3D264F199200068CDF /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -63,8 +63,8 @@
 			children = (
 				C69D8B3F264C66A400F651AE /* AppDelegate.swift */,
 				C69D8B41264C66A400F651AE /* SceneDelegate.swift */,
-				C69D8B43264C66A400F651AE /* ContentView.swift */,
 				C6F6FD3D264F199200068CDF /* WebView.swift */,
+				C6D9D9F728667F480040F7D0 /* NavigatorGeolocation.swift */,
 				C69D8B45264C66A400F651AE /* Assets.xcassets */,
 				C69D8B4A264C66A400F651AE /* LaunchScreen.storyboard */,
 				C69D8B4D264C66A400F651AE /* Info.plist */,
@@ -155,8 +155,8 @@
 				C69D8B40264C66A400F651AE /* AppDelegate.swift in Sources */,
 				C6F6FD3E264F199200068CDF /* WebView.swift in Sources */,
 				C69D8B42264C66A400F651AE /* SceneDelegate.swift in Sources */,
+				C6D9D9F828667F480040F7D0 /* NavigatorGeolocation.swift in Sources */,
 				C644F4452862729D00821E89 /* Reachability.swift in Sources */,
-				C69D8B44264C66A400F651AE /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
