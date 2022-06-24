@@ -28,6 +28,10 @@ final class WebView : NSObject, UIViewRepresentable, WKScriptMessageHandler {
         DispatchQueue.global(qos: .userInitiated).async {
             var done = false
 
+            print("pre-sleeping...")
+            Thread.sleep(forTimeInterval: 10)
+            print("done")
+
             while !done {
                 Thread.sleep(forTimeInterval: 1)
 
