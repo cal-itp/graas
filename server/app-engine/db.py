@@ -46,7 +46,9 @@ class Client:
 
     def query(self, kind):
         if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.query(kind)
+            print(f'- kind: {kind}')
+            print(f'- self._cloud_client: {self._cloud_client}')
+            return self._cloud_client.query(kind = kind)
         else:
             return Query(kind, self)
 
@@ -150,7 +152,7 @@ class Entity(dict):
 class Key:
     def __init__(self, kind):
         self.kind = kind
-        self.id = hex(random.getrandbits(128))[2:-1]
+        self.id = hex(random.getrandbits(128))[2:]
 
     def __str__ (self):
         return f'{self.kind}@{self.id}'
@@ -166,7 +168,7 @@ class Query:
         self.order = []
         self.filters = []
 
-    def _multisort(xs, specs):
+    def _multisort(self, xs, specs):
         for key, reverse in reversed(specs):
             xs.sort(key=attrgetter(key), reverse=reverse)
         return xs
@@ -187,12 +189,15 @@ class Query:
         else:
             raise ValueError(f'unsupported operand: {field["operand"]}')
 
-    def fetch(self, limit):
+    def fetch(self, limit=sys.maxsize):
         self.ret = []
 
-        for e in self.client.entities:
+        for e in self.client.entities.values():
             if len(self.ret) >= limit:
                 break
+
+            if not self.kind == e['kind']:
+                continue
 
             matched = True
 
@@ -217,53 +222,12 @@ class Query:
 
             args.append((o, reverse))
 
-        self.ret = _multisort(self.ret, tuple(args))
+        print(f'- self.ret: {self.ret}')
+        print(f'- args: {args}')
+        print(f'- tuple(args): {tuple(args)}')
+        self.ret = self._multisort(self.ret, tuple(args))
 
         return self.ret
 
     def add_filter(self, field, operand, value):
         self.filters.append({'field': field, 'operand': operand, 'value': value})
-
-
-# tmp-1 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1qXoVCyOO+XSOHucIYQqXE4nbKXm2BUV2PHKXVJiY3dg2+HVtmafp0R2ufeAD/QtUfYRC0Ls8hz0ycAfnYGKwg==
-# tmp-2 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESLctx+i80C56DRpQNQbf8HICkbDAbdplbIatiHVNcaXy4IlagIHgRoh8i4Aa9jG+9rUj3AJt4jOV/VpN7PDsvw==
-# tmp-3 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENT3kW2qhCsP96YEugqr8sADndj1uJM9XV7DgkcISYIgsgkhaRK1xxm1Ak0X0FCxUtQ902mdAZXyAoSoHBL8HVg==
-
-"""
-e1 = Entity(Key('agency'))
-e1['agency-id'] = 'tmp-1'
-e1['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1qXoVCyOO+XSOHucIYQqXE4nbKXm2BUV2PHKXVJiY3dg2+HVtmafp0R2ufeAD/QtUfYRC0Ls8hz0ycAfnYGKwg=='
-
-print(f'e1: {e1}')
-
-e2 = Entity(Key('agency'))
-e2['agency-id'] = 'tmp-2'
-e2['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESLctx+i80C56DRpQNQbf8HICkbDAbdplbIatiHVNcaXy4IlagIHgRoh8i4Aa9jG+9rUj3AJt4jOV/VpN7PDsvw=='
-
-print(f'e2: {e2}')
-
-e3 = Entity(Key('agency'))
-e3['agency-id'] = 'tmp-3'
-e3['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENT3kW2qhCsP96YEugqr8sADndj1uJM9XV7DgkcISYIgsgkhaRK1xxm1Ak0X0FCxUtQ902mdAZXyAoSoHBL8HVg=='
-
-print(f'e3: {e3}')
-"""
-
-client = Client()
-#client.put_multi([e1, e2, e3])
-
-"""
-s = [
-    [12, 'tall', 'green', 1],
-    [2, 'short', 'red', 9],
-    [4, 'tall', 'blue', 13]
-]
-
-s = sorted(s, key = operator.itemgetter(1))
-print(f'- s: {s}')
-
-s = sorted(s, key = operator.itemgetter(2))
-print(f'- s: {s}')
-"""
-
-
