@@ -42,6 +42,8 @@ class Client:
                         e = Entity(line)
                         self.entities[e['id']] = e
 
+            print(f'- self.entities: {self.entities}')
+
     def query(self, kind):
         if _db_mode == _DB_CLOUD_MODE:
             return self._cloud_client.query(kind)
@@ -55,16 +57,19 @@ class Client:
             return self.entities.get(str(key), None)
 
     def _write(self):
-        shutil.copyfile(_DB_FILE, _DB_FILE_BAK)
+        if os.path.exists(_DB_FILE):
+            shutil.copyfile(_DB_FILE, _DB_FILE_BAK)
         with open(_DB_FILE, 'w') as f:
             for e in self.entities.values():
                 e.write(f)
 
     def put(self, entity, flush=True):
+        print(f'Client.put()')
+        print(f'- entity: {entity}')
         if _db_mode == _DB_CLOUD_MODE:
             return self._cloud_client.put(entity)
         else:
-            self.entities[str(entity['key'])] = entity
+            self.entities[str(entity['id'])] = entity
 
         if flush:
             self._write()
@@ -112,18 +117,21 @@ class Entity(dict):
             self['kind'] = arg.kind
             self['id'] = arg.id
         elif isinstance(arg, str):
-            obj = json.parse(arg)
+            print(f'- arg: {arg}')
+            obj = json.loads(arg)
+            print(f'- obj: {obj}')
             for key in obj.keys():
                 self[key] = obj[key]
         else:
             raise ValueError('valid arg types are Key and str')
 
     def write(self, f):
-        f.write(json.dumps(self))
+        f.write(json.dumps(self) + '\n')
 
     def __getitem__(self, key):
+        print(f'Entity.__getitem__()')
+        print(f'- key: {key}')
         val = dict.__getitem__(self, key)
-        #print('GET', key)
         return val
 
     def __setitem__(self, key, val):
@@ -217,12 +225,34 @@ class Query:
         self.filters.append({'field': field, 'operand': operand, 'value': value})
 
 
-e = Entity(Key('position'))
-e['foo'] = 'bar'
+# tmp-1 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1qXoVCyOO+XSOHucIYQqXE4nbKXm2BUV2PHKXVJiY3dg2+HVtmafp0R2ufeAD/QtUfYRC0Ls8hz0ycAfnYGKwg==
+# tmp-2 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESLctx+i80C56DRpQNQbf8HICkbDAbdplbIatiHVNcaXy4IlagIHgRoh8i4Aa9jG+9rUj3AJt4jOV/VpN7PDsvw==
+# tmp-3 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENT3kW2qhCsP96YEugqr8sADndj1uJM9XV7DgkcISYIgsgkhaRK1xxm1Ak0X0FCxUtQ902mdAZXyAoSoHBL8HVg==
 
-print(f'e: {e}')
-print(f'json.dumps(e): {json.dumps(e)}')
+"""
+e1 = Entity(Key('agency'))
+e1['agency-id'] = 'tmp-1'
+e1['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1qXoVCyOO+XSOHucIYQqXE4nbKXm2BUV2PHKXVJiY3dg2+HVtmafp0R2ufeAD/QtUfYRC0Ls8hz0ycAfnYGKwg=='
 
+print(f'e1: {e1}')
+
+e2 = Entity(Key('agency'))
+e2['agency-id'] = 'tmp-2'
+e2['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESLctx+i80C56DRpQNQbf8HICkbDAbdplbIatiHVNcaXy4IlagIHgRoh8i4Aa9jG+9rUj3AJt4jOV/VpN7PDsvw=='
+
+print(f'e2: {e2}')
+
+e3 = Entity(Key('agency'))
+e3['agency-id'] = 'tmp-3'
+e3['public-key'] = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENT3kW2qhCsP96YEugqr8sADndj1uJM9XV7DgkcISYIgsgkhaRK1xxm1Ak0X0FCxUtQ902mdAZXyAoSoHBL8HVg=='
+
+print(f'e3: {e3}')
+"""
+
+client = Client()
+#client.put_multi([e1, e2, e3])
+
+"""
 s = [
     [12, 'tall', 'green', 1],
     [2, 'short', 'red', 9],
@@ -234,5 +264,6 @@ print(f'- s: {s}')
 
 s = sorted(s, key = operator.itemgetter(2))
 print(f'- s: {s}')
+"""
 
 

@@ -12,11 +12,11 @@ import os.path
 import sys
 from datetime import datetime
 import time
-from google.cloud import datastore
+import db
 from google.cloud import storage
 import pytz
 
-datastore_client = datastore.Client()
+datastore_client = db.Client()
 last_bucket_check = 0
 last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds
