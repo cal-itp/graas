@@ -13,8 +13,12 @@ import sys
 from datetime import datetime
 import time
 import db
-from google.cloud import storage
 import pytz
+
+try:
+    from google.cloud import storage
+except:
+    print(f'* google.cloud not found')
 
 datastore_client = db.Client()
 last_bucket_check = 0

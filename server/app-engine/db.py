@@ -46,8 +46,8 @@ class Client:
 
     def query(self, kind):
         if _db_mode == _DB_CLOUD_MODE:
-            print(f'- kind: {kind}')
-            print(f'- self._cloud_client: {self._cloud_client}')
+            #print(f'- kind: {kind}')
+            #print(f'- self._cloud_client: {self._cloud_client}')
             return self._cloud_client.query(kind = kind)
         else:
             return Query(kind, self)
@@ -131,8 +131,8 @@ class Entity(dict):
         f.write(json.dumps(self) + '\n')
 
     def __getitem__(self, key):
-        print(f'Entity.__getitem__()')
-        print(f'- key: {key}')
+        #print(f'Entity.__getitem__()')
+        #print(f'- key: {key}')
         val = dict.__getitem__(self, key)
         return val
 
