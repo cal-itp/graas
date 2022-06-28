@@ -122,13 +122,12 @@ class Client:
 class Entity(dict):
     @property
     def key(self):
-        return Key(kind=self['kind'], id=self['id'])
+        return self['key']
 
     def __init__(self, key=None, line=None, exclude_from_indexes=None):
         # ignore 'exclude_from_indexes' in simulator
         if key is not None:
-            self['kind'] = key.kind
-            self['id'] = key.id
+            self['key'] = key
         elif line is not None:
             #print(f'- line: {line}')
             obj = json.loads(line)
@@ -136,7 +135,7 @@ class Entity(dict):
             for k in obj.keys():
                 self[k] = obj[k]
 
-                if 'kind' in obj and 'id' in obj[k]:
+                if 'kind' in obj[k] and 'id' in obj[k]:
                     self[k] = Key(kind=obj[k]['kind'], id=obj[k]['id'])
         else:
             raise ValueError('either \'key\' or \'line\' must be given')
