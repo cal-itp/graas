@@ -28,7 +28,7 @@ except ImportError:
     _db_mode = _DB_LOCAL_MODE
 
 def serialize(obj):
-    print('serialize()')
+    #print('serialize()')
     return obj.__dict__
 
 class Client:
@@ -44,7 +44,7 @@ class Client:
                         line = line.rstrip()
                         #print(f'-- line: {line}')
                         e = Entity(line=line)
-                        self.entities[e['id']] = e
+                        self.entities[str(e['key'])] = e
 
             #print(f'- self.entities: {self.entities}')
 
@@ -75,7 +75,7 @@ class Client:
         if _db_mode == _DB_CLOUD_MODE:
             return self._cloud_client.put(entity)
         else:
-            self.entities[str(entity.key.id)] = entity
+            self.entities[str(entity.key)] = entity
 
             if flush:
                 self._write()
@@ -135,7 +135,7 @@ class Entity(dict):
             for k in obj.keys():
                 self[k] = obj[k]
 
-                if 'kind' in obj[k] and 'id' in obj[k]:
+                if hasattr(obj[k], '__iter__') and 'kind' in obj[k] and 'id' in obj[k]:
                     self[k] = Key(kind=obj[k]['kind'], id=obj[k]['id'])
         else:
             raise ValueError('either \'key\' or \'line\' must be given')
@@ -143,9 +143,7 @@ class Entity(dict):
     def write(self, f):
         #print(f'write()')
         #print(f'- self: {self}')
-        key = self.key
         f.write(json.dumps(self, default=serialize) + '\n')
-        self.key = key
 
     def __getitem__(self, key):
         #print(f'Entity.__getitem__()')
@@ -155,10 +153,6 @@ class Entity(dict):
 
     def __setitem__(self, key, val):
         #print('SET', key, val)
-        if key == 'id' and 'id' in self:
-            raise ValueError('\'id\' is a reserved key')
-        if key == 'kind' and 'kind' in self:
-            raise ValueError('\'kind\' is a reserved key')
         dict.__setitem__(self, key, val)
 
     def __repr__(self):
@@ -190,25 +184,30 @@ class Query:
         self.filters = []
 
     def _multisort(self, xs, specs):
+        #print(f'_multisort()')
+        #print(f'- xs: {xs}')
+        #print(f'- specs: {specs}')
         for key, reverse in reversed(specs):
-            xs.sort(key=operator.attrgetter(key), reverse=reverse)
+            #print(f'-- key: {key}')
+            #print(f'-- reverse: {reverse}')
+            xs.sort(key=operator.itemgetter(key), reverse=reverse)
         return xs
 
     def _matches(self, entity, filter):
         v = entity[filter['field']]
 
-        if not isinstance(v, (int, long, float, str)):
+        if not isinstance(v, (int, float, str)):
             raise ValueError(f'entity type error: {type(v)}')
 
-        if not isinstance(filter['value'], (int, long, float, str)):
+        if not isinstance(filter['value'], (int, float, str)):
             raise ValueError(f'filter type error: {type(filter["value"])}')
 
-        if field['operand'] == '=':
+        if filter['operand'] == '=':
             return v == filter['value']
-        elif field['operand'] == '<':
+        elif filter['operand'] == '<':
             return v < filter['value']
         else:
-            raise ValueError(f'unsupported operand: {field["operand"]}')
+            raise ValueError(f'unsupported operand: {filter["operand"]}')
 
     def fetch(self, limit=sys.maxsize):
         self.ret = []
@@ -217,13 +216,13 @@ class Query:
             if len(self.ret) >= limit:
                 break
 
-            if not self.kind == e['kind']:
+            if not self.kind == e['key'].kind:
                 continue
 
             matched = True
 
             for f in self.filters:
-                if not _matches(e, f):
+                if not self._matches(e, f):
                     matched = False
                     break
 
@@ -235,11 +234,11 @@ class Query:
             reverse = False
 
             if o.startswith('-'):
-                o = o[1: -1]
+                o = o[1:]
                 reverse = True
 
             if o.startswith('+'):
-                o = o[1: -1]
+                o = o[1:]
 
             args.append((o, reverse))
 
