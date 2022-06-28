@@ -27,6 +27,10 @@ try:
 except ImportError:
     _db_mode = _DB_LOCAL_MODE
 
+def serialize(obj):
+    print('serialize()')
+    return obj.__dict__
+
 class Client:
     def __init__(self):
         if _db_mode == _DB_CLOUD_MODE:
@@ -38,11 +42,11 @@ class Client:
                 with open(_DB_FILE) as f:
                     for line in f:
                         line = line.rstrip()
-                        print(f'-- line: {line}')
-                        e = Entity(line)
+                        #print(f'-- line: {line}')
+                        e = Entity(line=line)
                         self.entities[e['id']] = e
 
-            print(f'- self.entities: {self.entities}')
+            #print(f'- self.entities: {self.entities}')
 
     def query(self, kind):
         if _db_mode == _DB_CLOUD_MODE:
@@ -66,15 +70,15 @@ class Client:
                 e.write(f)
 
     def put(self, entity, flush=True):
-        print(f'Client.put()')
-        print(f'- entity: {entity}')
+        #print(f'Client.put()')
+        #print(f'- entity: {entity}')
         if _db_mode == _DB_CLOUD_MODE:
             return self._cloud_client.put(entity)
         else:
-            self.entities[str(entity['id'])] = entity
+            self.entities[str(entity.key.id)] = entity
 
-        if flush:
-            self._write()
+            if flush:
+                self._write()
 
     def put_multi(self, entity_list):
         if _db_mode == _DB_CLOUD_MODE:
@@ -83,14 +87,16 @@ class Client:
             for e in entity_list:
                 self.put(e, False)
 
-        self._write()
+            self._write()
 
     def delete(self, key, flush=True):
         if _db_mode == _DB_CLOUD_MODE:
             return self._cloud_client.delete(key)
+        else:
+            self.entities.pop(key.id)
 
-        if flush:
-            self._write()
+            if flush:
+                self._write()
 
     def delete_multi(self, key_list):
         if _db_mode == _DB_CLOUD_MODE:
@@ -99,7 +105,7 @@ class Client:
             for k in key_list:
                 self.delete(k, False)
 
-        self._write()
+            self._write()
 
     def key(self, kind):
         if _db_mode == _DB_CLOUD_MODE:
@@ -107,28 +113,40 @@ class Client:
         else:
             return Key(kind)
 
-    def entity(self, key):
+    def entity(self, key=None, line=None, exclude_from_indexes=None):
         if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.entity(key)
+            return self._cloud_client.entity(key, line, exclude_from_indexes)
         else:
             return Entity(key)
 
 class Entity(dict):
-    def __init__(self, arg):
-        if isinstance(arg, Key):
-            self['kind'] = arg.kind
-            self['id'] = arg.id
-        elif isinstance(arg, str):
-            print(f'- arg: {arg}')
-            obj = json.loads(arg)
-            print(f'- obj: {obj}')
-            for key in obj.keys():
-                self[key] = obj[key]
+    @property
+    def key(self):
+        return Key(kind=self['kind'], id=self['id'])
+
+    def __init__(self, key=None, line=None, exclude_from_indexes=None):
+        # ignore 'exclude_from_indexes' in simulator
+        if key is not None:
+            self['kind'] = key.kind
+            self['id'] = key.id
+        elif line is not None:
+            #print(f'- line: {line}')
+            obj = json.loads(line)
+            #print(f'- obj: {obj}')
+            for k in obj.keys():
+                self[k] = obj[k]
+
+                if 'kind' in obj and 'id' in obj[k]:
+                    self[k] = Key(kind=obj[k]['kind'], id=obj[k]['id'])
         else:
-            raise ValueError('valid arg types are Key and str')
+            raise ValueError('either \'key\' or \'line\' must be given')
 
     def write(self, f):
-        f.write(json.dumps(self) + '\n')
+        #print(f'write()')
+        #print(f'- self: {self}')
+        key = self.key
+        f.write(json.dumps(self, default=serialize) + '\n')
+        self.key = key
 
     def __getitem__(self, key):
         #print(f'Entity.__getitem__()')
@@ -138,6 +156,10 @@ class Entity(dict):
 
     def __setitem__(self, key, val):
         #print('SET', key, val)
+        if key == 'id' and 'id' in self:
+            raise ValueError('\'id\' is a reserved key')
+        if key == 'kind' and 'kind' in self:
+            raise ValueError('\'kind\' is a reserved key')
         dict.__setitem__(self, key, val)
 
     def __repr__(self):
@@ -146,13 +168,13 @@ class Entity(dict):
 
     def update(self, *args, **kwargs):
         #print('update', args, kwargs)
-        for k, v in dict(*args, **kwargs).iteritems():
+        for k, v in dict(*args, **kwargs).items():
             self[k] = v
 
 class Key:
-    def __init__(self, kind):
+    def __init__(self, kind, id=None):
         self.kind = kind
-        self.id = hex(random.getrandbits(128))[2:]
+        self.id = hex(random.getrandbits(128))[2:] if id is None else id
 
     def __str__ (self):
         return f'{self.kind}@{self.id}'
@@ -170,7 +192,7 @@ class Query:
 
     def _multisort(self, xs, specs):
         for key, reverse in reversed(specs):
-            xs.sort(key=attrgetter(key), reverse=reverse)
+            xs.sort(key=operator.attrgetter(key), reverse=reverse)
         return xs
 
     def _matches(self, entity, filter):
@@ -222,9 +244,9 @@ class Query:
 
             args.append((o, reverse))
 
-        print(f'- self.ret: {self.ret}')
-        print(f'- args: {args}')
-        print(f'- tuple(args): {tuple(args)}')
+        #print(f'- self.ret: {self.ret}')
+        #print(f'- args: {args}')
+        #print(f'- tuple(args): {tuple(args)}')
         self.ret = self._multisort(self.ret, tuple(args))
 
         return self.ret
