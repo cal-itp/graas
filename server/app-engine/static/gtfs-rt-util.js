@@ -73,8 +73,11 @@ if (!fetch) {
         if(date === null){
             return Date.now();
         } else {
-            let d = new Date(date);
-            return Date.seconds();
+            let year = date.substring(0, 4);
+            let month = date.substring(4, 6);
+            let day = date.substring(6, 8);
+            let d = new Date(year, month - 1, day);
+            return d.getTime()/1000;
         }
     }
     exports.getShortDate = function(date) {
@@ -373,40 +376,46 @@ if (!fetch) {
         arr = str.split(':');
         seconds = arr[0] * 60 * 60;
         seconds += arr[1] * 60;
-        seconds += arr[2];
+        seconds += arr[2] * 1;
         return seconds;
     }
+
+    exports.padIfShort = function(s){
+        if(s.toString().length === 1){
+            return "0" + s;
+        } else return s;
+    }
+
+    exports.secondsToHhmmss = function(seconds){
+        let hours = parseInt(seconds / 60 / 60);
+        seconds -= hours * 60 * 60;
+        let minutes = parseInt(seconds / 60);
+        seconds -= minutes * 60;
+        return `${hours}:${this.padIfShort(minutes)}:${this.padIfShort(seconds)}`;
+    }
+
     exports.degreesToRadians = function(degrees){
         return degrees * (Math.PI/180);
     }
 
     exports.haversineDistance = function(lat1, lon1, lat2, lon2){
-        util.log("lat1: "+ lat1);
-        util.log("lon1: "+ lon1);
-        util.log("lat2: "+ lat2);
-        util.log("lon2: "+ lon2);
         let phi1 = this.degreesToRadians(lat1)
         let phi2 = this.degreesToRadians(lat2)
         let delta_phi = this.degreesToRadians(lat2 - lat1)
         let delta_lam = this.degreesToRadians(lon2 - lon1)
-        util.log("phi1: "+ phi1);
         let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
             + Math.cos(phi1) * Math.cos(phi2)
             * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
-        util.log("a: "+ a);
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        util.log("c: "+ c);
-        let dist = c * this.EARTH_RADIUS_IN_FEET;
-        util.log("dist: " + dist);
-        return dist;
+        return c * this.EARTH_RADIUS_IN_FEET;
     }
 
     exports.getFeetAsLatDegrees = function(feet){
-        return feet / FEET_PER_LAT_DEGREE;
+        return feet / this.FEET_PER_LAT_DEGREE;
     }
 
     exports.getFeetAsLongDegrees = function(feet){
-        return feet / FEET_PER_LONG_DEGREE;
+        return feet / this.FEET_PER_LONG_DEGREE;
     }
 
 // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
