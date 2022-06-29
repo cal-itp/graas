@@ -412,7 +412,7 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
 
-    entity = datastore_client.entity(key=datastore_client.key('alert'))
+    entity = util.create_entity(key=datastore_client.key('alert'))
     alert['time_stamp'] = int(time.time())
 
     entity.update(alert)
@@ -455,7 +455,7 @@ def delete_alert(datastore_client, alert):
     print(f'+ deleted {alerts_to_delete} alerts')
 
 def add_position(datastore_client, pos):
-    entity = datastore_client.entity(key=datastore_client.key('position'))
+    entity = util.create_entity(key=datastore_client.key('position'))
     entity.update(pos)
     batch_writer.add(entity, 'position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
 
@@ -682,7 +682,7 @@ def handle_stop_entities(datastore_client, data):
             results = list(query.fetch())
 
             if len(results) == 0:
-                entity = datastore_client.entity(key=datastore_client.key('stop-time'))
+                entity = util.create_entity(key=datastore_client.key('stop-time'))
                 datastore_client.put(entity)
                 entity_key_cache.add(name, entity.key)
                 entity_key = entity.key
@@ -695,7 +695,7 @@ def handle_stop_entities(datastore_client, data):
                 entity_key_cache.remove(name)
                 continue
 
-        entity = datastore_client.entity(key=entity_key)
+        entity = util.create_entity(key=entity_key)
 
         entity.update(e)
         batch_writer.add(entity, 'stop-time-' + e['agency_id'] + '-' + e['vehicle_id'] + str(e['stop_sequence']))
@@ -750,7 +750,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- assignment_summary: {assignment_summary}')
 
-        entity1 = datastore_client.entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
+        entity1 = util.create_entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
         entity1.update(assignment_summary)
         datastore_client.put(entity1)
 
@@ -759,7 +759,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- block_list: {block_list}')
 
-        entity2 = datastore_client.entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
+        entity2 = util.create_entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
         entity2.update(block_list)
         datastore_client.put(entity2)
 
@@ -772,7 +772,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- block_metadata: {block_metadata}')
 
-        entity = datastore_client.entity(key=datastore_client.key('block-metadata'))
+        entity = util.create_entity(key=datastore_client.key('block-metadata'))
         entity.update(block_metadata)
         datastore_client.put(entity)
 
@@ -860,7 +860,7 @@ def handle_pos_update(datastore_client, data):
         #print(f'- profile query.fetch(): {time.time() - then} seconds')
 
         if len(results) == 0:
-            entity = datastore_client.entity(key=datastore_client.key('current-position'))
+            entity = util.create_entity(key=datastore_client.key('current-position'))
             entity['timestamp'] = 0
             datastore_client.put(entity)
             entity_key_cache.add(name, entity.key)
@@ -875,7 +875,7 @@ def handle_pos_update(datastore_client, data):
             result['status'] = 'no entity key'
             return result
 
-    entity = datastore_client.entity(key=entity_key)
+    entity = util.create_entity(key=entity_key)
     entity.update(data)
 
     #then = time.time()

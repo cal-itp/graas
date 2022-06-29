@@ -39,6 +39,12 @@ last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds
 PACIFIC_TZ = pytz.timezone("America/Los_Angeles")
 
+def create_entity(key=None, exclude_from_indexes=()):
+    if hasattr(datastore_client, 'entity'):
+        return datastore_client.entity(key, exclude_from_indexes)
+    else:
+        return datastore.Entity(key, exclude_from_indexes)
+
 # Pull agency IDs & public keys from datastore, save them
 def read_public_keys():
     """Read public keys for agencies from DB and return as dictionary that maps IDs to keys.

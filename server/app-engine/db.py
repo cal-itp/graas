@@ -64,7 +64,7 @@ class Client:
         self._write()
 
     def delete(self, key, flush=True):
-        self.entities.pop(key.id)
+        self.entities.pop(key)
 
         if flush:
             self._write()
