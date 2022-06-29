@@ -12,15 +12,28 @@ import os.path
 import sys
 from datetime import datetime
 import time
-import db
 import pytz
+
+datastore_client = None
+
+try:
+    from google.cloud import datastore
+    datastore_client = datastore.Client()
+    print(f'- datastore_client: {dir(datastore_client)}')
+except:
+    print(f'********************************************************')
+    print(f'*                                                      *')
+    print(f'* google.cloud.datastore not found, using DB simulator *')
+    print(f'*                                                      *')
+    print(f'********************************************************')
+    import db
+    datastore_client = db.Client()
 
 try:
     from google.cloud import storage
 except:
-    print(f'* google.cloud not found')
+    print(f'* google.cloud.storage not found *')
 
-datastore_client = db.Client()
 last_bucket_check = 0
 last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds

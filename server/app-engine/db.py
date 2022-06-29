@@ -15,17 +15,8 @@ import json
 import shutil
 import sys
 
-_DB_CLOUD_MODE = 'cloud'
-_DB_LOCAL_MODE = 'local'
 _DB_FILE     = 'db-sim.json'
 _DB_FILE_BAK = 'db-sim.json.bak'
-
-_db_mode = _DB_CLOUD_MODE
-
-try:
-    from google.cloud import datastore
-except ImportError:
-    _db_mode = _DB_LOCAL_MODE
 
 def serialize(obj):
     #print('serialize()')
@@ -33,34 +24,23 @@ def serialize(obj):
 
 class Client:
     def __init__(self):
-        if _db_mode == _DB_CLOUD_MODE:
-            self._cloud_client = datastore.Client()
-        else:
-            self.entities = {}
+        self.entities = {}
 
-            if os.path.exists(_DB_FILE):
-                with open(_DB_FILE) as f:
-                    for line in f:
-                        line = line.rstrip()
-                        #print(f'-- line: {line}')
-                        e = Entity(line=line)
-                        self.entities[str(e['key'])] = e
+        if os.path.exists(_DB_FILE):
+            with open(_DB_FILE) as f:
+                for line in f:
+                    line = line.rstrip()
+                    #print(f'-- line: {line}')
+                    e = Entity(line=line)
+                    self.entities[str(e['key'])] = e
 
-            #print(f'- self.entities: {self.entities}')
+        #print(f'- self.entities: {self.entities}')
 
     def query(self, kind):
-        if _db_mode == _DB_CLOUD_MODE:
-            #print(f'- kind: {kind}')
-            #print(f'- self._cloud_client: {self._cloud_client}')
-            return self._cloud_client.query(kind = kind)
-        else:
-            return Query(kind, self)
+        return Query(kind, self)
 
     def get(self, key):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.get(key)
-        else:
-            return self.entities.get(str(key), None)
+        return self.entities.get(str(key), None)
 
     def _write(self):
         if os.path.exists(_DB_FILE):
@@ -72,52 +52,34 @@ class Client:
     def put(self, entity, flush=True):
         #print(f'Client.put()')
         #print(f'- entity: {entity}')
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.put(entity)
-        else:
-            self.entities[str(entity.key)] = entity
+        self.entities[str(entity.key)] = entity
 
-            if flush:
-                self._write()
+        if flush:
+            self._write()
 
     def put_multi(self, entity_list):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.put_multi(entity_list)
-        else:
-            for e in entity_list:
-                self.put(e, False)
+        for e in entity_list:
+            self.put(e, False)
 
-            self._write()
+        self._write()
 
     def delete(self, key, flush=True):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.delete(key)
-        else:
-            self.entities.pop(key.id)
+        self.entities.pop(key.id)
 
-            if flush:
-                self._write()
-
-    def delete_multi(self, key_list):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.delete_multi(key_list)
-        else:
-            for k in key_list:
-                self.delete(k, False)
-
+        if flush:
             self._write()
 
+    def delete_multi(self, key_list):
+        for k in key_list:
+            self.delete(k, False)
+
+        self._write()
+
     def key(self, kind):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.key(kind)
-        else:
-            return Key(kind)
+        return Key(kind)
 
     def entity(self, key=None, line=None, exclude_from_indexes=None):
-        if _db_mode == _DB_CLOUD_MODE:
-            return self._cloud_client.entity(key, line, exclude_from_indexes)
-        else:
-            return Entity(key)
+        return Entity(key)
 
 class Entity(dict):
     @property
@@ -169,6 +131,9 @@ class Key:
         self.kind = kind
         self.id = hex(random.getrandbits(128))[2:] if id is None else id
 
+    def __repr__ (self):
+        return f'{self.kind}@{self.id}'
+
     def __str__ (self):
         return f'{self.kind}@{self.id}'
 
@@ -194,6 +159,11 @@ class Query:
         return xs
 
     def _matches(self, entity, filter):
+        #print(f'_matches()')
+        #print(f'- entity: {entity}')
+        #print(f'- filter: {filter}')
+        if not filter['field'] in entity:
+            return False
         v = entity[filter['field']]
 
         if not isinstance(v, (int, float, str)):
@@ -202,6 +172,7 @@ class Query:
         if not isinstance(filter['value'], (int, float, str)):
             raise ValueError(f'filter type error: {type(filter["value"])}')
 
+        # just the ops we need for GRaaS for now
         if filter['operand'] == '=':
             return v == filter['value']
         elif filter['operand'] == '<':
@@ -246,6 +217,7 @@ class Query:
         #print(f'- args: {args}')
         #print(f'- tuple(args): {tuple(args)}')
         self.ret = self._multisort(self.ret, tuple(args))
+        #print(f'- self.ret: {self.ret}')
 
         return self.ret
 
