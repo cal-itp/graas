@@ -111,6 +111,15 @@ if (!fetch) {
         return d;
     }
 
+    exports.getSecondsSinceMidnight = function(date){
+        if (!date) date = new Date();
+        let nowSeconds = Math.floor(date.getTime() / 1000);
+        util.log(`nowSeconds: ${nowSeconds}`);
+        let midnightSeconds = Math.floor(this.getMidnightDate().getTime() / 1000);
+        util.log(`midnightSeconds: ${midnightSeconds}`);
+        return nowSeconds - midnightSeconds;
+    }
+
     exports.nextDay = function(date) {
         let d = new Date();
         d.setTime(date.getTime() + this.MILLIS_PER_DAY);
@@ -394,16 +403,24 @@ if (!fetch) {
         return `${hours}:${this.padIfShort(minutes)}:${this.padIfShort(seconds)}`;
     }
 
+    exports.secondsToHhmm = function(seconds){
+        let hours = parseInt(seconds / 60 / 60);
+        seconds -= hours * 60 * 60;
+        let minutes = parseInt(seconds / 60);
+        seconds -= minutes * 60;
+        return `${hours}:${this.padIfShort(minutes)}`;
+    }
+
     exports.degreesToRadians = function(degrees){
         return degrees * (Math.PI/180);
     }
 
-    exports.haversineDistance = function(lat1, lon1, lat2, lon2){
+    exports.haversineDistance = async function(lat1, lon1, lat2, lon2){
         let phi1 = this.degreesToRadians(lat1)
         let phi2 = this.degreesToRadians(lat2)
         let delta_phi = this.degreesToRadians(lat2 - lat1)
         let delta_lam = this.degreesToRadians(lon2 - lon1)
-        let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
+        let a = await (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
             + Math.cos(phi1) * Math.cos(phi2)
             * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
@@ -422,6 +439,7 @@ if (!fetch) {
     exports.csvToArray = function(str, delimiter = ",") {
       //  replace \r\n with \n, to ensure consistent newline characters
         str = str.replace(/\r\n/g,"\n");
+        str = str.trim();
       // slice from start of text to the first \n index
       // use split to create an array from string by delimiter
         const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
@@ -443,8 +461,7 @@ if (!fetch) {
         return el;
       });
 
-      // return the array (hacky fix for null last row added)
-      return arr.slice(0,-1);
+      return arr;
     }
 
 }(typeof exports === 'undefined' ? this.util = {} : exports));

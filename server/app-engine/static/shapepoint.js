@@ -1,32 +1,40 @@
 class ShapePoint {
     constructor(lat = null, lon = null) {
         util.log("ShapePoint constructor");
-        this.lat = lat;
-        this.lon = lon;
+        if(lat !== null){
+            this.lat = parseFloat(lat);
+        } else this.lat = lat;
+        if(lon !== null){
+            this.lon = parseFloat(lon);
+        } else this.lon = lon;
     }
 
     setLatIfLess(lat){
-        if (this.lat === null || lat < this.lat){
-            this.lat = lat;
+        let latFloat = parseFloat(lat);
+        if (this.lat === null || latFloat < this.lat){
+            this.lat = latFloat;
         }
         // util.log("this.lat: " + this.lat);
     }
 
     setLatIfGreater(lat){
-        if (this.lat === null || lat > this.lat){
-            this.lat = lat;
+        let latFloat = parseFloat(lat);
+        if (this.lat === null || latFloat > this.lat){
+            this.lat = latFloat;
         }
     }
 
     setLonIfLess(lon){
-        if (this.lon === null || lon < this.lon){
-            this.lon = lon;
+        let lonFloat = parseFloat(lon);
+        if (this.lon === null || lonFloat < this.lon){
+            this.lon = lonFloat;
         }
     }
 
     setLonIfGreater(lon){
-        if (this.lon === null || lon > this.lon){
-            this.lon = lon;
+        let lonFloat = parseFloat(lon);
+        if (this.lon === null || lonFloat > this.lon){
+            this.lon = lonFloat;
         }
     }
 
