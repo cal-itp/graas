@@ -13,7 +13,7 @@
     
     
       
-        <title>Setting up a new instance of GRaaS - GRaaS Documentation</title>
+        <title>CONTRIBUTING - GRaaS Documentation</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#graas-quickstart-for-evaluation-purposes" class="md-skip">
+        <a href="#contributing-to-graas" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Setting up a new instance of GRaaS
+              CONTRIBUTING
             
           </span>
         </div>
@@ -208,14 +208,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
       
       
@@ -236,21 +234,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../new-instance-setup/" class="md-nav__link">
         Setting up a new instance of GRaaS
       </a>
-      
     </li>
   
 
@@ -338,44 +326,11 @@
                 
 
 
-<h1 id="graas-quickstart-for-evaluation-purposes">GRaaS Quickstart for Evaluation purposes</h1>
-<p><strong>NOTE: This option is for evaluation purposes only and not suitable for production</strong></p>
-<ol>
-<li>Create a venv using <code>server/app-engine/requirements-cloudless.txt</code></li>
-<li>Activate venv</li>
-<li>Run <code>python server/app-engine/main.py -c &lt;path-to-cert.pem&gt; -k &lt;path-to-key.pem&gt;</code> <em>.pem files constitute a self-signed https cert. See below on how to generate cert</em></li>
-<li>(optional) Put the server online using a tool like <a href="https://www.ngrok.com">ngrok</a></li>
-</ol>
-<h1 id="graas-instance-setup">GRaaS Instance Setup</h1>
-<p>Follow these instructions to set up your own instance of GRaaS.</p>
-<ol>
-<li>Clone or fork the GRaaS repo.</li>
-<li>From <code>server/app-engine</code>, set up a <a href="https://docs.python.org/3/library/venv.html">python virtual environment</a>, and then run <code>pip install -r requirements.txt</code> to install dependencies.</li>
-<li>Create a <a href="http://console.cloud.google.com">new Google Cloud project</a> (you will need to login to a Google user account first).</li>
-<li>Navigate to "Cloud Storage" and, if you haven't already, start a free trial. This is the one part of the setup where you'll need to put down a credit card - Google says you won't be charged without a warning.</li>
-<li>Follow the quickstart instructions <a href="http://cloud.google.com/sdk/docs/quickstart">here</a> to install the latest SDK version, and then follow steps 1-4 of under "Initializing the Cloud SDK".<ul>
-<li>Verify installation by running <code>gcloud --version</code> from the command line</li>
-<li>Verify that billing is enabled by running <code>gcloud beta billing projects describe YOUR_PROJECT_NAME</code> from the command line. Observe response like:</li>
-</ul>
-</li>
-</ol>
-<pre><code>    billingAccountName: billingAccounts/XXXXXX-XXXXXX-XXXXXX
-    billingEnabled: true
-    name: projects/YOUR_PROJECT_NAME/billingInfo
-    projectId: YOUR_PROJECT_NAME
-</code></pre>
-<ol>
-<li>Follow Google's instructions for <em>Creating a service account</em> and <em>Setting the environment variable</em> <a href="http://cloud.google.com/docs/authentication/getting-started">here</a>. Grant the service account the role of "Storage Admin."</li>
-<li>Under IAM &amp; Admin &gt; IAM, grant your Google account email address and the service account with Storage Admin, Storage Object Admin, and Cloud Datastore Owner access.</li>
-<li>Follow steps 1-3 under <a href="https://firebase.google.com/docs/web/setup?authuser=0">Add Firebase to your Project</a>. Enable Hosting.</li>
-<li>Navigate to the <a href="http://firebase.google.com/docs/web/learn-more#config-object">Firebase config object</a>, and update <code>server/static/firebaseconfig.js</code> with the variables from your project.</li>
-<li>Generate keys for HTTPS authentication, by running the following command:
-<code>openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365</code>. This will generate two files, cert.pem and key.pem.</li>
-<li>You are ready to run the server locally: from your virtual environment, run  <code>python main.py -c &lt;path-to-cert.pem&gt; -k &lt;path-to-key.pem&gt;</code>. This should launch the local server - from a web browser, go to the URL listed (likely https://127.0.0.1:8080). If the webpage loads correctly, continue to the next step.</li>
-<li>Follow instructions in the <a href="../server/onboarding-runbook/">Onboarding Runbook</a> to create a new test agency. Note that you'll need to replace the directory path 'graas-resources' in <code>server/agency-config/gtfs/copy-to-bucket.sh</code>,<code>server/app-engine/static/graas.js</code>, <code>server/app-engine/util.py</code>.</li>
-<li>Once you have a new agency created, load the local web app again and scan the QR you've just created (you'll need to pull it up on a separate device, or print it).</li>
-<li>Deploy the app with <code>gcloud app deploy</code>.</li>
-</ol>
+<h1 id="contributing-to-graas">Contributing to GRaaS</h1>
+<p>If you are interested in contributing to GRaaS, you hopefully have already <a href="../new-instance-setup/">set up your own instance of the app</a>. We welcome your support in both improving the existing capabilities for the app and expanding it to address additional needs.</p>
+<p>If you'd like to report a bug please file an Issue with a detailed description.</p>
+<p>Follow the <a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits</a> standard for all commits.</p>
+<p>To provide a clear expectation of how our members should interact with the project and each other, GRaaS has adopted the <a href="https://github.com/cal-itp/graas/blob/main/docs/code-of-conduct.md">Contributor Covenant Code of Conduct</a>.</p>
 
               
             </article>
@@ -386,42 +341,6 @@
       </main>
       
         <footer class="md-footer">
-  
-    
-    <nav class="md-footer__inner md-grid" aria-label="Footer" >
-      
-        
-        <a href="../attribution/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Attribution" rel="prev">
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-          </div>
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              Attribution
-            </div>
-          </div>
-        </a>
-      
-      
-        
-        <a href="../server/onboarding-runbook/" class="md-footer__link md-footer__link--next" aria-label="Next: Agency Onboarding Runbook" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Agency Onboarding Runbook
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
