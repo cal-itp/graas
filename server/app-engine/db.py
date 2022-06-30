@@ -2,11 +2,6 @@
 IMPORTANT NOTE: this a terrible DB simulation meant for only one thing - to let developers get
 a first impression of the system without having to set up an actual database. The implementation
 is naive, inefficient, incomplete and may well lose all data you add to it. You have been warned.
-
-to do:
-- util.py
-  + replace 'from google.cloud import datastore' with 'import from db import db'
-  + 'datastore_client = datastore.Client()' -> 'datastore_client = db.Client()'
 """
 import operator
 import os
