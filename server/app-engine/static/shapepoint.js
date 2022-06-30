@@ -14,7 +14,6 @@ class ShapePoint {
         if (this.lat === null || latFloat < this.lat){
             this.lat = latFloat;
         }
-        // util.log("this.lat: " + this.lat);
     }
 
     setLatIfGreater(lat){
@@ -46,9 +45,6 @@ class ShapePoint {
         return util.getHaversineDistance(this.lat, this.lon, plat, plon)
     }
 
-    __str__(){
-        return `(${this.lat}, ${this.lon})`;
-    }
     getLat() {
         return this.lat;
     }

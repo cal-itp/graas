@@ -24,7 +24,7 @@ class TripInference {
         this.lastCandidateFlush = Date.now();
 
         await this.getCalendarMap();
-        util.log("this.calendarMap: " + JSON.stringify(this.calendarMap));
+        // util.log("this.calendarMap: " + JSON.stringify(this.calendarMap));
         await this.getRouteMap();
         // util.log("this.routeMap: " + JSON.stringify(this.routeMap));
 
@@ -40,7 +40,7 @@ class TripInference {
 
         if (this.epochSeconds < 0) {
             this.epochSeconds = Math.floor(Date.now() / 1000);
-            util.log(`- epochSeconds: ${this.epochSeconds}`);
+            // util.log(`- epochSeconds: ${this.epochSeconds}`);
         }
 
         this.stops = await this.getStops();
@@ -399,11 +399,11 @@ class TripInference {
             index += 1;
         }
         // // //  REMOVE ME: for testing only
-        for (let i=0; i<wayPoints.length; i++){
-            if (!('time' in wayPoints[i])){
-                util.log(`.. ${i}`);
-            }
-        }
+        // for (let i=0; i<wayPoints.length; i++){
+        //     if (!('time' in wayPoints[i])){
+        //         util.log(`.. ${i}`);
+        //     }
+        // }
     }
 
     // For simpler trips `shape_dist_traveled` is optional. If the attribute is missing, we can take the following approach:
@@ -436,7 +436,7 @@ class TripInference {
             // util.log("JSON.stringify(anchorList): " + JSON.stringify(anchorList));
         }
         for (let i=0; i<20; i++){
-            util.log("i: " + i);
+            // util.log("i: " + i);
             // let lastAnchorList = Object.assign({}, anchorList);
             let lastAnchorList = JSON.parse(JSON.stringify(anchorList));
 
@@ -542,7 +542,6 @@ class TripInference {
         for (let i=0; i<stopTimes.length; i++){
             let traveled = stopTimes[i]['traveled'];
             let time = stopTimes[i]['arrival_time'];
-            // what does this mean?
             let min_difference = Number.MAX_VALUE;
             let min_index = -1;
 
@@ -564,7 +563,7 @@ class TripInference {
         util.log(`- makeTripSegments()`);
         util.log(`- maxSegmentLength: ${maxSegmentLength}`);
         util.log(`- trip_id: ${trip_id}`);
-        // util.log(`- wayPoints: ${wayPoints}`);
+        // util.log(`- wayPoints: ${JSON.stringify(wayPoints)}`);
 
         let segmentStart = 0;
         let index = segmentStart;
@@ -573,7 +572,6 @@ class TripInference {
         let firstSegment = true;
         let segmentCount = 1;
 
-        // let area = Area()
         let indexList = [];
         let segmentList = [];
 
@@ -592,7 +590,7 @@ class TripInference {
                 indexList.push(gridIndex);
             }
 
-            let distance = util.haversineDistance(lp['lat'], lp['lon'], p['lat'], p['lon']);
+            let distance = await util.haversineDistance(lp['lat'], lp['lon'], p['lat'], p['lon']);
             segmentLength += distance;
 
             if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1){
@@ -629,7 +627,6 @@ class TripInference {
                 }
 
                 segmentLength = 0;
-                // area = Area()
                 indexList = [];
 
                 index += 1;
@@ -697,7 +694,7 @@ class TripInference {
             trip_id = segment.getTripId();
 
             let candidate = null;
-            util.log("JSON.stringify(this.tripCandidates: " + JSON.stringify(this.tripCandidates));
+            // util.log("JSON.stringify(this.tripCandidates: " + JSON.stringify(this.tripCandidates));
             if (trip_id in this.tripCandidates){
                 candidate = this.tripCandidates[trip_id];
             } else {
@@ -746,11 +743,12 @@ class TripInference {
 
     // NOTE: brute force approach that returns the *first*
     // stop within max_distance feet from lat/lon
-    getStopForPosition(lat, lon, maxDistance){
+    async getStopForPosition(lat, lon, maxDistance){
         let stop_id = null;
 
         for (let [key, value] of Object.entries(this.stops)){
-            if (util.haversineDistance(lat, lon, value['lat'], value['long']) < maxDistance){
+            let distance = await util.haversineDistance(lat, lon, value['lat'], value['long']);
+            if (distance < maxDistance){
                 let stop_id = key;
                 break;
             }
@@ -771,7 +769,7 @@ class TripInference {
     }
     resetScoring(){
         util.log('+++ reset scoring! +++');
-        this.tripCandidates = {}
+        this.tripCandidates = {};
         this.lastCandidateFlush = Date.now();
     }
 
@@ -782,9 +780,9 @@ class TripInference {
         util.log(`- offset: {offset}`);
 
         let index = this.getRemainingStopsIndex(trip_id, daySeconds + offset);
-        util.log(`- index: ${index}`);
+        // util.log(`- index: ${index}`);
         let stopList = this.stopTimeMap[trip_id];
-        util.log(`- stopList: ${stopList}`);
+        // util.log(`- stopList: ${JSON.stringify(stopList)}`);
         let entities = [];
         let timestamp = Date.now();
 
