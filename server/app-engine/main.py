@@ -8,8 +8,6 @@ An implementation for Trip Updates is underway. For authentication, updates have
 for an agency. Public agency keys need to be added to the system database. The server will read public keys from
 the database at startup.
 
-There is a proof-of-concept implementation for a Service Alert UI called AlertUI in the gtfu folder. Alerts can
-also be submitted through 3rd party tools using HTTP POST and the /post-alert endpoint below.
 
 Clients can submit alert updates for individual feeds through the following endpoint:
 
@@ -23,7 +21,15 @@ Clients can submit alert updates for individual feeds through the following endp
             "header": ...,      # summary
             "time_stamp": ...,  # when the message was created
             "time_start": ...,  # start of valid time period
-            "time_stop": ...    # end of valid time period
+            "time_stop": ...,   # end of valid time period
+            "url": ...,         # optional url containing more info on alert
+        # At least one of the following 4 must be included, to specify which "entities" the alert applies to:
+        # In order to omit, pass a null value or don't include at all
+        # Note that route_type is not currently offerred as an entity option
+            "agency_id": ...,   # specific sub-agency the alert applies to
+            "trip_id": ...,     # which trip the alert applies to
+            "stop_id": ...,     # which stop the alert applies to
+            "route_id": ...,    # which route the alert applies to
         },
         "sig": ...              # base-64 encoded ECDSA signature of "data" object
     }
@@ -54,6 +60,9 @@ Consumers can retrieve current service alerts for an agency through the followin
 
     /service-alerts.pb?agency=MY-AGENCY-ID
 
+Authenticated agencies can retrieve current service alerts, without caching, through the following endpoint:
+    /service-alert-ui.pb
+
 Consumers can retrieve current vehicle positions for an agency through the following endpoints:
 
     /vehicle-positions.pb?agency=MY-AGENCY-ID
@@ -72,7 +81,13 @@ A web-based client for bulk-assigning GTFS blocks to vehicles is available at th
 
     /dispatch-ui
 
-*Note that at first ever startup, client needs to be initialized with QR code that contains agency ID and private key.*
+*Note that at first ever startup, client needs to be initialized by entering the agency ID and private key.*
+
+A web-based client for viewing, creating and deleting service alerts is available at this endpoint:
+
+    /service-alert-ui
+
+*Note that at first ever startup, client needs to be initialized by entering the agency ID and private key.*
 
 See how-to-run.txt in this folder for details on how to run the server both locally and in the cloud.
 
@@ -104,15 +119,52 @@ verified_map_millis = 0
 @app.route('/service-alerts.pb')
 def service_alerts():
     print('/service-alerts.pb')
+
     agency = request.args.get('agency')
     print('- agency: ' + agency)
-
     if agency is None:
         return 'No agency given', 400
 
+    use_cache = True;
+    include_future_alerts = False;
+
     feed = gtfsrt.get_alert_feed(
         util.datastore_client,
-        agency
+        agency,
+        use_cache,
+        include_future_alerts
+    )
+
+    return Response(feed, mimetype='application/octet-stream')
+
+@app.route('/service-alert-ui.pb', methods=['POST'])
+def service_alerts_no_cache():
+    print('//service-alert-ui.pb')
+
+    data = request.json['data'];
+    sig = request.json['sig'];
+
+    data_str = json.dumps(data,separators=(',',':'))
+    print('- data_str: ' + data_str)
+
+    agency = data['agency_key'];
+    print('- agency: ' + agency)
+
+    verified = util.verify_signature(agency, data_str, sig)
+    print('- verified: ' + str(verified))
+
+    if not verified:
+        print('*** could not verify signature for new alert, discarding')
+        return Response('{"command": "/service-alert-ui.pb", "status": "unverified"}', mimetype='application/json')
+
+    use_cache = False;
+    include_future_alerts = True;
+
+    feed = gtfsrt.get_alert_feed(
+        util.datastore_client,
+        agency,
+        use_cache,
+        include_future_alerts
     )
 
     return Response(feed, mimetype='application/octet-stream')
@@ -166,6 +218,16 @@ def dispatch_ui():
     print(f'{request.path}')
 
     fn = 'static/vehicle-assignment-index.html'
+    content = util.get_file(fn, 'r')
+    resp = Response(content, mimetype='text/html')
+    resp.headers['Last-Modified'] = util.get_mtime(fn);
+    return resp
+
+@app.route('/service-alert-ui')
+def service_alert_ui():
+    print(f'{request.path}')
+
+    fn = 'static/service-alert-ui.html'
     content = util.get_file(fn, 'r')
     resp = Response(content, mimetype='text/html')
     resp.headers['Last-Modified'] = util.get_mtime(fn);
@@ -230,6 +292,32 @@ def post_alert():
     gtfsrt.add_alert(util.datastore_client, data)
 
     return Response('{"command": "post-alert", "status": "ok"}', mimetype='application/json')
+
+@app.route('/delete-alert', methods=['POST'])
+def delete_alert():
+    print('/delete-alert')
+    #print('- request.data: ' + str(request.data))
+    #print('- request.json: ' + json.dumps(request.json))
+
+    data = request.json['data'];
+    sig = request.json['sig'];
+
+    data_str = json.dumps(data,separators=(',',':'))
+    print('- data_str: ' + data_str)
+
+    agency = data['agency_key'];
+    print('- agency: ' + agency)
+
+    verified = util.verify_signature(agency, data_str, sig)
+    print('- verified: ' + str(verified))
+
+    if not verified:
+        print('*** could not verify signature for delete request, discarding')
+        return Response('{"command": "delete-alert", "status": "unverified"}', mimetype='application/json')
+
+    gtfsrt.delete_alert(util.datastore_client, data)
+
+    return Response('{"command": "delete-alert", "status": "ok"}', mimetype='application/json')
 
 """
 Determine whether or not to accept an incoming user request.

@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <link type="text/css" rel="stylesheet" href="../static/service-alert-ui.css">
+        <script src="../static/alert-proto.browser.js"> </script>
+        <script src="../static/pbf.js"> </script>
+    </head>
+    <body>
+        <div id="keyEntryModal" class="modal">
+          <div class="modal-content">
+            <p id="key-title" style="text-align: center">Enter Key</p>
+            <textarea id="keyTextArea" rows="5"></textarea>
+            <button id="key-okay" onclick="handleKey(this.id)" type="submit" class="btn" style="background-color: blue">Okay</button>
+          </div>
+        </div>
+        <div id="menuModal" class="modal">
+            <div class="modal-content">
+                <button id="create-alert-button" onclick="createAlert()"> Create alert</button>
+                <button id="view-alerts-button" onclick="viewAlerts()"> View/delete alerts</button>
+            </div>
+        </div>
+        <div id="alertCreateModal" class="modal">
+            <div id="form" class="modal-content">
+                <button type="submit" id="alert-create-menu" onclick="menu()"> Menu </button> <br>
+                <a> Select at least one entity:</a><br>
+                <div id="route">
+                    <input type="checkbox" id="route-checkbox" name="route-checkbox" value="Route" onclick="handleEntitySelection(this)">
+                    <label for="route-checkbox"> Route</label>
+                    <select id="route-select" class="entity-select" > </select>
+                    <br>
+                </div>
+                <div id="trip">
+                    <input type="checkbox" id="trip-checkbox" name="trip-checkbox" value="Trip" onclick="handleEntitySelection(this)">
+                    <label for="trip-checkbox"> Trip</label>
+                    <select id="trip-select" class="entity-select"> </select>
+                    <br>
+                </div>
+                <div id="stop">
+                    <input type="checkbox" id="stop-checkbox" name="stop-checkbox" value="Stop" onclick="handleEntitySelection(this)">
+                    <label for="stop-checkbox"> Stop</label>
+                    <select id="stop-select" class="entity-select" style=""> </select>
+                    <br>
+                </div>
+                <div id="agency">
+                    <input type="checkbox" id="agency-checkbox" name="agency-checkbox" value="Agency" onclick="handleEntitySelection(this)">
+                    <label for="agency-checkbox"> Agency</label>
+                    <select id="agency-select" class="entity-select"> </select>
+                    <br>
+                </div>
+                <a> Header: </a>
+                <input type="text" id="header" placeholder="Short summary"> <br>
+                <a> Description: </a>
+                <form>
+                  <textarea id="description" rows="4" cols="50" placeholder="Detailed description"></textarea>
+                  <br>
+                </form>
+                <a> URL: </a>
+                <input type="text" id="url" placeholder="Optional URL with more info"> <br>
+                <label for="start-time">Start time:</label>
+                <input type="datetime-local" id="start-time" name="start-time" value="2022-01-01T08:00" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
+                <label for="stop-time">Stop time:</label>
+                <input type="datetime-local" id="stop-time" value="2023-01-01T08:00" name="stop-time" min="2022-01-01T08:00" max="2099-12-31T08:00"> <br>
+                <a> Cause: </a>
+                <select id="cause-select"> </select> <br>
+                <a> Effect: </a>
+                <select id="effect-select"> </select> <br>
+                <button type="submit" id="submit-alert-button" onclick="postServiceAlert()"> Submit </button>
+            </div>
+        </div>
+        <div id="viewFeedModal" class="modal">
+            <div class="modal-content">
+                <button type="submit" onclick="menu()"> Menu </button> <br>
+                <a id="feed-view-header"> Click an alert to see detail or delete </a>
+                <canvas id="canvas"> </canvas>
+            </div>
+        </div>
+        <div id="alertDetailModal" class="modal">
+            <div class="modal-content">
+                <button type="submit" onclick="menu()"> Menu </button>
+                <button type="submit" onclick="viewAlerts()"> Back to feed </button> <br>
+                <!-- <a id="alert-detail-header"> Alert Detail </a> -->
+                <a> Affected entities: </a>
+                <ul id="affected-entities">
+                </ul>
+                <ul id="alert-detail-list" style="list-style-type:none; padding-left: 0;">
+                </ul>
+                <button type="submit" onclick="deleteAlert()"> Delete alert </button>
+            </div>
+        </div>
+        <script src="../static/gtfs-rt-util.js"></script>
+        <script src="../static/service-alert-ui.js"></script>
+    </body>
+</html>

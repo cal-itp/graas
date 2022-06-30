@@ -1,7 +1,6 @@
 """GTFS-rt server business logic and some utility functions regarding DB access and protobuf structures.
 
 """
-from google.cloud import datastore
 from google.transit import gtfs_realtime_pb2
 import json
 import time
@@ -70,16 +69,16 @@ def make_translated_string(text):
 def make_entity_selector(item):
     selector = gtfs_realtime_pb2.EntitySelector()
 
-    if 'agency_id' in item:
+    if 'agency_id' in item and isinstance(item['agency_id'], str):
         selector.agency_id = item['agency_id']
 
-    if 'route_id' in item:
+    if 'route_id' in item and isinstance(item['route_id'], str):
         selector.route_id = item['route_id']
 
-    if 'stop_id' in item:
+    if 'stop_id' in item and isinstance(item['stop_id'], str):
         selector.stop_id = item['stop_id']
 
-    if 'trip_id' in item:
+    if 'trip_id' in item and isinstance(item['trip_id'], str):
         trip = gtfs_realtime_pb2.TripDescriptor()
         trip.trip_id = item['trip_id']
         selector.trip.CopyFrom(trip)
@@ -109,7 +108,7 @@ def make_alert(id, item):
     if 'description' in item:
         alert.description_text.CopyFrom(make_translated_string(item['description']))
 
-    if 'url' in item:
+    if 'url' in item and not util.is_null_or_empty(item['url']):
         alert.url.CopyFrom(make_translated_string(item['url']))
 
     entity = gtfs_realtime_pb2.FeedEntity()
@@ -120,7 +119,7 @@ def make_alert(id, item):
 
 def make_position(id, lat, lon, bearing, speed, trip_id, timestamp):
     trip = gtfs_realtime_pb2.TripDescriptor()
-    trip.trip_id = trip_id
+    trip.trip_id = 'missing' if trip_id is None else trip_id
 
     vehicle = gtfs_realtime_pb2.VehicleDescriptor()
     vehicle.label = id
@@ -176,12 +175,13 @@ def make_trip_update(list):
 
     return entity
 
-def alert_is_current(alert):
+def alert_is_current(alert, include_future_alerts):
     print('alert_is_current()')
     if not('time_start' in alert and 'time_stop' in alert):
         return False
     now = int(time.time())
-    return now >= int(alert['time_start']) and now < int(alert['time_stop'])
+
+    return (now >= alert['time_start'] or include_future_alerts) and now < alert['time_stop']
 
 def purge_old_alerts(datastore_client):
     global last_alert_purge
@@ -211,12 +211,14 @@ def purge_old_alerts(datastore_client):
     datastore_client.delete_multi(key_list)
     last_alert_purge = day
 
-def get_alert_feed(datastore_client, agency):
+def get_alert_feed(datastore_client, agency, use_cache, include_future_alerts):
     """Assemble alert feed for an agency in the [protobuf format](https://developers.google.com/protocol-buffers).
 
     Args:
         datastore_client (obj): reference to google cloud datastore instance.
         agency (str): an agency ID.
+        use_cache: whether to load feed from cache or re-generate from server
+        include_future_alerts: whether to include alerts with a start time in the future
 
     Returns:
         obj: alert feed in protobuf format
@@ -226,7 +228,8 @@ def get_alert_feed(datastore_client, agency):
     print('- agency: ' + agency)
 
     name = agency + '-alert-feed'
-    alert_feed = cache.get(name)
+
+    alert_feed = cache.get(name) if use_cache else None;
 
     if alert_feed is None:
         purge_old_alerts(datastore_client)
@@ -245,9 +248,9 @@ def get_alert_feed(datastore_client, agency):
         feed.header.CopyFrom(header)
 
         count = 1
-
+        print('- alerts to add:')
         for item in results:
-            if alert_is_current(item):
+            if alert_is_current(item, include_future_alerts):
                 print('-- ' + str(item))
                 feed.entity.append(make_alert(count, item))
                 count += 1
@@ -405,25 +408,56 @@ def add_alert(datastore_client, alert):
         print('alert doesn\'t have associated agency, discarding')
         return
 
-    if not('time_start' in alert and 'time_stop' in alert):
-        print('alert doesn\'t have valid time range, discarding')
-        return
-
     if not('agency_id' in alert or 'route_id' in alert or 'trip_id' in alert or 'stop_id' in alert):
         print('alert doesn\'t have an affected entity, discarding')
         return
 
-    entity = datastore.Entity(key=datastore_client.key('alert'))
+    entity = util.create_entity(key=datastore_client.key('alert'))
     alert['time_stamp'] = int(time.time())
 
     entity.update(alert)
     datastore_client.put(entity)
     print('+ wrote alert')
 
+def delete_alert(datastore_client, alert):
+    print('delete_alert()')
+    print('- alert: ' + str(alert))
+
+    query = datastore_client.query(kind='alert')
+    # We need to filter for all fields, since a unique ID isn't passed into the protobuf
+    query.add_filter('agency_key', '=', alert["agency_key"])
+    query.add_filter('cause', '=', alert["cause"])
+    query.add_filter('effect', '=', alert["effect"])
+    query.add_filter('description', '=', alert["description"])
+    query.add_filter('time_start', '=', alert["time_start"])
+    query.add_filter('time_stop', '=', alert["time_stop"])
+    if not util.is_null_or_empty(alert["url"]):
+        query.add_filter('url', '=', alert["url"])
+    if not util.is_null_or_empty(alert["stop_id"]):
+        query.add_filter('stop_id', '=', alert["stop_id"])
+    if not util.is_null_or_empty(alert["trip_id"]):
+        query.add_filter('trip_id', '=', alert["trip_id"])
+    if not util.is_null_or_empty(alert["route_id"]):
+        query.add_filter('route_id', '=', alert["route_id"])
+    if not util.is_null_or_empty(alert["agency_id"]):
+        query.add_filter('agency_id', '=', alert["agency_id"])
+    results = list(query.fetch(limit=20))
+    key_list = []
+
+    for alert in results:
+        print('-- alert to delete: ' + str(alert))
+        key_list.append(alert.key)
+
+    print('- key_list: ' + str(key_list))
+    alerts_to_delete = len(key_list)
+    datastore_client.delete_multi(key_list)
+
+    print(f'+ deleted {alerts_to_delete} alerts')
+
 def add_position(datastore_client, pos):
-    entity = datastore.Entity(key=datastore_client.key('position'))
+    entity = util.create_entity(key=datastore_client.key('position'))
     entity.update(pos)
-    batch_writer.add(entity)
+    batch_writer.add(entity, 'position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
 
 def load_block_collection(datastore_client, block_metadata):
     global block_map
@@ -564,6 +598,9 @@ def get_trip_id(datastore_client, agency_id, vehicle_id):
         return None
 
     day_seconds = util.get_seconds_since_midnight()
+    print(f'- day_seconds: {day_seconds}')
+    day_hours = int(day_seconds / 3600)
+    print(f'- day_hours: {day_hours}')
     for trip in block['trips']:
         #print(f'++++++++++++++++++++++++++++')
         #print(f'++ secs : {day_seconds}')
@@ -645,7 +682,7 @@ def handle_stop_entities(datastore_client, data):
             results = list(query.fetch())
 
             if len(results) == 0:
-                entity = datastore.Entity(key=datastore_client.key('stop-time'))
+                entity = util.create_entity(key=datastore_client.key('stop-time'))
                 datastore_client.put(entity)
                 entity_key_cache.add(name, entity.key)
                 entity_key = entity.key
@@ -658,10 +695,10 @@ def handle_stop_entities(datastore_client, data):
                 entity_key_cache.remove(name)
                 continue
 
-        entity = datastore.Entity(key=entity_key)
+        entity = util.create_entity(key=entity_key)
 
         entity.update(e)
-        batch_writer.add(entity)
+        batch_writer.add(entity, 'stop-time-' + e['agency_id'] + '-' + e['vehicle_id'] + str(e['stop_sequence']))
 
     return 'ok'
 
@@ -713,7 +750,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- assignment_summary: {assignment_summary}')
 
-        entity1 = datastore.Entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
+        entity1 = util.create_entity(key=datastore_client.key('assignment-summary'), exclude_from_indexes = ['data'])
         entity1.update(assignment_summary)
         datastore_client.put(entity1)
 
@@ -722,7 +759,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- block_list: {block_list}')
 
-        entity2 = datastore.Entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
+        entity2 = util.create_entity(key=datastore_client.key('block-list'), exclude_from_indexes = ['data'])
         entity2.update(block_list)
         datastore_client.put(entity2)
 
@@ -735,7 +772,7 @@ def handle_block_collection(datastore_client, data):
         }
         print(f'- block_metadata: {block_metadata}')
 
-        entity = datastore.Entity(key=datastore_client.key('block-metadata'))
+        entity = util.create_entity(key=datastore_client.key('block-metadata'))
         entity.update(block_metadata)
         datastore_client.put(entity)
 
@@ -803,7 +840,7 @@ def handle_pos_update(datastore_client, data):
             result['status'] = 'missing trip id'
             return result
 
-        data['trip_id'] = trip_id
+        data['trip-id'] = trip_id
         result['backfilled_trip_id'] = trip_id
 
     if data['uuid'] != 'replay':
@@ -823,7 +860,7 @@ def handle_pos_update(datastore_client, data):
         #print(f'- profile query.fetch(): {time.time() - then} seconds')
 
         if len(results) == 0:
-            entity = datastore.Entity(key=datastore_client.key('current-position'))
+            entity = util.create_entity(key=datastore_client.key('current-position'))
             entity['timestamp'] = 0
             datastore_client.put(entity)
             entity_key_cache.add(name, entity.key)
@@ -838,11 +875,11 @@ def handle_pos_update(datastore_client, data):
             result['status'] = 'no entity key'
             return result
 
-    entity = datastore.Entity(key=entity_key)
+    entity = util.create_entity(key=entity_key)
     entity.update(data)
 
     #then = time.time()
-    batch_writer.add(entity)
+    batch_writer.add(entity, 'current-position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
 
     #print(f'- profile datastore_client.put(): {time.time() - then} seconds')
 

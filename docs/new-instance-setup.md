@@ -1,3 +1,12 @@
+GRaaS Quickstart for Evaluation purposes
+========================================
+
+**NOTE: This option is for evaluation purposes only and not suitable for production**
+
+1. Create a venv using `server/app-engine/requirements-cloudless.txt`
+2. Activate venv
+3. run `python main.py -c <path-to-cert.pem> -k <path-to-key.pem>` # pem files constitute self-signed https cert. See below for how to generate required cert.
+
 GRaaS Instance Setup
 ====================
 Follow these instructions to set up your own instance of GRaaS.

@@ -12,15 +12,38 @@ import os.path
 import sys
 from datetime import datetime
 import time
-from google.cloud import datastore
-from google.cloud import storage
 import pytz
 
-datastore_client = datastore.Client()
+datastore_client = None
+
+try:
+    from google.cloud import datastore
+    datastore_client = datastore.Client()
+    print(f'- datastore_client: {dir(datastore_client)}')
+except:
+    print(f'********************************************************')
+    print(f'*                                                      *')
+    print(f'* google.cloud.datastore not found, using DB simulator *')
+    print(f'*                                                      *')
+    print(f'********************************************************')
+    import db
+    datastore_client = db.Client()
+
+try:
+    from google.cloud import storage
+except:
+    print(f'* google.cloud.storage not found *')
+
 last_bucket_check = 0
 last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds
 PACIFIC_TZ = pytz.timezone("America/Los_Angeles")
+
+def create_entity(key=None, exclude_from_indexes=()):
+    if hasattr(datastore_client, 'entity'):
+        return datastore_client.entity(key, exclude_from_indexes)
+    else:
+        return datastore.Entity(key, exclude_from_indexes)
 
 # Pull agency IDs & public keys from datastore, save them
 def read_public_keys():
@@ -42,7 +65,6 @@ def read_public_keys():
 
     return key_map
 
-# TODO: Consider moving this call to read_public_keys(). Currently it runs whenever util.py is loaded
 key_map = read_public_keys()
 
 def verify_signature(agency_id, data, signature):
@@ -123,47 +145,9 @@ def get_current_time_millis():
         int: The number of milliseonds since the epoch.
 
     """
-    now = datetime.now()
-    now = PACIFIC_TZ.localize(now)
     return int(round(time.time() * 1000))
 
-def get_epoch_seconds(date_string = None):
-    """Get the number of seconds since the epoch for a date string. If date string is omitted, the current date is assumed.
-
-    Args:
-        date_string (str): a date in the form of `yyyy-mm-dd`.
-
-    Returns:
-        int: The number of seconds since the epoch for a date string.
-
-    """
-    if date_string is None:
-        now = datetime.now()
-        now = PACIFIC_TZ.localize(now)
-        print(f'+ ts: {int(now.timestamp())}')
-        return int(now.timestamp())
-    else:
-        d = datetime.strptime(date_string, '%Y-%m-%d')
-        d = PACIFIC_TZ.localize(d)
-        print(f'+ ts: {int(d.timestamp())}')
-        return int(d.timestamp())
-
-def get_midnight_seconds(epoch_seconds):
-    """Get the number of seconds at midnight of the provided timestamp.
-
-    Args:
-        epoch_seconds (int): a timestamp given in number of seconds since the epoch.
-
-    Returns:
-        int: The number of seconds at midnight of the provided timestamp.
-
-    """
-    now = datetime.fromtimestamp(epoch_seconds)
-    now = PACIFIC_TZ.localize(now)
-    print(f'. ts: {int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())}')
-    return int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
-
-def get_seconds_since_midnight(seconds = None):
+def get_seconds_since_midnight(seconds = None, tz = PACIFIC_TZ):
     """Get the number of seconds since midnight of the provided timestamp.
 
     Args:
@@ -174,14 +158,13 @@ def get_seconds_since_midnight(seconds = None):
 
     """
     if seconds is None:
-        now = datetime.now()
+        now = datetime.now(tz)
     else:
-        now = datetime.fromtimestamp(seconds)
+        now = datetime.fromtimestamp(seconds, tz)
 
-    now = PACIFIC_TZ.localize(now)
     return int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
-def get_yyyymmdd(date = None):
+def get_yyyymmdd(date = None, tz = PACIFIC_TZ):
     """Get a string representation of the given date in the form `yyyy-mm-dd`.
 
     Args:
@@ -192,11 +175,11 @@ def get_yyyymmdd(date = None):
 
     """
     if date is None:
-        date = datetime.now()
+        date = datetime.now(tz)
+    elif date.tzinfo is None:
+        date = tz.localize(date)
 
-    date = PACIFIC_TZ.localize(date)
     return f'{date.year:04}-{date.month:02}-{date.day:02}'
-
 
 # For new instances of GRaaS, replace 'graas-resources' with a globally unique directory name in the below two functions:
 def update_bucket_timestamp():
@@ -262,3 +245,5 @@ def memory(obj):
 
     return size
 
+def is_null_or_empty(obj):
+    return obj == None or obj == '';
