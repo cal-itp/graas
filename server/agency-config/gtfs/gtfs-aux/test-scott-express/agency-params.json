@@ -5,5 +5,6 @@
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
 "use-bulk-assignment-mode": false,
-"ignore-start-end-date": true
+"ignore-start-end-date": true,
+"use-trip-inference": true
 }
