@@ -12,15 +12,38 @@ import os.path
 import sys
 from datetime import datetime
 import time
-from google.cloud import datastore
-from google.cloud import storage
 import pytz
 
-datastore_client = datastore.Client()
+datastore_client = None
+
+try:
+    from google.cloud import datastore
+    datastore_client = datastore.Client()
+    print(f'- datastore_client: {dir(datastore_client)}')
+except:
+    print(f'********************************************************')
+    print(f'*                                                      *')
+    print(f'* google.cloud.datastore not found, using DB simulator *')
+    print(f'*                                                      *')
+    print(f'********************************************************')
+    import db
+    datastore_client = db.Client()
+
+try:
+    from google.cloud import storage
+except:
+    print(f'* google.cloud.storage not found *')
+
 last_bucket_check = 0
 last_key_refresh = 0
 ONE_MINUTE_MILLIS = 60 * 1000  # 1 minute in milliseconds
 PACIFIC_TZ = pytz.timezone("America/Los_Angeles")
+
+def create_entity(key=None, exclude_from_indexes=()):
+    if hasattr(datastore_client, 'entity'):
+        return datastore_client.entity(key, exclude_from_indexes)
+    else:
+        return datastore.Entity(key, exclude_from_indexes)
 
 # Pull agency IDs & public keys from datastore, save them
 def read_public_keys():

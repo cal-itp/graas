@@ -11,4 +11,5 @@ log.txt
 .venv
 node_modules/
 server/tests/vehicles.csv
+server/app-engine/db-sim.json*
 
