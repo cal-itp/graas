@@ -441,7 +441,7 @@ function handleOkay() {
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
     p = document.getElementById('trip-assignment-mode');
-    let tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
+    let tripAssignmentMode = (useTripInference ? 'inference': (useBulkAssignmentMode ? 'bulk' : 'manual'));
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
     util.hideElement(ALL_DROPDOWNS);
@@ -1142,12 +1142,12 @@ function configComplete() {
     util.hideElement(LOADING_TEXT_ELEMENT);
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
-    if(vehicleIDCookie && useBulkAssignmentMode){
+    if(vehicleIDCookie && (useBulkAssignmentMode || useTripInference)){
         assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
         handleOkay()
     }
     // If bulk assignment mode and vehicleID is NOT cached, present vehicleID dropdown
-    else if(useBulkAssignmentMode){
+    else if(useBulkAssignmentMode || useTripInference){
         handleStartStop()
     }
     // If not bulk assignment mode, present the "Load trips" button.
