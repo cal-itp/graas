@@ -27,6 +27,8 @@ var startLon = null;
 var trips = [];
 var sessionID = null;
 var useBulkAssignmentMode = false;
+var useTripInference = false;
+var inf = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -79,20 +81,6 @@ function isObject(obj) {
 
 function toRadians(degrees) {
     return degrees * (Math.PI / 180);
-}
-
-// return distance in feet between to lat/long pairs
-function getHaversineDistance(lat1, lon1, lat2, lon2) {
-    const phi1 = toRadians(lat1);
-    const phi2 = toRadians(lat2);
-    const deltaPhi = toRadians(lat2 - lat1);
-    const deltaLam = toRadians(lon2 - lon1);
-
-    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
-        + Math.cos(phi1) * Math.cos(phi2)
-        * Math.sin(deltaLam / 2) * Math.sin(deltaLam / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS_IN_FEET * c;
 }
 
 function isMobile() {
@@ -347,7 +335,7 @@ function handleStartStop() {
             handleBusChoice();
         }
 
-        if(!useBulkAssignmentMode){
+        if(!useBulkAssignmentMode && !useTripInference){
             // Only load trips again if they were last loaded more than a minute ago
             if ((millis - lastTripLoadMillis) < util.MILLIS_PER_MINUTE * 1) {
                 populateTripList();
@@ -436,7 +424,7 @@ function handleOkay() {
     document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
     util.log("- vehicleID: " + vehicleID);
 
-    if(!useBulkAssignmentMode){
+    if(!useBulkAssignmentMode && !useTripInference){
         p = document.getElementById(TRIP_SELECT_DROPDOWN);
         let entry = tripIDLookup[p.value];
 
@@ -747,13 +735,15 @@ async function handleGPSUpdate(position) {
     let heading = 0;
 
     if (position) {
-        lat = position.coords.latitude;
-        long = position.coords.longitude;
+        lat = (testLat ? testLat : position.coords.latitude);
+        long = (testLong ? testLong : position.coords.longitude);
         accuracy = position.coords.accuracy;
         posTimestamp = Math.round(position.timestamp / 1000);
         speed = position.coords.speed;
         heading = position.coords.heading;
     }
+    util.log(`lat: ${lat}`);
+    util.log(`long: ${long}`);
 
     let timestamp = Math.floor(Date.now() / 1000);
 
@@ -791,12 +781,21 @@ async function handleGPSUpdate(position) {
         version: version
     };
 
+    if(useTripInference){
+        let seconds = util.getSecondsSinceMidnight();
+        let result = await inf.getTripId(lat, long, seconds, tripID);
+        util.log(`result: ${JSON.stringify(result)}`);
+        tripID = result['trip_id'];
+
+    }
+
     data['trip-id'] = tripID;
     data['agency-id'] = agencyID;
     data['vehicle-id'] = vehicleID;
     data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
     data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
+    data['use-trip-inference'] = useTripInference;
 
     let response = await util.signAndPost(data, signatureKey, '/new-pos-sig');
     let responseJson = await response.json();
@@ -907,7 +906,7 @@ async function initializeCallback(agencyData) {
     }
 }
 
-function agencyIDCallback(response) {
+async function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
@@ -921,6 +920,9 @@ function agencyIDCallback(response) {
         let arg = Date.now()
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
+        // need to decide how to determine vehicle id
+        inf = await new TripInference('~/tmp/',agencyID, vehicleID, 15);
+        await inf.init();
     }
 }
 
@@ -960,8 +962,12 @@ function gotConfigData(data, agencyID, arg) {
             if(data["use-bulk-assignment-mode"] !== null){
                 useBulkAssignmentMode = data["use-bulk-assignment-mode"];
             }
+            if(data["use-trip-inference"] !== null){
+                useTripInference = data["use-trip-inference"];
+            }
             ignoreStartEndDate = data["ignore-start-end-date"];
             // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
+            util.log(`- useTripInference: ${useTripInference}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
@@ -969,7 +975,7 @@ function gotConfigData(data, agencyID, arg) {
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
-        if (useBulkAssignmentMode){
+        if (useBulkAssignmentMode || useTripInference){
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
             util.hideElement(TRIP_SELECT_DROPDOWN);
         } else {
@@ -988,7 +994,7 @@ function gotConfigData(data, agencyID, arg) {
 }
 
 // Load & filter trips, and then populate dropdown
-function loadTrips() {
+async function loadTrips() {
     util.log("- loading trips");
     tripIDLookup = {};
 
@@ -1017,7 +1023,7 @@ function loadTrips() {
             // util.log(`- lon: ${lon}`);
             const timeDelta = util.getTimeDelta(time);
             // util.log(`- timeDelta: ${timeDelta}`);
-            const distance = getHaversineDistance(lat, lon, startLat, startLon);
+            const distance = await util.haversineDistance(lat, lon, startLat, startLon);
             // util.log(`- distance: ${distance}`);
             let holidayOn = false;
             let holidayOff = false;
@@ -1046,7 +1052,7 @@ function loadTrips() {
                     )
                     &&
                     // 3. meets distance parameters:
-                    (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                    (maxFeetFromStop < 0 || distance < maxFeetFromStop)
                     &&
                     // 4. Falls between start_date and end_date
                     (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))

@@ -114,9 +114,7 @@ if (!fetch) {
     exports.getSecondsSinceMidnight = function(date){
         if (!date) date = new Date();
         let nowSeconds = Math.floor(date.getTime() / 1000);
-        util.log(`nowSeconds: ${nowSeconds}`);
         let midnightSeconds = Math.floor(this.getMidnightDate().getTime() / 1000);
-        util.log(`midnightSeconds: ${midnightSeconds}`);
         return nowSeconds - midnightSeconds;
     }
 
@@ -422,7 +420,7 @@ if (!fetch) {
         let phi2 = this.degreesToRadians(lat2)
         let delta_phi = this.degreesToRadians(lat2 - lat1)
         let delta_lam = this.degreesToRadians(lon2 - lon1)
-        let a = await (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
+        let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
             + Math.cos(phi1) * Math.cos(phi2)
             * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))

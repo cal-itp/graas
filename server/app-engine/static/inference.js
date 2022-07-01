@@ -8,7 +8,7 @@ const STOP_CAP = 10;
 class TripInference {
 
     constructor(path, agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
-        util.log("constructor()");
+        // util.log("constructor()");
         this.agencyID = agencyID;
         this.vehicleID = vehicleID;
         this.subdivisions = subdivisions;
@@ -19,7 +19,7 @@ class TripInference {
     }
 
     async init(){
-
+        util.log("init()");
         this.tripCandidates = {};
         this.lastCandidateFlush = Date.now();
 
@@ -35,7 +35,7 @@ class TripInference {
 
         if (this.dow < 0) {
             this.dow = (new Date()).getDay();
-            util.log(`- dow: ${this.dow}`)
+            // util.log(`- dow: ${this.dow}`)
         }
 
         if (this.epochSeconds < 0) {
@@ -75,7 +75,7 @@ class TripInference {
             // util.log("JSON.stringify(cal): " + JSON.stringify(cal));
             // util.log("cal[this.dow]: " + cal[this.dow]);
             if (cal !== null && cal[this.dow] !== "1"){
-                util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
+                // util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
                 continue;
             }
             let startDate = this.calendarMap[service_id]['start_date'];
@@ -88,24 +88,24 @@ class TripInference {
                 // util.log("startSeconds: " + startSeconds);
                 // util.log("endSeconds: " + endSeconds);
                 if (this.epochSeconds < startSeconds || this.epochSeconds > endSeconds){
-                    util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
+                    // util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
                     continue;
                 }
             }
-            util.log('');
-            util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
+            // util.log('');
+            // util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
             count += 1;
 
             let route_id = r['route_id'];
-            util.log(`-- shape_id: ${shape_id}`);
+            // util.log(`-- shape_id: ${shape_id}`);
             let timer = new Timer('way points');
             let wayPoints = this.getShapePoints(shape_id);
-            util.log(timer);
+            // util.log(timer);
             // util.log(`-- wayPoints: ${wayPoints}`)
             // util.log(`-- wayPoints.length: ${wayPoints.length}`)
 
             if (wayPoints.length === 0){
-                util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
+                // util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
                 continue;
             }
 
@@ -113,7 +113,7 @@ class TripInference {
             let stopTimes = this.getStopTimes(trip_id);
 
             let block_id = ['block_id'];
-            util.log(`-- block_id: ${block_id}`);
+            // util.log(`-- block_id: ${block_id}`);
 
             if (block_id !== null && block_id.length > 0 && stopTimes !== null && stopTimes.length > 0){
                 let tripList = [];
@@ -135,16 +135,16 @@ class TripInference {
                     });
                 }
             }
-            util.log(timer);
+            // util.log(timer);
             // util.log(`-- stopTimes: ${stopTimes}`);
-            util.log(`-- len(stopTimes): ${stopTimes.length}`);
+            // util.log(`-- len(stopTimes): ${stopTimes.length}`);
             timer = new Timer('interpolate');
             this.interpolateWayPointTimes(wayPoints, stopTimes, this.stops);
-            util.log(timer);
+            // util.log(timer);
 
             // // trip_name = route_map[route_id]['name'] + ' @ ' + util.seconds_to_ampm_hhmm(stopTimes[0]['arrival_time'])
             let tripName = trip_id + ' @ ' + util.getHMForSeconds(stopTimes[0]['arrival_time'], true);
-            util.log(`-- tripName: ${tripName}`);
+            // util.log(`-- tripName: ${tripName}`);
             let shapeLength = this.shapeLengthMap[shape_id];
             let segmentLength = null;
             if (shapeLength === null){
@@ -162,7 +162,7 @@ class TripInference {
         }
         // util.log(`-- this.blockMap: ${JSON.stringify(this.blockMap)}`);
 
-        util.log(load_timer);
+        // util.log(load_timer);
         // util.log(`-- JSON.stringify(this.grid): ${JSON.stringify(this.grid)}`);
 
         for (let tid in this.stopTimeMap){
@@ -176,21 +176,21 @@ class TripInference {
 
     async getFile(fileName){
             let url = `${BASE_URL}/${this.agencyID}/${fileName}`;
-            util.log('- fetching from ' + url);
+            // util.log('- fetching from ' + url);
             let response = await util.timedFetch(url, {method: 'GET'});
             let text = await response.text();
             return util.csvToArray(text);
     }
 
     async getCalendarMap(){
-        util.log('getCalendarMap()');
+        // util.log('getCalendarMap()');
         let rows = await this.getFile("calendar.txt");
         this.calendarMap = {};
         let dow = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
         for (let r of rows){
             let service_id = r['service_id'];
-            util.log(`-- service id: ${service_id}`)
+            // util.log(`-- service id: ${service_id}`)
             let cal = [];
             for (let d of dow){
                 cal.push(r[d]);
@@ -201,7 +201,7 @@ class TripInference {
     }
 
     async getRouteMap(){
-        util.log('getRouteMap()');
+        // util.log('getRouteMap()');
         let rows = await this.getFile("routes.txt");
         this.routeMap = {};
         for (let r of rows){
@@ -216,7 +216,7 @@ class TripInference {
     }
 
     async getStops(){
-        util.log('getStops()');
+        // util.log('getStops()');
         let rows = await this.getFile("stops.txt");
         let stopList = {};
         for (let r of rows){
@@ -229,7 +229,7 @@ class TripInference {
     }
 
     async preloadStopTimes(){
-        util.log('preloadStopTimes()');
+        // util.log('preloadStopTimes()');
         let rows = await this.getFile("stop_times.txt");
         this.stopTimeMap = {};
 
@@ -262,7 +262,7 @@ class TripInference {
     }
 
     async preloadShapes(){
-        util.log('preloadShapes()');
+        // util.log('preloadShapes()');
         let rows = await this.getFile("shapes.txt");
         this.shapeMap = {};
 
@@ -312,7 +312,7 @@ class TripInference {
     }
 
     async populateBoundingBox(){
-        util.log("populateBoundingBox()");
+        // util.log("populateBoundingBox()");
         let rows = await this.getFile("shapes.txt");
         this.stopTimeMap = {};
 
@@ -401,7 +401,7 @@ class TripInference {
         // // //  REMOVE ME: for testing only
         // for (let i=0; i<wayPoints.length; i++){
         //     if (!('time' in wayPoints[i])){
-        //         util.log(`.. ${i}`);
+                // util.log(`.. ${i}`);
         //     }
         // }
     }
@@ -560,9 +560,9 @@ class TripInference {
     }
 
     async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
-        util.log(`- makeTripSegments()`);
-        util.log(`- maxSegmentLength: ${maxSegmentLength}`);
-        util.log(`- trip_id: ${trip_id}`);
+        // util.log(`- makeTripSegments()`);
+        // util.log(`- maxSegmentLength: ${maxSegmentLength}`);
+        // util.log(`- trip_id: ${trip_id}`);
         // util.log(`- wayPoints: ${JSON.stringify(wayPoints)}`);
 
         let segmentStart = 0;
@@ -576,7 +576,7 @@ class TripInference {
         let segmentList = [];
 
         let skirtSize = Math.max(parseInt(maxSegmentLength / 10), 500)
-        util.log(`- skirtSize: ${skirtSize}`);
+        // util.log(`- skirtSize: ${skirtSize}`);
 
         while (index < wayPoints.length){
             let lp = wayPoints[lastIndex];
@@ -597,7 +597,7 @@ class TripInference {
                 this.area.extend(skirtSize);
 
                 if (segmentStart === 0 && wayPoints[segmentStart]['time'] === wayPoints[index]['time']){
-                    util.log(`0 duration first segment for trip ${trip_id}`);
+                    // util.log(`0 duration first segment for trip ${trip_id}`);
                 }
 
                 let stop_id = null;
@@ -648,7 +648,8 @@ class TripInference {
 
     async getTripId(lat, lon, seconds, tripIdFromBlock = null){
         util.log("getTripId()");
-        let segmentList = this.grid.getSegmentList(lat, lon);
+        let segmentList = await this.grid.getSegmentList(lat, lon);
+        util.log(`- segmentList: ${JSON.stringify(segmentList)}`);
         let ret = {
             'trip_id': null,
             'stop_time_entities': null
@@ -659,7 +660,7 @@ class TripInference {
         }
 
         util.log(`- segmentList.length: ${segmentList.length}`);
-        util.log(`- tripIdFromBlock: ${tripIdFromBlock}`);
+        // util.log(`- tripIdFromBlock: ${tripIdFromBlock}`);
 
         let stop_id = await this.getStopForPosition(lat, lon, STOP_PROXIMITY);
 
@@ -679,7 +680,7 @@ class TripInference {
             let result = await segment.getScore(lat, lon, seconds, shapes);
             util.log(`result: ${JSON.stringify(result)}`);
             let score = multiplier * result['score'];
-            util.log(`score: ${score}`);
+            // util.log(`score: ${score}`);
             let time_offset = result['time_offset'];
             // util.log(`-- time_offset: ${time_offset}`);
 
@@ -701,12 +702,12 @@ class TripInference {
                 candidate = {'score': 0, 'name': segment.tripName};
                 this.tripCandidates[trip_id] = candidate;
             }
-            util.log("candidate['score']: " + candidate['score']);
-            util.log("score: " + score);
+            // util.log("candidate['score']: " + candidate['score']);
+            // util.log("score: " + score);
             candidate['score'] += score;
-            util.log("candidate['score']: " + candidate['score']);
+            // util.log("candidate['score']: " + candidate['score']);
             candidate['time_offset'] = time_offset;
-            util.log(`-- candidate["time_offset"]: ${candidate["time_offset"]}`);
+            // util.log(`-- candidate["time_offset"]: ${candidate["time_offset"]}`);
         }
 
         if (maxSegmentScore > 0 && stop_id !== null){
@@ -722,7 +723,7 @@ class TripInference {
             let score = cand['score'];
             let name = cand['name'];
             // util.log(`candidate update: id=${trip_id} trip-name=${util.to_b64(name)} score=${score}`)
-            util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
+            // util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
 
             if (score > maxScore){
                 maxScore = score;
@@ -732,7 +733,7 @@ class TripInference {
             }
         }
 
-        util.log(`- maxScore: ${maxScore}`);
+        // util.log(`- maxScore: ${maxScore}`);
 
         if (maxScore >= SCORE_THRESHOLD){
             ret['trip_id'] = maxTripId
@@ -768,16 +769,16 @@ class TripInference {
         }
     }
     resetScoring(){
-        util.log('+++ reset scoring! +++');
+        // util.log('+++ reset scoring! +++');
         this.tripCandidates = {};
         this.lastCandidateFlush = Date.now();
     }
 
     getStopTimeEntities(trip_id, daySeconds, offset){
-        util.log(`getStopTimeEntities()`);
-        util.log(`- trip_id: ${trip_id}`);
-        util.log(`- daySeconds: ${daySeconds}`);
-        util.log(`- offset: {offset}`);
+        // util.log(`getStopTimeEntities()`);
+        // util.log(`- trip_id: ${trip_id}`);
+        // util.log(`- daySeconds: ${daySeconds}`);
+        // util.log(`- offset: {offset}`);
 
         let index = this.getRemainingStopsIndex(trip_id, daySeconds + offset);
         // util.log(`- index: ${index}`);
@@ -788,7 +789,7 @@ class TripInference {
 
         for (let i=0; i<stopList.length; i++){
             let s = stopList[i];
-            util.log(`-- s: ${s}`);
+            // util.log(`-- s: ${s}`);
 
             let e = {
                 'agency_id': this.agency_id,
@@ -806,12 +807,12 @@ class TripInference {
     }
     // assumes that stopList entries are sorted by 'arrival_time'
     getRemainingStopsIndex(trip_id, daySeconds){
-        util.log(`getRemainingStopsIndex()`);
-        util.log(`- trip_id: ${trip_id}`);
-        util.log(`- daySeconds: {daySeconds}`);
+        // util.log(`getRemainingStopsIndex()`);
+        // util.log(`- trip_id: ${trip_id}`);
+        // util.log(`- daySeconds: {daySeconds}`);
 
         let stopList = this.stopTimeMap[trip_id];
-        util.log(`- stopList: ${stopList}`);
+        // util.log(`- stopList: ${stopList}`);
         let result = [];
 
         if (util.isNullOrUndefined(stopList)){
