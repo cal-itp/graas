@@ -20,12 +20,12 @@ Follow these instructions to set up your own instance of GRaaS.
     - Verify installation by running `gcloud --version` from the command line
     - Verify that billing is enabled by running `gcloud beta billing projects describe YOUR_PROJECT_NAME` from the command line. Observe response like:
 
-```
-    billingAccountName: billingAccounts/XXXXXX-XXXXXX-XXXXXX
-    billingEnabled: true
-    name: projects/YOUR_PROJECT_NAME/billingInfo
-    projectId: YOUR_PROJECT_NAME
-```
+        <code>
+        billingAccountName: billingAccounts/XXXXXX-XXXXXX-XXXXXX<br/>
+        billingEnabled: true<br/>
+        name: projects/YOUR_PROJECT_NAME/billingInfo<br/>
+        projectId: YOUR_PROJECT_NAME
+        </code>
 
 1. Follow Google's instructions for *Creating a service account* and *Setting the environment variable* [here](http://cloud.google.com/docs/authentication/getting-started). Grant the service account the role of "Storage Admin."
 1. Under IAM & Admin > IAM, grant your Google account email address and the service account with Storage Admin, Storage Object Admin, and Cloud Datastore Owner access.
