@@ -353,19 +353,24 @@
 <li>From <code>server/app-engine</code>, set up a <a href="https://docs.python.org/3/library/venv.html">python virtual environment</a>, and then run <code>pip install -r requirements.txt</code> to install dependencies.</li>
 <li>Create a <a href="http://console.cloud.google.com">new Google Cloud project</a> (you will need to login to a Google user account first).</li>
 <li>Navigate to "Cloud Storage" and, if you haven't already, start a free trial. This is the one part of the setup where you'll need to put down a credit card - Google says you won't be charged without a warning.</li>
-<li>Follow the quickstart instructions <a href="http://cloud.google.com/sdk/docs/quickstart">here</a> to install the latest SDK version, and then follow steps 1-4 of under "Initializing the Cloud SDK".<ul>
+<li>
+<p>Follow the quickstart instructions <a href="http://cloud.google.com/sdk/docs/quickstart">here</a> to install the latest SDK version, and then follow steps 1-4 of under "Initializing the Cloud SDK".</p>
+<ul>
 <li>Verify installation by running <code>gcloud --version</code> from the command line</li>
-<li>Verify that billing is enabled by running <code>gcloud beta billing projects describe YOUR_PROJECT_NAME</code> from the command line. Observe response like:</li>
+<li>
+<p>Verify that billing is enabled by running <code>gcloud beta billing projects describe YOUR_PROJECT_NAME</code> from the command line. Observe response like:</p>
+<p><code>
+billingAccountName: billingAccounts/XXXXXX-XXXXXX-XXXXXX<br/>
+billingEnabled: true<br/>
+name: projects/YOUR_PROJECT_NAME/billingInfo<br/>
+projectId: YOUR_PROJECT_NAME
+</code></p>
+</li>
 </ul>
 </li>
-</ol>
-<pre><code>    billingAccountName: billingAccounts/XXXXXX-XXXXXX-XXXXXX
-    billingEnabled: true
-    name: projects/YOUR_PROJECT_NAME/billingInfo
-    projectId: YOUR_PROJECT_NAME
-</code></pre>
-<ol>
-<li>Follow Google's instructions for <em>Creating a service account</em> and <em>Setting the environment variable</em> <a href="http://cloud.google.com/docs/authentication/getting-started">here</a>. Grant the service account the role of "Storage Admin."</li>
+<li>
+<p>Follow Google's instructions for <em>Creating a service account</em> and <em>Setting the environment variable</em> <a href="http://cloud.google.com/docs/authentication/getting-started">here</a>. Grant the service account the role of "Storage Admin."</p>
+</li>
 <li>Under IAM &amp; Admin &gt; IAM, grant your Google account email address and the service account with Storage Admin, Storage Object Admin, and Cloud Datastore Owner access.</li>
 <li>Follow steps 1-3 under <a href="https://firebase.google.com/docs/web/setup?authuser=0">Add Firebase to your Project</a>. Enable Hosting.</li>
 <li>Navigate to the <a href="http://firebase.google.com/docs/web/learn-more#config-object">Firebase config object</a>, and update <code>server/static/firebaseconfig.js</code> with the variables from your project.</li>
