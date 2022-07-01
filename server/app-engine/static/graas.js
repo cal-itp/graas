@@ -735,15 +735,18 @@ async function handleGPSUpdate(position) {
     let heading = 0;
 
     if (position) {
-        lat = (testLat ? testLat : position.coords.latitude);
-        long = (testLong ? testLong : position.coords.longitude);
+        lat = position.coords.latitude;
+        long = position.coords.longitude;
         accuracy = position.coords.accuracy;
         posTimestamp = Math.round(position.timestamp / 1000);
         speed = position.coords.speed;
         heading = position.coords.heading;
     }
-    util.log(`lat: ${lat}`);
-    util.log(`long: ${long}`);
+
+    if(testLat && testLong){
+        lat = testLat;
+        long = testLong;
+    }
 
     let timestamp = Math.floor(Date.now() / 1000);
 
@@ -786,7 +789,6 @@ async function handleGPSUpdate(position) {
         let result = await inf.getTripId(lat, long, seconds, tripID);
         util.log(`result: ${JSON.stringify(result)}`);
         tripID = result['trip_id'];
-
     }
 
     data['trip-id'] = tripID;

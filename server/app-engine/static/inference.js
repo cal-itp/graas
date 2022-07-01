@@ -542,7 +542,6 @@ class TripInference {
         for (let i=0; i<stopTimes.length; i++){
             let traveled = stopTimes[i]['traveled'];
             let time = stopTimes[i]['arrival_time'];
-            // what does this mean?
             let min_difference = Number.MAX_VALUE;
             let min_index = -1;
 
@@ -771,7 +770,7 @@ class TripInference {
     }
     resetScoring(){
         // util.log('+++ reset scoring! +++');
-        this.tripCandidates = {}
+        this.tripCandidates = {};
         this.lastCandidateFlush = Date.now();
     }
 
