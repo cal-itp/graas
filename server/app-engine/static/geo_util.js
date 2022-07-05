@@ -1,5 +1,6 @@
-
-
+if(typeof util === 'undefined'){
+    var util = require('../static/gtfs-rt-util');
+}
   //   If the part of the surface of the earth which you want to draw is relatively small, then you can use a very simple approximation. You can simply use the horizontal axis x to denote longitude λ, the vertical axis y to denote latitude φ. The ratio between these should not be 1:1, though. Instead you should use cos(φ0) as the aspect ratio, where φ0 denotes a latitude close to the center of your map. Furthermore, to convert from angles (measured in radians) to lengths, you multiply by the radius of the earth (which in this model is assumed to be a sphere).
 
   //   x = r λ cos(φ0)
@@ -31,7 +32,7 @@
 
 (function(exports) {
 
-    exports.getMinDistance = async function(sp1, sp2, latu, lonu, seconds){
+    exports.getMinDistance = function(sp1, sp2, latu, lonu, seconds){
 
         // Get the minimal distance of a GPS update U from a trip segment S
         // defined by endpoints SP1 and SP2.
@@ -83,8 +84,8 @@
         // util.log(`- sp1: (${x1}, ${y1})`);
         // util.log(`-   u: (${x2}, ${y2})`);
 
-        let h1 = await util.haversineDistance(lat0, lon0, latu, lonu);
-        let h2 = await util.haversineDistance(lat1, lon1, latu, lonu);
+        let h1 = util.haversineDistance(lat0, lon0, latu, lonu);
+        let h2 = util.haversineDistance(lat1, lon1, latu, lonu);
 
         // util.log(`--------`);
         // util.log(`- h1: ${h1}`);
@@ -135,16 +136,16 @@
         // d4 = util.distance(x0, y0, x, y)   # length of vector(SP1, INTERSECTION_POINT)
         // d5 = util.distance(x, y, x2, y2)   # distance of U from INTERSECTION_POINT
 
-        let h3 = await util.haversineDistance(lat0, lon0, lat1, lon1); //length of vector(SP1, SP2);
+        let h3 = util.haversineDistance(lat0, lon0, lat1, lon1); //length of vector(SP1, SP2);
 
         let h4 = Number.MAX_VALUE;
         if (lon !== Number.MAX_VALUE){
-            h4 = await util.haversineDistance(lat0, lon0, lat, lon);   // length of vector(SP1, INTERSECTION_POINT)
+            h4 = util.haversineDistance(lat0, lon0, lat, lon);   // length of vector(SP1, INTERSECTION_POINT)
         }
 
         let h5 = Number.MAX_VALUE;
         if (lon !== Number.MAX_VALUE){
-             h5 = await util.haversineDistance(lon, lat, latu, lonu);   // distance of U from INTERSECTION_POINT
+             h5 = util.haversineDistance(lon, lat, latu, lonu);   // distance of U from INTERSECTION_POINT
         }
         // util.log(`- d3: ${d3}`);
         // util.log(`- d4: ${d4}`);
@@ -157,5 +158,4 @@
             return Math.min(h1, h2);
         }
     }
-
 }(typeof exports === 'undefined' ? this.geo_util = {} : exports));

@@ -1,3 +1,5 @@
+
+
 /*
 This is a quick and dirty refactoring of web app untility code to also be usable by tests.
 
@@ -113,9 +115,9 @@ if (!fetch) {
 
     exports.getSecondsSinceMidnight = function(date){
         if (!date) date = new Date();
-        let nowSeconds = Math.floor(date.getTime() / 1000);
-        let midnightSeconds = Math.floor(this.getMidnightDate().getTime() / 1000);
-        return nowSeconds - midnightSeconds;
+        let dateSeconds = Math.floor(date.getTime() / 1000);
+        let midnightSeconds = Math.floor(this.getMidnightDate(date).getTime() / 1000);
+        return dateSeconds - midnightSeconds;
     }
 
     exports.nextDay = function(date) {
@@ -411,11 +413,17 @@ if (!fetch) {
         return `${hours}:${this.padIfShort(minutes)}`;
     }
 
+    exports.secondsToDate = function(seconds) {
+        let d = new Date(1970, 0, 1); // Epoch
+        d.setSeconds(seconds);
+        return d;
+    }
+
     exports.degreesToRadians = function(degrees){
         return degrees * (Math.PI/180);
     }
 
-    exports.haversineDistance = async function(lat1, lon1, lat2, lon2){
+    exports.haversineDistance = function(lat1, lon1, lat2, lon2){
         let phi1 = this.degreesToRadians(lat1)
         let phi2 = this.degreesToRadians(lat2)
         let delta_phi = this.degreesToRadians(lat2 - lat1)
@@ -533,4 +541,5 @@ if (!fetch) {
         let p = document.getElementById(id);
         p.style.display = display;
     }
+
 }(typeof exports === 'undefined' ? this.util = {} : exports));

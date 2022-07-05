@@ -711,7 +711,6 @@ function positionCallback() {
     }
 
     let str = localStorage.getItem("lat-long-pem") || "";
-
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
             // ios WKWebView doesn't support camera access :[
@@ -785,8 +784,11 @@ async function handleGPSUpdate(position) {
     };
 
     if(useTripInference){
+        // util.log(`lat: ${lat}`);
+        // util.log(`long: ${long}`);
         let seconds = util.getSecondsSinceMidnight();
-        let result = await inf.getTripId(lat, long, seconds, tripID);
+        // TODO: when do we pass it a tripID?
+        let result = await inf.getTripId(lat, long, seconds, null);
         util.log(`result: ${JSON.stringify(result)}`);
         tripID = result['trip_id'];
     }
@@ -923,7 +925,7 @@ async function agencyIDCallback(response) {
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
         // need to decide how to determine vehicle id
-        inf = await new TripInference('~/tmp/',agencyID, vehicleID, 15);
+        inf = new inference.TripInference(agencyID, vehicleID, 15);
         await inf.init();
     }
 }
