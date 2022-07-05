@@ -5,7 +5,7 @@ var path = require( 'path' );
 // import inference_stats
 
 
-async function batch(dataDir, outputDir, simulateBlockAssignment){
+async function main(dataDir, outputDir, simulateBlockAssignment){
     let timestamp = new Date().toISOString();
     util.log(timestamp);
 
@@ -130,4 +130,4 @@ if (dataDir === null || outputDir === null){
     process.exit(1);
 }
 
-batch(dataDir, outputDir, simulateBlockAssignment);
+main(dataDir, outputDir, simulateBlockAssignment);
