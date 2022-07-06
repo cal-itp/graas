@@ -1,14 +1,17 @@
-const Tee = require('./tee')
-const tee = new Tee();
+const Tee = require('./tee');
+const { Console } = require('node:console');
 
-function log(s) {
-    tee.stream.write(s + '\n');
-}
+const tee = new Tee();
+const console = new Console(tee, process.stderr);
 
 const args = process.argv.slice(2);
-log(`- args: ${args}`);
+console.log(`- args: ${args}`);
 
 for (a of args) {
     tee.redirect(a)
-    log(`- a: ${a}`);
+    console.log(`- a: ${a}`);
 }
+
+tee.redirect();
+console.log('the end?');
+
