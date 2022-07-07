@@ -67,6 +67,7 @@ const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const ALL_DROPDOWNS = "config";
 const LOADING_TEXT_ELEMENT = "loading";
 const TRIP_STATS_ELEMENT = "stats";
+var BASE_URL = 'https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux';
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
@@ -538,7 +539,7 @@ function getURLContent(agencyID, arg) {
     locator = configMatrix.getNextToLoad().locator;
     name = configMatrix.getNextToLoad().name;
 
-    url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${locator}?foo=${arg}`
+    url = `${BASE_URL}/${agencyID}/${locator}?foo=${arg}`
     util.log('- fetching from ' + url);
     util.timedFetch(url, {
         method: 'GET'/*,
@@ -684,6 +685,14 @@ function initialize() {
 
     if (window.hasOwnProperty('graasShimVersion')) {
         util.log("- graasShimVersion: " + graasShimVersion);
+    }
+
+    const urlArgs = new URLSearchParams(window.location.search);
+    const cloudless = urlArgs.get('cloudless');
+    util.log('- cloudless: ' + cloudless);
+
+    if (cloudless === 'true') {
+        BASE_URL = 'https://127.0.0.1:8080';
     }
 
     let e = document.getElementById("version");

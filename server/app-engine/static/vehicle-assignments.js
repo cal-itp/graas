@@ -41,6 +41,7 @@ var readOnlyAccess = false;
 var elementWidth = 0;
 var blockDescriptions = {};
 var lastHoveredBlockID = null;
+var BASE_URL = 'https://storage.googleapis.com/graas-resources/gtfs-aux';
 
 function isMobile() {
     util.log("isMobile()");
@@ -199,6 +200,14 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
 function initialize() {
     //window.addEventListener('resize', resizeCanvas, false);
+
+    const urlArgs = new URLSearchParams(window.location.search);
+    const cloudless = urlArgs.get('cloudless');
+    util.log('- cloudless: ' + cloudless);
+
+    if (cloudless === 'true') {
+        BASE_URL = 'https://127.0.0.1:8080';
+    }
 
     const url = window.location.href;
     util.log('- url: ' + url);
@@ -572,7 +581,7 @@ function getGithubData(agencyID, filename) {
     // ### FIXME: replace with GH repo base URL, still using bucket URL for
     // now to break must-test-before-checkin, can't-test-before-checkin catch 22
     //var url = `https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
-    let url = `https://storage.googleapis.com/graas-resources/gtfs-aux/${agencyID}/${filename}?foo=${arg}`;
+    let url = `${BASE_URL}/${agencyID}/${filename}?foo=${arg}`;
     return util.getJSONResponse(url);
 }
 
