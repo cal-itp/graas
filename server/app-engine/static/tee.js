@@ -1,34 +1,25 @@
-class Tee {
-    constructor(){
-        this.terminal = sys.stdout;
-        this.log = null;
-        this.filename = null;
+const fs = require('fs');
+
+class Tee extends fs.WriteStream {
+    constructor() {
+        super(new Uint8Array());
     }
 
-    redirect(filename = null){
-        if (self.log !== null){
-            this.log.close();
-        }
-
-        this.filename = filename;
-
-        if (filename === null){
-            this.log = null;
-        } else{
-            this.log = open(filename, 'w');
+    redirect(fn) {
+        if (fn) {
+            this.stream = fs.createWriteStream(fn);
+        } else {
+            this.stream = null;
         }
     }
 
-    write(message){
-        this.terminal.write(message);
-
-        if (this.log !== null){
-            this.log.write(message);
+    write(chunk, encoding, callback) {
+        if (this.stream) {
+            this.stream.write(chunk, encoding, callback);
         }
-    }
 
-    flush(){
-        this.terminal.flush();
+        process.stdout.write(chunk, encoding, callback);
     }
 }
+
 module.exports = Tee;

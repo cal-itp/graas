@@ -1,7 +1,8 @@
 var util = require('../static/gtfs-rt-util');
-var tee = require('../static/tee');
+var Tee = require('../static/tee');
 var inference = require('../static/inference');
 var {readFileSync, promises: fsPromises} = require('fs');
+const { Console } = require('node:console');
 
 function getAgencyIdFromPath(path){
     let ir = path.lastIndexOf('-');
@@ -24,7 +25,8 @@ function getAgencyIdFromPath(path){
 
         // util.log(`- inference.TripInference.VERSION: ${inference.TripInference.VERSION}`);
 
-        // const tee = new Tee();
+        const tee = new Tee();
+        const console = new Console(tee, process.stderr);
         // let stdout_save = sys.stdout;
         // let sys.stdout = tee;
         let lastDow = -1;
@@ -63,7 +65,7 @@ function getAgencyIdFromPath(path){
             if (dow != lastDow){
                 // tee.redirect()
                 let agency_id = getAgencyIdFromPath(df);
-                util.log(`++ inferred agency ID: ${agency_id}`);
+                console.log(`++ inferred agency ID: ${agency_id} \n`);
 
                 inf = new inference.TripInference(
                     agency_id,
@@ -79,8 +81,8 @@ function getAgencyIdFromPath(path){
             inf.resetScoring();
 
             let fn = outputFolder + '/' + name + '-log.txt';
-            util.log(`-- fn: ${fn}`);
-        //     tee.redirect(fn)
+            console.log(`-- fn: ${fn} \n`);
+            tee.redirect(fn)
 
             let lines = fileToArray(df);
 
@@ -95,7 +97,7 @@ function getAgencyIdFromPath(path){
                 let lon = parseFloat(tok[2]);
                 let gridIndex = inf.grid.getIndex(lat, lon);
                 // util.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex}`);
-
+                console.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
                 let result = await inf.getTripId(lat, lon, daySeconds, expected_trip_id);
                 // util.log(`- result: ${JSON.stringify(result)}`);
 
@@ -104,10 +106,11 @@ function getAgencyIdFromPath(path){
                 if (result !== null){
                     tripID = result['trip_id'];
                 }
-
+                console.log(`- tripID: ${tripID} \n`);
                 // util.log(`- tripID: ${tripID}`);
             }
         }
+        tee.redirect();
         // sys.stdout = stdout_save
     }
 }(typeof exports === 'undefined' ? this.run_archived_trip = {} : exports));
@@ -125,27 +128,26 @@ function getDow(yyyymmdd){
     else return -1;
 }
 
-    function getProperty(filename, name){
-        let key = name + ': ';
-        let lines = fileToArray(filename);
+function getProperty(filename, name){
+    let key = name + ': ';
+    let lines = fileToArray(filename);
 
-        for (let line of lines){
-            line = line.trim();
-            let i = line.indexOf(key);
-            if (i === 0){
-                return line.substring(key.length);
-            }
+    for (let line of lines){
+        line = line.trim();
+        let i = line.indexOf(key);
+        if (i === 0){
+            return line.substring(key.length);
         }
-
-        return null;
     }
 
-    function fileToArray(filename){
-        const contents = readFileSync(filename, 'utf-8');
-        const arr = contents.split(/\r?\n/);
-        return arr;
-    }
+    return null;
+}
 
+function fileToArray(filename) {
+    const contents = readFileSync(filename, 'utf-8');
+    const arr = contents.split(/\r?\n/);
+    return arr;
+}
 
 function usage(){
     util.log(`usage: run-archived-trip.js -o|--output-folder <output-folder> data-file [<data-files>]`);

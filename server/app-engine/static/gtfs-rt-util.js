@@ -398,17 +398,17 @@ if (!fetch) {
     }
 
     exports.secondsToHhmmss = function(seconds){
-        let hours = parseInt(seconds / 60 / 60);
+        let hours = Math.floor(seconds / 60 / 60);
         seconds -= hours * 60 * 60;
-        let minutes = parseInt(seconds / 60);
+        let minutes = Math.floor(seconds / 60);
         seconds -= minutes * 60;
         return `${hours}:${this.padIfShort(minutes)}:${this.padIfShort(seconds)}`;
     }
 
     exports.secondsToHhmm = function(seconds){
-        let hours = parseInt(seconds / 60 / 60);
+        let hours = Math.floor(seconds / 60 / 60);
         seconds -= hours * 60 * 60;
-        let minutes = parseInt(seconds / 60);
+        let minutes = Math.floor(seconds / 60);
         seconds -= minutes * 60;
         return `${hours}:${this.padIfShort(minutes)}`;
     }
@@ -541,5 +541,4 @@ if (!fetch) {
         let p = document.getElementById(id);
         p.style.display = display;
     }
-
 }(typeof exports === 'undefined' ? this.util = {} : exports));

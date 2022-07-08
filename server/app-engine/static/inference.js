@@ -255,7 +255,6 @@ const STOP_CAP = 10;
                 }
 
                 let entry = {'arrival_time': util.hhmmssToSeconds(arrival_time), 'stop_id': stop_id, 'stop_sequence': stop_sequence}
-
                 let sdt = r['shape_dist_traveled'];
 
                 if (!util.isNullOrUndefined(sdt) && sdt.length > 0){
@@ -275,8 +274,8 @@ const STOP_CAP = 10;
                 // util.log("JSON.stringify(r): " + JSON.stringify(r));
 
                 let shape_id = rows[i]['shape_id'];
-                let lat = rows[i]['shape_pt_lat'];
-                let lon = rows[i]['shape_pt_lon'];
+                let lat = parseFloat(rows[i]['shape_pt_lat']);
+                let lon = parseFloat(rows[i]['shape_pt_lon']);
 
                 let plist = this.shapeMap[shape_id];
 
@@ -296,7 +295,7 @@ const STOP_CAP = 10;
             }
         }
 
-        async computeShapeLengths() {
+        computeShapeLengths() {
             this.shapeLengthMap = {};
             // util.log("shapeMap: " + JSON.stringify(this.shapeMap));
             for (let [key, value] of Object.entries(this.shapeMap)){
@@ -308,7 +307,7 @@ const STOP_CAP = 10;
                     // util.log("JSON.stringify(pointList[i]): " + JSON.stringify(pointList[i]));
                     let p1 = pointList[i];
                     let p2 = pointList[i+1];
-                    length += await util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
+                    length += util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
                 }
 
                 this.shapeLengthMap[key] = length;
@@ -324,8 +323,8 @@ const STOP_CAP = 10;
             for (let r of rows){
                 // util.log("JSON.stringify(r): " + JSON.stringify(r));
 
-                let lat = r['shape_pt_lat'];
-                let lon = r['shape_pt_lon'];
+                let lat = parseFloat(r['shape_pt_lat']);
+                let lon = parseFloat(r['shape_pt_lon']);
                 this.area.update(lat, lon);
             }
         }

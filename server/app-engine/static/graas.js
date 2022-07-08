@@ -710,7 +710,8 @@ function positionCallback() {
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
 
-    let str = localStorage.getItem("lat-long-pem") || "";
+    // let str = localStorage.getItem("lat-long-pem") || "";
+    let str = "test-scott-express-----BEGIN TOKEN-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgXCWA9ECwQFFiwf3gnY2OEdxGLm5pRKJIe9BO3Myp5QKhRANCAARPTxhsDYbtpFe837JnWScJhtnafrj/SBXzISqECiLDxrSxNSlpHaIfZFAXSOj87mEiwIPzSMehRurhC5tC8DlQ-----END TOKEN-----";
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
             // ios WKWebView doesn't support camera access :[
@@ -998,7 +999,7 @@ function gotConfigData(data, agencyID, arg) {
 }
 
 // Load & filter trips, and then populate dropdown
-async function loadTrips() {
+function loadTrips() {
     util.log("- loading trips");
     tripIDLookup = {};
 
@@ -1027,7 +1028,7 @@ async function loadTrips() {
             // util.log(`- lon: ${lon}`);
             const timeDelta = util.getTimeDelta(time);
             // util.log(`- timeDelta: ${timeDelta}`);
-            const distance = await util.haversineDistance(lat, lon, startLat, startLon);
+            const distance = util.haversineDistance(lat, lon, startLat, startLon);
             // util.log(`- distance: ${distance}`);
             let holidayOn = false;
             let holidayOff = false;

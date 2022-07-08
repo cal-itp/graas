@@ -113,8 +113,6 @@ var id_base = 0;
             let timeScore = .5 * (MAX_TIME_DISTANCE - time_distance) / MAX_TIME_DISTANCE;
 
             // util.log(`segment update: id=${this.id} trip-name=${this.trip_name} score=${locationScore + timeScore} trip_pos=(${this.segment_index}/${this.segments_per_trip}) closest-lat=${closestLat} closest-lon=${closestLon}`);
-            // util.log(`segment update: id=${this.id} trip-name=${util.to_b64(this.trip_name)} score=${locationScore + timeScore} trip_pos=(${this.segment_index}/${this.segments_per_trip}) closest-lat=${closestLat} closest-lon=${closestLon}`);
-            // util.log(`+ trip_name: ${this.trip_name}`);
             return {
                 'score': locationScore + timeScore,
                 'time_offset': seconds - this.waypointList[min_index]['time']

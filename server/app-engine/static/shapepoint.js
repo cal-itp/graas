@@ -6,36 +6,36 @@ if(typeof util === 'undefined'){
         constructor(lat = null, lon = null) {
             // util.log("ShapePoint constructor");
             if(lat !== null){
-                this.lat = parseFloat(lat);
+                this.lat = lat;
             } else this.lat = lat;
             if(lon !== null){
-                this.lon = parseFloat(lon);
+                this.lon = lon;
             } else this.lon = lon;
         }
 
         setLatIfLess(lat){
-            let latFloat = parseFloat(lat);
+            let latFloat = lat;
             if (this.lat === null || latFloat < this.lat){
                 this.lat = latFloat;
             }
         }
 
         setLatIfGreater(lat){
-            let latFloat = parseFloat(lat);
+            let latFloat = lat;
             if (this.lat === null || latFloat > this.lat){
                 this.lat = latFloat;
             }
         }
 
         setLonIfLess(lon){
-            let lonFloat = parseFloat(lon);
+            let lonFloat = lon;
             if (this.lon === null || lonFloat < this.lon){
                 this.lon = lonFloat;
             }
         }
 
         setLonIfGreater(lon){
-            let lonFloat = parseFloat(lon);
+            let lonFloat = lon;
             if (this.lon === null || lonFloat > this.lon){
                 this.lon = lonFloat;
             }
