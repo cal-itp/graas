@@ -343,8 +343,10 @@
 <ol>
 <li>Create a venv using <code>server/app-engine/requirements-cloudless.txt</code></li>
 <li>Activate venv</li>
+<li>Run <code>server/app-engine/cloudless-setup.sh</code>. This will generate an ad hoc agency key pair. The public key is added to the cloudless DB, and a QR code is generated as <code>server/app-engine/ad-hoc.png</code>.</li>
 <li>Run <code>python server/app-engine/main.py -c &lt;path-to-cert.pem&gt; -k &lt;path-to-key.pem&gt;</code> <em>.pem files constitute a self-signed https cert. See below on how to generate cert</em></li>
 <li>(optional) Put the server online using a tool like <a href="https://www.ngrok.com">ngrok</a></li>
+<li>Authenticate web app by pointing browser to server URL and scanning QR code</li>
 </ol>
 <h1 id="graas-instance-setup">GRaaS Instance Setup</h1>
 <p>Follow these instructions to set up your own instance of GRaaS.</p>
