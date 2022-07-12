@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1",
+    "trips": [
+      {
+        "id": "A_1_outbound_0000",
+        "headsign": "Outbound Around The World",
+        "start_time": 0,
+        "end_time": 86400
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "trips": [
+      {
+        "id": "B_1_inbound_0000",
+        "headsign": "Inbound Two Shakes of a Lamb's Tail",
+        "start_time": 0,
+        "end_time": 1
+      }
+    ]
+  }
+]

@@ -99,7 +99,7 @@ import json
 import sys
 import time
 import warnings
-from flask import Flask, Response, request
+from flask import abort, Flask, Response, request
 import threading
 import socket
 
@@ -238,6 +238,24 @@ def test():
     fn = 'static/device-test.html'
     content = util.get_file(fn, 'rb')
     return Response(content, mimetype='text/html')
+
+# for cloudless evaluation testing
+@app.route('/test/<filename>')
+def test_files(filename):
+    print(f'test_files()')
+    print(f'- filename: {filename}')
+
+    if filename == 'vehicle-ids.json':
+        content = util.get_file('static/ad-hoc-vehicle-ids.json', 'r')
+        return Response(content, mimetype='application/json')
+    elif filename == 'agency-params.json':
+        content = util.get_file('static/ad-hoc-agency-params.json', 'r')
+        return Response(content, mimetype='application/json')
+    elif filename.startswith('blocks-'):
+        content = util.get_file('static/ad-hoc-blocks.json', 'r')
+        return Response(content, mimetype='application/json')
+    else:
+        abort(404)
 
 @app.route('/vibrate.mp3')
 def vibrate():
