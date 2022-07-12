@@ -1,16 +1,12 @@
 const fs = require('fs');
 
-class Tee extends fs.WriteStream {
-    constructor() {
-        super(new Uint8Array());
-    }
-
-    redirect(fn) {
-        if (fn) {
-            this.stream = fs.createWriteStream(fn);
-        } else {
-            this.stream = null;
+class TeeStream  {
+    constructor(filename, savedStdOut) {
+        if (filename) {
+            this.stream = fs.createWriteStream(filename);
         }
+
+        this.savedStdOut = savedStdOut;
     }
 
     write(chunk, encoding, callback) {
@@ -18,7 +14,18 @@ class Tee extends fs.WriteStream {
             this.stream.write(chunk, encoding, callback);
         }
 
-        process.stdout.write(chunk, encoding, callback);
+        this.savedStdOut.write(chunk, encoding, callback);
+    }
+}
+
+class Tee {
+    constructor() {
+        this.savedStdOut = process.stdout;
+        this.stream = new TeeStream(null, this.savedStdOut);
+    }
+
+    redirect(filename) {
+        this.stream = new TeeStream(filename, this.savedStdOut);
     }
 }
 

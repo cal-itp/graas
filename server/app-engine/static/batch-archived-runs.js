@@ -1,9 +1,11 @@
+// run with NODE_PATH=../../node/node_modules node batch-archived-runs.js -d ~/src/graas/data/trip-inference-training/included -o ~/tmp
+
 var util = require('../static/gtfs-rt-util');
 var run_archived_trip = require('../static/run-archived-trip');
 var fs = require( 'fs' );
 var path = require( 'path' );
 var Tee = require('../static/tee');
-const { Console } = require('node:console');
+var { Console } = require('node:console');
 // import inference_stats
 
 
@@ -14,32 +16,21 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
     let vehiclePositionFiles = [];
     let metadataFiles = [];
     const tee = new Tee();
-    const console = new Console(tee, process.stderr);
-    try {
-        util.log(`dataDir: ${dataDir}`);
-        let dirs = await fs.promises.readdir(dataDir);
-
-        for (let dir of dirs) {
-            try {
-                let files = await fs.promises.readdir(`${dataDir}/${dir}`);
-                for (let file of files) {
-                    // util.log(" - file: " + file);
-                    if(file === "updates.txt")
-                    {
-                        vehiclePositionFiles.push(`${dataDir}/${dir}/${file}`);
-                    }
-                    if(file === "metadata.txt")
-                    {
-                        metadataFiles.push(`${dataDir}/${dir}/${file}`);
-                    }
-                }
-            } catch (e) {
-                console.log("hello!");
-                console.error(e);
+    let dirs = listDirs(dataDir);
+    for (let dir of dirs) {
+        let tripDir = `${dataDir}/${dir}`
+        let files = listDirs(tripDir);
+        for (let file of files) {
+            util.log(" - file: " + file);
+            if(file === "updates.txt")
+            {
+                vehiclePositionFiles.push(`${dataDir}/${dir}/${file}`);
+            }
+            if(file === "metadata.txt")
+            {
+                metadataFiles.push(`${dataDir}/${dir}/${file}`);
             }
         }
-    } catch (e) {
-        console.error(e);
     }
     vehiclePositionFiles = vehiclePositionFiles.sort();
     util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
@@ -53,15 +44,14 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
     // stdout_save = sys.stdout
     let logFile = `${outputDir}/log.txt`;
     util.log(`- logFile: ${logFile}`);
-    tee.redirect(logFile);
 
     // sys.stdout = open(log_file, 'w')
     let then = Date.now();
-    // await run_archived_trip.main(vehiclePositionFiles, outputDir, simulateBlockAssignment);
+    await run_archived_trip.main(vehiclePositionFiles, outputDir, simulateBlockAssignment);
     // sys.stdout.close()
     // sys.stdout = stdout_save
-    console.log(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
-    console.log(` - resultFile: ${resultFile}\n`);
+    tee.stream.write(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
+    tee.stream.write(` - resultFile: ${resultFile}\n`);
 
     for (let file of metadataFiles) {
         let agencyDate = getAgencyDateFromPath(file);
@@ -71,8 +61,9 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
             let contents = fs.readFileSync(file, 'utf-8').trim();
             let index = contents.search(": ");
             expectedTripID = contents.substring(index + 2);
-            console.log(`expected: ${expectedTripID}\n`);
+            tee.stream.write(`expected: ${expectedTripID}\n`);
             let tripIDs = {};
+            util.log(`logFileName: ${logFileName}`);
             let logs = fileToArray(logFileName);
 
             if(logs === null) continue;
@@ -91,16 +82,15 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
                 }
             }
             for (let [key, value] of Object.entries(tripIDs)){
-                console.log(`${value} - ${key}\n`);
+                tee.stream.write(`${value} - ${key}\n`);
             }
         } catch(e){
-            console.log("skip, files incomplete for now");
-            // console.log(e);
+            util.log("skip, files incomplete for now");
+            console.log(e);
         }
 
-        tee.redirect();
+        // tee.redirect();
     }
-
     // with open(resultFile, 'w') as f:
     //     files = glob.glob(f'{dataDir}/trip-inference-training/included/202*')
     //     for i in files:
@@ -143,6 +133,24 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
     // score = line.split(' ')[1]
     // print(f'score: {score}')
 }
+function listDirs(path){
+    console.log(`listDirs(${path})`);
+    try {
+      if (fs.existsSync(path)) {
+        util.log("Directory exists.");
+      } else {
+        util.log("Directory does not exist.");
+      }
+    } catch(e) {
+      util.log("An error occurred.");
+    }
+
+    try {
+        return fs.readdirSync(path);
+    } catch (e) {
+        util.log('Error occured while reading directory!');
+    }
+}
 
 function getAgencyDateFromPath(path){
     let ir = path.lastIndexOf('/');
@@ -163,7 +171,8 @@ function fileToArray(filename) {
         const arr = contents.split(/\r?\n/);
         return arr;
     } catch(e){
-        console.log(e);
+        util.log("skipping error, file missing for now");
+        // console.log(e);
         return null;
     }
 }

@@ -19,9 +19,11 @@ var id_base = 0;
 (function(exports) {
     exports.Segment = class {
         constructor(segment_index, trip_id, trip_name, trip_start_seconds, stop_id, boundingBox, start_time, end_time, min_file_offset, max_file_offset){
+            util.log(`new segment! id_base: ${id_base}`);
             this.id = id_base;
             id_base += 1;
             this.segment_index = segment_index;
+            util.log(`segment_index: ${segment_index}`);
             this.trip_id = trip_id;
             this.trip_name = trip_name;
             this.trip_start_seconds = trip_start_seconds;
@@ -60,7 +62,8 @@ var id_base = 0;
 
             if (this.waypointList === null){
                 this.waypointList = [];
-
+                util.log(`this.min_file_offset: ${this.min_file_offset}`)
+                util.log(`this.max_file_offset: ${this.max_file_offset}`)
                 for(let r = this.min_file_offset; r < this.max_file_offset+1; r++){
                     let llat = shapes[r]['shape_pt_lat'];
                     let llon = shapes[r]['shape_pt_lon'];
@@ -103,8 +106,7 @@ var id_base = 0;
             // util.log(`+ update time : ${util.secondsToHhmm(seconds)}`);
             // util.log(`+ segment time: ${util.secondsToHhmm(this.waypointList[min_index]["time"])}`);
             let time_distance = Math.abs(seconds - this.waypointList[min_index]['time']);
-            // util.log(`- time_distance: ${time_distance}`);
-
+            util.log(`- time_distance: ${time_distance}`);
             if (time_distance > MAX_TIME_DISTANCE){
                 return {'score': -1, 'time_offset': 0};
             }
@@ -112,7 +114,7 @@ var id_base = 0;
             let locationScore = .5 * (MAX_LOCATION_DISTANCE - min_distance) / MAX_LOCATION_DISTANCE;
             let timeScore = .5 * (MAX_TIME_DISTANCE - time_distance) / MAX_TIME_DISTANCE;
 
-            // util.log(`segment update: id=${this.id} trip-name=${this.trip_name} score=${locationScore + timeScore} trip_pos=(${this.segment_index}/${this.segments_per_trip}) closest-lat=${closestLat} closest-lon=${closestLon}`);
+            util.log(`segment update: id=${this.id} trip-name=${this.trip_name} score=${locationScore + timeScore} trip_pos=(${this.segment_index}/${this.segments_per_trip}) closest-lat=${closestLat} closest-lon=${closestLon}`);
             return {
                 'score': locationScore + timeScore,
                 'time_offset': seconds - this.waypointList[min_index]['time']

@@ -26,7 +26,7 @@ function getAgencyIdFromPath(path){
         // util.log(`- inference.TripInference.VERSION: ${inference.TripInference.VERSION}`);
 
         const tee = new Tee();
-        const console = new Console(tee, process.stderr);
+        // const console = new Console(tee, process.stderr);
         // let stdout_save = sys.stdout;
         // let sys.stdout = tee;
         let lastDow = -1;
@@ -47,7 +47,7 @@ function getAgencyIdFromPath(path){
                     let metaf = df.slice(0,i + 1) + 'metadata.txt';
                     util.log(`- metaf: ${metaf}`);
                     let expected_trip_id = getProperty(metaf, 'trip-id');
-                    util.log(`- expected_trip_id: >${expected_trip_id}<`);
+                    tee.stream.write(`- expected_trip_id: >${expected_trip_id}<\n`);
                 }
             }
             let m1 = pattern1.exec(df);
@@ -65,7 +65,7 @@ function getAgencyIdFromPath(path){
             if (dow != lastDow){
                 // tee.redirect()
                 let agency_id = getAgencyIdFromPath(df);
-                console.log(`++ inferred agency ID: ${agency_id} \n`);
+                tee.stream.write(`++ inferred agency ID: ${agency_id} \n`);
 
                 inf = new inference.TripInference(
                     agency_id,
@@ -81,7 +81,7 @@ function getAgencyIdFromPath(path){
             inf.resetScoring();
 
             let fn = outputFolder + '/' + name + '-log.txt';
-            console.log(`-- fn: ${fn} \n`);
+            tee.stream.write(`-- fn: ${fn} \n`);
             tee.redirect(fn)
 
             let lines = fileToArray(df);
@@ -97,7 +97,7 @@ function getAgencyIdFromPath(path){
                 let lon = parseFloat(tok[2]);
                 let gridIndex = inf.grid.getIndex(lat, lon);
                 // util.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex}`);
-                console.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
+                tee.stream.write(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
                 let result = await inf.getTripId(lat, lon, daySeconds, expected_trip_id);
                 // util.log(`- result: ${JSON.stringify(result)}`);
 
@@ -106,7 +106,7 @@ function getAgencyIdFromPath(path){
                 if (result !== null){
                     tripID = result['trip_id'];
                 }
-                console.log(`- tripID: ${tripID} \n`);
+                tee.stream.write(`- tripID: ${tripID} \n`);
                 // util.log(`- tripID: ${tripID}`);
             }
         }
