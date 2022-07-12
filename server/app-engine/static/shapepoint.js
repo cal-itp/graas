@@ -52,5 +52,9 @@ if(typeof util === 'undefined'){
         getLat() {
             return this.lat;
         }
+
+        toString() {
+            return `(${this.lat}, ${this.lon})`;
+        }
     }
 }(typeof exports === 'undefined' ? this.shapepoint = {} : exports));

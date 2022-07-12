@@ -33,23 +33,23 @@ const STOP_CAP = 10;
             const routeMap = await this.getRouteMap();
             util.log("- routeMap: " + JSON.stringify(routeMap, null, 2));
 
-            util.log('exiting early...');
-            process.exit();
-
             this.area = new area.Area();
             await this.populateBoundingBox();
-            // util.log(`- JSON.stringify(this.area): ${JSON.stringify(this.area)}`);
+            util.log(`- this.area: ${this.area}`);
             this.grid = new grid.Grid(this.area, this.subdivisions);
 
             if (this.dow < 0) {
                 this.dow = (new Date()).getDay();
-                util.log(`- dow: ${this.dow}`);
             }
+            util.log(`- dow: ${this.dow}`);
 
             if (this.epochSeconds < 0) {
                 this.epochSeconds = Math.floor(Date.now() / 1000);
-                // util.log(`- epochSeconds: ${this.epochSeconds}`);
             }
+            util.log(`- this.epochSeconds: ${this.epochSeconds}`);
+
+            util.log('exiting early...');
+            process.exit();
 
             this.stops = await this.getStops();
             // util.log(`-- JSON.stringify(this.stops): ${JSON.stringify(this.stops)}`);

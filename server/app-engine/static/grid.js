@@ -9,7 +9,7 @@ if(typeof util === 'undefined'){
             this.aspectRatio = boundingBox.getAspectRatio();
             this.subdivisions = subdivisions;
             this.table = {};
-            // util.log(`grid: top_left=${JSON.stringify(boundingBox.topLeft)} bottom_right=${JSON.stringify(boundingBox.bottomRight)} subdivisions=${subdivisions}`)
+            util.log(`grid: top_left=${boundingBox.topLeft} bottom_right=${boundingBox.bottomRight} subdivisions=${subdivisions}`)
         }
 
         addSegment(segment, index){

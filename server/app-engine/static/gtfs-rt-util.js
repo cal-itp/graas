@@ -43,6 +43,7 @@ if (!fetch) {
     exports.EARTH_RADIUS_IN_FEET = 20902231;
     exports.FEET_PER_LAT_DEGREE = 364000;
     exports.FEET_PER_LONG_DEGREE = 288200;
+    exports.FEET_PER_MILE = 5280;
 
     exports.log = function(s) {
         console.log(s);
@@ -76,8 +77,8 @@ if (!fetch) {
             return Date.now();
         } else {
             let year = date.substring(0, 4);
-            let month = date.substring(4, 6);
-            let day = date.substring(6, 8);
+            let month = date.substring(5, 7);
+            let day = date.substring(8, 10);
             let d = new Date(year, month - 1, day);
             return d.getTime()/1000;
         }
@@ -442,6 +443,15 @@ if (!fetch) {
     exports.getFeetAsLongDegrees = function(feet){
         return feet / this.FEET_PER_LONG_DEGREE;
     }
+
+    exports.getDistanceString = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} ft`;
+        } else {
+            return `${Math.round(feet / this.FEET_PER_MILE)} mi`;
+        }
+    }
+
 
     // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
     exports.csvToArray = function(str, delimiter = ",") {

@@ -51,12 +51,25 @@ if(typeof util === 'undefined'){
             let delta = this.getLatDelta();
             return 1 - ((lat - this.bottomRight.lat) / delta);
         }
+
         getLongFraction(lon, showError=true){
             if (lon > this.bottomRight.lon || lon < this.topLeft.lon){
                 util.log(` - error: lon of ${lon} is not between ${this.bottomRight.lon} and ${this.topLeft.lon}`);           return null;
             }
             let delta = this.getLongDelta();
             return 1 - ((Math.abs(lon) - Math.abs(this.bottomRight.lon)) / delta);
+        }
+
+        toString() {
+            return `{topLeft: ${this.topLeft}, bottomRight: ${this.bottomRight}, width: ${util.getDistanceString(this.getWidthInFeet())}, ${util.getDistanceString(this.getHeightInFeet())}}`;
+        }
+
+        getWidthInFeet() {
+            return Math.round(util.haversineDistance(0, this.topLeft.lon, 0, this.bottomRight.lon));
+        }
+
+        getHeightInFeet() {
+            return Math.round(util.haversineDistance(this.topLeft.lat, 0, this.bottomRight.lat, 0));
         }
 
         contains(lat, lon){

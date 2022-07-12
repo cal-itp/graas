@@ -57,10 +57,11 @@ function getAgencyIdFromPath(path){
 
             let m2 = pattern2.exec(df);
             let date = m2[1];
-            // util.log(`date: ${date}`);
+            //util.log(`date: ${date}`);
             let dow = getDow(date);
             // util.log(`dow: ${dow}`);
             let epochSeconds = util.getEpochSeconds(date);
+            //util.log(`epochSeconds: ${epochSeconds}`);
 
             if (dow != lastDow){
                 // tee.redirect()
