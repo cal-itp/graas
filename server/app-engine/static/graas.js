@@ -710,8 +710,7 @@ function positionCallback() {
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
 
-    // let str = localStorage.getItem("lat-long-pem") || "";
-    let str = "test-scott-express-----BEGIN TOKEN-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgXCWA9ECwQFFiwf3gnY2OEdxGLm5pRKJIe9BO3Myp5QKhRANCAARPTxhsDYbtpFe837JnWScJhtnafrj/SBXzISqECiLDxrSxNSlpHaIfZFAXSOj87mEiwIPzSMehRurhC5tC8DlQ-----END TOKEN-----";
+    let str = localStorage.getItem("lat-long-pem") || "";
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
             // ios WKWebView doesn't support camera access :[
