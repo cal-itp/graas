@@ -16,7 +16,7 @@ const STOP_CAP = 10;
     exports.TripInference = class {
 
         constructor(agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
-            util.log("constructor()");
+            util.log("TripInference.TripInference()");
             this.agencyID = agencyID;
             this.vehicleID = vehicleID;
             this.subdivisions = subdivisions;
@@ -28,10 +28,13 @@ const STOP_CAP = 10;
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
 
-            await this.getCalendarMap();
-            // util.log("this.calendarMap: " + JSON.stringify(this.calendarMap));
-            await this.getRouteMap();
-            // util.log("this.routeMap: " + JSON.stringify(this.routeMap));
+            const calendarMap = await this.getCalendarMap();
+            util.log("- calendarMap: " + JSON.stringify(calendarMap, null, 2));
+            const routeMap = await this.getRouteMap();
+            util.log("- routeMap: " + JSON.stringify(routeMap, null, 2));
+
+            util.log('exiting early...');
+            process.exit();
 
             this.area = new area.Area();
             await this.populateBoundingBox();
@@ -191,25 +194,28 @@ const STOP_CAP = 10;
         async getCalendarMap(){
             // util.log('getCalendarMap()');
             let rows = await this.getFile("calendar.txt");
-            this.calendarMap = {};
+            const calendarMap = {};
             let dow = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
             for (let r of rows){
                 let service_id = r['service_id'];
-                // util.log(`-- service id: ${service_id}`)
+                util.log(`-- service id: ${service_id}`)
                 let cal = [];
                 for (let d of dow){
                     cal.push(r[d]);
                     // util.log(`-- cal: ${cal}`);
                 }
-                this.calendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
+                calendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
             }
+
+            return calendarMap;
         }
 
         async getRouteMap(){
             // util.log('getRouteMap()');
             let rows = await this.getFile("routes.txt");
-            this.routeMap = {};
+            const routeMap = {};
+
             for (let r of rows){
                 let route_id = r['route_id'];
                 // util.log(`-- route_id: ${route_id}`)
@@ -217,8 +223,10 @@ const STOP_CAP = 10;
                 let longName = r['route_long_name'];
                 let name = (!util.isNullUndefinedOrBlank(shortName) ? shortName : longName);
 
-                this.routeMap[route_id] = {'name': name};
+                routeMap[route_id] = {'name': name};
             }
+
+            return routeMap;
         }
 
         async getStops(){
