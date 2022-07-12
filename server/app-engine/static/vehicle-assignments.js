@@ -150,7 +150,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
         xx += GAP + elementWidth;
 
-        if (xx >= window.innerWidth) {
+        if (xx + elementWidth >= window.innerWidth) {
             xx = GAP;
             yy += GAP + bh;
         }
@@ -188,7 +188,7 @@ function layout(blockIDList, vehicleIDList, assignments) {
 
         xx += GAP + elementWidth;
 
-        if (xx >= window.innerWidth) {
+        if (xx + elementWidth >= window.innerWidth) {
             xx = GAP;
             yy += GAP + bh;
         }
