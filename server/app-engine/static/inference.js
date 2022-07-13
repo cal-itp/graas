@@ -1,4 +1,5 @@
 if (typeof util === 'undefined' || util === null) {
+    var platform = require('../static/platform');
     var util = require('../static/gtfs-rt-util');
     var grid = require('../static/grid');
     var timer = require('../static/timer');
@@ -195,11 +196,19 @@ const STOP_CAP = 10;
         }
 
         async getFile(fileName){
-                let url = `${BASE_URL}/${this.agencyID}/${fileName}`;
-                // util.log('- fetching from ' + url);
-                let response = await util.timedFetch(url, {method: 'GET'});
-                let text = await response.text();
-                return util.csvToArray(text);
+            //util.log('inference.getFile()');
+            //util.log('- fileName: ' + fileName);
+
+            /*
+            let url = `${BASE_URL}/${this.agencyID}/${fileName}`;
+            // util.log('- fetching from ' + url);
+            let response = await util.timedFetch(url, {method: 'GET'});
+            let text = await response.text();*/
+
+            // ### TODO: port csv DictReader and use instead
+            const text = platform.readFile(fileName);
+            //util.log('- text: ' + text);
+            return util.csvToArray(text);
         }
 
         async getCalendarMap(){
