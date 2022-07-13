@@ -15,8 +15,8 @@ Finally, fetch() timeouts are currently not implemented under node.
 //console.log('- this.crypto: ' + this.crypto);
 //console.log('- this.fetch: ' + this.fetch);
 
-var crypto = this.crypto
-var fetch = this.fetch
+let crypto = this.crypto
+let fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -26,6 +26,12 @@ if (!crypto) {
 
 if (!fetch) {
     fetch = require('node-fetch')
+}
+
+let platform = this.platform;
+
+if (typeof platform === 'undefined' || platform === null) {
+    platform = require('./platform');
 }
 
 (function(exports) {
@@ -592,11 +598,11 @@ if (!fetch) {
         this.log('- cachePath: ' + cachePath);
         this.log('- url: ' + url);
 
-        platform.ensureResourcePath(cache_path)
+        platform.ensureResourcePath(cachePath)
         const fileName = cachePath + 'gtfs.zip'
         this.log('- fileName: ' + fileName);
 
-        if (url.startswith('http://') || url.startswith('https://')) {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
             const r = await fetch(url, {method: 'HEAD'});
             this.log('- r.headers: ' + r.headers);
             const urlTime = r.headers.get('last-modified');
@@ -635,7 +641,9 @@ if (!fetch) {
             const stats = fs.statSync(url);
             this.log('- stats: ' + JSON.stringify(stats));
             const tsArchive = Date.parse(stats.mtime);
+            this.log('- tsArchive: ' + tsArchive);
             const tsCache = platform.getMTime(fileName);
+            this.log('- tsCache:   ' + tsCache);
 
             if (tsArchive < tsCache) {
                 this.log('+ gtfs.zip up-to-date, nothing to do');
@@ -643,11 +651,12 @@ if (!fetch) {
             }
 
             const content = fs.readFileSync(url, 'utf8');
-            platform.writeToFile(filename, content);
+            this.log('- content.length:   ' + content.length);
+            platform.writeToFile(fileName, content);
         }
 
         util.log('+ gtfs.zip downloaded')
         const names = ['calendar.txt', 'routes.txt', 'stops.txt', 'stop_times.txt', 'shapes.txt', 'trips.txt'];
-        platform.unpackZipFile(fileName, cachePath, names);
+        platform.unpackZip(fileName, cachePath, names);
     }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

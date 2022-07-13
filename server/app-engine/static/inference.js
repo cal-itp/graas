@@ -1,4 +1,4 @@
-if(typeof util === 'undefined'){
+if (typeof util === 'undefined' || util === null) {
     var util = require('../static/gtfs-rt-util');
     var grid = require('../static/grid');
     var timer = require('../static/timer');
@@ -34,7 +34,7 @@ const STOP_CAP = 10;
         }
 
         async init(){
-            //util.updateCacheIfNeeded(this.path, this.url);
+            util.updateCacheIfNeeded(this.path, this.url);
 
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();

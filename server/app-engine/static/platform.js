@@ -2,16 +2,12 @@ let localStorage = this.localStorage;
 let Zip = null;
 let fs = null;
 
-if (typeof localStorage === "undefined" || localStorage === null) {
+if (typeof localStorage === 'undefined' || localStorage === null) {
     const LocalStorage = require('node-localstorage').LocalStorage;
     localStorage = new LocalStorage('./local-storage');
     Zip = require('adm-zip');
     fetch = require('node-fetch');
     fs = require('fs');
-}
-
-if (typeof util === "undefined" || util === null) {
-    var util = require('./gtfs-rt-util');
 }
 
 (function(exports) {
@@ -20,116 +16,120 @@ if (typeof util === "undefined" || util === null) {
     readMTimes();
 
     function readMTimes() {
-        util.log('readMTimes()');
+        console.log('readMTimes()');
 
         const content = localStorage.getItem(MTIME_NAME);
+        if (!content) return;
+
         const lines = content.split('\n');
 
         for (let line of lines) {
-            util.log('-- line: ' + line);
+            console.log('-- line: ' + line);
             const i = line.indexOf(': ');
             const key = line.substring(0, i);
-            util.log('-- key: ' + key);
+            console.log('-- key: ' + key);
             const value = parseInt(line.substring(i + 2));
-            util.log('-- value: ' + new Date(value));
+            console.log('-- value: ' + new Date(value));
 
             mtimeMap[key] = value;
         }
     }
 
     function writeMTimes() {
-        util.log('writeMTimes()');
+        console.log('writeMTimes()');
 
         let s = '';
 
         for (let key of Object.keys(mtimeMap)) {
-            s += `${key}: ${mtimeMap[key]}`;
+            s += `${key}: ${mtimeMap[key]}\n`;
         }
 
-        util.log('- s: ' + s);
-        localStorage.putItemd(MTIME_NAME, s);
+        console.log('- s: ' + s);
+        localStorage.setItem(MTIME_NAME, s);
     }
 
     exports.getTextFileContents = function(path) {
-        util.log('platform.getTextFileContents()');
-        util.log('- path: ' + path);
+        console.log('platform.getTextFileContents()');
+        console.log('- path: ' + path);
 
         const content = localStorage.getItem(path);
         return content.split('\n');
     }
 
     exports.readFile = function(path) {
-        util.log('platform.readFile()');
-        util.log('- path: ' + path);
+        console.log('platform.readFile()');
+        console.log('- path: ' + path);
 
         return localStorage.getItem(path);
     }
 
     exports.writeToFile = function(path, content) {
-        util.log('platform.writeToFile()');
-        util.log('- path: ' + path);
-        util.log('- content.length: ' + content.length);
+        console.log('platform.writeToFile()');
+        console.log('- path: ' + path);
+        console.log('- content.length: ' + content.length);
 
-        localStorage.putItem(path, content);
+        localStorage.setItem(path, content);
         mtimeMap[path] = util.now();
         writeMTimes();
     }
 
     exports.getMTime = function(path) {
-        util.log('platform.getMTime()');
-        util.log('- path: ' + path);
+        console.log('platform.getMTime()');
+        console.log('- path: ' + path);
 
         const value = mtimeMap[path];
         return value ? value : -1;
     }
 
     exports.resourceExists = function(path) {
-        util.log('platform.resourceExists()');
-        util.log('- path: ' + path);
+        console.log('platform.resourceExists()');
+        console.log('- path: ' + path);
 
         return localStorage.getItem(path) !== null;
     }
 
     exports.ensureResourcePath = function(path) {
-        util.log('platform.ensureResourcePath()');
-        util.log('- path: ' + path);
+        console.log('platform.ensureResourcePath()');
+        console.log('- path: ' + path);
 
         // no op with this implementation
     }
 
     exports.copyFile = function(srcPath, dstPath) {
-        util.log('platform.ensurcopyFileeResourcePath()');
-        util.log('- srcPath: ' + srcPath);
-        util.log('- dstPath: ' + dstPath);
+        console.log('platform.ensurcopyFileeResourcePath()');
+        console.log('- srcPath: ' + srcPath);
+        console.log('- dstPath: ' + dstPath);
 
         const content = this.readFile(srcPath);
         this.writeFile(dstPath, content)
     }
 
     exports.unpackZip = async function(url, dstPath, files) {
-        util.log('platform.unpackZip()');
-        util.log('- url: ' + url);
-        util.log('- dstPath: ' + dstPath);
-        util.log('- files: ' + files);
+        console.log('platform.unpackZip()');
+        console.log('- url: ' + url);
+        console.log('- dstPath: ' + dstPath);
+        console.log('- files: ' + files);
 
-        if (util.runningInNode()) {
+        if (/*util.runningInNode()*/ typeof window === 'undefined') {
             let body = null;
 
             if (url.startsWith('http://') || url.startsWith('https://')) {
                 body = await util.getResponseBody(url);
             } else {
-                body = fs.readFileSync(url, 'utf8');
+                body = fs.readFileSync(url);
+                util.log('- typeof body:   ' + (typeof body));
+                util.log('- body.length:   ' + body.length);
             }
 
             const zipFile = new Zip(body);
             const zipEntries = zipFile.getEntries();
-            util.log('- zipEntries.length: ' + zipEntries.length);
+            console.log('- zipEntries.length: ' + zipEntries.length);
 
             zipEntries.forEach((entry) => {
-                util.log('-- entry.entryName: ' + entry.entryName);
+                console.log('-- entry.entryName: ' + entry.entryName);
 
                 if (files.includes(entry.entryName)) {
-                    this.writeFile(entry.entryName, zipFile.readAsText(entry));
+                    this.writeToFile(entry.entryName, zipFile.readAsText(entry) + '\n');
                 }
             });
         } else {

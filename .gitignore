@@ -13,4 +13,5 @@ node_modules/
 server/tests/vehicles.csv
 server/tests/tee-test-*.txt
 server/app-engine/db-sim.json*
+local-storage/
 
