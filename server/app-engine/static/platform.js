@@ -57,8 +57,8 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
     }
 
     exports.readFile = function(path) {
-        console.log('platform.readFile()');
-        console.log('- path: ' + path);
+        //console.log('platform.readFile()');
+        //console.log('- path: ' + path);
 
         return localStorage.getItem(path);
     }

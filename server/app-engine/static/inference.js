@@ -78,14 +78,14 @@ const STOP_CAP = 10;
             for (let r of rows){
                 let loopTimer = new timer.Timer('loop');
                 let trip_id = r['trip_id'];
-                // util.log(`trip_id: ${trip_id}`);
+                util.log(`-- trip_id: ${trip_id}`);
                 let service_id = r['service_id'];
                 let shape_id = r['shape_id'];
 
                 tripSet.add(trip_id);
 
                 if (!(service_id in calendarMap)){
-                    // util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
+                    //util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
                     continue;
                 }
                 let cal = calendarMap[service_id]['cal'];
@@ -93,7 +93,7 @@ const STOP_CAP = 10;
                 // util.log("JSON.stringify(cal): " + JSON.stringify(cal));
                 // util.log("cal[this.dow]: " + cal[this.dow]);
                 if (cal !== null && cal[this.dow] !== "1"){
-                    // util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
+                    //util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
                     continue;
                 }
                 let startDate = calendarMap[service_id]['start_date'];
@@ -106,7 +106,11 @@ const STOP_CAP = 10;
                     // util.log("startSeconds: " + startSeconds);
                     // util.log("endSeconds: " + endSeconds);
                     if (this.epochSeconds < startSeconds || this.epochSeconds > endSeconds){
-                        // util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
+                        //util.log('-- startDate: ' + startDate);
+                        //util.log('-- endDate:   ' + endDate);
+                        //util.log('-- startSeconds:      ' + startSeconds);
+                        //util.log('-- endSeconds:        ' + endSeconds);
+                        //util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
                         continue;
                     }
                 }
@@ -123,7 +127,7 @@ const STOP_CAP = 10;
                 // util.log(`-- wayPoints.length: ${wayPoints.length}`)
 
                 if (wayPoints.length === 0){
-                    // util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
+                    util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
                     continue;
                 }
 

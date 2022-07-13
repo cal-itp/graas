@@ -79,14 +79,23 @@ if (typeof platform === 'undefined' || platform === null) {
     }
 
     exports.getEpochSeconds = function(date) {
+        //this.log('util.getEpochSeconds()');
+        //this.log('- date: ' + date);
+
+        date = date.replace('-', '');
+
         if(date === null){
             return Date.now();
         } else {
             let year = date.substring(0, 4);
-            let month = date.substring(5, 7);
-            let day = date.substring(8, 10);
+            //this.log('- year: ' + year);
+            let month = date.substring(4, 6);
+            //this.log('- month: ' + month);
+            let day = date.substring(6, 8);
+            //this.log('- day: ' + day);
             let d = new Date(year, month - 1, day);
-            return d.getTime()/1000;
+            //this.log('- d: ' + d);
+            return Math.round(d.getTime() / 1000);
         }
     }
     exports.getShortDate = function(date) {
