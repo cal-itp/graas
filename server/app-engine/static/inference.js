@@ -15,8 +15,17 @@ const STOP_CAP = 10;
 (function(exports) {
     exports.TripInference = class {
 
-        constructor(agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
+        constructor(path, url, agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
             util.log("TripInference.TripInference()");
+
+            if (!path.endsWith('/')) {
+                path += '/';
+            }
+
+            this.path = path;
+            util.log(`- this.path: ${this.path}`);
+            this.url = url;
+            util.log(`- this.url: ${this.url}`);
             this.agencyID = agencyID;
             this.vehicleID = vehicleID;
             this.subdivisions = subdivisions;
@@ -25,6 +34,8 @@ const STOP_CAP = 10;
         }
 
         async init(){
+            //util.updateCacheIfNeeded(this.path, this.url);
+
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
 

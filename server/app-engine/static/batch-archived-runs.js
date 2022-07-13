@@ -9,7 +9,7 @@ var { Console } = require('node:console');
 // import inference_stats
 
 
-async function main(dataDir, outputDir, simulateBlockAssignment){
+async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment){
     let timestamp = new Date().toISOString();
     let resultFile = `${outputDir}/results-${timestamp}.txt`;
     let statsFile = `${outputDir}/ti-scores-${timestamp}.txt`;
@@ -47,7 +47,7 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
 
     // sys.stdout = open(log_file, 'w')
     let then = Date.now();
-    await run_archived_trip.main(vehiclePositionFiles, outputDir, simulateBlockAssignment);
+    await run_archived_trip.main(vehiclePositionFiles, gtfsCacheDir, outputDir, staticGtfsUrl, simulateBlockAssignment);
     // sys.stdout.close()
     // sys.stdout = stdout_save
     tee.stream.write(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
@@ -180,6 +180,8 @@ function fileToArray(filename) {
 let dataDir = null;
 let outputDir = null;
 let simulateBlockAssignment = false;
+let gtfsCacheDir = null;
+let staticGtfsUrl = null;
 
 const args = process.argv.slice(2);
 
@@ -197,17 +199,33 @@ for(let j = 0; j < args.length; j++){
         continue;
     }
 
+    if (args[j] == '-g' && j < args.length - 1){
+        j++;
+        gtfsCacheDir = args[j];
+        continue;
+    }
+
+    if (args[j] == '-s' && j < args.length - 1){
+        j++;
+        staticGtfsUrl = args[j];
+        continue;
+    }
+
     if (args[j] == '-b'){
         simulateBlockAssignment = true;
         continue;
     }
 }
-if (dataDir === null || outputDir === null){
-    util.log(`* usage: ${sys.argv[0]} -d <data-dir> -o <output-dir>'`);
+
+if (dataDir === null || outputDir === null || gtfsCacheDir === null || staticGtfsUrl === null) {
+    util.log(`* usage: ${sys.argv[0]} -d <data-dir> -o <output-dir> -g <gtfs-cache-dir> -s <static-gtfs-url> [-b]`);
     util.log(`  -b: simulate block assignment'`);
-    util.log(`  <data-dir>: where to find training data, e.g. $GRASS_REPO/data/trip-inference-training/included'`);
-    util.log(`  <output-dir>: where to put output data, e.g. ~/tmp'`);
+    util.log(`  <data-dir>: where to find training data, e.g. $GRASS_REPO/data/trip-inference-training/included`);
+    util.log(`  <output-dir>: where to put output data, e.g. ~/tmp`);
+    util.log(`  <gtfs-cache-dir>: where to cache GTFS data. e.g. ~/tmp/gtfs-cache`);
+    util.log(`  <static-gtfs-url>: live GTFS URL or archived file, e.g. $GRASS_REPO/data/trip-inference-training/gtfs-archive/2022-02-14-tcrta-gtfs.zip`);
+
     process.exit(1);
 }
 
-main(dataDir, outputDir, simulateBlockAssignment);
+main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment);

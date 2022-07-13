@@ -18,10 +18,12 @@ function getAgencyIdFromPath(path){
 }
 
 (function(exports) {
-    exports.main = async function(dataFiles, outputFolder, simulateBlockAssignment){
+    exports.main = async function(dataFiles, gtfsCacheDir, outputFolder, staticGtfsUrl, simulateBlockAssignment){
         util.log(`main()`);
         util.log(`- dataFiles: ${dataFiles}`);
+        util.log(`- gtfsCacheDir: ${gtfsCacheDir}`);
         util.log(`- outputFolder: ${outputFolder}`);
+        util.log(`- staticGtfsUrl: ${staticGtfsUrl}`);
 
         // util.log(`- inference.TripInference.VERSION: ${inference.TripInference.VERSION}`);
 
@@ -69,6 +71,8 @@ function getAgencyIdFromPath(path){
                 tee.stream.write(`++ inferred agency ID: ${agency_id} \n`);
 
                 inf = new inference.TripInference(
+                    gtfsCacheDir,
+                    staticGtfsUrl,
                     agency_id,
                     'test-vehicle-id',
                     15,
