@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "adm-zip": "^0.5.9",
     "gtfs-realtime-bindings": "^0.0.6",
     "node-fetch": "^2.6.7",
+    "node-localstorage": "^2.2.1",
     "request": "^2.88.2"
   },
   "devDependencies": {
