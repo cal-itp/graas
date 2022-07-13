@@ -46,17 +46,14 @@ const STOP_CAP = 10;
             if (this.epochSeconds < 0) {
                 this.epochSeconds = Math.floor(Date.now() / 1000);
             }
-            util.log(`- this.epochSeconds: ${this.epochSeconds}`);
-
-            util.log('exiting early...');
-            process.exit();
+            util.log(`- this.epochSeconds: ${new Date(this.epochSeconds * 1000)}`);
 
             this.stops = await this.getStops();
             // util.log(`-- JSON.stringify(this.stops): ${JSON.stringify(this.stops)}`);
 
             await this.preloadStopTimes();
-
             // util.log(`-- JSON.stringify(this.stopTimeMap): ${JSON.stringify(this.stopTimeMap)}`);
+
             await this.preloadShapes();
 
             this.computeShapeLengths();
@@ -75,11 +72,11 @@ const STOP_CAP = 10;
 
                 tripSet.add(trip_id);
 
-                if (!(service_id in this.calendarMap)){
+                if (!(service_id in calendarMap)){
                     // util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
                     continue;
                 }
-                let cal = this.calendarMap[service_id]['cal'];
+                let cal = calendarMap[service_id]['cal'];
                 // util.log("cal: " + cal);
                 // util.log("JSON.stringify(cal): " + JSON.stringify(cal));
                 // util.log("cal[this.dow]: " + cal[this.dow]);
@@ -87,8 +84,8 @@ const STOP_CAP = 10;
                     // util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
                     continue;
                 }
-                let startDate = this.calendarMap[service_id]['start_date'];
-                let endDate = this.calendarMap[service_id]['end_date'];
+                let startDate = calendarMap[service_id]['start_date'];
+                let endDate = calendarMap[service_id]['end_date'];
 
                 if (startDate !== null && endDate !== null){
                     let startSeconds = util.getEpochSeconds(startDate);
@@ -181,6 +178,9 @@ const STOP_CAP = 10;
             }
             // Why?
             this.shapeMap = {}
+
+            util.log('exiting early...');
+            process.exit();
         }
 
         async getFile(fileName){
@@ -320,7 +320,7 @@ const STOP_CAP = 10;
                 }
 
                 this.shapeLengthMap[key] = length;
-                // util.log(`++ length for shape ${key}: ${length}`);
+                util.log(`++ length for shape ${key}: ${util.getDisplayDistance(length)}`);
             }
         }
 

@@ -452,6 +452,16 @@ if (!fetch) {
         }
     }
 
+    exports.getDisplayDistance = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} FEET`;
+        } else if (feet < 10 * this.FEET_PER_MILE) {
+            const v = Math.round(feet / this.FEET_PER_MILE * 10) / 10;
+            return `${v} MILES`;
+        } else {
+            return `${Math.round(feet / this.FEET_PER_MILE)} MILES`;
+        }
+    }
 
     // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
     exports.csvToArray = function(str, delimiter = ",") {
