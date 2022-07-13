@@ -124,7 +124,7 @@ const STOP_CAP = 10;
                 let wayPoints = this.getShapePoints(shape_id);
                 // util.log(timer);
                 // util.log(`-- wayPoints: ${wayPoints}`)
-                // util.log(`-- wayPoints.length: ${wayPoints.length}`)
+                util.log(`-- wayPoints.length: ${wayPoints.length}`)
 
                 if (wayPoints.length === 0){
                     util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
@@ -159,7 +159,7 @@ const STOP_CAP = 10;
                 }
                 // util.log(timer);
                 // util.log(`-- stopTimes: ${stopTimes}`);
-                // util.log(`-- len(stopTimes): ${stopTimes.length}`);
+                util.log(`-- stopTimes.length: ${stopTimes.length}`);
                 mainTimer = new timer.Timer('interpolate');
                 this.interpolateWayPointTimes(wayPoints, stopTimes, this.stops);
                 // util.log(timer);
@@ -470,7 +470,7 @@ const STOP_CAP = 10;
                             };
                 anchorList.push(listItem);
                 // util.log("JSON.stringify(listItem): " + JSON.stringify(listItem));
-                // util.log("JSON.stringify(anchorList): " + JSON.stringify(anchorList));
+                //util.log('- anchorList): ' + JSON.stringify(anchorList));
             }
             for (let i=0; i<20; i++){
                 // util.log("i: " + i);
@@ -520,7 +520,7 @@ const STOP_CAP = 10;
                     // util.log(`++ min_index: ${min_index}`)
                     anchorList[j]['index'] = min_index;
                 }
-                // util.log(`-- anchorList : ${anchorList}`);
+                //util.log(`-- anchorList : ${JSON.stringify(anchorList)}`);
 
                 let stable = true;
 
@@ -535,7 +535,7 @@ const STOP_CAP = 10;
                 }
                 if (stable) break;
             }
-            // util.log(`++ JSON.stringify(anchorList) : ${JSON.stringify(anchorList)}`);
+            util.log('- anchorList:' + JSON.stringify(anchorList));
 
             return anchorList;
         }
