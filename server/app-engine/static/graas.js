@@ -28,6 +28,11 @@ var trips = [];
 var sessionID = null;
 var useBulkAssignmentMode = false;
 var useTripInference = false;
+var runTripInferenceTest = false;
+var tiTestData = null;
+var tiTestTripID = null;
+var tiTestIndex = 0;
+var tiTestResults = [];
 var inf = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
@@ -44,6 +49,9 @@ var testDow = null;
 var testDate = null;
 var version = null;
 
+const TI_TEST_DIR_URL = "https://storage.googleapis.com/graas-resources/test/trip-inference-testing";
+const TI_TEST_INCLUDED_FILES_LIST = "included_files.txt"
+const TI_TEST_INCLUDED_FILES_DIRNAME = "included"
 const UUID_NAME = 'lat_long_id';
 const VEHICLE_ID_COOKIE_NAME = 'vehicle_id';
 var vehicleIDCookie = null;
@@ -309,7 +317,7 @@ function handleRefreshOkay() {
     window.location.reload();
 }
 
-function handleStartStop() {
+async function handleStartStop() {
     util.log("handleStartStop()");
 
     let p = document.getElementById(START_STOP_BUTTON);
@@ -601,6 +609,12 @@ function getRewriteArgs() {
             testDow = value;
         } else if (key === 'testdate') {
             testDate = value;
+        } else if (key === 'ti-test') {
+            runTripInferenceTest = true;
+            util.log(`runTripInferenceTest: ${runTripInferenceTest}`);
+        } else if (key === 'ti') {
+            useTripInference = true;
+            util.log(`useTripInference: ${useTripInference}`);
         }
     }
 }
@@ -709,7 +723,7 @@ function positionCallback() {
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
-
+    // let str = "test-scott-express-----BEGIN TOKEN-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQguvTiDmwXl32OjdDptK1bLnG1t5c3H7XOySro90iarCChRANCAASsK6tX2ywfV7Efp1PjPEWJJxTsEW47OlA7umOEL5OkfyKgF+OfhnzQ++Y7DXQ/p1QcQssCJ31It4Xc4d7G6dd-----END TOKEN-----";
     let str = localStorage.getItem("lat-long-pem") || "";
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
@@ -784,13 +798,42 @@ async function handleGPSUpdate(position) {
     };
 
     if(useTripInference){
+        let seconds = util.getSecondsSinceMidnight();
+
+        if(runTripInferenceTest){
+            util.log(`tiTestIndex: ${tiTestIndex}`);
+            // if(tiTestIndex < tiTestData.length){
+            if(tiTestIndex < 4){
+                lat = tiTestData[tiTestIndex].lat;
+                long = tiTestData[tiTestIndex].long;
+                seconds = tiTestData[tiTestIndex].seconds;
+
+                util.log(`lat: ${lat}`);
+                util.log(`long: ${long}`);
+                util.log(`seconds: ${seconds}`);
+
+                tiTestIndex++;
+            } else {
+                util.log("Test complete");
+                let correctCount = 0;
+                for(let i=0; i<tiTestResults.length; i++){
+                    if(tiTestResults[i] === tiTestTripID){
+                        correctCount++;
+                    }
+                }
+                util.log(`Correct percentage: ${correctCount * 100 / tiTestResults.length}%`);
+                return;
+            }
+        }
         // util.log(`lat: ${lat}`);
         // util.log(`long: ${long}`);
-        let seconds = util.getSecondsSinceMidnight();
+        // util.log(`seconds: ${seconds}`);
         // TODO: when do we pass it a tripID?
         let result = await inf.getTripId(lat, long, seconds, null);
         util.log(`result: ${JSON.stringify(result)}`);
         tripID = result['trip_id'];
+        tiTestResults.push(tripID);
+        if(runTripInferenceTest) return;
     }
 
     data['trip-id'] = tripID;
@@ -852,10 +895,8 @@ async function initializeCallback(agencyData) {
     }
 
     util.log("- keyType: " + keyType);
-    // util.log("- keyLength: " + keyLength);
 
     let b = atob(b64);
-    // util.log("- key.length: " + key.length);
 
     const binaryDer = util.str2ab(b);
     try{
@@ -885,12 +926,12 @@ async function initializeCallback(agencyData) {
         let buf = await util.sign(str, signatureKey)
 
         let sig = btoa(util.ab2str(buf));
-
+        util.log(`sig: ${sig}`);
         let hello = {
             msg: str,
             sig: sig
         };
-
+        util.log(`hello: ${hello}`);
         if (agencyData.id) {
             hello.id = agencyData.id;
         }
@@ -925,8 +966,45 @@ async function agencyIDCallback(response) {
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
         // need to decide how to determine vehicle id
-        inf = new inference.TripInference(agencyID, vehicleID, 15);
-        await inf.init();
+        if(useTripInference){
+            inf = new inference.TripInference(agencyID, vehicleID, 15);
+            await inf.init();
+            if(runTripInferenceTest){
+                let response = await util.timedFetch(`${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
+                                                {method: 'GET'}
+                                               );
+                // util.log('- response.status: ' + response.status);
+                // util.log('- response.statusText: ' + response.statusText);
+
+                let responseText = await response.text();
+                let tiTestTrips = responseText.split(/\r?\n/);
+                let testTripIndex = Math.floor(Math.random() * tiTestTrips.length);
+                let tiTestTrip = tiTestTrips[testTripIndex];
+                let tiTestTripURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${tiTestTrip}`;
+                util.log(`tiTestTripURL: ${tiTestTripURL}`);
+                let tiTestTripDataURL = `${tiTestTripURL}/updates.txt`;
+                let tiTestTripMetadataURL = `${tiTestTripURL}/metadata.txt`;
+                response = await util.timedFetch(tiTestTripDataURL,
+                                                    {method: 'GET'}
+                                                   );
+                // util.log('- response.status: ' + response.status);
+                // util.log('- response.statusText: ' + response.statusText);
+                let rawData = await response.text();
+                rawDataWithHeaders = "seconds,lat,long\n" + rawData;
+                // util.log(`rawDataWithHeaders: ${rawDataWithHeaders}`);
+                tiTestData = util.csvToArray(rawDataWithHeaders);
+                // util.log(`JSON.stringify(tiTestData): ${JSON.stringify(tiTestData)}`);
+                response = await util.timedFetch(tiTestTripMetadataURL,
+                                                    {method: 'GET'}
+                                                   );
+                // util.log('- response.status: ' + response.status);
+                // util.log('- response.statusText: ' + response.statusText);
+                responseText = await response.text();
+                // Assumes file has one row, in the format: "trip-id: ABC123"
+                tiTestTripID = responseText.substring(9);
+                util.log(`tiTestTripID: ${tiTestTripID}`);
+            }
+        }
     }
 }
 
@@ -963,15 +1041,15 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            if(data["use-bulk-assignment-mode"] !== null){
+            if(!util.isNullOrUndefined(data["use-bulk-assignment-mode"])){
                 useBulkAssignmentMode = data["use-bulk-assignment-mode"];
             }
-            if(data["use-trip-inference"] !== null){
+            if(!util.isNullOrUndefined(data["use-trip-inference"])){
                 useTripInference = data["use-trip-inference"];
             }
             ignoreStartEndDate = data["ignore-start-end-date"];
             // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
-            util.log(`- useTripInference: ${useTripInference}`);
+            // util.log(`- useTripInference: ${useTripInference}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
@@ -979,7 +1057,11 @@ function gotConfigData(data, agencyID, arg) {
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
+        util.log("name is config tripnames");
+        util.log(`useTripInference: ${useTripInference}`);
+        util.log(`useBulkAssignmentMode: ${useBulkAssignmentMode}`);
         if (useBulkAssignmentMode || useTripInference){
+            util.log("useBulkAssignmentMode || useTripInference");
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
             util.hideElement(TRIP_SELECT_DROPDOWN);
         } else {

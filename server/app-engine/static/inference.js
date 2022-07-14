@@ -66,7 +66,6 @@ const STOP_CAP = 10;
             for (let r of rows){
                 let loopTimer = new timer.Timer('loop');
                 let trip_id = r['trip_id'];
-                // util.log(`trip_id: ${trip_id}`);
                 let service_id = r['service_id'];
                 let shape_id = r['shape_id'];
 
@@ -162,7 +161,7 @@ const STOP_CAP = 10;
 
                 // util.log(f'-- segmentLength: {segmentLength}')
                 mainTimer = new timer.Timer('segments');
-                await this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength);
+                this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength);
                 // util.log(timer)
                 // util.log(loopTimer)
             }
@@ -227,8 +226,8 @@ const STOP_CAP = 10;
             let stopList = {};
             for (let r of rows){
                 let id = r['stop_id'];
-                let lat = r['stop_lat'];
-                let lon = r['stop_lon'];
+                let lat = parseFloat(r['stop_lat']);
+                let lon = parseFloat(r['stop_lon']);
                 stopList[id] = {'lat': lat, 'long': lon}
             }
             return stopList
@@ -256,6 +255,7 @@ const STOP_CAP = 10;
                 }
 
                 let entry = {'arrival_time': util.hhmmssToSeconds(arrival_time), 'stop_id': stop_id, 'stop_sequence': stop_sequence}
+
                 let sdt = r['shape_dist_traveled'];
 
                 if (!util.isNullOrUndefined(sdt) && sdt.length > 0){
@@ -296,7 +296,7 @@ const STOP_CAP = 10;
             }
         }
 
-        computeShapeLengths() {
+        async computeShapeLengths() {
             this.shapeLengthMap = {};
             // util.log("shapeMap: " + JSON.stringify(this.shapeMap));
             for (let [key, value] of Object.entries(this.shapeMap)){
@@ -308,7 +308,7 @@ const STOP_CAP = 10;
                     // util.log("JSON.stringify(pointList[i]): " + JSON.stringify(pointList[i]));
                     let p1 = pointList[i];
                     let p2 = pointList[i+1];
-                    length += util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
+                    length += await util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
                 }
 
                 this.shapeLengthMap[key] = length;
@@ -565,12 +565,10 @@ const STOP_CAP = 10;
         }
 
         async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
-            // Why are there so many segments?!?
-            util.log(`- makeTripSegments()`);
+            // util.log(`- makeTripSegments()`);
             // util.log(`- maxSegmentLength: ${maxSegmentLength}`);
-            util.log(`- trip_id: ${trip_id}`);
-            util.log(`- tripName: ${tripName}`);
-            util.log(`- wayPoints.length: ${wayPoints.length}`);
+            // util.log(`- trip_id: ${trip_id}`);
+            // util.log(`- wayPoints: ${wayPoints}`);
 
             let segmentStart = 0;
             let index = segmentStart;
@@ -579,7 +577,7 @@ const STOP_CAP = 10;
             let firstSegment = true;
             let segmentCount = 1;
 
-            let segmentArea = new area.Area()
+            // let area = Area()
             let indexList = [];
             let segmentList = [];
 
@@ -591,7 +589,7 @@ const STOP_CAP = 10;
                 let p = wayPoints[index];
                 // util.log("p['lat']: " + p['lat']);
                 // util.log("p['lon']: " + p['lon']);
-                segmentArea.update(p['lat'], p['lon']);
+                this.area.update(p['lat'], p['lon']);
 
                 let gridIndex = this.grid.getIndex(p['lat'], p['lon']);
                 if  (!(gridIndex in indexList)){
@@ -602,7 +600,7 @@ const STOP_CAP = 10;
                 segmentLength += distance;
 
                 if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1){
-                    segmentArea.extend(skirtSize);
+                    this.area.extend(skirtSize);
 
                     if (segmentStart === 0 && wayPoints[segmentStart]['time'] === wayPoints[index]['time']){
                         // util.log(`0 duration first segment for trip ${trip_id}`);
@@ -620,7 +618,7 @@ const STOP_CAP = 10;
                         tripName,
                         firstStop['arrival_time'],
                         stop_id,
-                        segmentArea,
+                        this.area,
                         wayPoints[segmentStart]['time'],
                         wayPoints[index]['time'],
                         wayPoints[segmentStart]['file_offset'],
@@ -628,27 +626,27 @@ const STOP_CAP = 10;
                     );
 
                     segmentList.push(tripSegment);
-                    segmentCount++;
+                    segmentCount += 1;
 
                     for (let i of indexList){
                         this.grid.addSegment(tripSegment, i);
                     }
 
                     segmentLength = 0;
-                    segmentArea = new area.Area()
+                    // area = Area()
                     indexList = [];
 
-                    index++;
+                    index += 1;
                     lastIndex = index;
                     segmentStart = index;
 
                     p = wayPoints[Math.max(segmentStart - 1, 0)];
-                    segmentArea.update(p['lat'], p['lon']);
+                    this.area.update(p['lat'], p['lon']);
 
                     continue;
                 }
                 lastIndex = index;
-                index++;
+                index += 1;
             }
             for (let s of segmentList){
                 s.setSegmentsPerTrip(segmentCount - 1);
@@ -667,7 +665,7 @@ const STOP_CAP = 10;
                 return ret;
             }
 
-            util.log(`- segmentList.length: ${segmentList.length}`);
+            // util.log(`- segmentList.length: ${segmentList.length}`);
             // util.log(`- tripIdFromBlock: ${tripIdFromBlock}`);
 
             let stop_id = await this.getStopForPosition(lat, lon, STOP_PROXIMITY);
@@ -680,16 +678,12 @@ const STOP_CAP = 10;
             let maxSegmentScore = 0;
             let timeOffset = 0;
             let shapes = await this.getFile("shapes.txt");
-            // util.log(`JSON.stringify(segmentList): ${JSON.stringify(segmentList)}`);
             for (let segment of segmentList){
                 if (tripIdFromBlock !== null && segment.trip_id !== tripIdFromBlock){
                     continue;
                 }
-                // util.log(`JSON.stringify(segment): ${JSON.stringify(segment)}`);
-                util.log(`segment.trip_id: ${segment.trip_id}`);
-                let result = await segment.getScore(lat, lon, seconds, shapes);
-                // util.log(`JSON.stringify(segment.waypointList): ${JSON.stringify(segment.waypointList)}`);
 
+                let result = await segment.getScore(lat, lon, seconds, shapes);
                 // util.log(`result: ${JSON.stringify(result)}`);
                 let score = multiplier * result['score'];
                 // util.log(`score: ${score}`);
@@ -735,7 +729,7 @@ const STOP_CAP = 10;
                 let score = cand['score'];
                 let name = cand['name'];
                 // util.log(`candidate update: id=${trip_id} trip-name=${util.to_b64(name)} score=${score}`)
-                util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
+                // util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
 
                 if (score > maxScore){
                     maxScore = score;
@@ -745,7 +739,7 @@ const STOP_CAP = 10;
                 }
             }
 
-            util.log(`- maxScore: ${maxScore}`);
+            // util.log(`- maxScore: ${maxScore}`);
 
             if (maxScore >= SCORE_THRESHOLD){
                 ret['trip_id'] = maxTripId

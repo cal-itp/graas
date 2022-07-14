@@ -17,10 +17,11 @@ if(typeof util === 'undefined'){
 
         extend(feet){
             // util.log("extend()");
-            this.topLeft.lat += util.getFeetAsLatDegrees(feet / 2);
-            this.topLeft.lon -= util.getFeetAsLongDegrees(feet / 2);
-            this.bottomRight.lat -= util.getFeetAsLatDegrees(feet / 2);
-            this.bottomRight.lon += util.getFeetAsLongDegrees(feet / 2);
+            this.topLeft.lat += parseFloat(util.getFeetAsLatDegrees(feet / 2));
+            this.topLeft.lon -= parseFloat(util.getFeetAsLongDegrees(feet / 2));
+
+            this.bottomRight.lat -= parseFloat(util.getFeetAsLatDegrees(feet / 2));
+            this.bottomRight.lon += parseFloat(util.getFeetAsLongDegrees(feet / 2));
         }
 
         update(lat, lon){

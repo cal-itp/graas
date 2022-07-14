@@ -209,7 +209,7 @@ if (!fetch) {
     }
 
     exports.sign = function(msg, signatureKey) {
-        //this.log("sign()");
+        // this.log("sign()");
         //this.log("- msg: " + msg);
         //this.log("- signatureKey: " + signatureKey);
 
