@@ -615,6 +615,7 @@ const STOP_CAP = 10;
 
             let skirtSize = Math.max(parseInt(maxSegmentLength / 10), 500)
             // util.log(`- skirtSize: ${skirtSize}`);
+            const shapes = await this.getFile('shapes.txt');
 
             while (index < wayPoints.length){
                 let lp = wayPoints[lastIndex];
@@ -655,7 +656,8 @@ const STOP_CAP = 10;
                         wayPoints[segmentStart]['time'],
                         wayPoints[index]['time'],
                         wayPoints[segmentStart]['file_offset'],
-                        wayPoints[index]['file_offset']
+                        wayPoints[index]['file_offset'],
+                        shapes
                     );
 
                     segmentList.push(tripSegment);
@@ -712,7 +714,6 @@ const STOP_CAP = 10;
 
             let maxSegmentScore = 0;
             let timeOffset = 0;
-            let shapes = await this.getFile("shapes.txt");
             // util.log(`JSON.stringify(segmentList): ${JSON.stringify(segmentList)}`);
             for (let segment of segmentList){
                 if (tripIdFromBlock !== null && segment.trip_id !== tripIdFromBlock){
@@ -720,7 +721,7 @@ const STOP_CAP = 10;
                 }
                 // util.log(`JSON.stringify(segment): ${JSON.stringify(segment)}`);
                 //util.log(`segment.trip_id: ${segment.trip_id}`);
-                let result = await segment.getScore(lat, lon, seconds, shapes);
+                let result = await segment.getScore(lat, lon, seconds);
                 // util.log(`JSON.stringify(segment.waypointList): ${JSON.stringify(segment.waypointList)}`);
 
                 //util.log(`result: ${JSON.stringify(result)}`);
