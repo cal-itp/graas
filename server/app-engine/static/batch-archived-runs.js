@@ -44,6 +44,7 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
     }
     vehiclePositionFiles = vehiclePositionFiles.sort();
     //util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
+    //util.log(`- metadataFiles: ${JSON.stringify(metadataFiles)}`);
     //util.log(`- statsFile: ${JSON.stringify(statsFile)}`);
 
     // files = glob.glob(f'{outputDir}/202*-log.txt')
@@ -67,6 +68,7 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
 
     for (let file of metadataFiles) {
         let agencyDate = getAgencyDateFromPath(file);
+        //util.log('-- agencyDate: ' + agencyDate);
         resultContent += `i: ${agencyDate}\n`;
         let logFileName = `${outputDir}/${agencyDate}-log.txt`
         let expectedTripID = null;
