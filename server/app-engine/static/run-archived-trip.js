@@ -59,9 +59,9 @@ function getAgencyIdFromPath(path){
 
             let m2 = pattern2.exec(df);
             let date = m2[1];
-            //util.log(`date: ${date}`);
+            //util.log(`- date: ${date}`);
             let dow = getDow(date);
-            // util.log(`dow: ${dow}`);
+            //util.log(`- dow: ${dow}`);
             let epochSeconds = util.getEpochSeconds(date);
             //util.log(`epochSeconds: ${epochSeconds}`);
 
@@ -123,14 +123,33 @@ function getAgencyIdFromPath(path){
 // # assumes that filename contains a string of format yyyy-mm-dd
 // # returns day of week: 0-6 for Monday through Sunday if date string present, -1 otherwise
 function getDow(yyyymmdd){
-    if (yyyymmdd){
-        let yyyy = yyyymmdd.substring(0,4);
-        let mm = parseInt(yyyymmdd.substring(5,7)) - 1;
-        let dd = yyyymmdd.substring(8,10);
-        let d = new Date(yyyy, mm, dd);
-        return d.getDay() - 1;
+    /*
+    - python: Monday == 0 -> Sunday == 6
+    - js:     Sunday == 0 -> Saturday == 6
+    */
+
+    //util.log('getDow()');
+    //util.log('- yyyymmdd: ' + yyyymmdd);
+
+    if (yyyymmdd) {
+        const yyyy = yyyymmdd.substring(0,4);
+        //util.log('- yyyy: ' + yyyy);
+        const mm = parseInt(yyyymmdd.substring(5,7)) - 1;
+        //util.log('- mm: ' + mm);
+        const dd = yyyymmdd.substring(8,10);
+        //util.log('- dd: ' + dd);
+        const d = new Date(yyyy, mm, dd);
+        //util.log('- d: ' + d);
+        //util.log('- d.getDay(): ' + d.getDay());
+
+        let weekday = d.getDay() - 1;
+        if (weekday < 0) weekday += 7;
+        return weekday;
+    } else {
+        return -1;
     }
-    else return -1;
+
+    return 6;
 }
 
 function getProperty(filename, name){

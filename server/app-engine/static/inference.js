@@ -770,7 +770,7 @@ const STOP_CAP = 10;
                 let score = cand['score'];
                 let name = cand['name'];
                 // util.log(`candidate update: id=${trip_id} trip-name=${util.to_b64(name)} score=${score}`)
-                util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
+                //util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
 
                 if (score > maxScore){
                     maxScore = score;
