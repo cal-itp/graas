@@ -490,7 +490,7 @@ if (typeof platform === 'undefined' || platform === null) {
         if (feet < this.FEET_PER_MILE) {
             return `${feet} ft`;
         } else {
-            return `${Math.round(feet / this.FEET_PER_MILE)} mi`;
+            return `${Math.floor(feet / this.FEET_PER_MILE)} mi`;
         }
     }
 
@@ -498,10 +498,10 @@ if (typeof platform === 'undefined' || platform === null) {
         if (feet < this.FEET_PER_MILE) {
             return `${feet} FEET`;
         } else if (feet < 10 * this.FEET_PER_MILE) {
-            const v = Math.round(feet / this.FEET_PER_MILE * 10) / 10;
+            const v = Math.floor(feet / this.FEET_PER_MILE * 10) / 10;
             return `${v} MILES`;
         } else {
-            return `${Math.round(feet / this.FEET_PER_MILE)} MILES`;
+            return `${Math.floor(feet / this.FEET_PER_MILE)} MILES`;
         }
     }
 
