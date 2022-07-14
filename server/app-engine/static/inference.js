@@ -78,7 +78,7 @@ const STOP_CAP = 10;
             for (let r of rows){
                 let loopTimer = new timer.Timer('loop');
                 let trip_id = r['trip_id'];
-                util.log(`-- trip_id: ${trip_id}`);
+                //util.log(`-- trip_id: ${trip_id}`);
                 let service_id = r['service_id'];
                 let shape_id = r['shape_id'];
 
@@ -115,7 +115,7 @@ const STOP_CAP = 10;
                     }
                 }
                 // util.log('');
-                // util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
+                util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
                 count += 1;
 
                 let route_id = r['route_id'];
@@ -166,14 +166,13 @@ const STOP_CAP = 10;
 
                 // // trip_name = route_map[route_id]['name'] + ' @ ' + util.seconds_to_ampm_hhmm(stopTimes[0]['arrival_time'])
                 let tripName = trip_id + ' @ ' + util.getHMForSeconds(stopTimes[0]['arrival_time'], true);
-                // util.log(`-- tripName: ${tripName}`);
+                util.log(`-- tripName: ${tripName}`);
                 let shapeLength = this.shapeLengthMap[shape_id];
                 let segmentLength = null;
                 if (shapeLength === null){
                     segmentLength = 2 * util.FEET_PER_MILE;
-                }
-                else{
-                    segmentLength = shapeLength;
+                } else {
+                    segmentLength = Math.round(shapeLength / 30);
                 }
 
                 // util.log(f'-- segmentLength: {segmentLength}')
@@ -261,7 +260,7 @@ const STOP_CAP = 10;
                 let id = r['stop_id'];
                 let lat = r['stop_lat'];
                 let lon = r['stop_lon'];
-                stopList[id] = {'lat': lat, 'long': lon}
+                stopList[id] = {'lat': lat, 'lon': lon}
             }
             return stopList
         }
@@ -464,7 +463,7 @@ const STOP_CAP = 10;
                 // util.log(`-- seconds: ${seconds}`);
                 let frac = seconds / totalSeconds;
                 // util.log(`-- frac: ${frac}`);
-                let j = parseInt(frac * (wayPoints.length - 1));
+                let j = Math.floor(frac * (wayPoints.length - 1));
                 let listItem = {'index': j,
                                 'time': stopTimes[i]['arrival_time']
                             };
@@ -472,10 +471,12 @@ const STOP_CAP = 10;
                 // util.log("JSON.stringify(listItem): " + JSON.stringify(listItem));
                 //util.log('- anchorList): ' + JSON.stringify(anchorList));
             }
+
             for (let i=0; i<20; i++){
                 // util.log("i: " + i);
                 // let lastAnchorList = Object.assign({}, anchorList);
                 let lastAnchorList = JSON.parse(JSON.stringify(anchorList));
+                //util.log('- lastAnchorList:' + JSON.stringify(lastAnchorList));
 
                 // explore neighbors in anchorList, potentially changing index fields
                 for (let j=0; j<lastAnchorList.length; j++){
@@ -490,7 +491,7 @@ const STOP_CAP = 10;
                     }
                     let n = c;
                     if (j < lastAnchorList.length - 1){
-                        let n = lastAnchorList[j + 1];
+                        n = lastAnchorList[j + 1];
                     }
 
                     let p1 = stops[stopTimes[j]['stop_id']];
@@ -503,18 +504,18 @@ const STOP_CAP = 10;
                     // util.log(`-- p["index"]: ${p["index"]}`)
                     // util.log(`-- n["index"]: ${n["index"]}`)
 
-                    let kf = p['index'] + Math.ceil((c['index'] - p['index']) / 2);
-                    let kt = c['index'] + (n['index'] - c['index']) / 2;
+                    let kf = Math.floor(p['index'] + Math.ceil((c['index'] - p['index']) / 2));
+                    let kt = Math.floor(c['index'] + (n['index'] - c['index']) / 2);
 
                     // util.log(`-- kf: ${kf}, kt: ${kt}`)
 
                     for (let k=kf; k<kt; k++){
                         let p2 = wayPoints[k];
-                        let diff = util.haversineDistance(p1['lat'], p1['long'], p2['lat'], p2['long']);
+                        let diff = util.haversineDistance(p1['lat'], p1['lon'], p2['lat'], p2['lon']);
 
                         if (diff < min_diff){
-                            let min_diff = diff;
-                            let min_index = k;
+                            min_diff = diff;
+                            min_index = k;
                         }
                     }
                     // util.log(`++ min_index: ${min_index}`)
@@ -598,11 +599,11 @@ const STOP_CAP = 10;
 
         async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
             // Why are there so many segments?!?
-            util.log(`- makeTripSegments()`);
-            // util.log(`- maxSegmentLength: ${maxSegmentLength}`);
-            util.log(`- trip_id: ${trip_id}`);
-            util.log(`- tripName: ${tripName}`);
-            util.log(`- wayPoints.length: ${wayPoints.length}`);
+            //util.log(`- makeTripSegments()`);
+            //util.log(`- maxSegmentLength: ${maxSegmentLength}`);
+            //util.log(`- trip_id: ${trip_id}`);
+            //util.log(`- tripName: ${tripName}`);
+            //util.log(`- wayPoints.length: ${wayPoints.length}`);
 
             let segmentStart = 0;
             let index = segmentStart;
@@ -632,8 +633,9 @@ const STOP_CAP = 10;
 
                 let distance = util.haversineDistance(lp['lat'], lp['lon'], p['lat'], p['lon']);
                 segmentLength += distance;
+                //util.log(`-- segmentLength: ${segmentLength}`);
 
-                if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1){
+                if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1) {
                     segmentArea.extend(skirtSize);
 
                     if (segmentStart === 0 && wayPoints[segmentStart]['time'] === wayPoints[index]['time']){
@@ -646,7 +648,7 @@ const STOP_CAP = 10;
                         stop_id = firstStop['stop_id'];
                     }
 
-                    let tripSegment = await new segment.Segment(
+                    let tripSegment = new segment.Segment(
                         segmentCount,
                         trip_id,
                         tripName,
@@ -679,6 +681,7 @@ const STOP_CAP = 10;
 
                     continue;
                 }
+
                 lastIndex = index;
                 index++;
             }
@@ -792,7 +795,7 @@ const STOP_CAP = 10;
             let stop_id = null;
 
             for (let [key, value] of Object.entries(this.stops)){
-                if (util.haversineDistance(lat, lon, value['lat'], value['long']) < maxDistance){
+                if (util.haversineDistance(lat, lon, value['lat'], value['lon']) < maxDistance){
                     let stop_id = key;
                     break;
                 }

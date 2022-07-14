@@ -19,21 +19,24 @@ var id_base = 0;
 (function(exports) {
     exports.Segment = class {
         constructor(segment_index, trip_id, trip_name, trip_start_seconds, stop_id, boundingBox, start_time, end_time, min_file_offset, max_file_offset){
-            util.log(`new segment! id_base: ${id_base}`);
+            //util.log(`new segment! id_base: ${id_base}`);
             this.id = id_base;
             id_base += 1;
+
+            util.log(`segment: id=${this.id} trip_id=${trip_id} top_left=${boundingBox.topLeft} bottom_right=${boundingBox.bottomRight} start_time=${util.secondsToHhmmss(start_time)} end_time=${util.secondsToHhmmss(end_time)}`);
+
             this.segment_index = segment_index;
-            util.log(`segment_index: ${segment_index}`);
+            //util.log(`segment_index: ${segment_index}`);
             this.trip_id = trip_id;
             this.trip_name = trip_name;
             this.trip_start_seconds = trip_start_seconds;
             this.stop_id = stop_id;
             // util.log(`- trip_start_seconds: ${trip_start_seconds}`);
-            this.boundingBox = boundingBox
-            this.start_time = start_time
-            this.end_time = end_time
-            this.min_file_offset = min_file_offset
-            this.max_file_offset = max_file_offset
+            this.boundingBox = boundingBox;
+            this.start_time = start_time;
+            this.end_time = end_time;
+            this.min_file_offset = min_file_offset;
+            this.max_file_offset = max_file_offset;
             this.waypointList = null;
             // util.log(`segment: id=${this.id} trip_id=${trip_id} top_left=${JSON.stringify(boundingBox.topLeft)} bottom_right=${JSON.stringify(boundingBox.bottomRight)} start_time=${util.secondsToHhmmss(start_time)} end_time=${util.secondsToHhmmss(end_time)}`);
         }
