@@ -1,14 +1,26 @@
 // run with NODE_PATH=../../node/node_modules node batch-archived-runs.js -d ~/src/graas/data/trip-inference-training/included -o ~/tmp
 
-var util = require('../static/gtfs-rt-util');
-var run_archived_trip = require('../static/run-archived-trip');
-var fs = require( 'fs' );
-var path = require( 'path' );
-var Tee = require('../static/tee');
-var { Console } = require('node:console');
+const util = require('../static/gtfs-rt-util');
+const run_archived_trip = require('../static/run-archived-trip');
+const inferencestats = require('../static/inferencestats');
+const fs = require( 'fs' );
+const path = require( 'path' );
+const Tee = require('../static/tee');
+const { Console } = require('node:console');
+
+function getTimeStamp() {
+    const d = new Date();
+
+    const mon = ('' + (d.getMonth() + 1)).padStart(2, '0');
+    const day = ('' + d.getDay()).padStart(2, '0');
+    const hour = ('' + d.getHours()).padStart(2, '0');
+    const min = ('' + d.getMinutes()).padStart(2, '0');
+
+    return `${d.getFullYear()}-${mon}-${day}-${hour}-${min}`;
+}
 
 async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment){
-    let timestamp = new Date().toISOString();
+    let timestamp = getTimeStamp();
     let resultFile = `${outputDir}/results-${timestamp}.txt`;
     let statsFile = `${outputDir}/ti-scores-${timestamp}.txt`;
     let vehiclePositionFiles = [];
@@ -31,8 +43,8 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
         }
     }
     vehiclePositionFiles = vehiclePositionFiles.sort();
-    util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
-    util.log(`- statsFile: ${JSON.stringify(statsFile)}`);
+    //util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
+    //util.log(`- statsFile: ${JSON.stringify(statsFile)}`);
 
     // files = glob.glob(f'{outputDir}/202*-log.txt')
     // for f in files:
@@ -41,7 +53,7 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
 
     // stdout_save = sys.stdout
     let logFile = `${outputDir}/log.txt`;
-    util.log(`- logFile: ${logFile}`);
+    //util.log(`- logFile: ${logFile}`);
 
     // sys.stdout = open(log_file, 'w')
     let then = Date.now();
@@ -51,17 +63,20 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
     tee.stream.write(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
     tee.stream.write(`- resultFile: ${resultFile}\n`);
 
+    let resultContent = '';
+
     for (let file of metadataFiles) {
         let agencyDate = getAgencyDateFromPath(file);
+        resultContent += `i: ${agencyDate}\n`;
         let logFileName = `${outputDir}/${agencyDate}-log.txt`
         let expectedTripID = null;
         try{
             let contents = fs.readFileSync(file, 'utf-8').trim();
             let index = contents.search(": ");
             expectedTripID = contents.substring(index + 2);
-            tee.stream.write(`expected: ${expectedTripID}\n`);
+            resultContent += `expected: ${expectedTripID}\n`;
             let tripIDs = {};
-            util.log(`logFileName: ${logFileName}`);
+            //util.log(`logFileName: ${logFileName}`);
             let logs = fileToArray(logFileName);
 
             if(logs === null) continue;
@@ -80,7 +95,8 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
                 }
             }
             for (let [key, value] of Object.entries(tripIDs)){
-                tee.stream.write(`${value} - ${key}\n`);
+                //util.log(`${value} - ${key}\n`);
+                resultContent += `${value} - trip_id: ${key}\n`;
             }
         } catch(e){
             util.log("skip, files incomplete for now");
@@ -89,6 +105,10 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
 
         // tee.redirect();
     }
+
+    util.log('- resultContent: ' + resultContent);
+    fs.writeFileSync(resultFile, resultContent);
+    inferencestats.main(resultFile);
 }
 
 function listDirs(path){
