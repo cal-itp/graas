@@ -51,7 +51,7 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
     // sys.stdout.close()
     // sys.stdout = stdout_save
     tee.stream.write(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
-    tee.stream.write(` - resultFile: ${resultFile}\n`);
+    tee.stream.write(`- resultFile: ${resultFile}\n`);
 
     for (let file of metadataFiles) {
         let agencyDate = getAgencyDateFromPath(file);

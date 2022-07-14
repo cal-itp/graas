@@ -82,7 +82,8 @@ if (typeof platform === 'undefined' || platform === null) {
         //this.log('util.getEpochSeconds()');
         //this.log('- date: ' + date);
 
-        date = date.replace('-', '');
+        date = date.replaceAll('-', '');
+        //this.log('- date: ' + date);
 
         if(date === null){
             return Date.now();

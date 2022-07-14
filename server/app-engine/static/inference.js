@@ -85,7 +85,7 @@ const STOP_CAP = 10;
                 tripSet.add(trip_id);
 
                 if (!(service_id in calendarMap)){
-                    //util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
+                    util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
                     continue;
                 }
                 let cal = calendarMap[service_id]['cal'];
@@ -93,7 +93,7 @@ const STOP_CAP = 10;
                 // util.log("JSON.stringify(cal): " + JSON.stringify(cal));
                 // util.log("cal[this.dow]: " + cal[this.dow]);
                 if (cal !== null && cal[this.dow] !== "1"){
-                    //util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
+                    util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
                     continue;
                 }
                 let startDate = calendarMap[service_id]['start_date'];
@@ -108,9 +108,10 @@ const STOP_CAP = 10;
                     if (this.epochSeconds < startSeconds || this.epochSeconds > endSeconds){
                         //util.log('-- startDate: ' + startDate);
                         //util.log('-- endDate:   ' + endDate);
+                        //util.log('-- this.epochSeconds: ' + this.epochSeconds);
                         //util.log('-- startSeconds:      ' + startSeconds);
                         //util.log('-- endSeconds:        ' + endSeconds);
-                        //util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
+                        util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
                         continue;
                     }
                 }
@@ -814,7 +815,7 @@ const STOP_CAP = 10;
             }
         }
         resetScoring(){
-            // util.log('+++ reset scoring! +++');
+            util.log('+++ reset scoring! +++');
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
         }
