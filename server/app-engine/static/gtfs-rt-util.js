@@ -455,8 +455,10 @@ if (typeof platform === 'undefined' || platform === null) {
     }
 
     exports.secondsToDate = function(seconds) {
-        let d = new Date(1970, 0, 1); // Epoch
-        d.setSeconds(seconds);
+        //this.log('- seconds: ' + seconds);
+        const d = new Date();
+        d.setTime(seconds * 1000);
+        //this.log('- d: ' + d);
         return d;
     }
 

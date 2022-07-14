@@ -723,7 +723,7 @@ const STOP_CAP = 10;
                 let result = await segment.getScore(lat, lon, seconds, shapes);
                 // util.log(`JSON.stringify(segment.waypointList): ${JSON.stringify(segment.waypointList)}`);
 
-                // util.log(`result: ${JSON.stringify(result)}`);
+                //util.log(`result: ${JSON.stringify(result)}`);
                 let score = multiplier * result['score'];
                 // util.log(`score: ${score}`);
                 let time_offset = result['time_offset'];

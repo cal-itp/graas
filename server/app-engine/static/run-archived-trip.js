@@ -104,7 +104,7 @@ function getAgencyIdFromPath(path){
                 // util.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex}`);
                 tee.stream.write(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
                 let result = await inf.getTripId(lat, lon, daySeconds, expected_trip_id);
-                // util.log(`- result: ${JSON.stringify(result)}`);
+                util.log(`- result: ${JSON.stringify(result)}`);
 
                 tripID = null;
 
