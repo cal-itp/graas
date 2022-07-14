@@ -67,6 +67,7 @@ const STOP_CAP = 10;
             // util.log(`-- JSON.stringify(this.stopTimeMap): ${JSON.stringify(this.stopTimeMap)}`);
 
             await this.preloadShapes();
+            const shapes = await this.getFile('shapes.txt');
 
             this.computeShapeLengths();
             this.blockMap = {}
@@ -178,13 +179,13 @@ const STOP_CAP = 10;
 
                 // util.log(f'-- segmentLength: {segmentLength}')
                 mainTimer = new timer.Timer('segments');
-                await this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength);
-                // util.log(timer)
-                // util.log(loopTimer)
+                await this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength, shapes);
+                //util.log(mainTimer.toString());
+                //util.log(loopTimer.toString());
             }
             // util.log(`-- this.blockMap: ${JSON.stringify(this.blockMap)}`);
 
-            // util.log(load_timer);
+            util.log(load_timer.toString());
             // util.log(`-- JSON.stringify(this.grid): ${JSON.stringify(this.grid)}`);
 
             for (let tid in this.stopTimeMap){
@@ -595,7 +596,7 @@ const STOP_CAP = 10;
             return anchorList;
         }
 
-        async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
+        async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength, shapes){
             // Why are there so many segments?!?
             //util.log(`- makeTripSegments()`);
             //util.log(`- maxSegmentLength: ${maxSegmentLength}`);
@@ -616,7 +617,6 @@ const STOP_CAP = 10;
 
             let skirtSize = Math.max(parseInt(maxSegmentLength / 10), 500)
             // util.log(`- skirtSize: ${skirtSize}`);
-            const shapes = await this.getFile('shapes.txt');
 
             while (index < wayPoints.length){
                 let lp = wayPoints[lastIndex];

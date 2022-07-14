@@ -5,7 +5,7 @@
             this.start = Date.now();
         }
 
-        str(){
+        toString() {
             return `timer '${this.name}': ${Date.now() - this.start} ms`;
         }
     }
