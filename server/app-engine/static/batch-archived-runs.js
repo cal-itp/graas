@@ -6,8 +6,6 @@ var fs = require( 'fs' );
 var path = require( 'path' );
 var Tee = require('../static/tee');
 var { Console } = require('node:console');
-// import inference_stats
-
 
 async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment){
     let timestamp = new Date().toISOString();
@@ -91,48 +89,8 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
 
         // tee.redirect();
     }
-    // with open(resultFile, 'w') as f:
-    //     files = glob.glob(f'{dataDir}/trip-inference-training/included/202*')
-    //     for i in files:
-    //         #print(f'-- i: {i}')
-    //         si = i.rfind('/')
-    //         rel_i = i[si + 1:]
-    //         #print(f'-- rel_i: {rel_i}')
-    //         f.write(f'i: {rel_i}\n')
-    //         log = f'{outputDir}/{rel_i}-log.txt'
-    //         metadata = f'{i}/metadata.txt'
-    //         expected_trip_id = None
-    //         with open(metadata) as mf:
-    //             s = mf.readline().strip()
-    //             n = s.find(': ')
-    //             expected_trip_id = s[n + 2:]
-    //         f.write(f'expected: {expected_trip_id}\n')
-    //         trip_ids = {}
-    //         with open(log) as lf:
-    //             for line in lf:
-    //                 s = line.strip()
-    //                 if len(s) == 0:
-    //                     continue
-    //                 if s.startswith('- trip_id:'):
-    //                     if s in trip_ids:
-    //                         trip_ids[s] = trip_ids[s] + 1
-    //                     else:
-    //                         trip_ids[s] = 1
-    //         for k in trip_ids.keys():
-    //             f.write(f'{trip_ids[k]} - {k}\n')
-
-    // sys.stdout = open(statsFile, 'w')
-    // inference_stats.main(resultFile)
-    // sys.stdout.close()
-    // sys.stdout = stdout_save
-
-    // line = ''
-    // with open(statsFile) as f:
-    //     for line in f:
-    //         line = line.strip()
-    // score = line.split(' ')[1]
-    // print(f'score: {score}')
 }
+
 function listDirs(path){
     console.log(`listDirs(${path})`);
     try {
