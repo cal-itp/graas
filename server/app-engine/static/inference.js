@@ -193,9 +193,6 @@ const STOP_CAP = 10;
             }
             // Why?
             this.shapeMap = {}
-
-            util.log('exiting early...');
-            process.exit();
         }
 
         async getFile(fileName){
@@ -627,7 +624,7 @@ const STOP_CAP = 10;
                 segmentArea.update(p['lat'], p['lon']);
 
                 let gridIndex = this.grid.getIndex(p['lat'], p['lon']);
-                if  (!(gridIndex in indexList)){
+                if  (!indexList.includes(gridIndex)){
                     indexList.push(gridIndex);
                 }
 
@@ -691,7 +688,8 @@ const STOP_CAP = 10;
         }
 
         async getTripId(lat, lon, seconds, tripIdFromBlock = null){
-            // util.log("getTripId()");
+            //util.log("inference.getTripId()");
+
             let segmentList = await this.grid.getSegmentList(lat, lon);
             let ret = {
                 'trip_id': null,
@@ -721,7 +719,7 @@ const STOP_CAP = 10;
                     continue;
                 }
                 // util.log(`JSON.stringify(segment): ${JSON.stringify(segment)}`);
-                util.log(`segment.trip_id: ${segment.trip_id}`);
+                //util.log(`segment.trip_id: ${segment.trip_id}`);
                 let result = await segment.getScore(lat, lon, seconds, shapes);
                 // util.log(`JSON.stringify(segment.waypointList): ${JSON.stringify(segment.waypointList)}`);
 
