@@ -830,7 +830,7 @@ const STOP_CAP = 10;
             let stopList = this.stopTimeMap[trip_id];
             // util.log(`- stopList: ${stopList}`);
             let entities = [];
-            let timestamp = Date.now();
+            let timestamp = Math.floor(Date.now() / 1000);
 
             for (let i=0; i<stopList.length; i++){
                 let s = stopList[i];
