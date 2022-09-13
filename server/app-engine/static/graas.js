@@ -723,7 +723,6 @@ function positionCallback() {
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
-    // let str = "test-scott-express-----BEGIN TOKEN-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQguvTiDmwXl32OjdDptK1bLnG1t5c3H7XOySro90iarCChRANCAASsK6tX2ywfV7Efp1PjPEWJJxTsEW47OlA7umOEL5OkfyKgF+OfhnzQ++Y7DXQ/p1QcQssCJ31It4Xc4d7G6dd-----END TOKEN-----";
     let str = localStorage.getItem("lat-long-pem") || "";
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
