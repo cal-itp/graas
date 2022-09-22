@@ -1,11 +1,11 @@
 let localStorage = this.localStorage;
-let Zip = null;
+let JSZip = null;
 let fs = null;
 
 if (typeof localStorage === 'undefined' || localStorage === null) {
     const LocalStorage = require('node-localstorage').LocalStorage;
     localStorage = new LocalStorage('./local-storage');
-    Zip = require('adm-zip');
+    JSZip = require('jszip');
     fetch = require('node-fetch');
     fs = require('fs');
 }
@@ -108,7 +108,7 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
         //console.log('platform.unpackZip()');
         //console.log('- url: ' + url);
         //console.log('- dstPath: ' + dstPath);
-        //console.log('- files: ' + files);
+        //console.log('- files: ' + JSON.stringify(files));
 
         if (/*util.runningInNode()*/ typeof window === 'undefined') {
             let body = null;
@@ -121,17 +121,19 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
                 //console.log('- body.length:   ' + body.length);
             }
 
-            const zipFile = new Zip(body);
-            const zipEntries = zipFile.getEntries();
-            //console.log('- zipEntries.length: ' + zipEntries.length);
+            const zip = await JSZip.loadAsync(body);
+            //console.log('- files: ' + JSON.stringify(zip.files));
 
-            zipEntries.forEach((entry) => {
-                //console.log('-- entry.entryName: ' + entry.entryName);
+            const fnlist = Object.keys(zip.files);
 
-                if (files.includes(entry.entryName)) {
-                    this.writeToFile(entry.entryName, zipFile.readAsText(entry) + '\n');
+            for (let f of fnlist) {
+                //console.log(`-- ${f}`);
+                const content = await zip.file(f).async('string');
+
+                if (files.includes(f)) {
+                    this.writeToFile(f, content + '\n');
                 }
-            });
+            }
         } else {
             throw 'add browser implementation for unpackZip()';
         }

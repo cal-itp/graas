@@ -650,8 +650,15 @@ if (typeof platform === 'undefined' || platform === null) {
             // are running in node
 
             const fs = require('fs');
-            const stats = fs.statSync(url);
+            let stats = fs.statSync(url, {throwIfNoEntry: false});
             this.log('- stats: ' + JSON.stringify(stats));
+
+            if (!stats) {
+                stats = {
+                    mtime: '1970-01-01T00:00:00.000Z'
+                };
+            }
+
             const tsArchive = Date.parse(stats.mtime);
             this.log('- tsArchive: ' + tsArchive);
             const tsCache = platform.getMTime(fileName);
