@@ -7,4 +7,4 @@ pycrypto==2.6.1
 ecdsa==0.16.0
 itsdangerous==2.0.1
 pytz==2021.1
-protobuf==3.20.1
+protobuf==3.20.2
