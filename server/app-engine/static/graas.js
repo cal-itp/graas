@@ -411,7 +411,7 @@ function handleBusChoice() {
 }
 
 // Driver taps "Go" to start a ride
-function handleOkay() {
+async function handleOkay() {
     util.log("handleOkay()");
 
     sessionID = createUUID();
@@ -799,31 +799,6 @@ async function handleGPSUpdate(position) {
     if(useTripInference){
         let seconds = util.getSecondsSinceMidnight();
 
-        if(runTripInferenceTest){
-            util.log(`tiTestIndex: ${tiTestIndex}`);
-            // if(tiTestIndex < tiTestData.length){
-            if(tiTestIndex < 4){
-                lat = tiTestData[tiTestIndex].lat;
-                long = tiTestData[tiTestIndex].long;
-                seconds = tiTestData[tiTestIndex].seconds;
-
-                util.log(`lat: ${lat}`);
-                util.log(`long: ${long}`);
-                util.log(`seconds: ${seconds}`);
-
-                tiTestIndex++;
-            } else {
-                util.log("Test complete");
-                let correctCount = 0;
-                for(let i=0; i<tiTestResults.length; i++){
-                    if(tiTestResults[i] === tiTestTripID){
-                        correctCount++;
-                    }
-                }
-                util.log(`Correct percentage: ${correctCount * 100 / tiTestResults.length}%`);
-                return;
-            }
-        }
         // util.log(`lat: ${lat}`);
         // util.log(`long: ${long}`);
         // util.log(`seconds: ${seconds}`);
@@ -831,8 +806,6 @@ async function handleGPSUpdate(position) {
         let result = await inf.getTripId(lat, long, seconds, null);
         util.log(`result: ${JSON.stringify(result)}`);
         tripID = result['trip_id'];
-        tiTestResults.push(tripID);
-        if(runTripInferenceTest) return;
     }
 
     data['trip-id'] = tripID;
@@ -968,6 +941,7 @@ async function agencyIDCallback(response) {
         if(useTripInference){
             inf = new inference.TripInference(agencyID, vehicleID, 15);
             await inf.init();
+
             if(runTripInferenceTest){
                 let response = await util.timedFetch(`${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
                                                 {method: 'GET'}
@@ -977,10 +951,13 @@ async function agencyIDCallback(response) {
 
                 let responseText = await response.text();
                 let tiTestTrips = responseText.split(/\r?\n/);
-                let testTripIndex = Math.floor(Math.random() * tiTestTrips.length);
+                // ### UNCOMMENT ME: let testTripIndex = Math.floor(Math.random() * tiTestTrips.length);
+                let testTripIndex = 0;
+                util.log(`+ ### using fixed trip index!`);
+                util.log(`- testTripIndex: ${testTripIndex}`);
                 let tiTestTrip = tiTestTrips[testTripIndex];
                 let tiTestTripURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${tiTestTrip}`;
-                util.log(`tiTestTripURL: ${tiTestTripURL}`);
+                util.log(`- tiTestTripURL: ${tiTestTripURL}`);
                 let tiTestTripDataURL = `${tiTestTripURL}/updates.txt`;
                 let tiTestTripMetadataURL = `${tiTestTripURL}/metadata.txt`;
                 response = await util.timedFetch(tiTestTripDataURL,
@@ -1001,7 +978,42 @@ async function agencyIDCallback(response) {
                 responseText = await response.text();
                 // Assumes file has one row, in the format: "trip-id: ABC123"
                 tiTestTripID = responseText.substring(9);
-                util.log(`tiTestTripID: ${tiTestTripID}`);
+                util.log(`- tiTestTripID: ${tiTestTripID}`);
+
+                tiTestResults = [];
+
+                //util.log(`tiTestIndex: ${tiTestIndex}`);
+
+                const then = util.now();
+
+                for (let tiTestIndex = 0; tiTestIndex < tiTestData.length; tiTestIndex++) {
+                    const lat = tiTestData[tiTestIndex].lat;
+                    const long = tiTestData[tiTestIndex].long;
+                    const seconds = tiTestData[tiTestIndex].seconds;
+
+                    //util.log(`lat: ${lat}`);
+                    //util.log(`long: ${long}`);
+                    //util.log(`seconds: ${seconds}`);
+                    util.log(`(${tiTestIndex}/${tiTestData.length})`);
+                    util.log(`${seconds}: (${lat}, ${long})`);
+
+                    const result = await inf.getTripId(lat, long, seconds, null);
+                    //util.log(`result: ${JSON.stringify(result)}`);
+                    const tripID = result['trip_id'];
+                    util.log(`- tripID: ${tripID}`);
+                    tiTestResults.push(tripID);
+                }
+
+                util.log(`+ completed test in ${util.now() - then} ms`);
+                let correctCount = 0;
+
+                for(let i=0; i<tiTestResults.length; i++){
+                    if(tiTestResults[i] === tiTestTripID){
+                        correctCount++;
+                    }
+                }
+
+                util.log(`+ correct percentage: ${Math.floor(correctCount * 100 / tiTestResults.length)}%`);
             }
         }
     }
@@ -1153,7 +1165,7 @@ function loadTrips() {
 }
 
 function gpsInterval(millis) {
-    if (navigator.onLine && running) {
+    if (navigator.onLine && running && !runTripInferenceTest) {
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
             //util.log('+ gpsInterval() tick ' + Math.floor(Date.now() / 1000) + '...');
             //util.log('- graasShimVersion: ' + graasShimVersion);
@@ -1227,11 +1239,11 @@ function configComplete() {
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
     if(vehicleIDCookie && (useBulkAssignmentMode || useTripInference)){
         assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
-        handleOkay()
+        handleOkay();
     }
     // If bulk assignment mode and vehicleID is NOT cached, present vehicleID dropdown
     else if(useBulkAssignmentMode || useTripInference){
-        handleStartStop()
+        handleStartStop();
     }
     // If not bulk assignment mode, present the "Load trips" button.
     else{
