@@ -18,10 +18,12 @@ function getAgencyIdFromPath(path){
 }
 
 (function(exports) {
-    exports.main = async function(dataFiles, outputFolder, simulateBlockAssignment){
+    exports.main = async function(dataFiles, gtfsCacheDir, outputFolder, staticGtfsUrl, simulateBlockAssignment){
         util.log(`main()`);
         util.log(`- dataFiles: ${dataFiles}`);
+        util.log(`- gtfsCacheDir: ${gtfsCacheDir}`);
         util.log(`- outputFolder: ${outputFolder}`);
+        util.log(`- staticGtfsUrl: ${staticGtfsUrl}`);
 
         // util.log(`- inference.TripInference.VERSION: ${inference.TripInference.VERSION}`);
 
@@ -57,10 +59,11 @@ function getAgencyIdFromPath(path){
 
             let m2 = pattern2.exec(df);
             let date = m2[1];
-            // util.log(`date: ${date}`);
-            let dow = getDow(date);
-            // util.log(`dow: ${dow}`);
+            //util.log(`- date: ${date}`);
+            let dow = util.getDow(date);
+            //util.log(`- dow: ${dow}`);
             let epochSeconds = util.getEpochSeconds(date);
+            //util.log(`epochSeconds: ${epochSeconds}`);
 
             if (dow != lastDow){
                 // tee.redirect()
@@ -68,6 +71,8 @@ function getAgencyIdFromPath(path){
                 tee.stream.write(`++ inferred agency ID: ${agency_id} \n`);
 
                 inf = new inference.TripInference(
+                    gtfsCacheDir,
+                    staticGtfsUrl,
                     agency_id,
                     'test-vehicle-id',
                     15,
@@ -97,16 +102,16 @@ function getAgencyIdFromPath(path){
                 let lon = parseFloat(tok[2]);
                 let gridIndex = inf.grid.getIndex(lat, lon);
                 // util.log(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex}`);
-                tee.stream.write(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
+                //tee.stream.write(`current location: lat=${lat} long=${lon} seconds=${daySeconds} grid_index=${gridIndex} \n`);
                 let result = await inf.getTripId(lat, lon, daySeconds, expected_trip_id);
-                // util.log(`- result: ${JSON.stringify(result)}`);
+                //util.log(`- result: ${JSON.stringify(result)}`);
 
                 tripID = null;
 
                 if (result !== null){
                     tripID = result['trip_id'];
                 }
-                tee.stream.write(`- tripID: ${tripID} \n`);
+                //tee.stream.write(`- tripID: ${tripID} \n`);
                 // util.log(`- tripID: ${tripID}`);
             }
         }
@@ -114,19 +119,6 @@ function getAgencyIdFromPath(path){
         // sys.stdout = stdout_save
     }
 }(typeof exports === 'undefined' ? this.run_archived_trip = {} : exports));
-
-// # assumes that filename contains a string of format yyyy-mm-dd
-// # returns day of week: 0-6 for Monday through Sunday if date string present, -1 otherwise
-function getDow(yyyymmdd){
-    if (yyyymmdd){
-        let yyyy = yyyymmdd.substring(0,4);
-        let mm = parseInt(yyyymmdd.substring(5,7)) - 1;
-        let dd = yyyymmdd.substring(8,10);
-        let d = new Date(yyyy, mm, dd);
-        return d.getDay() - 1;
-    }
-    else return -1;
-}
 
 function getProperty(filename, name){
     let key = name + ': ';

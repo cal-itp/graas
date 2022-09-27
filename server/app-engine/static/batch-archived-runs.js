@@ -1,16 +1,26 @@
 // run with NODE_PATH=../../node/node_modules node batch-archived-runs.js -d ~/src/graas/data/trip-inference-training/included -o ~/tmp
 
-var util = require('../static/gtfs-rt-util');
-var run_archived_trip = require('../static/run-archived-trip');
-var fs = require( 'fs' );
-var path = require( 'path' );
-var Tee = require('../static/tee');
-var { Console } = require('node:console');
-// import inference_stats
+const util = require('../static/gtfs-rt-util');
+const run_archived_trip = require('../static/run-archived-trip');
+const inferencestats = require('../static/inferencestats');
+const fs = require( 'fs' );
+const path = require( 'path' );
+const Tee = require('../static/tee');
+const { Console } = require('node:console');
 
+function getTimeStamp() {
+    const d = new Date();
 
-async function main(dataDir, outputDir, simulateBlockAssignment){
-    let timestamp = new Date().toISOString();
+    const mon = ('' + (d.getMonth() + 1)).padStart(2, '0');
+    const day = ('' + d.getDay()).padStart(2, '0');
+    const hour = ('' + d.getHours()).padStart(2, '0');
+    const min = ('' + d.getMinutes()).padStart(2, '0');
+
+    return `${d.getFullYear()}-${mon}-${day}-${hour}-${min}`;
+}
+
+async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment){
+    let timestamp = getTimeStamp();
     let resultFile = `${outputDir}/results-${timestamp}.txt`;
     let statsFile = `${outputDir}/ti-scores-${timestamp}.txt`;
     let vehiclePositionFiles = [];
@@ -33,8 +43,9 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
         }
     }
     vehiclePositionFiles = vehiclePositionFiles.sort();
-    util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
-    util.log(`- statsFile: ${JSON.stringify(statsFile)}`);
+    //util.log(`- vehiclePositionFiles: ${JSON.stringify(vehiclePositionFiles)}`);
+    //util.log(`- metadataFiles: ${JSON.stringify(metadataFiles)}`);
+    //util.log(`- statsFile: ${JSON.stringify(statsFile)}`);
 
     // files = glob.glob(f'{outputDir}/202*-log.txt')
     // for f in files:
@@ -43,27 +54,31 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
 
     // stdout_save = sys.stdout
     let logFile = `${outputDir}/log.txt`;
-    util.log(`- logFile: ${logFile}`);
+    //util.log(`- logFile: ${logFile}`);
 
     // sys.stdout = open(log_file, 'w')
     let then = Date.now();
-    await run_archived_trip.main(vehiclePositionFiles, outputDir, simulateBlockAssignment);
+    await run_archived_trip.main(vehiclePositionFiles, gtfsCacheDir, outputDir, staticGtfsUrl, simulateBlockAssignment);
     // sys.stdout.close()
     // sys.stdout = stdout_save
     tee.stream.write(`+ elapsed time: ${Date.now() - then} milliseconds\n`);
-    tee.stream.write(` - resultFile: ${resultFile}\n`);
+    tee.stream.write(`- resultFile: ${resultFile}\n`);
+
+    let resultContent = '';
 
     for (let file of metadataFiles) {
         let agencyDate = getAgencyDateFromPath(file);
+        //util.log('-- agencyDate: ' + agencyDate);
+        resultContent += `i: ${agencyDate}\n`;
         let logFileName = `${outputDir}/${agencyDate}-log.txt`
         let expectedTripID = null;
         try{
             let contents = fs.readFileSync(file, 'utf-8').trim();
             let index = contents.search(": ");
             expectedTripID = contents.substring(index + 2);
-            tee.stream.write(`expected: ${expectedTripID}\n`);
+            resultContent += `expected: ${expectedTripID}\n`;
             let tripIDs = {};
-            util.log(`logFileName: ${logFileName}`);
+            //util.log(`logFileName: ${logFileName}`);
             let logs = fileToArray(logFileName);
 
             if(logs === null) continue;
@@ -82,7 +97,8 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
                 }
             }
             for (let [key, value] of Object.entries(tripIDs)){
-                tee.stream.write(`${value} - ${key}\n`);
+                //util.log(`${value} - ${key}\n`);
+                resultContent += `${value} - trip_id: ${key}\n`;
             }
         } catch(e){
             util.log("skip, files incomplete for now");
@@ -91,48 +107,12 @@ async function main(dataDir, outputDir, simulateBlockAssignment){
 
         // tee.redirect();
     }
-    // with open(resultFile, 'w') as f:
-    //     files = glob.glob(f'{dataDir}/trip-inference-training/included/202*')
-    //     for i in files:
-    //         #print(f'-- i: {i}')
-    //         si = i.rfind('/')
-    //         rel_i = i[si + 1:]
-    //         #print(f'-- rel_i: {rel_i}')
-    //         f.write(f'i: {rel_i}\n')
-    //         log = f'{outputDir}/{rel_i}-log.txt'
-    //         metadata = f'{i}/metadata.txt'
-    //         expected_trip_id = None
-    //         with open(metadata) as mf:
-    //             s = mf.readline().strip()
-    //             n = s.find(': ')
-    //             expected_trip_id = s[n + 2:]
-    //         f.write(f'expected: {expected_trip_id}\n')
-    //         trip_ids = {}
-    //         with open(log) as lf:
-    //             for line in lf:
-    //                 s = line.strip()
-    //                 if len(s) == 0:
-    //                     continue
-    //                 if s.startswith('- trip_id:'):
-    //                     if s in trip_ids:
-    //                         trip_ids[s] = trip_ids[s] + 1
-    //                     else:
-    //                         trip_ids[s] = 1
-    //         for k in trip_ids.keys():
-    //             f.write(f'{trip_ids[k]} - {k}\n')
 
-    // sys.stdout = open(statsFile, 'w')
-    // inference_stats.main(resultFile)
-    // sys.stdout.close()
-    // sys.stdout = stdout_save
-
-    // line = ''
-    // with open(statsFile) as f:
-    //     for line in f:
-    //         line = line.strip()
-    // score = line.split(' ')[1]
-    // print(f'score: {score}')
+    util.log('- resultContent: ' + resultContent);
+    fs.writeFileSync(resultFile, resultContent);
+    inferencestats.main(resultFile);
 }
+
 function listDirs(path){
     console.log(`listDirs(${path})`);
     try {
@@ -180,6 +160,8 @@ function fileToArray(filename) {
 let dataDir = null;
 let outputDir = null;
 let simulateBlockAssignment = false;
+let gtfsCacheDir = null;
+let staticGtfsUrl = null;
 
 const args = process.argv.slice(2);
 
@@ -197,17 +179,33 @@ for(let j = 0; j < args.length; j++){
         continue;
     }
 
+    if (args[j] == '-g' && j < args.length - 1){
+        j++;
+        gtfsCacheDir = args[j];
+        continue;
+    }
+
+    if (args[j] == '-s' && j < args.length - 1){
+        j++;
+        staticGtfsUrl = args[j];
+        continue;
+    }
+
     if (args[j] == '-b'){
         simulateBlockAssignment = true;
         continue;
     }
 }
-if (dataDir === null || outputDir === null){
-    util.log(`* usage: ${sys.argv[0]} -d <data-dir> -o <output-dir>'`);
+
+if (dataDir === null || outputDir === null || gtfsCacheDir === null || staticGtfsUrl === null) {
+    util.log(`* usage: ${sys.argv[0]} -d <data-dir> -o <output-dir> -g <gtfs-cache-dir> -s <static-gtfs-url> [-b]`);
     util.log(`  -b: simulate block assignment'`);
-    util.log(`  <data-dir>: where to find training data, e.g. $GRASS_REPO/data/trip-inference-training/included'`);
-    util.log(`  <output-dir>: where to put output data, e.g. ~/tmp'`);
+    util.log(`  <data-dir>: where to find training data, e.g. $GRASS_REPO/data/trip-inference-training/included`);
+    util.log(`  <output-dir>: where to put output data, e.g. ~/tmp`);
+    util.log(`  <gtfs-cache-dir>: where to cache GTFS data. e.g. ~/tmp/gtfs-cache`);
+    util.log(`  <static-gtfs-url>: live GTFS URL or archived file, e.g. $GRASS_REPO/data/trip-inference-training/gtfs-archive/2022-02-14-tcrta-gtfs.zip`);
+
     process.exit(1);
 }
 
-main(dataDir, outputDir, simulateBlockAssignment);
+main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlockAssignment);

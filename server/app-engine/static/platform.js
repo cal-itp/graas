@@ -145,7 +145,7 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
         //console.log('- dstPath: ' + dstPath);
         //console.log('- files: ' + JSON.stringify(files));
 
-        if (/*util.runningInNode()*/ typeof window === 'undefined') {
+        if (!util.isBrowser()) {
             let body = null;
 
             if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -166,7 +166,7 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
                 const content = await zip.file(f).async('string');
 
                 if (files.includes(f)) {
-                    this.writeToFile(f, toASCII(content + '\n'));
+                    this.writeToFile(f, content + '\n');
                 }
             }
         } else {

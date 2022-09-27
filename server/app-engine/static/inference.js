@@ -709,7 +709,7 @@ const STOP_CAP = 10;
                 return ret;
             }
 
-            util.log(`- segmentList.length: ${segmentList.length}`);
+            //util.log(`- segmentList.length: ${segmentList.length}`);
             // util.log(`- tripIdFromBlock: ${tripIdFromBlock}`);
 
             let stop_id = await this.getStopForPosition(lat, lon, STOP_PROXIMITY);
@@ -786,7 +786,7 @@ const STOP_CAP = 10;
                 }
             }
 
-            util.log(`- maxScore: ${maxScore}`);
+            //util.log(`- maxScore: ${maxScore}`);
 
             if (maxScore >= SCORE_THRESHOLD){
                 ret['trip_id'] = maxTripId

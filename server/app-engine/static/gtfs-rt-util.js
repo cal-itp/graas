@@ -15,8 +15,8 @@ Finally, fetch() timeouts are currently not implemented under node.
 //console.log('- this.crypto: ' + this.crypto);
 //console.log('- this.fetch: ' + this.fetch);
 
-var crypto = this.crypto
-var fetch = this.fetch
+let crypto = this.crypto
+let fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -27,6 +27,12 @@ if (!crypto) {
 if (!fetch) {
     fetch = require('node-fetch')
 }
+
+/*let platform = this.platform;
+
+if (typeof window === 'undefined') {
+    platform = require('./platform');
+}*/
 
 (function(exports) {
     exports.SECONDS_PER_MINUTE = 60;
@@ -43,6 +49,7 @@ if (!fetch) {
     exports.EARTH_RADIUS_IN_FEET = 20902231;
     exports.FEET_PER_LAT_DEGREE = 364000;
     exports.FEET_PER_LONG_DEGREE = 288200;
+    exports.FEET_PER_MILE = 5280;
 
     exports.log = function(s) {
         console.log(s);
@@ -57,8 +64,30 @@ if (!fetch) {
         }
     };
 
-    exports.isBrowser = function() {
-        return typeof window !== "undefined" && typeof window.document !== "undefined";
+
+    // # assumes that arg contains a string of format yyyy-mm-dd
+    // # returns day of week: 0-6 for Monday through Sunday if date string present, -1 otherwise
+    exports.getDow = function(yyyymmdd){
+        //util.log('getDow()');
+        //util.log('- yyyymmdd: ' + yyyymmdd);
+
+        if (yyyymmdd) {
+            const yyyy = yyyymmdd.substring(0,4);
+            //util.log('- yyyy: ' + yyyy);
+            const mm = parseInt(yyyymmdd.substring(5,7)) - 1;
+            //util.log('- mm: ' + mm);
+            const dd = yyyymmdd.substring(8,10);
+            //util.log('- dd: ' + dd);
+            const d = new Date(yyyy, mm, dd);
+            //util.log('- d: ' + d);
+            //util.log('- d.getDay(): ' + d.getDay());
+
+            let weekday = d.getDay() - 1;
+            if (weekday < 0) weekday += 7;
+            return weekday;
+        } else {
+            return -1;
+        }
     }
 
     exports.now = function() {
@@ -76,14 +105,24 @@ if (!fetch) {
     }
 
     exports.getEpochSeconds = function(date) {
+        //this.log('util.getEpochSeconds()');
+        //this.log('- date: ' + date);
+
+        date = date.replaceAll('-', '');
+        //this.log('- date: ' + date);
+
         if(date === null){
             return Date.now();
         } else {
             let year = date.substring(0, 4);
+            //this.log('- year: ' + year);
             let month = date.substring(4, 6);
+            //this.log('- month: ' + month);
             let day = date.substring(6, 8);
+            //this.log('- day: ' + day);
             let d = new Date(year, month - 1, day);
-            return d.getTime()/1000;
+            //this.log('- d: ' + d);
+            return Math.round(d.getTime() / 1000);
         }
     }
     exports.getShortDate = function(date) {
@@ -213,7 +252,7 @@ if (!fetch) {
     }
 
     exports.sign = function(msg, signatureKey) {
-        // this.log("sign()");
+        //this.log("sign()");
         //this.log("- msg: " + msg);
         //this.log("- signatureKey: " + signatureKey);
 
@@ -315,6 +354,31 @@ if (!fetch) {
         this.log('- json: ' + JSON.stringify(json));
 
         return json;
+    }
+
+
+    exports.getResponseBody = async function(url) {
+        const requestSettings = {
+            method: 'GET'
+        };
+
+        const response = await fetch(url, requestSettings);
+        const blob = await response.blob();
+        //util.log(`- blob: ${blob}`);
+
+        const arrayBuf = await blob.arrayBuffer();
+        //util.log(`- arrayBuf.byteLength: ${arrayBuf.byteLength}`);
+
+        const body = Buffer.from(arrayBuf);
+        //util.log(`- body: ${JSON.stringify(body)}`);
+
+        return body;
+    }
+
+    // naive approach that assumes that for node
+    // apps there is no global symbol 'window'.
+    exports.isBrowser = function() {
+        return typeof window !== "undefined" && typeof window.document !== "undefined";
     }
 
     exports.apiCall = async function(data, url) {
@@ -434,8 +498,10 @@ if (!fetch) {
     }
 
     exports.secondsToDate = function(seconds) {
-        let d = new Date(1970, 0, 1); // Epoch
-        d.setSeconds(seconds);
+        //this.log('- seconds: ' + seconds);
+        const d = new Date();
+        d.setTime(seconds * 1000);
+        //this.log('- d: ' + d);
         return d;
     }
 
@@ -576,7 +642,7 @@ if (!fetch) {
         this.changeDisplay(id,"block");
     }
 
-    exports.changeDisplay = function(id,display) {
+    exports.changeDisplay = function(id, display) {
         let p = document.getElementById(id);
         p.style.display = display;
     }
@@ -611,13 +677,12 @@ if (!fetch) {
         this.log('- url: ' + url);
 
         platform.ensureResourcePath(cachePath);
-        const fileName = 'gtfs.zip'
+        const fileName = cachePath + 'gtfs.zip'
         this.log('- fileName: ' + fileName);
 
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            this.log('+ network url');
             const r = await fetch(url, {method: 'HEAD'});
-            //this.log('- r.headers: ' + r.headers);
+            this.log('- r.headers: ' + r.headers);
             const urlTime = r.headers.get('last-modified');
             this.log('- urlTime: ' + urlTime);
 
@@ -631,16 +696,15 @@ if (!fetch) {
             let fileDate = 0;
 
             if (platform.resourceExists(fileName)) {
-                fileDate = platform.getMTime(fileName);
+                fileDate = platform.getMTime(filename);
             }
-            this.log('- fileDate: ' + fileDate);
 
             if (urlDate <= fileDate) {
                 this.log('+ gtfs.zip up-to-date, nothing to do');
                 return;
             }
 
-            util.log('+ gtfs.zip out of date, downloading...')
+            util.log('+ gtfs.zip out of date, downloading...');
 
             const body = await this.getResponseBody(url);
             this.log('- body.length: ' + body.length);

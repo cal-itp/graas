@@ -724,18 +724,9 @@ function positionCallback() {
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
-    //let str = localStorage.getItem("lat-long-pem") || "";
 
-    // ### DO NOT CHECK IN!
+    let str = localStorage.getItem("lat-long-pem") || "";
 
-    util.log('### DO NOT CHECK IN! ###');
-
-    let str = `tcrta
------BEGIN TOKEN-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgO7w/VXws3CiiXdyx
-vjeg06hXfmccas9o4ej5RzesJN6hRANCAARu0JfeR3m/d/PoWk2pfqKBBb01m2tl
-VMUAGA5OldjlLJUE/Aftb/6ud9AftG13OUdFcsPL+sxEIKsPVmilw10O
------END TOKEN-----`;
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
             // ios WKWebView doesn't support camera access :[
@@ -953,10 +944,11 @@ async function agencyIDCallback(response) {
         if(useTripInference){
             const path = '' + agencyID; // ### is this right?
             const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
-            inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15);
-            await inf.init();
 
-            if(runTripInferenceTest){
+            if (!runTripInferenceTest) {
+                inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15);
+                await inf.init();
+            } else {
                 let response = await util.timedFetch(`${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
                                                 {method: 'GET'}
                                                );
@@ -972,11 +964,27 @@ async function agencyIDCallback(response) {
                 let tiTestTrip = tiTestTrips[testTripIndex];
                 let tiTestTripURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${tiTestTrip}`;
                 util.log(`- tiTestTripURL: ${tiTestTripURL}`);
+
+
+                let pattern = new RegExp(".*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*","g");     // yyyy-mm-dd-hh-mm
+
+                let match = pattern.exec(tiTestTripURL);
+                let date = match[1];
+                util.log(`- date: ${date}`);
+                let dow = util.getDow(date);
+                util.log(`- dow: ${dow}`);
+                let epochSeconds = util.getEpochSeconds(date);
+                util.log(`- epochSeconds: ${epochSeconds}`);
+
+                inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
+                await inf.init();
+
                 let tiTestTripDataURL = `${tiTestTripURL}/updates.txt`;
                 let tiTestTripMetadataURL = `${tiTestTripURL}/metadata.txt`;
-                response = await util.timedFetch(tiTestTripDataURL,
-                                                    {method: 'GET'}
-                                                   );
+                response = await util.timedFetch(
+                    tiTestTripDataURL,
+                    {method: 'GET'}
+                );
                 // util.log('- response.status: ' + response.status);
                 // util.log('- response.statusText: ' + response.statusText);
                 let rawData = await response.text();
@@ -991,8 +999,8 @@ async function agencyIDCallback(response) {
                 // util.log('- response.statusText: ' + response.statusText);
                 responseText = await response.text();
                 // Assumes file has one row, in the format: "trip-id: ABC123"
-                tiTestTripID = responseText.substring(9);
-                util.log(`- tiTestTripID: ${tiTestTripID}`);
+                tiTestTripID = responseText.trim().substring(9);
+                util.log(`- tiTestTripID: "${tiTestTripID}"`);
 
                 tiTestResults = [];
 
@@ -1004,29 +1012,33 @@ async function agencyIDCallback(response) {
                     const lat = tiTestData[tiTestIndex].lat;
                     const long = tiTestData[tiTestIndex].long;
                     const seconds = tiTestData[tiTestIndex].seconds;
+                    const daySeconds = util.getSecondsSinceMidnight(util.secondsToDate(seconds));
 
                     //util.log(`lat: ${lat}`);
                     //util.log(`long: ${long}`);
                     //util.log(`seconds: ${seconds}`);
                     util.log(`(${tiTestIndex}/${tiTestData.length})`);
-                    util.log(`${seconds}: (${lat}, ${long})`);
+                    util.log(`${daySeconds}: (${lat}, ${long})`);
 
-                    const result = await inf.getTripId(lat, long, seconds, null);
+                    const result = await inf.getTripId(lat, long, daySeconds, null);
                     //util.log(`result: ${JSON.stringify(result)}`);
                     const tripID = result['trip_id'];
-                    util.log(`- tripID: ${tripID}`);
+                    util.log(`- tiTestTripID: "${tiTestTripID}"`);
+                    util.log(`- tripID: "${tripID}"`);
                     tiTestResults.push(tripID);
                 }
 
+                util.log(`- tiTestResults.length: ${tiTestResults.length}`);
                 util.log(`+ completed test in ${util.now() - then} ms`);
                 let correctCount = 0;
 
-                for(let i=0; i<tiTestResults.length; i++){
-                    if(tiTestResults[i] === tiTestTripID){
+                for (let i=0; i<tiTestResults.length; i++) {
+                    if (tiTestResults[i] === tiTestTripID) {
                         correctCount++;
                     }
                 }
 
+                util.log(`- correctCount: ${correctCount}`);
                 util.log(`+ correct percentage: ${Math.floor(correctCount * 100 / tiTestResults.length)}%`);
             }
         }
