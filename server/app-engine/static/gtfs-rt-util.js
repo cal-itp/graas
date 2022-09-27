@@ -57,6 +57,10 @@ if (!fetch) {
         }
     };
 
+    exports.isBrowser = function() {
+        return typeof window !== "undefined" && typeof window.document !== "undefined";
+    }
+
     exports.now = function() {
         return (new Date()).getTime();
     }
@@ -255,6 +259,22 @@ if (!fetch) {
         return binary;
     };
 
+    exports.ab2base64 = function(ab) {
+        let buf = [];
+        const view = new Uint8Array(ab);
+        const len = view.byteLength;
+
+        for (let c of view) {
+            buf.push(String.fromCharCode(c));
+        }
+
+        return btoa(buf.join(''));
+    }
+
+    exports.base642ab = function(s) {
+        return this.str2ab(atob(s));
+    }
+
     exports.timedFetch = function(url, opts, window) {
         //this.log('timedFetch()');
         //this.log('- url: ' + url);
@@ -443,6 +463,25 @@ if (!fetch) {
         return feet / this.FEET_PER_LONG_DEGREE;
     }
 
+    exports.getDistanceString = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} ft`;
+        } else {
+            return `${Math.floor(feet / this.FEET_PER_MILE)} mi`;
+        }
+    }
+
+    exports.getDisplayDistance = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} FEET`;
+        } else if (feet < 10 * this.FEET_PER_MILE) {
+            const v = Math.floor(feet / this.FEET_PER_MILE * 10) / 10;
+            return `${v} MILES`;
+        } else {
+            return `${Math.floor(feet / this.FEET_PER_MILE)} MILES`;
+        }
+    }
+
     // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
     exports.csvToArray = function(str, delimiter = ",") {
       //  replace \r\n with \n, to ensure consistent newline characters
@@ -540,5 +579,105 @@ if (!fetch) {
     exports.changeDisplay = function(id,display) {
         let p = document.getElementById(id);
         p.style.display = display;
+    }
+
+    exports.blobToBase64 = function(blob) {
+        return new Promise((resolve, _) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.replace(/^data:.+;base64,/, ''));
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    exports.getResponseBody = async function(url) {
+        this.log('util.getResponseBody()');
+        this.log('- url: ' + url);
+
+        const requestSettings = {
+            method: 'GET'
+        };
+
+        const response = await fetch(url, requestSettings);
+        this.log('- response.status: ' + response.status);
+        const blob = await response.blob();
+        //util.log(`- blob: ${blob}`);
+
+        return await blob.arrayBuffer();
+    }
+
+    exports.updateCacheIfNeeded = async function(cachePath, url) {
+        this.log('util.updateCacheIfNeeded()');
+        this.log('- cachePath: ' + cachePath);
+        this.log('- url: ' + url);
+
+        platform.ensureResourcePath(cachePath);
+        const fileName = 'gtfs.zip'
+        this.log('- fileName: ' + fileName);
+
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            this.log('+ network url');
+            const r = await fetch(url, {method: 'HEAD'});
+            //this.log('- r.headers: ' + r.headers);
+            const urlTime = r.headers.get('last-modified');
+            this.log('- urlTime: ' + urlTime);
+
+            if (!urlTime) {
+                this.log(`* can\'t access static GTFS URL ${url}, aborting cache update`);
+                return;
+            }
+
+            const urlDate = Date.parse(urlTime);
+            this.log('- urlDate: ' + urlDate);
+            let fileDate = 0;
+
+            if (platform.resourceExists(fileName)) {
+                fileDate = platform.getMTime(fileName);
+            }
+            this.log('- fileDate: ' + fileDate);
+
+            if (urlDate <= fileDate) {
+                this.log('+ gtfs.zip up-to-date, nothing to do');
+                return;
+            }
+
+            util.log('+ gtfs.zip out of date, downloading...')
+
+            const body = await this.getResponseBody(url);
+            this.log('- body.length: ' + body.length);
+
+            platform.writeToFile(fileName, util.ab2base64(body));
+        } else {
+            // assume url is in fact a path to a local file.
+            // further, assume that if url is a file that we
+            // are running in node
+
+            const fs = require('fs');
+            let stats = fs.statSync(url, {throwIfNoEntry: false});
+            this.log('- stats: ' + JSON.stringify(stats));
+
+            if (!stats) {
+                stats = {
+                    mtime: '1970-01-01T00:00:00.000Z'
+                };
+            }
+
+            const tsArchive = Date.parse(stats.mtime);
+            this.log('- tsArchive: ' + tsArchive);
+            const tsCache = platform.getMTime(fileName);
+            this.log('- tsCache:   ' + tsCache);
+
+            if (tsArchive < tsCache) {
+                this.log('+ gtfs.zip up-to-date, nothing to do');
+                return;
+            }
+
+            const content = fs.readFileSync(url, 'utf8');
+            this.log('- content.length:   ' + content.length);
+            platform.writeToFile(fileName, content);
+        }
+
+        util.log('+ gtfs.zip downloaded')
+        const names = ['calendar.txt', 'routes.txt', 'stops.txt', 'stop_times.txt', 'shapes.txt', 'trips.txt'];
+        await platform.unpackZip(fileName, cachePath, names);
     }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

@@ -682,7 +682,8 @@ function scanQRCode() {
 }
 
 function initialize() {
-    util.log("+ page loaded 6");
+    util.log("+ page loaded");
+    util.log('- JSZip.version: ' + JSZip.version);
 
     if (window.hasOwnProperty('graasShimVersion')) {
         util.log("- graasShimVersion: " + graasShimVersion);
@@ -723,7 +724,18 @@ function positionCallback() {
         list = ["key-title", "keyTextArea", "key-okay", "stale-title", "stale-okay", "resume"];
         list.forEach(l => resizeElementFont(document.getElementById(l)));
     }
-    let str = localStorage.getItem("lat-long-pem") || "";
+    //let str = localStorage.getItem("lat-long-pem") || "";
+
+    // ### DO NOT CHECK IN!
+
+    util.log('### DO NOT CHECK IN! ###');
+
+    let str = `tcrta
+-----BEGIN TOKEN-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgO7w/VXws3CiiXdyx
+vjeg06hXfmccas9o4ej5RzesJN6hRANCAARu0JfeR3m/d/PoWk2pfqKBBb01m2tl
+VMUAGA5OldjlLJUE/Aftb/6ud9AftG13OUdFcsPL+sxEIKsPVmilw10O
+-----END TOKEN-----`;
     if (!str) {
         if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
             // ios WKWebView doesn't support camera access :[
@@ -936,10 +948,12 @@ async function agencyIDCallback(response) {
         // Passing current timestamp as an argument ensures that the config file will refresh, rather than loading from cache.
         let arg = Date.now()
         util.log("- arg: " + arg);
-        getURLContent(agencyID, arg);
+        // ### UNCOMMENT ME: getURLContent(agencyID, arg);
         // need to decide how to determine vehicle id
         if(useTripInference){
-            inf = new inference.TripInference(agencyID, vehicleID, 15);
+            const path = '' + agencyID; // ### is this right?
+            const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
+            inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15);
             await inf.init();
 
             if(runTripInferenceTest){
@@ -1302,6 +1316,11 @@ if (!Object.entries) {
       return resArray;
    };
 }
+
+/*window.addEventListener("unhandledrejection", function (event) {
+    util.log('unhandledrejection');
+    util.log('- event: ' + JSON.stringify(event));
+});*/
 
 configMatrix = new ConfigMatrix();
 

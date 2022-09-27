@@ -1,4 +1,5 @@
-if(typeof util === 'undefined'){
+if (typeof util === 'undefined' || util === null) {
+    var platform = require('../static/platform');
     var util = require('../static/gtfs-rt-util');
     var grid = require('../static/grid');
     var timer = require('../static/timer');
@@ -15,8 +16,22 @@ const STOP_CAP = 10;
 (function(exports) {
     exports.TripInference = class {
 
-        constructor(agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
-            util.log("constructor()");
+        constructor(path, url, agencyID, vehicleID, subdivisions, dow = -1, epochSeconds = -1) {
+            util.log('TripInference.TripInference()');
+            util.log('- path: ' + path);
+            util.log('- url: ' + url);
+            util.log('- agencyID: ' + agencyID);
+            util.log('- vehicleID: ' + vehicleID);
+            util.log('- subdivisions: ' + subdivisions);
+
+            if (!path.endsWith('/')) {
+                path += '/';
+            }
+
+            this.path = path;
+            util.log(`- this.path: ${this.path}`);
+            this.url = url;
+            util.log(`- this.url: ${this.url}`);
             this.agencyID = agencyID;
             this.vehicleID = vehicleID;
             this.subdivisions = subdivisions;
@@ -25,36 +40,39 @@ const STOP_CAP = 10;
         }
 
         async init(){
+            await util.updateCacheIfNeeded(this.path, this.url);
+
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
 
-            await this.getCalendarMap();
-            // util.log("this.calendarMap: " + JSON.stringify(this.calendarMap));
-            await this.getRouteMap();
-            // util.log("this.routeMap: " + JSON.stringify(this.routeMap));
+            const calendarMap = await this.getCalendarMap();
+            util.log("- calendarMap: " + JSON.stringify(calendarMap, null, 2));
+            const routeMap = await this.getRouteMap();
+            util.log("- routeMap: " + JSON.stringify(routeMap, null, 2));
 
             this.area = new area.Area();
             await this.populateBoundingBox();
-            // util.log(`- JSON.stringify(this.area): ${JSON.stringify(this.area)}`);
+            util.log(`- this.area: ${this.area}`);
             this.grid = new grid.Grid(this.area, this.subdivisions);
 
             if (this.dow < 0) {
                 this.dow = (new Date()).getDay();
-                util.log(`- dow: ${this.dow}`);
             }
+            util.log(`- dow: ${this.dow}`);
 
             if (this.epochSeconds < 0) {
                 this.epochSeconds = Math.floor(Date.now() / 1000);
-                // util.log(`- epochSeconds: ${this.epochSeconds}`);
             }
+            util.log(`- this.epochSeconds: ${new Date(this.epochSeconds * 1000)}`);
 
             this.stops = await this.getStops();
             // util.log(`-- JSON.stringify(this.stops): ${JSON.stringify(this.stops)}`);
 
             await this.preloadStopTimes();
-
             // util.log(`-- JSON.stringify(this.stopTimeMap): ${JSON.stringify(this.stopTimeMap)}`);
+
             await this.preloadShapes();
+            const shapes = await this.getFile('shapes.txt');
 
             this.computeShapeLengths();
             this.blockMap = {}
@@ -66,25 +84,26 @@ const STOP_CAP = 10;
             for (let r of rows){
                 let loopTimer = new timer.Timer('loop');
                 let trip_id = r['trip_id'];
+                //util.log(`-- trip_id: ${trip_id}`);
                 let service_id = r['service_id'];
                 let shape_id = r['shape_id'];
 
                 tripSet.add(trip_id);
 
-                if (!(service_id in this.calendarMap)){
-                    // util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
+                if (!(service_id in calendarMap)){
+                    //util.log(`* service id \'${service_id}\' not found in calendar map, skipping trip \'${trip_id}\'`);
                     continue;
                 }
-                let cal = this.calendarMap[service_id]['cal'];
+                let cal = calendarMap[service_id]['cal'];
                 // util.log("cal: " + cal);
                 // util.log("JSON.stringify(cal): " + JSON.stringify(cal));
                 // util.log("cal[this.dow]: " + cal[this.dow]);
                 if (cal !== null && cal[this.dow] !== "1"){
-                    // util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
+                    //util.log(`* dow \'${this.dow}\' not set, skipping trip \'${trip_id}\'`);
                     continue;
                 }
-                let startDate = this.calendarMap[service_id]['start_date'];
-                let endDate = this.calendarMap[service_id]['end_date'];
+                let startDate = calendarMap[service_id]['start_date'];
+                let endDate = calendarMap[service_id]['end_date'];
 
                 if (startDate !== null && endDate !== null){
                     let startSeconds = util.getEpochSeconds(startDate);
@@ -93,12 +112,17 @@ const STOP_CAP = 10;
                     // util.log("startSeconds: " + startSeconds);
                     // util.log("endSeconds: " + endSeconds);
                     if (this.epochSeconds < startSeconds || this.epochSeconds > endSeconds){
-                        // util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
+                        //util.log('-- startDate: ' + startDate);
+                        //util.log('-- endDate:   ' + endDate);
+                        //util.log('-- this.epochSeconds: ' + this.epochSeconds);
+                        //util.log('-- startSeconds:      ' + startSeconds);
+                        //util.log('-- endSeconds:        ' + endSeconds);
+                        //util.log(`* trip date outside service period (start: ${startDate}, end: ${endDate}), skipping trip \'${trip_id}\'`);
                         continue;
                     }
                 }
                 // util.log('');
-                // util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
+                util.log(`-- trip_id: ${trip_id} (${count}/${rows.length})`);
                 count += 1;
 
                 let route_id = r['route_id'];
@@ -107,10 +131,10 @@ const STOP_CAP = 10;
                 let wayPoints = this.getShapePoints(shape_id);
                 // util.log(timer);
                 // util.log(`-- wayPoints: ${wayPoints}`)
-                // util.log(`-- wayPoints.length: ${wayPoints.length}`)
+                //util.log(`-- wayPoints.length: ${wayPoints.length}`)
 
                 if (wayPoints.length === 0){
-                    // util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
+                    util.log(`* no way points for trip_id \'${trip_id}\', shape_id \'${shape_id}\'`);
                     continue;
                 }
 
@@ -142,32 +166,31 @@ const STOP_CAP = 10;
                 }
                 // util.log(timer);
                 // util.log(`-- stopTimes: ${stopTimes}`);
-                // util.log(`-- len(stopTimes): ${stopTimes.length}`);
+                //util.log(`-- stopTimes.length: ${stopTimes.length}`);
                 mainTimer = new timer.Timer('interpolate');
                 this.interpolateWayPointTimes(wayPoints, stopTimes, this.stops);
                 // util.log(timer);
 
                 // // trip_name = route_map[route_id]['name'] + ' @ ' + util.seconds_to_ampm_hhmm(stopTimes[0]['arrival_time'])
                 let tripName = trip_id + ' @ ' + util.getHMForSeconds(stopTimes[0]['arrival_time'], true);
-                // util.log(`-- tripName: ${tripName}`);
+                //util.log(`-- tripName: ${tripName}`);
                 let shapeLength = this.shapeLengthMap[shape_id];
                 let segmentLength = null;
                 if (shapeLength === null){
                     segmentLength = 2 * util.FEET_PER_MILE;
-                }
-                else{
-                    segmentLength = shapeLength;
+                } else {
+                    segmentLength = Math.round(shapeLength / 30);
                 }
 
                 // util.log(f'-- segmentLength: {segmentLength}')
                 mainTimer = new timer.Timer('segments');
-                this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength);
-                // util.log(timer)
-                // util.log(loopTimer)
+                await this.makeTripSegments(trip_id, tripName, stopTimes[0], wayPoints, segmentLength, shapes);
+                //util.log(mainTimer.toString());
+                //util.log(loopTimer.toString());
             }
             // util.log(`-- this.blockMap: ${JSON.stringify(this.blockMap)}`);
 
-            // util.log(load_timer);
+            util.log(load_timer.toString());
             // util.log(`-- JSON.stringify(this.grid): ${JSON.stringify(this.grid)}`);
 
             for (let tid in this.stopTimeMap){
@@ -180,35 +203,47 @@ const STOP_CAP = 10;
         }
 
         async getFile(fileName){
-                let url = `${BASE_URL}/${this.agencyID}/${fileName}`;
-                // util.log('- fetching from ' + url);
-                let response = await util.timedFetch(url, {method: 'GET'});
-                let text = await response.text();
-                return util.csvToArray(text);
+            util.log('inference.getFile()');
+            util.log('- fileName: ' + fileName);
+
+            /*
+            let url = `${BASE_URL}/${this.agencyID}/${fileName}`;
+            // util.log('- fetching from ' + url);
+            let response = await util.timedFetch(url, {method: 'GET'});
+            let text = await response.text();*/
+
+            // ### TODO: port csv DictReader and use instead
+            //const text = util.ab2str(util.base642ab(platform.readFile(fileName)));
+            const text = await platform.readFile(fileName);
+            //util.log('- text: ' + text);
+            return util.csvToArray(text);
         }
 
         async getCalendarMap(){
             // util.log('getCalendarMap()');
             let rows = await this.getFile("calendar.txt");
-            this.calendarMap = {};
+            const calendarMap = {};
             let dow = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
             for (let r of rows){
                 let service_id = r['service_id'];
-                // util.log(`-- service id: ${service_id}`)
+                util.log(`-- service id: ${service_id}`)
                 let cal = [];
                 for (let d of dow){
                     cal.push(r[d]);
                     // util.log(`-- cal: ${cal}`);
                 }
-                this.calendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
+                calendarMap[service_id] = {'cal': cal, 'start_date': r['start_date'], 'end_date': r['end_date']};
             }
+
+            return calendarMap;
         }
 
         async getRouteMap(){
             // util.log('getRouteMap()');
             let rows = await this.getFile("routes.txt");
-            this.routeMap = {};
+            const routeMap = {};
+
             for (let r of rows){
                 let route_id = r['route_id'];
                 // util.log(`-- route_id: ${route_id}`)
@@ -216,8 +251,10 @@ const STOP_CAP = 10;
                 let longName = r['route_long_name'];
                 let name = (!util.isNullUndefinedOrBlank(shortName) ? shortName : longName);
 
-                this.routeMap[route_id] = {'name': name};
+                routeMap[route_id] = {'name': name};
             }
+
+            return routeMap;
         }
 
         async getStops(){
@@ -226,9 +263,9 @@ const STOP_CAP = 10;
             let stopList = {};
             for (let r of rows){
                 let id = r['stop_id'];
-                let lat = parseFloat(r['stop_lat']);
-                let lon = parseFloat(r['stop_lon']);
-                stopList[id] = {'lat': lat, 'long': lon}
+                let lat = r['stop_lat'];
+                let lon = r['stop_lon'];
+                stopList[id] = {'lat': lat, 'lon': lon}
             }
             return stopList
         }
@@ -255,7 +292,6 @@ const STOP_CAP = 10;
                 }
 
                 let entry = {'arrival_time': util.hhmmssToSeconds(arrival_time), 'stop_id': stop_id, 'stop_sequence': stop_sequence}
-
                 let sdt = r['shape_dist_traveled'];
 
                 if (!util.isNullOrUndefined(sdt) && sdt.length > 0){
@@ -296,7 +332,7 @@ const STOP_CAP = 10;
             }
         }
 
-        async computeShapeLengths() {
+        computeShapeLengths() {
             this.shapeLengthMap = {};
             // util.log("shapeMap: " + JSON.stringify(this.shapeMap));
             for (let [key, value] of Object.entries(this.shapeMap)){
@@ -308,11 +344,11 @@ const STOP_CAP = 10;
                     // util.log("JSON.stringify(pointList[i]): " + JSON.stringify(pointList[i]));
                     let p1 = pointList[i];
                     let p2 = pointList[i+1];
-                    length += await util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
+                    length += util.haversineDistance(p1.lat, p1.lon, p2.lat, p2.lon);
                 }
 
                 this.shapeLengthMap[key] = length;
-                // util.log(`++ length for shape ${key}: ${length}`);
+                util.log(`++ length for shape ${key}: ${util.getDisplayDistance(length)}`);
             }
         }
 
@@ -432,18 +468,20 @@ const STOP_CAP = 10;
                 // util.log(`-- seconds: ${seconds}`);
                 let frac = seconds / totalSeconds;
                 // util.log(`-- frac: ${frac}`);
-                let j = parseInt(frac * (wayPoints.length - 1));
+                let j = Math.floor(frac * (wayPoints.length - 1));
                 let listItem = {'index': j,
                                 'time': stopTimes[i]['arrival_time']
                             };
                 anchorList.push(listItem);
                 // util.log("JSON.stringify(listItem): " + JSON.stringify(listItem));
-                // util.log("JSON.stringify(anchorList): " + JSON.stringify(anchorList));
+                //util.log('- anchorList): ' + JSON.stringify(anchorList));
             }
+
             for (let i=0; i<20; i++){
                 // util.log("i: " + i);
                 // let lastAnchorList = Object.assign({}, anchorList);
                 let lastAnchorList = JSON.parse(JSON.stringify(anchorList));
+                //util.log('- lastAnchorList:' + JSON.stringify(lastAnchorList));
 
                 // explore neighbors in anchorList, potentially changing index fields
                 for (let j=0; j<lastAnchorList.length; j++){
@@ -458,7 +496,7 @@ const STOP_CAP = 10;
                     }
                     let n = c;
                     if (j < lastAnchorList.length - 1){
-                        let n = lastAnchorList[j + 1];
+                        n = lastAnchorList[j + 1];
                     }
 
                     let p1 = stops[stopTimes[j]['stop_id']];
@@ -471,24 +509,24 @@ const STOP_CAP = 10;
                     // util.log(`-- p["index"]: ${p["index"]}`)
                     // util.log(`-- n["index"]: ${n["index"]}`)
 
-                    let kf = p['index'] + Math.ceil((c['index'] - p['index']) / 2);
-                    let kt = c['index'] + (n['index'] - c['index']) / 2;
+                    let kf = Math.floor(p['index'] + Math.ceil((c['index'] - p['index']) / 2));
+                    let kt = Math.floor(c['index'] + (n['index'] - c['index']) / 2);
 
                     // util.log(`-- kf: ${kf}, kt: ${kt}`)
 
                     for (let k=kf; k<kt; k++){
                         let p2 = wayPoints[k];
-                        let diff = util.haversineDistance(p1['lat'], p1['long'], p2['lat'], p2['long']);
+                        let diff = util.haversineDistance(p1['lat'], p1['lon'], p2['lat'], p2['lon']);
 
                         if (diff < min_diff){
-                            let min_diff = diff;
-                            let min_index = k;
+                            min_diff = diff;
+                            min_index = k;
                         }
                     }
                     // util.log(`++ min_index: ${min_index}`)
                     anchorList[j]['index'] = min_index;
                 }
-                // util.log(`-- anchorList : ${anchorList}`);
+                //util.log(`-- anchorList : ${JSON.stringify(anchorList)}`);
 
                 let stable = true;
 
@@ -503,7 +541,7 @@ const STOP_CAP = 10;
                 }
                 if (stable) break;
             }
-            // util.log(`++ JSON.stringify(anchorList) : ${JSON.stringify(anchorList)}`);
+            //util.log('- anchorList:' + JSON.stringify(anchorList));
 
             return anchorList;
         }
@@ -564,11 +602,13 @@ const STOP_CAP = 10;
             return anchorList;
         }
 
-        async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength){
-            // util.log(`- makeTripSegments()`);
-            // util.log(`- maxSegmentLength: ${maxSegmentLength}`);
-            // util.log(`- trip_id: ${trip_id}`);
-            // util.log(`- wayPoints: ${wayPoints}`);
+        async makeTripSegments(trip_id, tripName, firstStop, wayPoints, maxSegmentLength, shapes){
+            // Why are there so many segments?!?
+            //util.log(`- makeTripSegments()`);
+            //util.log(`- maxSegmentLength: ${maxSegmentLength}`);
+            //util.log(`- trip_id: ${trip_id}`);
+            //util.log(`- tripName: ${tripName}`);
+            //util.log(`- wayPoints.length: ${wayPoints.length}`);
 
             let segmentStart = 0;
             let index = segmentStart;
@@ -577,7 +617,7 @@ const STOP_CAP = 10;
             let firstSegment = true;
             let segmentCount = 1;
 
-            // let area = Area()
+            let segmentArea = new area.Area()
             let indexList = [];
             let segmentList = [];
 
@@ -589,18 +629,19 @@ const STOP_CAP = 10;
                 let p = wayPoints[index];
                 // util.log("p['lat']: " + p['lat']);
                 // util.log("p['lon']: " + p['lon']);
-                this.area.update(p['lat'], p['lon']);
+                segmentArea.update(p['lat'], p['lon']);
 
                 let gridIndex = this.grid.getIndex(p['lat'], p['lon']);
-                if  (!(gridIndex in indexList)){
+                if  (!indexList.includes(gridIndex)){
                     indexList.push(gridIndex);
                 }
 
                 let distance = util.haversineDistance(lp['lat'], lp['lon'], p['lat'], p['lon']);
                 segmentLength += distance;
+                //util.log(`-- segmentLength: ${segmentLength}`);
 
-                if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1){
-                    this.area.extend(skirtSize);
+                if (segmentLength >= maxSegmentLength || index === wayPoints.length - 1) {
+                    segmentArea.extend(skirtSize);
 
                     if (segmentStart === 0 && wayPoints[segmentStart]['time'] === wayPoints[index]['time']){
                         // util.log(`0 duration first segment for trip ${trip_id}`);
@@ -612,41 +653,43 @@ const STOP_CAP = 10;
                         stop_id = firstStop['stop_id'];
                     }
 
-                    let tripSegment = await new segment.Segment(
+                    let tripSegment = new segment.Segment(
                         segmentCount,
                         trip_id,
                         tripName,
                         firstStop['arrival_time'],
                         stop_id,
-                        this.area,
+                        segmentArea,
                         wayPoints[segmentStart]['time'],
                         wayPoints[index]['time'],
                         wayPoints[segmentStart]['file_offset'],
-                        wayPoints[index]['file_offset']
+                        wayPoints[index]['file_offset'],
+                        shapes
                     );
 
                     segmentList.push(tripSegment);
-                    segmentCount += 1;
+                    segmentCount++;
 
                     for (let i of indexList){
                         this.grid.addSegment(tripSegment, i);
                     }
 
                     segmentLength = 0;
-                    // area = Area()
+                    segmentArea = new area.Area()
                     indexList = [];
 
-                    index += 1;
+                    index++;
                     lastIndex = index;
                     segmentStart = index;
 
                     p = wayPoints[Math.max(segmentStart - 1, 0)];
-                    this.area.update(p['lat'], p['lon']);
+                    segmentArea.update(p['lat'], p['lon']);
 
                     continue;
                 }
+
                 lastIndex = index;
-                index += 1;
+                index++;
             }
             for (let s of segmentList){
                 s.setSegmentsPerTrip(segmentCount - 1);
@@ -654,7 +697,8 @@ const STOP_CAP = 10;
         }
 
         async getTripId(lat, lon, seconds, tripIdFromBlock = null){
-            // util.log("getTripId()");
+            //util.log("inference.getTripId()");
+
             let segmentList = await this.grid.getSegmentList(lat, lon);
             let ret = {
                 'trip_id': null,
@@ -665,7 +709,7 @@ const STOP_CAP = 10;
                 return ret;
             }
 
-            // util.log(`- segmentList.length: ${segmentList.length}`);
+            util.log(`- segmentList.length: ${segmentList.length}`);
             // util.log(`- tripIdFromBlock: ${tripIdFromBlock}`);
 
             let stop_id = await this.getStopForPosition(lat, lon, STOP_PROXIMITY);
@@ -677,14 +721,17 @@ const STOP_CAP = 10;
 
             let maxSegmentScore = 0;
             let timeOffset = 0;
-            let shapes = await this.getFile("shapes.txt");
+            // util.log(`JSON.stringify(segmentList): ${JSON.stringify(segmentList)}`);
             for (let segment of segmentList){
                 if (tripIdFromBlock !== null && segment.trip_id !== tripIdFromBlock){
                     continue;
                 }
+                // util.log(`JSON.stringify(segment): ${JSON.stringify(segment)}`);
+                //util.log(`segment.trip_id: ${segment.trip_id}`);
+                let result = await segment.getScore(lat, lon, seconds);
+                // util.log(`JSON.stringify(segment.waypointList): ${JSON.stringify(segment.waypointList)}`);
 
-                let result = await segment.getScore(lat, lon, seconds, shapes);
-                // util.log(`result: ${JSON.stringify(result)}`);
+                //util.log(`result: ${JSON.stringify(result)}`);
                 let score = multiplier * result['score'];
                 // util.log(`score: ${score}`);
                 let time_offset = result['time_offset'];
@@ -729,7 +776,7 @@ const STOP_CAP = 10;
                 let score = cand['score'];
                 let name = cand['name'];
                 // util.log(`candidate update: id=${trip_id} trip-name=${util.to_b64(name)} score=${score}`)
-                // util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
+                //util.log(`candidate update: id=${trip_id} trip-name=${name} score=${score}`)
 
                 if (score > maxScore){
                     maxScore = score;
@@ -739,7 +786,7 @@ const STOP_CAP = 10;
                 }
             }
 
-            // util.log(`- maxScore: ${maxScore}`);
+            util.log(`- maxScore: ${maxScore}`);
 
             if (maxScore >= SCORE_THRESHOLD){
                 ret['trip_id'] = maxTripId
@@ -754,7 +801,7 @@ const STOP_CAP = 10;
             let stop_id = null;
 
             for (let [key, value] of Object.entries(this.stops)){
-                if (util.haversineDistance(lat, lon, value['lat'], value['long']) < maxDistance){
+                if (util.haversineDistance(lat, lon, value['lat'], value['lon']) < maxDistance){
                     let stop_id = key;
                     break;
                 }
@@ -774,7 +821,7 @@ const STOP_CAP = 10;
             }
         }
         resetScoring(){
-            // util.log('+++ reset scoring! +++');
+            util.log('+++ reset scoring! +++');
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
         }
@@ -790,7 +837,7 @@ const STOP_CAP = 10;
             let stopList = this.stopTimeMap[trip_id];
             // util.log(`- stopList: ${stopList}`);
             let entities = [];
-            let timestamp = Date.now();
+            let timestamp = Math.floor(Date.now() / 1000);
 
             for (let i=0; i<stopList.length; i++){
                 let s = stopList[i];
