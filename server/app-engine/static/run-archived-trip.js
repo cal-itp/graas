@@ -32,12 +32,13 @@ function getAgencyIdFromPath(path){
         // let stdout_save = sys.stdout;
         // let sys.stdout = tee;
         let lastDow = -1;
-        var inf = null
+        var inf = null;
+        var count = 1;
 
         for (let df of dataFiles){
             let pattern1 = new RegExp(".*/([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-.*)/.*","g"); // yyyy-mm-dd-hh-mm-<agency>
             let pattern2 =  new RegExp(".*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*","g");     // yyyy-mm-dd-hh-mm
-            util.log(`df: ${df}`);
+            util.log(`df: (${count++}/${dataFiles.length}) ${df}`);
             let expected_trip_id = null;
             let block_id = null;
 
@@ -111,8 +112,10 @@ function getAgencyIdFromPath(path){
                 if (result !== null){
                     tripID = result['trip_id'];
                 }
-                //tee.stream.write(`- tripID: ${tripID} \n`);
-                // util.log(`- tripID: ${tripID}`);
+
+                // ### do not comment out, needed for inference stats
+                tee.stream.write(`- tripID: ${tripID} \n`);
+                //util.log(`- tripID: ${tripID}`);
             }
         }
         tee.redirect();

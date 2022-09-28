@@ -728,7 +728,8 @@ function positionCallback() {
     let str = localStorage.getItem("lat-long-pem") || "";
 
     if (!str) {
-        if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
+        if (!isMobile() || window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
+            // pasting token is easier than scanning on desktop
             // ios WKWebView doesn't support camera access :[
             handleModal("keyEntryModal");
         } else {
@@ -930,7 +931,7 @@ async function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    util.showElement(LOADING_TEXT_ELEMENT);
+    if (!runTripInferenceTest) util.showElement(LOADING_TEXT_ELEMENT);
     util.hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {

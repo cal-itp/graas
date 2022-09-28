@@ -1,5 +1,8 @@
-if (typeof util === 'undefined' || util === null) {
+if (typeof platform === 'undefined' || platform === null) {
     var platform = require('../static/platform');
+}
+
+if (typeof util === 'undefined' || util === null) {
     var util = require('../static/gtfs-rt-util');
     var grid = require('../static/grid');
     var timer = require('../static/timer');
@@ -40,7 +43,7 @@ const STOP_CAP = 10;
         }
 
         async init(){
-            await util.updateCacheIfNeeded(this.path, this.url);
+            await this.updateCacheIfNeeded(this.path, this.url);
 
             this.tripCandidates = {};
             this.lastCandidateFlush = Date.now();
@@ -200,6 +203,81 @@ const STOP_CAP = 10;
             }
             // Why?
             this.shapeMap = {}
+        }
+
+
+        async updateCacheIfNeeded(cachePath, url) {
+            util.log('util.updateCacheIfNeeded()');
+            util.log('- cachePath: ' + cachePath);
+            util.log('- url: ' + url);
+
+            platform.ensureResourcePath(cachePath);
+            const fileName = cachePath + 'gtfs.zip'
+            util.log('- fileName: ' + fileName);
+
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                const r = await fetch(url, {method: 'HEAD'});
+                util.log('- r.headers: ' + r.headers);
+                const urlTime = r.headers.get('last-modified');
+                util.log('- urlTime: ' + urlTime);
+
+                if (!urlTime) {
+                    util.log(`* can\'t access static GTFS URL ${url}, aborting cache update`);
+                    return;
+                }
+
+                const urlDate = Date.parse(urlTime);
+                util.log('- urlDate: ' + urlDate);
+                let fileDate = 0;
+
+                if (platform.resourceExists(fileName)) {
+                    fileDate = platform.getMTime(filename);
+                }
+
+                if (urlDate <= fileDate) {
+                    util.log('+ gtfs.zip up-to-date, nothing to do');
+                    return;
+                }
+
+                util.log('+ gtfs.zip out of date, downloading...');
+
+                const body = await util.getResponseBody(url);
+                util.log('- body.length: ' + body.length);
+
+                platform.writeToFile(fileName, util.ab2base64(body));
+            } else {
+                // assume url is in fact a path to a local file.
+                // further, assume that if url is a file that we
+                // are running in node
+
+                const fs = require('fs');
+                let stats = fs.statSync(url, {throwIfNoEntry: false});
+                util.log('- stats: ' + JSON.stringify(stats));
+
+                if (!stats) {
+                    stats = {
+                        mtime: '1970-01-01T00:00:00.000Z'
+                    };
+                }
+
+                const tsArchive = Date.parse(stats.mtime);
+                util.log('- tsArchive: ' + tsArchive);
+                const tsCache = platform.getMTime(fileName);
+                util.log('- tsCache:   ' + tsCache);
+
+                if (tsArchive < tsCache) {
+                    util.log('+ gtfs.zip up-to-date, nothing to do');
+                    return;
+                }
+
+                const content = fs.readFileSync(url, 'utf8');
+                util.log('- content.length:   ' + content.length);
+                platform.writeToFile(fileName, content);
+            }
+
+            util.log('+ gtfs.zip downloaded')
+            const names = ['calendar.txt', 'routes.txt', 'stops.txt', 'stop_times.txt', 'shapes.txt', 'trips.txt'];
+            await platform.unpackZip(fileName, cachePath, names);
         }
 
         async getFile(fileName){

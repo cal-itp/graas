@@ -28,12 +28,6 @@ if (!fetch) {
     fetch = require('node-fetch')
 }
 
-/*let platform = this.platform;
-
-if (typeof window === 'undefined') {
-    platform = require('./platform');
-}*/
-
 (function(exports) {
     exports.SECONDS_PER_MINUTE = 60;
     exports.SECONDS_PER_HOUR   = 60 * exports.SECONDS_PER_MINUTE;
@@ -669,79 +663,5 @@ if (typeof window === 'undefined') {
         //util.log(`- blob: ${blob}`);
 
         return await blob.arrayBuffer();
-    }
-
-    exports.updateCacheIfNeeded = async function(cachePath, url) {
-        this.log('util.updateCacheIfNeeded()');
-        this.log('- cachePath: ' + cachePath);
-        this.log('- url: ' + url);
-
-        platform.ensureResourcePath(cachePath);
-        const fileName = cachePath + 'gtfs.zip'
-        this.log('- fileName: ' + fileName);
-
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            const r = await fetch(url, {method: 'HEAD'});
-            this.log('- r.headers: ' + r.headers);
-            const urlTime = r.headers.get('last-modified');
-            this.log('- urlTime: ' + urlTime);
-
-            if (!urlTime) {
-                this.log(`* can\'t access static GTFS URL ${url}, aborting cache update`);
-                return;
-            }
-
-            const urlDate = Date.parse(urlTime);
-            this.log('- urlDate: ' + urlDate);
-            let fileDate = 0;
-
-            if (platform.resourceExists(fileName)) {
-                fileDate = platform.getMTime(filename);
-            }
-
-            if (urlDate <= fileDate) {
-                this.log('+ gtfs.zip up-to-date, nothing to do');
-                return;
-            }
-
-            util.log('+ gtfs.zip out of date, downloading...');
-
-            const body = await this.getResponseBody(url);
-            this.log('- body.length: ' + body.length);
-
-            platform.writeToFile(fileName, util.ab2base64(body));
-        } else {
-            // assume url is in fact a path to a local file.
-            // further, assume that if url is a file that we
-            // are running in node
-
-            const fs = require('fs');
-            let stats = fs.statSync(url, {throwIfNoEntry: false});
-            this.log('- stats: ' + JSON.stringify(stats));
-
-            if (!stats) {
-                stats = {
-                    mtime: '1970-01-01T00:00:00.000Z'
-                };
-            }
-
-            const tsArchive = Date.parse(stats.mtime);
-            this.log('- tsArchive: ' + tsArchive);
-            const tsCache = platform.getMTime(fileName);
-            this.log('- tsCache:   ' + tsCache);
-
-            if (tsArchive < tsCache) {
-                this.log('+ gtfs.zip up-to-date, nothing to do');
-                return;
-            }
-
-            const content = fs.readFileSync(url, 'utf8');
-            this.log('- content.length:   ' + content.length);
-            platform.writeToFile(fileName, content);
-        }
-
-        util.log('+ gtfs.zip downloaded')
-        const names = ['calendar.txt', 'routes.txt', 'stops.txt', 'stop_times.txt', 'shapes.txt', 'trips.txt'];
-        await platform.unpackZip(fileName, cachePath, names);
     }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

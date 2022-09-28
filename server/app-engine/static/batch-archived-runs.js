@@ -1,5 +1,7 @@
 // run with NODE_PATH=../../node/node_modules node batch-archived-runs.js -d ~/src/graas/data/trip-inference-training/included -o ~/tmp
 
+const platform = require('../static/platform');
+console.log('- platform: ' + platform);
 const util = require('../static/gtfs-rt-util');
 const run_archived_trip = require('../static/run-archived-trip');
 const inferencestats = require('../static/inferencestats');
@@ -12,7 +14,7 @@ function getTimeStamp() {
     const d = new Date();
 
     const mon = ('' + (d.getMonth() + 1)).padStart(2, '0');
-    const day = ('' + d.getDay()).padStart(2, '0');
+    const day = ('' + d.getDate()).padStart(2, '0');
     const hour = ('' + d.getHours()).padStart(2, '0');
     const min = ('' + d.getMinutes()).padStart(2, '0');
 
@@ -31,7 +33,7 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
         let tripDir = `${dataDir}/${dir}`
         let files = listDirs(tripDir);
         for (let file of files) {
-            util.log(" - file: " + file);
+            //util.log(" - file: " + file);
             if(file === "updates.txt")
             {
                 vehiclePositionFiles.push(`${dataDir}/${dir}/${file}`);
@@ -114,12 +116,12 @@ async function main(dataDir, outputDir, gtfsCacheDir, staticGtfsUrl, simulateBlo
 }
 
 function listDirs(path){
-    console.log(`listDirs(${path})`);
+    //console.log(`listDirs(${path})`);
     try {
       if (fs.existsSync(path)) {
-        util.log("Directory exists.");
+        //util.log("Directory exists.");
       } else {
-        util.log("Directory does not exist.");
+        //util.log("Directory does not exist.");
       }
     } catch(e) {
       util.log("An error occurred.");
