@@ -31,7 +31,8 @@ var useTripInference = false;
 var runTripInferenceTest = false;
 let tripInferenceTestConfig = {};
 let loadBaseURL = null;
-let testBody = null;
+let testTable = null;
+let testTableIndex = 0;
 var inf = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
@@ -949,7 +950,7 @@ function loadTestData() {
         conf.passRates.push(passRate);
 
         util.log(`+ pass rate: ${passRate}%`);
-        testBody.innerHTML += ` ${passRate}%<br>`;
+        setTableCell(testTableIndex++, 3, passRate + '%');
     }
 
     const name = conf.testNames[conf.nameIndex++];
@@ -962,10 +963,7 @@ function loadTestData() {
     const epochSeconds = util.getEpochSeconds(date);
     util.log(`- epochSeconds: ${epochSeconds}`);
 
-    let displayCount = '' + (conf.nameIndex);
-    displayCount = displayCount.padStart(2, '0');
-    testBody.innerHTML += `- [${displayCount}/${conf.testNames.length}] ${name}...`;
-
+    setTableCell(testTableIndex, 0, name);
     util.log(`- conf.lastDate: ${conf.lastDate}`);
 
     if (date !== conf.lastDate) {
@@ -1023,17 +1021,6 @@ async function loadTestDataHandleMetadataResponse(response) {
     tripInferenceTestIteration();
 }
 
-function updateTestProgress(s) {
-    let index = testBody.innerHTML.lastIndexOf('(');
-
-    if (testBody.innerHTML.endsWith('...')) {
-        testBody.innerHTML += s;
-    } else if (testBody.innerHTML.endsWith(')') && testBody.innerHTML.length - index < 20) {
-        testBody.innerHTML = testBody.innerHTML.substring(0, index);
-        testBody.innerHTML += s;
-    }
-}
-
 async function tripInferenceTestIteration() {
     const conf = tripInferenceTestConfig;
 
@@ -1044,17 +1031,19 @@ async function tripInferenceTestIteration() {
             passTotal += p;
         }
 
-        testBody.innerHTML += `==> total pass rate: ${Math.floor(passTotal / conf.passRates.length)}%<br>`;
+        setTableCell(conf.testNames.length, 0, 'total');
+        setTableCell(conf.testNames.length, 3, Math.floor(passTotal / conf.passRates.length) + '%');
         return; // done with test suite
-    }
-
-    if (conf.testValues) {
-        updateTestProgress(`(${conf.valueIndex}/${conf.testValues.length})`);
     }
 
     if (conf.testValues == null || conf.valueIndex >= conf.testValues.length) {
         loadTestData();
         return;
+    }
+
+    if (conf.testValues) {
+        setTableCell(testTableIndex, 1, conf.valueIndex);
+        setTableCell(testTableIndex, 2, conf.testValues.length);
     }
 
     const line = conf.testValues[conf.valueIndex++];
@@ -1068,6 +1057,20 @@ async function tripInferenceTestIteration() {
     conf.inferredtripIDs.push(tripID);
 
     setTimeout(tripInferenceTestIteration, 1);
+}
+
+function setTableCell(row, col, value) {
+    testTable.rows[row].cells[col].firstChild.nodeValue = value;
+}
+
+function styleCell(cell, w, align) {
+    cell.style.textAlign = align;
+    cell.style.width = w + 'px';
+    cell.style.height = '20px';
+    cell.style.backgroundColor = 'lightGray';
+    cell.style.border = '1px solid white';
+    cell.style.borderCollapse = 'collapse';
+    cell.style.padding = '5px';
 }
 
 async function agencyIDCallback(response) {
@@ -1096,14 +1099,6 @@ async function agencyIDCallback(response) {
                 inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15);
                 await inf.init();
             } else {
-                testBody = document.createElement("p");
-                document.body.appendChild(testBody);
-
-                testBody.style.fontFamily = '"Consolas Bold", "Courier Bold", mono';
-                testBody.style.fontSize = '10px';
-                testBody.style.textAlign = 'left';
-                testBody.innerHTML += '<br>Executing trip inference test suite, please stand by:<br>';
-
                 let response = await util.timedFetch(
                     `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
                     {method: 'GET'}
@@ -1117,6 +1112,42 @@ async function agencyIDCallback(response) {
                 tripInferenceTestConfig.nameIndex = 0;
                 tripInferenceTestConfig.passRates = [];
                 tripInferenceTestConfig.inferredtripIDs = null;
+
+                const conf = tripInferenceTestConfig;
+                const elem = document.createElement('p');
+                elem.innerHTML = 'Trip Inference Test Suite:';
+                document.body.appendChild(elem);
+
+                testTable = document.createElement('table');
+
+                testTable.style.border = '1px solid white';
+                testTable.style.borderCollapse = 'collapse';
+
+                for (let i = 0; i < conf.testNames.length + 1; i++) {
+                    const tr = testTable.insertRow();
+                    tr.style.border = '1px solid white';
+                    tr.style.borderCollapse = 'collapse';
+
+                    let td = tr.insertCell();
+                    let node = document.createTextNode('');
+
+                    styleCell(td, 300, 'left');
+                    td.appendChild(node);
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+                }
+
+                document.body.appendChild(testTable);
 
                 tripInferenceTestConfig.testNames.sort();
                 tripInferenceTestIteration();
