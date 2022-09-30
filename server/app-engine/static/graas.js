@@ -30,6 +30,8 @@ var useBulkAssignmentMode = false;
 var useTripInference = false;
 var runTripInferenceTest = false;
 let tripInferenceTestConfig = {};
+let loadBaseURL = null;
+let testBody = null;
 var inf = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
@@ -930,7 +932,8 @@ function getYYYYMMDDFromString(s) {
     return match.length > 0 ? match[1] : null;
 }
 
-async function loadTestData() {
+function loadTestData() {
+    util.log('loadTestData()');
     const conf = tripInferenceTestConfig;
 
     if (conf.inferredtripIDs !== null) {
@@ -946,13 +949,13 @@ async function loadTestData() {
         conf.passRates.push(passRate);
 
         util.log(`+ pass rate: ${passRate}%`);
-        document.body.innerHTML += ` ${passRate}%<br>`;
+        testBody.innerHTML += ` ${passRate}%<br>`;
     }
 
     const name = conf.testNames[conf.nameIndex++];
-    const baseURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${name}`;
+    loadBaseURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${name}`;
 
-    const date = getYYYYMMDDFromString(baseURL);
+    const date = getYYYYMMDDFromString(loadBaseURL);
     util.log(`- date: ${date}`);
     const dow = util.getDow(date);
     util.log(`- dow: ${dow}`);
@@ -961,25 +964,35 @@ async function loadTestData() {
 
     let displayCount = '' + (conf.nameIndex);
     displayCount = displayCount.padStart(2, '0');
-    document.body.innerHTML += `- [${displayCount}/${conf.testNames.length}] ${name}...`;
+    testBody.innerHTML += `- [${displayCount}/${conf.testNames.length}] ${name}...`;
+
+    util.log(`- conf.lastDate: ${conf.lastDate}`);
 
     if (date !== conf.lastDate) {
+        conf.lastDate = date;
         // ### TODO don't hard-code static GTFS URL for test suite
         const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
         inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
-        await inf.init();
+        inf.init().then(loadTestDataInferenceInitialized);
+    } else {
+        setTimeout(loadTestDataInferenceInitialized(), 1);
     }
+}
+
+function loadTestDataInferenceInitialized() {
+    util.log('loadTestDataInferenceInitialized()');
 
     inf.resetScoring();
-    conf.lastDate = date;
 
-    const dataURL = `${baseURL}/updates.txt`;
-    const metadataURL = `${baseURL}/metadata.txt`;
-
-    response = await fetch(
-        dataURL,
+    fetch(
+        `${loadBaseURL}/updates.txt`,
         {method: 'GET'}
-    );
+    ).then(loadTestDataHandleResponse);
+}
+
+async function loadTestDataHandleResponse(response) {
+    util.log('loadTestDataHandleResponse()');
+    const conf = tripInferenceTestConfig;
 
     let csvData = await response.text();
     csvData = "seconds,lat,long\n" + csvData;
@@ -989,16 +1002,36 @@ async function loadTestData() {
     util.log(`- conf.testValues.length: ${conf.testValues.length}`);
     // util.log(`- conf.testValues: ${JSON.stringify(conf.testValues)}`);
 
-    response = await fetch(
-        metadataURL,
-        {method: 'GET'}
-    );
 
+    fetch(
+        `${loadBaseURL}/metadata.txt`,
+        {method: 'GET'}
+    ).then(loadTestDataHandleMetadataResponse);
+}
+
+async function loadTestDataHandleMetadataResponse(response) {
+    util.log('loadTestDataHandleMetadataResponse()');
+    const conf = tripInferenceTestConfig;
     let metadata = await response.text();
     metadata = metadata.trim();
     const index = metadata.indexOf(': ');
     // Assumes file has one row, in the format: "trip-id: ABC123"
     conf.expectedTripID = metadata.substring(index + 2);
+    util.log('- conf.expectedTripID:' + conf.expectedTripID);
+    conf.inferredtripIDs = [];
+
+    tripInferenceTestIteration();
+}
+
+function updateTestProgress(s) {
+    let index = testBody.innerHTML.lastIndexOf('(');
+
+    if (testBody.innerHTML.endsWith('...')) {
+        testBody.innerHTML += s;
+    } else if (testBody.innerHTML.endsWith(')') && testBody.innerHTML.length - index < 20) {
+        testBody.innerHTML = testBody.innerHTML.substring(0, index);
+        testBody.innerHTML += s;
+    }
 }
 
 async function tripInferenceTestIteration() {
@@ -1011,15 +1044,17 @@ async function tripInferenceTestIteration() {
             passTotal += p;
         }
 
-        document.body.innerHTML += `==> total pass rate: ${Math.floor(passTotal / conf.passRates.length)}%<br>`;
+        testBody.innerHTML += `==> total pass rate: ${Math.floor(passTotal / conf.passRates.length)}%<br>`;
         return; // done with test suite
     }
 
-    util.log(`. (${conf.valueIndex}/${conf.testValues ? conf.testValues.length : 'null'})`);
+    if (conf.testValues) {
+        updateTestProgress(`(${conf.valueIndex}/${conf.testValues.length})`);
+    }
 
     if (conf.testValues == null || conf.valueIndex >= conf.testValues.length) {
-        await loadTestData();
-        conf.inferredtripIDs = [];
+        loadTestData();
+        return;
     }
 
     const line = conf.testValues[conf.valueIndex++];
@@ -1032,7 +1067,7 @@ async function tripInferenceTestIteration() {
     util.log(`- tripID: "${tripID}"`);
     conf.inferredtripIDs.push(tripID);
 
-    setInterval(tripInferenceTestIteration, 30);
+    setTimeout(tripInferenceTestIteration, 1);
 }
 
 async function agencyIDCallback(response) {
@@ -1061,9 +1096,13 @@ async function agencyIDCallback(response) {
                 inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15);
                 await inf.init();
             } else {
-                document.body.style.fontFamily = '"Consolas Bold", "Courier Bold", mono';
-                document.body.style.textAlign = 'left';
-                document.body.innerHTML += '<br>Executing trip inference test suite, please stand by:<br>';
+                testBody = document.createElement("p");
+                document.body.appendChild(testBody);
+
+                testBody.style.fontFamily = '"Consolas Bold", "Courier Bold", mono';
+                testBody.style.fontSize = '10px';
+                testBody.style.textAlign = 'left';
+                testBody.innerHTML += '<br>Executing trip inference test suite, please stand by:<br>';
 
                 let response = await util.timedFetch(
                     `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
