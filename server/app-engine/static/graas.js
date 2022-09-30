@@ -29,10 +29,7 @@ var sessionID = null;
 var useBulkAssignmentMode = false;
 var useTripInference = false;
 var runTripInferenceTest = false;
-var tiTestData = null;
-var tiTestTripID = null;
-var tiTestIndex = 0;
-var tiTestResults = [];
+let tripInferenceTestConfig = {};
 var inf = null;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
@@ -453,7 +450,7 @@ async function handleOkay() {
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
     util.hideElement(ALL_DROPDOWNS);
-    util.showElement(TRIP_STATS_ELEMENT);
+    if (!runTripInferenceTest) util.showElement(TRIP_STATS_ELEMENT);
     changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
@@ -927,6 +924,117 @@ async function initializeCallback(agencyData) {
     }
 }
 
+function getYYYYMMDDFromString(s) {
+    const DATE_PATTERN = new RegExp(".*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*","g");     // yyyy-mm-dd-hh-mm
+    const match = DATE_PATTERN.exec(s);
+    return match.length > 0 ? match[1] : null;
+}
+
+async function loadTestData() {
+    const conf = tripInferenceTestConfig;
+
+    if (conf.inferredtripIDs !== null) {
+        let correctCount = 0;
+
+        for (let i=0; i<conf.inferredtripIDs.length; i++) {
+            if (conf.inferredtripIDs[i] === conf.expectedTripID) {
+                correctCount++;
+            }
+        }
+
+        const passRate = Math.floor(correctCount * 100 / conf.inferredtripIDs.length);
+        conf.passRates.push(passRate);
+
+        util.log(`+ pass rate: ${passRate}%`);
+        document.body.innerHTML += ` ${passRate}%<br>`;
+    }
+
+    const name = conf.testNames[conf.nameIndex++];
+    const baseURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${name}`;
+
+    const date = getYYYYMMDDFromString(baseURL);
+    util.log(`- date: ${date}`);
+    const dow = util.getDow(date);
+    util.log(`- dow: ${dow}`);
+    const epochSeconds = util.getEpochSeconds(date);
+    util.log(`- epochSeconds: ${epochSeconds}`);
+
+    let displayCount = '' + (conf.nameIndex);
+    displayCount = displayCount.padStart(2, '0');
+    document.body.innerHTML += `- [${displayCount}/${conf.testNames.length}] ${name}...`;
+
+    if (date !== conf.lastDate) {
+        // ### TODO don't hard-code static GTFS URL for test suite
+        const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
+        inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
+        await inf.init();
+    }
+
+    inf.resetScoring();
+    conf.lastDate = date;
+
+    const dataURL = `${baseURL}/updates.txt`;
+    const metadataURL = `${baseURL}/metadata.txt`;
+
+    response = await fetch(
+        dataURL,
+        {method: 'GET'}
+    );
+
+    let csvData = await response.text();
+    csvData = "seconds,lat,long\n" + csvData;
+    conf.testValues = util.csvToArray(csvData);
+    conf.valueIndex = 0;
+
+    util.log(`- conf.testValues.length: ${conf.testValues.length}`);
+    // util.log(`- conf.testValues: ${JSON.stringify(conf.testValues)}`);
+
+    response = await fetch(
+        metadataURL,
+        {method: 'GET'}
+    );
+
+    let metadata = await response.text();
+    metadata = metadata.trim();
+    const index = metadata.indexOf(': ');
+    // Assumes file has one row, in the format: "trip-id: ABC123"
+    conf.expectedTripID = metadata.substring(index + 2);
+}
+
+async function tripInferenceTestIteration() {
+    const conf = tripInferenceTestConfig;
+
+    if (conf.nameIndex >= conf.testNames.length) {
+        let passTotal = 0;
+
+        for (let p of conf.passRates) {
+            passTotal += p;
+        }
+
+        document.body.innerHTML += `==> total pass rate: ${Math.floor(passTotal / conf.passRates.length)}%<br>`;
+        return; // done with test suite
+    }
+
+    util.log(`. (${conf.valueIndex}/${conf.testValues ? conf.testValues.length : 'null'})`);
+
+    if (conf.testValues == null || conf.valueIndex >= conf.testValues.length) {
+        await loadTestData();
+        conf.inferredtripIDs = [];
+    }
+
+    const line = conf.testValues[conf.valueIndex++];
+    const daySeconds = util.getSecondsSinceMidnight(util.secondsToDate(line.seconds));
+
+    //util.log(`- ${daySeconds}: (${line.lat}, ${line.long})`);
+
+    const result = await inf.getTripId(line.lat, line.long, daySeconds, null);
+    const tripID = result['trip_id'];
+    util.log(`- tripID: "${tripID}"`);
+    conf.inferredtripIDs.push(tripID);
+
+    setInterval(tripInferenceTestIteration, 30);
+}
+
 async function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
@@ -937,110 +1045,42 @@ async function agencyIDCallback(response) {
     if (agencyID === 'not found') {
         alert('could not verify client identity');
     } else {
-        // Passing current timestamp as an argument ensures that the config file will refresh, rather than loading from cache.
+        // Passing current timestamp as an argument ensures that
+        // the config file will refresh, rather than loading from cache.
         let arg = Date.now()
         util.log("- arg: " + arg);
-        // ### UNCOMMENT ME: getURLContent(agencyID, arg);
-        // need to decide how to determine vehicle id
-        if(useTripInference){
-            const path = '' + agencyID; // ### is this right?
-            const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
+        getURLContent(agencyID, arg);
 
+        if(useTripInference){
             if (!runTripInferenceTest) {
-                inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15);
+                // ### FIXME:
+                // - how do we get the static GTFS URL for an agency?
+                // - how do we work around CORS limitation?
+                const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
+
+                inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15);
                 await inf.init();
             } else {
-                let response = await util.timedFetch(`${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
-                                                {method: 'GET'}
-                                               );
-                // util.log('- response.status: ' + response.status);
-                // util.log('- response.statusText: ' + response.statusText);
+                document.body.style.fontFamily = '"Consolas Bold", "Courier Bold", mono';
+                document.body.style.textAlign = 'left';
+                document.body.innerHTML += '<br>Executing trip inference test suite, please stand by:<br>';
 
-                let responseText = await response.text();
-                let tiTestTrips = responseText.split(/\r?\n/);
-                // ### UNCOMMENT ME: let testTripIndex = Math.floor(Math.random() * tiTestTrips.length);
-                let testTripIndex = 0;
-                util.log(`+ ### using fixed trip index!`);
-                util.log(`- testTripIndex: ${testTripIndex}`);
-                let tiTestTrip = tiTestTrips[testTripIndex];
-                let tiTestTripURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${tiTestTrip}`;
-                util.log(`- tiTestTripURL: ${tiTestTripURL}`);
-
-
-                let pattern = new RegExp(".*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*","g");     // yyyy-mm-dd-hh-mm
-
-                let match = pattern.exec(tiTestTripURL);
-                let date = match[1];
-                util.log(`- date: ${date}`);
-                let dow = util.getDow(date);
-                util.log(`- dow: ${dow}`);
-                let epochSeconds = util.getEpochSeconds(date);
-                util.log(`- epochSeconds: ${epochSeconds}`);
-
-                inf = new inference.TripInference(path, url, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
-                await inf.init();
-
-                let tiTestTripDataURL = `${tiTestTripURL}/updates.txt`;
-                let tiTestTripMetadataURL = `${tiTestTripURL}/metadata.txt`;
-                response = await util.timedFetch(
-                    tiTestTripDataURL,
+                let response = await util.timedFetch(
+                    `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
                     {method: 'GET'}
                 );
-                // util.log('- response.status: ' + response.status);
-                // util.log('- response.statusText: ' + response.statusText);
-                let rawData = await response.text();
-                rawDataWithHeaders = "seconds,lat,long\n" + rawData;
-                // util.log(`rawDataWithHeaders: ${rawDataWithHeaders}`);
-                tiTestData = util.csvToArray(rawDataWithHeaders);
-                // util.log(`JSON.stringify(tiTestData): ${JSON.stringify(tiTestData)}`);
-                response = await util.timedFetch(tiTestTripMetadataURL,
-                                                    {method: 'GET'}
-                                                   );
-                // util.log('- response.status: ' + response.status);
-                // util.log('- response.statusText: ' + response.statusText);
-                responseText = await response.text();
-                // Assumes file has one row, in the format: "trip-id: ABC123"
-                tiTestTripID = responseText.trim().substring(9);
-                util.log(`- tiTestTripID: "${tiTestTripID}"`);
 
-                tiTestResults = [];
+                const text = await response.text();
 
-                //util.log(`tiTestIndex: ${tiTestIndex}`);
+                tripInferenceTestConfig.testNames = text.split(/\r?\n/);
+                tripInferenceTestConfig.lastDate = null;
+                tripInferenceTestConfig.testValues = null;
+                tripInferenceTestConfig.nameIndex = 0;
+                tripInferenceTestConfig.passRates = [];
+                tripInferenceTestConfig.inferredtripIDs = null;
 
-                const then = util.now();
-
-                for (let tiTestIndex = 0; tiTestIndex < tiTestData.length; tiTestIndex++) {
-                    const lat = tiTestData[tiTestIndex].lat;
-                    const long = tiTestData[tiTestIndex].long;
-                    const seconds = tiTestData[tiTestIndex].seconds;
-                    const daySeconds = util.getSecondsSinceMidnight(util.secondsToDate(seconds));
-
-                    //util.log(`lat: ${lat}`);
-                    //util.log(`long: ${long}`);
-                    //util.log(`seconds: ${seconds}`);
-                    util.log(`(${tiTestIndex}/${tiTestData.length})`);
-                    util.log(`${daySeconds}: (${lat}, ${long})`);
-
-                    const result = await inf.getTripId(lat, long, daySeconds, null);
-                    //util.log(`result: ${JSON.stringify(result)}`);
-                    const tripID = result['trip_id'];
-                    util.log(`- tiTestTripID: "${tiTestTripID}"`);
-                    util.log(`- tripID: "${tripID}"`);
-                    tiTestResults.push(tripID);
-                }
-
-                util.log(`- tiTestResults.length: ${tiTestResults.length}`);
-                util.log(`+ completed test in ${util.now() - then} ms`);
-                let correctCount = 0;
-
-                for (let i=0; i<tiTestResults.length; i++) {
-                    if (tiTestResults[i] === tiTestTripID) {
-                        correctCount++;
-                    }
-                }
-
-                util.log(`- correctCount: ${correctCount}`);
-                util.log(`+ correct percentage: ${Math.floor(correctCount * 100 / tiTestResults.length)}%`);
+                tripInferenceTestConfig.testNames.sort();
+                tripInferenceTestIteration();
             }
         }
     }
