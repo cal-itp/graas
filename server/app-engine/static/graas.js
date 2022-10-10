@@ -1192,6 +1192,9 @@ function gotConfigData(data, agencyID, arg) {
             if(!util.isNullOrUndefined(data["use-trip-inference"])){
                 useTripInference = data["use-trip-inference"];
             }
+            if(!util.isNullOrUndefined(data["static-gtfs-url"])){
+                staticGTFSURL = data["static-gtfs-url"];
+            }
             ignoreStartEndDate = data["ignore-start-end-date"];
             // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
             // util.log(`- useTripInference: ${useTripInference}`);
