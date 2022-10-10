@@ -30,6 +30,10 @@ var useBulkAssignmentMode = false;
 var useTripInference = false;
 var runTripInferenceTest = false;
 let tripInferenceTestConfig = {};
+// ### set static GTFS URL to historic TCRTA zip by default to easily run test suite.
+// ### TODO: to properly use this field for actual trip inference, add 'staticGtfsUrl' field to agency-params.json and then
+//     set in gotConfigData()
+let staticGTFSURL = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
 let loadBaseURL = null;
 let testTable = null;
 let testTableIndex = 0;
@@ -968,9 +972,7 @@ function loadTestData() {
 
     if (date !== conf.lastDate) {
         conf.lastDate = date;
-        // ### TODO don't hard-code static GTFS URL for test suite
-        const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
-        inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
+        inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
         inf.init().then(loadTestDataInferenceInitialized);
     } else {
         setTimeout(loadTestDataInferenceInitialized(), 1);
@@ -1091,12 +1093,7 @@ async function agencyIDCallback(response) {
 
         if(useTripInference){
             if (!runTripInferenceTest) {
-                // ### FIXME:
-                // - how do we get the static GTFS URL for an agency?
-                // - how do we work around CORS limitation?
-                const url = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
-
-                inf = new inference.TripInference('' + agencyID, url, agencyID, 'test-vehicle-id', 15);
+                inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15);
                 await inf.init();
             } else {
                 let response = await util.timedFetch(
