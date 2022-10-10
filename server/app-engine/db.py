@@ -179,9 +179,6 @@ class Query:
         self.ret = []
 
         for e in self.client.entities.values():
-            if len(self.ret) >= limit:
-                break
-
             if not self.kind == e['key'].kind:
                 continue
 
@@ -214,7 +211,7 @@ class Query:
         self.ret = self._multisort(self.ret, tuple(args))
         #print(f'- self.ret: {self.ret}')
 
-        return self.ret
+        return self.ret[:limit]
 
     def add_filter(self, field, operand, value):
         self.filters.append({'field': field, 'operand': operand, 'value': value})
