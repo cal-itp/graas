@@ -6,13 +6,18 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          node-version: '16.1.0'
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
           java-version: '11'
+          node-version: '16.1.0'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+        with:
+          node-version: '16.1.0'
       - name: Build with Gradle (incl unit tests)
         working-directory: gtfu
         run: ./gradlew build
