@@ -4,5 +4,6 @@
 "max-feet-from-stop": 4239840,
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
-"ignore-start-end-date": false
+"ignore-start-end-date": false,
+"static-gtfs-url": "http://mjcaction.com/MJC_GTFS_Public/syvt_google_transit.zip"
 }
