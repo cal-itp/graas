@@ -17,3 +17,4 @@ server/app-engine/static/local-storage/
 server/app-engine/ad-hoc
 server/app-engine/ad-hoc.pub
 server/app-engine/ad-hoc.png
+server/qr-gen/qr.png

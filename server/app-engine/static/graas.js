@@ -813,7 +813,7 @@ async function handleGPSUpdate(position) {
         version: version
     };
 
-    if(useTripInference){
+    if(useTripInference && inf){
         let seconds = util.getSecondsSinceMidnight();
 
         // util.log(`lat: ${lat}`);
@@ -1101,10 +1101,7 @@ async function agencyIDCallback(response) {
         getURLContent(agencyID, arg);
 
         if(useTripInference){
-            if (!runTripInferenceTest) {
-                inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15);
-                await inf.init();
-            } else {
+            if (runTripInferenceTest) {
                 let response = await util.timedFetch(
                     `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
                     {method: 'GET'}
@@ -1180,7 +1177,7 @@ function getTimeFromName(s) {
 
 // Load json file content, one at a time, and perform filtering in some cases.
 // Call getURLContent until all files are loaded, call configComplete when done.
-function gotConfigData(data, agencyID, arg) {
+async function gotConfigData(data, agencyID, arg) {
     util.log("gotConfigData()");
     util.log("- agencyID: " + agencyID);
     util.log("- arg: " + arg);
@@ -1210,7 +1207,13 @@ function gotConfigData(data, agencyID, arg) {
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
+            util.log(`- staticGTFSURL: ${staticGTFSURL}`);
             // util.log(`- ignoreStartEndDate: ${ignoreStartEndDate}`);
+
+            if (useTripInference && !runTripInferenceTest) {
+                inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15);
+                await inf.init();
+            }
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
