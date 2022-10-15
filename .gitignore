@@ -16,3 +16,5 @@ server/app-engine/db-sim.json*
 server/app-engine/ad-hoc
 server/app-engine/ad-hoc.pub
 server/app-engine/ad-hoc.png
+server/app-engine/static/local-storage/
+server/qr-gen/qr.png

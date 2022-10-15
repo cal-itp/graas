@@ -5,5 +5,5 @@
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
 "ignore-start-end-date": false,
-"static-gtfs-url": "http://mjcaction.com/MJC_GTFS_Public/syvt_google_transit.zip"
+"static-gtfs-url": "https://storage.googleapis.com/graas-resources/gtfs-mirror/santa-ynez-valley-transit.zip"
 }
