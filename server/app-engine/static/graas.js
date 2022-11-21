@@ -1,3 +1,8 @@
+/*
+ * - url rewrite args:
+ *   usefilters=<true|false>: if active, filter routes by criteria such as lat/long/time of day/... Defaults to true
+ */
+
 var hexDigits = '0123456789abcdef';
 var lastModified = null;
 var tripID = null;
@@ -27,6 +32,7 @@ var startLon = null;
 var trips = [];
 var sessionID = null;
 var useBulkAssignmentMode = false;
+let useFilters = true;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -594,6 +600,11 @@ function getRewriteArgs() {
         if (!a) continue;
 
         const t = a.split('=');
+
+        if (t.length < 2
+            || !t[0]
+            || !t[1]) continue;
+
         const key = t[0];
         const value = t[1];
 
@@ -614,6 +625,9 @@ function getRewriteArgs() {
             testDow = value;
         } else if (key === 'testdate') {
             testDate = value;
+        } else if (key === 'usefilters') {
+            useFilters = value.toLowerCase() === 'true';
+            util.log(`- useFilters: ${useFilters}`);
         }
     }
 }
@@ -1040,25 +1054,27 @@ function loadTrips() {
             if(!util.isNullOrUndefined(offDates) && offDates.includes(parseInt(date,10))){
                 holidayOff = true;
             }
-            // 4 conditions need to be met for inclusion...
+            // For inclusion, either filter override has to be set,
+            // or 4 conditions need to be met
             if (
-                    // 1. meets time parameters
-                    (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
-                    &&
-                    // 2. meets day-of-week parameters or has holiday exception
-                    (
-                        holidayOn  ||
+                    !useFilters
+                        // 1. meets time parameters
+                        || ((maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                        &&
+                        // 2. meets day-of-week parameters or has holiday exception
                         (
-                            (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
-                            && !holidayOff
+                            holidayOn  ||
+                            (
+                                (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
+                                && !holidayOff
+                            )
                         )
-                    )
-                    &&
-                    // 3. meets distance parameters:
-                    (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
-                    &&
-                    // 4. Falls between start_date and end_date
-                    (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
+                        &&
+                        // 3. meets distance parameters:
+                        (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
+                        &&
+                        // 4. Falls between start_date and end_date
+                        (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date)))
                 )
             {
                 // util.log(`+ adding ${tripInfo["trip_name"]}`);
