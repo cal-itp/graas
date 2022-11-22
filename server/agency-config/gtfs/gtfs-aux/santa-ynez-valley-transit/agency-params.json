@@ -4,5 +4,6 @@
 "max-feet-from-stop": 4239840,
 "triplist-generator-namefield": "headsign",
 "triplist-generator-use-direction": false,
-"ignore-start-end-date": false
+"ignore-start-end-date": false,
+"static-gtfs-url": "https://storage.googleapis.com/graas-resources/gtfs-mirror/santa-ynez-valley-transit.zip"
 }
