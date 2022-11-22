@@ -56,7 +56,7 @@ jobs:
       - name: Run Python unit tests
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9.2'
+          python-version: '3.10.6'
       - run: |
           pip install -r server/app-engine/requirements.txt
           python server/tests/unit-tests.py
