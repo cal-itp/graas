@@ -21,4 +21,6 @@ nav:
     - Setting up a new instance of GRaaS: "new-instance-setup.md"
     - Agency Onboarding Runbook: "server/onboarding-runbook.md"
   - GRaaS hardware intro and assembly: "hardware/README.md"
+  - Testing:
+    - Trip Inference: "testing/trip-inference.md"
   - Python docs: "python-docs.md"

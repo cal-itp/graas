@@ -1,3 +1,5 @@
+
+
 /*
 This is a quick and dirty refactoring of web app untility code to also be usable by tests.
 
@@ -13,8 +15,8 @@ Finally, fetch() timeouts are currently not implemented under node.
 //console.log('- this.crypto: ' + this.crypto);
 //console.log('- this.fetch: ' + this.fetch);
 
-var crypto = this.crypto
-var fetch = this.fetch
+let crypto = this.crypto
+let fetch = this.fetch
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -38,6 +40,11 @@ if (!fetch) {
     exports.MILLIS_PER_HOUR   =   60 * exports.MILLIS_PER_MINUTE;
     exports.MILLIS_PER_DAY    =   24 * exports.MILLIS_PER_HOUR;
 
+    exports.EARTH_RADIUS_IN_FEET = 20902231;
+    exports.FEET_PER_LAT_DEGREE = 364000;
+    exports.FEET_PER_LONG_DEGREE = 288200;
+    exports.FEET_PER_MILE = 5280;
+
     exports.log = function(s) {
         console.log(s);
 
@@ -50,6 +57,32 @@ if (!fetch) {
             }
         }
     };
+
+
+    // # assumes that arg contains a string of format yyyy-mm-dd
+    // # returns day of week: 0-6 for Monday through Sunday if date string present, -1 otherwise
+    exports.getDow = function(yyyymmdd){
+        //util.log('getDow()');
+        //util.log('- yyyymmdd: ' + yyyymmdd);
+
+        if (yyyymmdd) {
+            const yyyy = yyyymmdd.substring(0,4);
+            //util.log('- yyyy: ' + yyyy);
+            const mm = parseInt(yyyymmdd.substring(5,7)) - 1;
+            //util.log('- mm: ' + mm);
+            const dd = yyyymmdd.substring(8,10);
+            //util.log('- dd: ' + dd);
+            const d = new Date(yyyy, mm, dd);
+            //util.log('- d: ' + d);
+            //util.log('- d.getDay(): ' + d.getDay());
+
+            let weekday = d.getDay() - 1;
+            if (weekday < 0) weekday += 7;
+            return weekday;
+        } else {
+            return -1;
+        }
+    }
 
     exports.now = function() {
         return (new Date()).getTime();
@@ -65,6 +98,27 @@ if (!fetch) {
         return '' + date.getFullYear() + '-' + month + '-' + day;
     }
 
+    exports.getEpochSeconds = function(date) {
+        //this.log('util.getEpochSeconds()');
+        //this.log('- date: ' + date);
+
+        date = date.replaceAll('-', '');
+        //this.log('- date: ' + date);
+
+        if(date === null){
+            return Date.now();
+        } else {
+            let year = date.substring(0, 4);
+            //this.log('- year: ' + year);
+            let month = date.substring(4, 6);
+            //this.log('- month: ' + month);
+            let day = date.substring(6, 8);
+            //this.log('- day: ' + day);
+            let d = new Date(year, month - 1, day);
+            //this.log('- d: ' + d);
+            return Math.round(d.getTime() / 1000);
+        }
+    }
     exports.getShortDate = function(date) {
         if (date === null) {
             date = new Date();
@@ -94,6 +148,13 @@ if (!fetch) {
         d.setTime(date.getTime());
         d.setHours(0, 0, 0);
         return d;
+    }
+
+    exports.getSecondsSinceMidnight = function(date){
+        if (!date) date = new Date();
+        let dateSeconds = Math.floor(date.getTime() / 1000);
+        let midnightSeconds = Math.floor(this.getMidnightDate(date).getTime() / 1000);
+        return dateSeconds - midnightSeconds;
     }
 
     exports.nextDay = function(date) {
@@ -180,6 +241,10 @@ if (!fetch) {
         return object === null || typeof object === 'undefined';
     }
 
+    exports.isNullUndefinedOrBlank = function(object) {
+        return object === null || typeof object === 'undefined' || object === '';
+    }
+
     exports.sign = function(msg, signatureKey) {
         //this.log("sign()");
         //this.log("- msg: " + msg);
@@ -227,6 +292,22 @@ if (!fetch) {
         return binary;
     };
 
+    exports.ab2base64 = function(ab) {
+        let buf = [];
+        const view = new Uint8Array(ab);
+        const len = view.byteLength;
+
+        for (let c of view) {
+            buf.push(String.fromCharCode(c));
+        }
+
+        return btoa(buf.join(''));
+    }
+
+    exports.base642ab = function(s) {
+        return this.str2ab(atob(s));
+    }
+
     exports.timedFetch = function(url, opts, window) {
         //this.log('timedFetch()');
         //this.log('- url: ' + url);
@@ -267,6 +348,31 @@ if (!fetch) {
         this.log('- json: ' + JSON.stringify(json));
 
         return json;
+    }
+
+
+    exports.getResponseBody = async function(url) {
+        const requestSettings = {
+            method: 'GET'
+        };
+
+        const response = await fetch(url, requestSettings);
+        const blob = await response.blob();
+        //util.log(`- blob: ${blob}`);
+
+        const arrayBuf = await blob.arrayBuffer();
+        //util.log(`- arrayBuf.byteLength: ${arrayBuf.byteLength}`);
+
+        const body = Buffer.from(arrayBuf);
+        //util.log(`- body: ${JSON.stringify(body)}`);
+
+        return body;
+    }
+
+    // naive approach that assumes that for node
+    // apps there is no global symbol 'window'.
+    exports.isBrowser = function() {
+        return typeof window !== "undefined" && typeof window.document !== "undefined";
     }
 
     exports.apiCall = async function(data, url) {
@@ -343,6 +449,7 @@ if (!fetch) {
             sel.remove(i);
         }
     }
+
      exports.populateSelectOptions = function(id, str, list) {
         this.log("populateSelectOptions()");
         // this.log("str: " + str);
@@ -353,6 +460,117 @@ if (!fetch) {
 
         this.setupSelectHeader(p);
     }
+
+    exports.hhmmssToSeconds = function(str){
+        arr = str.split(':');
+        seconds = arr[0] * 60 * 60;
+        seconds += arr[1] * 60;
+        seconds += arr[2] * 1;
+        return seconds;
+    }
+
+    exports.padIfShort = function(s){
+        if(s.toString().length === 1){
+            return "0" + s;
+        } else return s;
+    }
+
+    exports.secondsToHhmmss = function(seconds){
+        let hours = Math.floor(seconds / 60 / 60);
+        seconds -= hours * 60 * 60;
+        let minutes = Math.floor(seconds / 60);
+        seconds -= minutes * 60;
+        return `${hours}:${this.padIfShort(minutes)}:${this.padIfShort(seconds)}`;
+    }
+
+    exports.secondsToHhmm = function(seconds){
+        let hours = Math.floor(seconds / 60 / 60);
+        seconds -= hours * 60 * 60;
+        let minutes = Math.floor(seconds / 60);
+        seconds -= minutes * 60;
+        return `${hours}:${this.padIfShort(minutes)}`;
+    }
+
+    exports.secondsToDate = function(seconds) {
+        //this.log('- seconds: ' + seconds);
+        const d = new Date();
+        d.setTime(seconds * 1000);
+        //this.log('- d: ' + d);
+        return d;
+    }
+
+    exports.degreesToRadians = function(degrees){
+        return degrees * (Math.PI/180);
+    }
+
+    exports.haversineDistance = function(lat1, lon1, lat2, lon2){
+        let phi1 = this.degreesToRadians(lat1)
+        let phi2 = this.degreesToRadians(lat2)
+        let delta_phi = this.degreesToRadians(lat2 - lat1)
+        let delta_lam = this.degreesToRadians(lon2 - lon1)
+        let a = (Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2)
+            + Math.cos(phi1) * Math.cos(phi2)
+            * Math.sin(delta_lam / 2) * Math.sin(delta_lam / 2))
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return c * this.EARTH_RADIUS_IN_FEET;
+    }
+
+    exports.getFeetAsLatDegrees = function(feet){
+        return feet / this.FEET_PER_LAT_DEGREE;
+    }
+
+    exports.getFeetAsLongDegrees = function(feet){
+        return feet / this.FEET_PER_LONG_DEGREE;
+    }
+
+    exports.getDistanceString = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} ft`;
+        } else {
+            return `${Math.floor(feet / this.FEET_PER_MILE)} mi`;
+        }
+    }
+
+    exports.getDisplayDistance = function(feet) {
+        if (feet < this.FEET_PER_MILE) {
+            return `${feet} FEET`;
+        } else if (feet < 10 * this.FEET_PER_MILE) {
+            const v = Math.floor(feet / this.FEET_PER_MILE * 10) / 10;
+            return `${v} MILES`;
+        } else {
+            return `${Math.floor(feet / this.FEET_PER_MILE)} MILES`;
+        }
+    }
+
+    // Thanks to: https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
+    exports.csvToArray = function(str, delimiter = ",") {
+      //  replace \r\n with \n, to ensure consistent newline characters
+        str = str.replace(/\r\n/g,"\n");
+        str = str.trim();
+      // slice from start of text to the first \n index
+      // use split to create an array from string by delimiter
+        const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+
+      // slice from \n index + 1 to the end of the text
+      // use split to create an array of each csv value row
+        const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+      // Map the rows
+      // split values from each row into an array
+      // use headers.reduce to create an object
+      // object properties derived from headers:values
+      // the object passed as an element of the array
+        const arr = rows.map(function (row) {
+        const values = row.split(delimiter);
+        const el = headers.reduce(function (object, header, index) {
+          object[header] = values[index];
+          return object;
+        }, {});
+        return el;
+      });
+
+      return arr;
+    }
+
     exports.setupSelectHeader = function(listElem) {
         listElem.selectedIndex = 0;
         listElem.options[0].value = "disabled";
@@ -418,8 +636,32 @@ if (!fetch) {
         this.changeDisplay(id,"block");
     }
 
-    exports.changeDisplay = function(id,display) {
+    exports.changeDisplay = function(id, display) {
         let p = document.getElementById(id);
         p.style.display = display;
+    }
+
+    exports.blobToBase64 = function(blob) {
+        return new Promise((resolve, _) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.replace(/^data:.+;base64,/, ''));
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    exports.getResponseBody = async function(url) {
+        this.log('util.getResponseBody()');
+        this.log('- url: ' + url);
+
+        const requestSettings = {
+            method: 'GET'
+        };
+
+        const response = await fetch(url, requestSettings);
+        this.log('- response.status: ' + response.status);
+        const blob = await response.blob();
+        //util.log(`- blob: ${blob}`);
+
+        return await blob.arrayBuffer();
     }
 }(typeof exports === 'undefined' ? this.util = {} : exports));

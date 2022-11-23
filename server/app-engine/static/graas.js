@@ -32,6 +32,17 @@ var startLon = null;
 var trips = [];
 var sessionID = null;
 var useBulkAssignmentMode = false;
+var useTripInference = false;
+var runTripInferenceTest = false;
+let tripInferenceTestConfig = {};
+// ### set static GTFS URL to historic TCRTA zip by default to easily run test suite.
+// ### TODO: to properly use this field for actual trip inference, add 'staticGtfsUrl' field to agency-params.json and then
+//     set in gotConfigData()
+let staticGTFSURL = 'https://storage.googleapis.com/graas-resources/test/trip-inference-testing/gtfs-archive/2022-02-14-tcrta-gtfs.zip';
+let loadBaseURL = null;
+let testTable = null;
+let testTableIndex = 0;
+var inf = null;
 let useFilters = true;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
@@ -48,6 +59,9 @@ var testDow = null;
 var testDate = null;
 var version = null;
 
+const TI_TEST_DIR_URL = "https://storage.googleapis.com/graas-resources/test/trip-inference-testing";
+const TI_TEST_INCLUDED_FILES_LIST = "included_files.txt"
+const TI_TEST_INCLUDED_FILES_DIRNAME = "included"
 const UUID_NAME = 'lat_long_id';
 const VEHICLE_ID_COOKIE_NAME = 'vehicle_id';
 var vehicleIDCookie = null;
@@ -73,7 +87,7 @@ const BUS_SELECT_DROPDOWN_TEXT = "Select Bus No.";
 const ALL_DROPDOWNS = "config";
 const LOADING_TEXT_ELEMENT = "loading";
 const TRIP_STATS_ELEMENT = "stats";
-var BASE_URL = 'https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux';
+var BASE_CONFIG_URL = 'https://raw.githubusercontent.com/cal-itp/graas/main/server/agency-config/gtfs/gtfs-aux';
 
 const EARTH_RADIUS_IN_FEET = 20902231;
 const FEET_PER_MILE = 5280;
@@ -86,20 +100,6 @@ function isObject(obj) {
 
 function toRadians(degrees) {
     return degrees * (Math.PI / 180);
-}
-
-// return distance in feet between to lat/long pairs
-function getHaversineDistance(lat1, lon1, lat2, lon2) {
-    const phi1 = toRadians(lat1);
-    const phi2 = toRadians(lat2);
-    const deltaPhi = toRadians(lat2 - lat1);
-    const deltaLam = toRadians(lon2 - lon1);
-
-    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
-        + Math.cos(phi1) * Math.cos(phi2)
-        * Math.sin(deltaLam / 2) * Math.sin(deltaLam / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS_IN_FEET * c;
 }
 
 function isMobile() {
@@ -328,7 +328,7 @@ function handleRefreshOkay() {
     window.location.reload();
 }
 
-function handleStartStop() {
+async function handleStartStop() {
     util.log("handleStartStop()");
 
     let p = document.getElementById(START_STOP_BUTTON);
@@ -354,7 +354,7 @@ function handleStartStop() {
             handleBusChoice();
         }
 
-        if(!useBulkAssignmentMode){
+        if(!useBulkAssignmentMode && !useTripInference){
             // Only load trips again if they were last loaded more than a minute ago
             if ((millis - lastTripLoadMillis) < util.MILLIS_PER_MINUTE * 1) {
                 populateTripList();
@@ -422,7 +422,7 @@ function handleBusChoice() {
 }
 
 // Driver taps "Go" to start a ride
-function handleOkay() {
+async function handleOkay() {
     util.log("handleOkay()");
 
     sessionID = createUUID();
@@ -443,7 +443,7 @@ function handleOkay() {
     document.cookie = `${VEHICLE_ID_COOKIE_NAME}=${vehicleID}; max-age=${MAX_VEHICLE_ID_AGE_SECS}`;
     util.log("- vehicleID: " + vehicleID);
 
-    if(!useBulkAssignmentMode){
+    if(!useBulkAssignmentMode && !useTripInference){
         p = document.getElementById(TRIP_SELECT_DROPDOWN);
         let entry = tripIDLookup[p.value];
 
@@ -460,11 +460,11 @@ function handleOkay() {
     p.innerHTML = "Vehicle ID: " + vehicleID;
 
     p = document.getElementById('trip-assignment-mode');
-    let tripAssignmentMode = (useBulkAssignmentMode ? 'bulk' : 'manual')
+    let tripAssignmentMode = (useTripInference ? 'inference': (useBulkAssignmentMode ? 'bulk' : 'manual'));
     p.innerHTML = "Trip assignment mode: " + tripAssignmentMode;
 
     util.hideElement(ALL_DROPDOWNS);
-    util.showElement(TRIP_STATS_ELEMENT);
+    if (!runTripInferenceTest) util.showElement(TRIP_STATS_ELEMENT);
     changeText(START_STOP_BUTTON, START_STOP_BUTTON_STOP_TEXT);
 
     util.log('- starting position updates');
@@ -545,7 +545,7 @@ function getURLContent(agencyID, arg) {
     locator = configMatrix.getNextToLoad().locator;
     name = configMatrix.getNextToLoad().name;
 
-    url = `${BASE_URL}/${agencyID}/${locator}?foo=${arg}`
+    url = `${BASE_CONFIG_URL}/${agencyID}/${locator}?foo=${arg}`
     util.log('- fetching from ' + url);
     util.timedFetch(url, {
         method: 'GET'/*,
@@ -625,6 +625,12 @@ function getRewriteArgs() {
             testDow = value;
         } else if (key === 'testdate') {
             testDate = value;
+        } else if (key === 'ti-test') {
+            runTripInferenceTest = true;
+            util.log(`runTripInferenceTest: ${runTripInferenceTest}`);
+        } else if (key === 'ti') {
+            useTripInference = true;
+            util.log(`useTripInference: ${useTripInference}`);
         } else if (key === 'usefilters') {
             useFilters = value.toLowerCase() === 'true';
             util.log(`- useFilters: ${useFilters}`);
@@ -695,7 +701,8 @@ function scanQRCode() {
 }
 
 function initialize() {
-    util.log("+ page loaded 6");
+    util.log("+ page loaded");
+    util.log('- JSZip.version: ' + JSZip.version);
 
     if (window.hasOwnProperty('graasShimVersion')) {
         util.log("- graasShimVersion: " + graasShimVersion);
@@ -706,7 +713,7 @@ function initialize() {
     util.log('- cloudless: ' + cloudless);
 
     if (cloudless === 'true') {
-        BASE_URL = 'https://127.0.0.1:8080';
+        BASE_CONFIG_URL = 'https://127.0.0.1:8080';
     }
 
     let e = document.getElementById("version");
@@ -748,7 +755,8 @@ function positionCallback() {
     let str = localStorage.getItem("lat-long-pem") || "";
 
     if (!str) {
-        if (window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
+        if (!isMobile() || window.hasOwnProperty("graasShimVersion") && graasShimVersion.startsWith("ios")) {
+            // pasting token is easier than scanning on desktop
             // ios WKWebView doesn't support camera access :[
             handleModal("keyEntryModal");
         } else {
@@ -776,6 +784,11 @@ async function handleGPSUpdate(position) {
         posTimestamp = Math.round(position.timestamp / 1000);
         speed = position.coords.speed;
         heading = position.coords.heading;
+    }
+
+    if(testLat && testLong){
+        lat = testLat;
+        long = testLong;
     }
 
     let timestamp = Math.floor(Date.now() / 1000);
@@ -814,12 +827,25 @@ async function handleGPSUpdate(position) {
         version: version
     };
 
+    if(useTripInference && inf){
+        let seconds = util.getSecondsSinceMidnight();
+
+        // util.log(`lat: ${lat}`);
+        // util.log(`long: ${long}`);
+        // util.log(`seconds: ${seconds}`);
+        // TODO: when do we pass it a tripID?
+        let result = await inf.getTripId(lat, long, seconds, null);
+        util.log(`result: ${JSON.stringify(result)}`);
+        tripID = result['trip_id'];
+    }
+
     data['trip-id'] = tripID;
     data['agency-id'] = agencyID;
     data['vehicle-id'] = vehicleID;
     data['session-id'] = sessionID;
     data['pos-timestamp'] = posTimestamp;
     data['use-bulk-assignment-mode'] = useBulkAssignmentMode;
+    data['use-trip-inference'] = useTripInference;
 
     let response = await util.signAndPost(data, signatureKey, '/new-pos-sig');
     let responseJson = await response.json();
@@ -872,10 +898,8 @@ async function initializeCallback(agencyData) {
     }
 
     util.log("- keyType: " + keyType);
-    // util.log("- keyLength: " + keyLength);
 
     let b = atob(b64);
-    // util.log("- key.length: " + key.length);
 
     const binaryDer = util.str2ab(b);
     try{
@@ -905,12 +929,12 @@ async function initializeCallback(agencyData) {
         let buf = await util.sign(str, signatureKey)
 
         let sig = btoa(util.ab2str(buf));
-
+        util.log(`sig: ${sig}`);
         let hello = {
             msg: str,
             sig: sig
         };
-
+        util.log(`hello: ${hello}`);
         if (agencyData.id) {
             hello.id = agencyData.id;
         }
@@ -930,20 +954,222 @@ async function initializeCallback(agencyData) {
     }
 }
 
-function agencyIDCallback(response) {
+function getYYYYMMDDFromString(s) {
+    const DATE_PATTERN = new RegExp(".*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]).*","g");     // yyyy-mm-dd-hh-mm
+    const match = DATE_PATTERN.exec(s);
+    return match.length > 0 ? match[1] : null;
+}
+
+function loadTestData() {
+    util.log('loadTestData()');
+    const conf = tripInferenceTestConfig;
+
+    if (conf.inferredtripIDs !== null) {
+        let correctCount = 0;
+
+        for (let i=0; i<conf.inferredtripIDs.length; i++) {
+            if (conf.inferredtripIDs[i] === conf.expectedTripID) {
+                correctCount++;
+            }
+        }
+
+        const passRate = Math.floor(correctCount * 100 / conf.inferredtripIDs.length);
+        conf.passRates.push(passRate);
+
+        util.log(`+ pass rate: ${passRate}%`);
+        setTableCell(testTableIndex++, 3, passRate + '%');
+    }
+
+    const name = conf.testNames[conf.nameIndex++];
+    loadBaseURL = `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_DIRNAME}/${name}`;
+
+    const date = getYYYYMMDDFromString(loadBaseURL);
+    util.log(`- date: ${date}`);
+    const dow = util.getDow(date);
+    util.log(`- dow: ${dow}`);
+    const epochSeconds = util.getEpochSeconds(date);
+    util.log(`- epochSeconds: ${epochSeconds}`);
+
+    setTableCell(testTableIndex, 0, name);
+    util.log(`- conf.lastDate: ${conf.lastDate}`);
+
+    if (date !== conf.lastDate) {
+        conf.lastDate = date;
+        inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15, dow, epochSeconds);
+        inf.init().then(loadTestDataInferenceInitialized);
+    } else {
+        setTimeout(loadTestDataInferenceInitialized(), 1);
+    }
+}
+
+function loadTestDataInferenceInitialized() {
+    util.log('loadTestDataInferenceInitialized()');
+
+    inf.resetScoring();
+
+    fetch(
+        `${loadBaseURL}/updates.txt`,
+        {method: 'GET'}
+    ).then(loadTestDataHandleResponse);
+}
+
+async function loadTestDataHandleResponse(response) {
+    util.log('loadTestDataHandleResponse()');
+    const conf = tripInferenceTestConfig;
+
+    let csvData = await response.text();
+    csvData = "seconds,lat,long\n" + csvData;
+    conf.testValues = util.csvToArray(csvData);
+    conf.valueIndex = 0;
+
+    util.log(`- conf.testValues.length: ${conf.testValues.length}`);
+    // util.log(`- conf.testValues: ${JSON.stringify(conf.testValues)}`);
+
+
+    fetch(
+        `${loadBaseURL}/metadata.txt`,
+        {method: 'GET'}
+    ).then(loadTestDataHandleMetadataResponse);
+}
+
+async function loadTestDataHandleMetadataResponse(response) {
+    util.log('loadTestDataHandleMetadataResponse()');
+    const conf = tripInferenceTestConfig;
+    let metadata = await response.text();
+    metadata = metadata.trim();
+    const index = metadata.indexOf(': ');
+    // Assumes file has one row, in the format: "trip-id: ABC123"
+    conf.expectedTripID = metadata.substring(index + 2);
+    util.log('- conf.expectedTripID:' + conf.expectedTripID);
+    conf.inferredtripIDs = [];
+
+    tripInferenceTestIteration();
+}
+
+async function tripInferenceTestIteration() {
+    const conf = tripInferenceTestConfig;
+
+    if (conf.nameIndex >= conf.testNames.length) {
+        let passTotal = 0;
+
+        for (let p of conf.passRates) {
+            passTotal += p;
+        }
+
+        setTableCell(conf.testNames.length, 0, 'total');
+        setTableCell(conf.testNames.length, 3, Math.floor(passTotal / conf.passRates.length) + '%');
+        return; // done with test suite
+    }
+
+    if (conf.testValues == null || conf.valueIndex >= conf.testValues.length) {
+        loadTestData();
+        return;
+    }
+
+    if (conf.testValues) {
+        setTableCell(testTableIndex, 1, conf.valueIndex);
+        setTableCell(testTableIndex, 2, conf.testValues.length);
+    }
+
+    const line = conf.testValues[conf.valueIndex++];
+    const daySeconds = util.getSecondsSinceMidnight(util.secondsToDate(line.seconds));
+
+    //util.log(`- ${daySeconds}: (${line.lat}, ${line.long})`);
+
+    const result = await inf.getTripId(line.lat, line.long, daySeconds, null);
+    const tripID = result['trip_id'];
+    util.log(`- tripID: "${tripID}"`);
+    conf.inferredtripIDs.push(tripID);
+
+    setTimeout(tripInferenceTestIteration, 1);
+}
+
+function setTableCell(row, col, value) {
+    testTable.rows[row].cells[col].firstChild.nodeValue = value;
+}
+
+function styleCell(cell, w, align) {
+    cell.style.textAlign = align;
+    cell.style.width = w + 'px';
+    cell.style.height = '20px';
+    cell.style.backgroundColor = 'lightGray';
+    cell.style.border = '1px solid white';
+    cell.style.borderCollapse = 'collapse';
+    cell.style.padding = '5px';
+}
+
+async function agencyIDCallback(response) {
     agencyID = response.agencyID;
     util.log("- agencyID: " + agencyID);
 
-    util.showElement(LOADING_TEXT_ELEMENT);
+    if (!runTripInferenceTest) util.showElement(LOADING_TEXT_ELEMENT);
     util.hideElement(QR_READER_ELEMENT);
 
     if (agencyID === 'not found') {
         alert('could not verify client identity');
     } else {
-        // Passing current timestamp as an argument ensures that the config file will refresh, rather than loading from cache.
+        // Passing current timestamp as an argument ensures that
+        // the config file will refresh, rather than loading from cache.
         let arg = Date.now()
         util.log("- arg: " + arg);
         getURLContent(agencyID, arg);
+
+        if(useTripInference){
+            if (runTripInferenceTest) {
+                let response = await util.timedFetch(
+                    `${TI_TEST_DIR_URL}/${TI_TEST_INCLUDED_FILES_LIST}`,
+                    {method: 'GET'}
+                );
+
+                const text = await response.text();
+
+                tripInferenceTestConfig.testNames = text.split(/\r?\n/);
+                tripInferenceTestConfig.lastDate = null;
+                tripInferenceTestConfig.testValues = null;
+                tripInferenceTestConfig.nameIndex = 0;
+                tripInferenceTestConfig.passRates = [];
+                tripInferenceTestConfig.inferredtripIDs = null;
+
+                const conf = tripInferenceTestConfig;
+                const elem = document.createElement('p');
+                elem.innerHTML = 'Trip Inference Test Suite:';
+                document.body.appendChild(elem);
+
+                testTable = document.createElement('table');
+
+                testTable.style.border = '1px solid white';
+                testTable.style.borderCollapse = 'collapse';
+
+                for (let i = 0; i < conf.testNames.length + 1; i++) {
+                    const tr = testTable.insertRow();
+                    tr.style.border = '1px solid white';
+                    tr.style.borderCollapse = 'collapse';
+
+                    let td = tr.insertCell();
+                    let node = document.createTextNode('');
+
+                    styleCell(td, 300, 'left');
+                    td.appendChild(node);
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+
+                    td = tr.insertCell();
+                    styleCell(td, 40, 'right');
+                    td.appendChild(document.createTextNode(''));
+                }
+
+                document.body.appendChild(testTable);
+
+                tripInferenceTestConfig.testNames.sort();
+                tripInferenceTestIteration();
+            }
+        }
     }
 }
 
@@ -965,7 +1191,7 @@ function getTimeFromName(s) {
 
 // Load json file content, one at a time, and perform filtering in some cases.
 // Call getURLContent until all files are loaded, call configComplete when done.
-function gotConfigData(data, agencyID, arg) {
+async function gotConfigData(data, agencyID, arg) {
     util.log("gotConfigData()");
     util.log("- agencyID: " + agencyID);
     util.log("- arg: " + arg);
@@ -980,19 +1206,36 @@ function gotConfigData(data, agencyID, arg) {
             isFilterByDayOfWeek = data["is-filter-by-day-of-week"];
             maxMinsFromStart = data["max-mins-from-start"];
             maxFeetFromStop = data["max-feet-from-stop"];
-            if(data["use-bulk-assignment-mode"] !== null){
+            if(!util.isNullOrUndefined(data["use-bulk-assignment-mode"])){
                 useBulkAssignmentMode = data["use-bulk-assignment-mode"];
+            }
+            if(!util.isNullOrUndefined(data["use-trip-inference"])){
+                useTripInference = data["use-trip-inference"];
+            }
+            if(!util.isNullOrUndefined(data["static-gtfs-url"])){
+                staticGTFSURL = data["static-gtfs-url"];
             }
             ignoreStartEndDate = data["ignore-start-end-date"];
             // util.log(`- useBulkAssignmentMode: ${useBulkAssignmentMode}`);
+            // util.log(`- useTripInference: ${useTripInference}`);
             // util.log(`- isFilterByDayOfWeek: ${isFilterByDayOfWeek}`);
             // util.log(`- maxMinsFromStart: ${maxMinsFromStart}`);
             // util.log(`- maxFeetFromStop: ${maxFeetFromStop}`);
+            util.log(`- staticGTFSURL: ${staticGTFSURL}`);
             // util.log(`- ignoreStartEndDate: ${ignoreStartEndDate}`);
+
+            if (useTripInference && !runTripInferenceTest) {
+                inf = new inference.TripInference('' + agencyID, staticGTFSURL, agencyID, 'test-vehicle-id', 15);
+                await inf.init();
+            }
         }
     }
     else if (name === CONFIG_TRIP_NAMES) {
-        if (useBulkAssignmentMode){
+        util.log("name is config tripnames");
+        util.log(`useTripInference: ${useTripInference}`);
+        util.log(`useBulkAssignmentMode: ${useBulkAssignmentMode}`);
+        if (useBulkAssignmentMode || useTripInference){
+            util.log("useBulkAssignmentMode || useTripInference");
             configMatrix.setPresent(name, ConfigMatrix.NOT_PRESENT)
             util.hideElement(TRIP_SELECT_DROPDOWN);
         } else {
@@ -1040,7 +1283,7 @@ function loadTrips() {
             // util.log(`- lon: ${lon}`);
             const timeDelta = util.getTimeDelta(time);
             // util.log(`- timeDelta: ${timeDelta}`);
-            const distance = getHaversineDistance(lat, lon, startLat, startLon);
+            const distance = util.haversineDistance(lat, lon, startLat, startLon);
             // util.log(`- distance: ${distance}`);
             let holidayOn = false;
             let holidayOff = false;
@@ -1057,24 +1300,24 @@ function loadTrips() {
             // For inclusion, either filter override has to be set,
             // or 4 conditions need to be met
             if (
-                    !useFilters
-                        // 1. meets time parameters
-                        || ((maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
-                        &&
-                        // 2. meets day-of-week parameters or has holiday exception
+                !useFilters
+                    // 1. meets time parameters
+                    || ((maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                    &&
+                    // 2. meets day-of-week parameters or has holiday exception
+                    (
+                        holidayOn  ||
                         (
-                            holidayOn  ||
-                            (
-                                (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
-                                && !holidayOff
-                            )
+                            (!isFilterByDayOfWeek || (tripInfo.calendar != null && tripInfo.calendar[dow] === 1))
+                            && !holidayOff
                         )
-                        &&
-                        // 3. meets distance parameters:
-                        (maxFeetFromStop < 0 || getHaversineDistance(lat, lon, startLat, startLon) < maxFeetFromStop)
-                        &&
-                        // 4. Falls between start_date and end_date
-                        (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date)))
+                    )
+                    &&
+                    // 3. meets distance parameters:
+                    (maxFeetFromStop < 0 || distance < maxFeetFromStop)
+                    &&
+                    // 4. Falls between start_date and end_date
+                    (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date)))
                 )
             {
                 // util.log(`+ adding ${tripInfo["trip_name"]}`);
@@ -1087,7 +1330,7 @@ function loadTrips() {
 }
 
 function gpsInterval(millis) {
-    if (navigator.onLine && running) {
+    if (navigator.onLine && running && !runTripInferenceTest) {
         if (window.hasOwnProperty('graasShimVersion') && graasShimVersion.startsWith("android")) {
             //util.log('+ gpsInterval() tick ' + Math.floor(Date.now() / 1000) + '...');
             //util.log('- graasShimVersion: ' + graasShimVersion);
@@ -1159,13 +1402,13 @@ function configComplete() {
     util.hideElement(LOADING_TEXT_ELEMENT);
 
     // If bulk assignment mode and vehicleID is already cached, simply start tracking
-    if(vehicleIDCookie && useBulkAssignmentMode){
+    if(vehicleIDCookie && (useBulkAssignmentMode || useTripInference)){
         assignValue(BUS_SELECT_DROPDOWN, vehicleIDCookie);
-        handleOkay()
+        handleOkay();
     }
     // If bulk assignment mode and vehicleID is NOT cached, present vehicleID dropdown
-    else if(useBulkAssignmentMode){
-        handleStartStop()
+    else if(useBulkAssignmentMode || useTripInference){
+        handleStartStop();
     }
     // If not bulk assignment mode, present the "Load trips" button.
     else{
@@ -1224,6 +1467,11 @@ if (!Object.entries) {
       return resArray;
    };
 }
+
+/*window.addEventListener("unhandledrejection", function (event) {
+    util.log('unhandledrejection');
+    util.log('- event: ' + JSON.stringify(event));
+});*/
 
 configMatrix = new ConfigMatrix();
 
