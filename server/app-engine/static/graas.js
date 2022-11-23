@@ -1,3 +1,8 @@
+/*
+ * - url rewrite args:
+ *   usefilters=<true|false>: if active, filter routes by criteria such as lat/long/time of day/... Defaults to true
+ */
+
 var hexDigits = '0123456789abcdef';
 var lastModified = null;
 var tripID = null;
@@ -38,6 +43,7 @@ let loadBaseURL = null;
 let testTable = null;
 let testTableIndex = 0;
 var inf = null;
+let useFilters = true;
 
 // Default filter parameters, used when agency doesn't have an agency-config.json file
 var maxMinsFromStart = 60;
@@ -594,6 +600,11 @@ function getRewriteArgs() {
         if (!a) continue;
 
         const t = a.split('=');
+
+        if (t.length < 2
+            || !t[0]
+            || !t[1]) continue;
+
         const key = t[0];
         const value = t[1];
 
@@ -620,6 +631,9 @@ function getRewriteArgs() {
         } else if (key === 'ti') {
             useTripInference = true;
             util.log(`useTripInference: ${useTripInference}`);
+        } else if (key === 'usefilters') {
+            useFilters = value.toLowerCase() === 'true';
+            util.log(`- useFilters: ${useFilters}`);
         }
     }
 }
@@ -1283,10 +1297,12 @@ function loadTrips() {
             if(!util.isNullOrUndefined(offDates) && offDates.includes(parseInt(date,10))){
                 holidayOff = true;
             }
-            // 4 conditions need to be met for inclusion...
+            // For inclusion, either filter override has to be set,
+            // or 4 conditions need to be met
             if (
+                !useFilters
                     // 1. meets time parameters
-                    (maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
+                    || ((maxMinsFromStart < 0 || (timeDelta != null && timeDelta < maxMinsFromStart))
                     &&
                     // 2. meets day-of-week parameters or has holiday exception
                     (
@@ -1301,7 +1317,7 @@ function loadTrips() {
                     (maxFeetFromStop < 0 || distance < maxFeetFromStop)
                     &&
                     // 4. Falls between start_date and end_date
-                    (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date))
+                    (ignoreStartEndDate || (date >= tripInfo.start_date && date <= tripInfo.end_date)))
                 )
             {
                 // util.log(`+ adding ${tripInfo["trip_name"]}`);
