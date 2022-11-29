@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
@@ -74,13 +76,13 @@ public class StaticGTFSToBucket {
             long lastModifiedRemote = Util.getLastModifiedRemote(gtfsURL);
             ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
 
-            if (lastModifiedRemote <= lastModifiedGcloud) {
-                if (progressObserver != null) {
-                    progressObserver.setMax(1);
-                    progressObserver.update(1);
-                }
-                continue;
-            }
+            // if (lastModifiedRemote <= lastModifiedGcloud) {
+            //     if (progressObserver != null) {
+            //         progressObserver.setMax(1);
+            //         progressObserver.update(1);
+            //     }
+            //     continue;
+            // }
 
             Debug.log("+ remote GTFS zip is newer than the version on gcloud, updating...");
             setLastModifiedGcloud(bucketName, agencyID, lastModifiedRemote);
@@ -95,12 +97,16 @@ public class StaticGTFSToBucket {
                 int contentLength = Integer.parseInt(cl);
                 Debug.log("- contentLength: " + contentLength);
                 progressObserver.setMax(contentLength);
-
-                File zf = new File(name + "/gtfs.zip");
+                String filePath = name + "/gtfs.zip";
+                File zf = new File(filePath);
                 FileOutputStream fos = new FileOutputStream(zf);
 
                 Util.downloadURLContent(gtfsURL, fos, progressObserver);
                 fos.close();
+
+                // Upload raw zip file to bucket
+                byte[] zipBytes = Files.readAllBytes(Paths.get(filePath));
+                gcs.uploadObject(bucketName, "gtfs-mirror/", agencyID + ".zip", zipBytes, "application/zip");
 
                 ZipFile zip = new ZipFile(zf);
                 Enumeration<? extends ZipEntry> entries = zip.entries();
@@ -109,7 +115,7 @@ public class StaticGTFSToBucket {
                     ZipEntry e = entries.nextElement();
                     Debug.log("-- " + e.getName());
                     byte[] bytes = Util.readInput(zip.getInputStream(e), null);
-                    gcs.uploadObject(bucketName, "gtfs-archive/" + agencyID + "/", e.getName(), bytes);
+                    gcs.uploadObject(bucketName, "gtfs-archive/" + agencyID + "/", e.getName(), bytes, "application/zip");
                 }
                 reporter.addLine("- " + agencyID);
 
