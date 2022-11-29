@@ -115,7 +115,7 @@ public class StaticGTFSToBucket {
                     ZipEntry e = entries.nextElement();
                     Debug.log("-- " + e.getName());
                     byte[] bytes = Util.readInput(zip.getInputStream(e), null);
-                    gcs.uploadObject(bucketName, "gtfs-archive/" + agencyID + "/", e.getName(), bytes, "application/zip");
+                    gcs.uploadObject(bucketName, "gtfs-archive/" + agencyID + "/", e.getName(), bytes);
                 }
                 reporter.addLine("- " + agencyID);
 
