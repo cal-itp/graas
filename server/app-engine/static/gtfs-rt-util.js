@@ -46,7 +46,8 @@ if (!fetch) {
     exports.FEET_PER_MILE = 5280;
 
     exports.log = function(s) {
-        console.log(s);
+        //console.log(s);
+        console.log.apply(console, Array.from(arguments));
 
         if (typeof document !== 'undefined') {
             try {

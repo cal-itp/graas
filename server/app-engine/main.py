@@ -269,6 +269,12 @@ def bus():
     content = util.get_file(fn, 'rb')
     return Response(content, mimetype='image/png')
 
+@app.route('/favicon.ico')
+def fav():
+    fn = 'static/favicon.ico'
+    content = util.get_file(fn, 'rb')
+    return Response(content, mimetype='image/x-icon')
+
 @app.route('/hello', methods=['POST'])
 def hello():
     print('/hello')

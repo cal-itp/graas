@@ -702,7 +702,23 @@ function scanQRCode() {
 
 function initialize() {
     util.log("+ page loaded");
-    util.log('- JSZip.version: ' + JSZip.version);
+    util.log('- JSZip.version: ', JSZip.version);
+
+    const lat = 52.205;
+    const lon = 0.119;
+
+    util.log('- lat: ', lat);
+    util.log('- lon: ', lon);
+
+     // => 'u120fxw'
+    const hash = Geohash.encode(lat, lon, 7);
+    util.log('- hash: ', hash);
+
+    const result = Geohash.decode(hash);
+    util.log('- result: ', result);
+
+    util.log('returning early...');
+    return;
 
     if (window.hasOwnProperty('graasShimVersion')) {
         util.log("- graasShimVersion: " + graasShimVersion);
