@@ -76,13 +76,13 @@ public class StaticGTFSToBucket {
             long lastModifiedRemote = Util.getLastModifiedRemote(gtfsURL);
             ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
 
-            // if (lastModifiedRemote <= lastModifiedGcloud) {
-            //     if (progressObserver != null) {
-            //         progressObserver.setMax(1);
-            //         progressObserver.update(1);
-            //     }
-            //     continue;
-            // }
+            if (lastModifiedRemote <= lastModifiedGcloud) {
+                if (progressObserver != null) {
+                    progressObserver.setMax(1);
+                    progressObserver.update(1);
+                }
+                continue;
+            }
 
             Debug.log("+ remote GTFS zip is newer than the version on gcloud, updating...");
             setLastModifiedGcloud(bucketName, agencyID, lastModifiedRemote);
