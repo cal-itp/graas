@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
@@ -95,12 +97,16 @@ public class StaticGTFSToBucket {
                 int contentLength = Integer.parseInt(cl);
                 Debug.log("- contentLength: " + contentLength);
                 progressObserver.setMax(contentLength);
-
-                File zf = new File(name + "/gtfs.zip");
+                String filePath = name + "/gtfs.zip";
+                File zf = new File(filePath);
                 FileOutputStream fos = new FileOutputStream(zf);
 
                 Util.downloadURLContent(gtfsURL, fos, progressObserver);
                 fos.close();
+
+                // Upload raw zip file to bucket
+                byte[] zipBytes = Files.readAllBytes(Paths.get(filePath));
+                gcs.uploadObject(bucketName, "gtfs-mirror/", agencyID + ".zip", zipBytes, "application/zip");
 
                 ZipFile zip = new ZipFile(zf);
                 Enumeration<? extends ZipEntry> entries = zip.entries();
