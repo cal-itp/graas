@@ -64,6 +64,10 @@ const tooltipItems = ["trip_id", "vehicle_id", "agent", "device",
  const ALPHA_MIN = 0.4;
  const MARGIN = 5;
 
+function log(s) {
+    console.log.apply(console, Array.from(arguments));
+}
+
 function initialize(){
     getRewriteArgs()
     url = `${bucketURL}${archiveDir}graas-report-agency-dates.json`;
@@ -198,6 +202,164 @@ function processTripJSON(object){
     load();
 }
 
+function handleDownloadRequest() {
+    //log('handleDownloadRequest()');
+    const tcanvas = document.getElementById("timeline");
+    const tdataURL = tcanvas.toDataURL("image/png");
+
+    const mcanvas = document.getElementById("maps");
+    const mdataURL = mcanvas.toDataURL("image/png");
+
+    const offscreen = new OffscreenCanvas(tcanvas.width, tcanvas.height + mcanvas.height);
+    const context = offscreen.getContext('2d');
+
+    var tDrawn = false;
+    var mDrawn = false;
+    var drawn = false;
+
+    const draw = function() {
+        //log('draw()');
+        //log('- drawn', drawn);
+
+        if (!drawn) {
+            drawn = true;
+
+            const dataURL = offscreen.convertToBlob().then(function(blob) {
+                const reader = new FileReader();
+
+                reader.addEventListener("load", function() {
+                    const a = document.createElement('a');
+
+                    a.href = reader.result;
+                    a.download = `graas-report-${selectedAgency}-${selectedDate}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }, false);
+
+                reader.readAsDataURL(blob);
+            });
+        }
+    }
+
+    const timg = new Image();
+    timg.onload = function() {
+        //log('timg.onload()');
+        context.drawImage(timg, 0, 0);
+        tDrawn = true;
+
+        //log('- tDrawn', tDrawn);
+        //log('- mDrawn', mDrawn);
+
+        if (mDrawn) draw();
+    }
+    timg.src = tdataURL;
+
+    const mimg = new Image();
+    mimg.onload = function() {
+        //log('mimg.onload()');
+        context.drawImage(mimg, 0, tcanvas.height);
+        mDrawn = true;
+
+        //log('- mDrawn', mDrawn);
+        //log('- tDrawn', tDrawn);
+
+        if (tDrawn) draw();
+    }
+    mimg.src = mdataURL;
+}
+
+function handleClick(event) {
+    log('handleClick()');
+
+    const id = event.target.id;
+    log('- id: ', id);
+
+    if (id === 'download-button') {
+        handleDownloadRequest();
+    }
+}
+
+function handleCanvasClick(event) {
+    console.log(event);
+    event.stopPropagation();
+    event.preventDefault();
+
+    let searchX = event.pageX;
+    let searchY = event.pageY;
+
+    scrollTop = document.documentElement.scrollTop; // Top of current screen
+    timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
+    mapScrollTop = scrollTop + headerHeight;        // Top of current map
+    scrollBottom = scrollTop + windowHeight;        // Bottom of current map
+
+    if(searchY > scrollTop + dropdownHeight && instructionsVisible){
+        hideElement("box");
+        instructionsVisible = false;
+        return;
+    }
+
+    if (event.shiftKey && isZoomedIn) {
+        zoomOut();
+        return;
+    }
+
+    isNewPageSelect = false;
+
+    let searchObject = null;
+
+    // If the click occurs below the header, adjust y value and search map objects
+    // If the click occurs within the header, adjust y value and search timeline objects
+    if(searchY >= mapScrollTop){
+        // console.log("Click is BELOW header");
+        searchY -=headerHeight;
+        searchObject = "map";
+    } else {
+        // console.log("Click is ABOVE header");
+        searchY -=timelineScrollTop;
+        searchObject = "timeline";
+    }
+
+    if (isZoomedIn){
+        searchX += translateOffsetX;
+        searchY += translateOffsetY;
+        searchX /= 2;
+        searchY /= 2;
+    }
+
+    for (let i = 0; i < trips.length; i++){
+
+        if (objectContainsPoint(trips[i][searchObject], searchX, searchY)){
+            let clickedTrip = trips[i];
+            console.log("Found trip: " + clickedTrip.trip_name);
+            if (event.shiftKey && !isZoomedIn) {
+                console.log("Zooming into this trip...");
+                zoomTo(clickedTrip);
+                scrollToTrip(clickedTrip)
+            }
+            if(mostRecentAnimation === trips[i]){
+                console.log("Animation for this trip is already in progress.");
+                return
+            }
+            else{
+                console.log("Drawing background, metadata, etc...");
+                drawReportExcept(clickedTrip);
+                drawMetadata(clickedTrip);
+                selectTrip(mapCtx, clickedTrip, "map");
+                selectTrip(timelineCtx, clickedTrip, "timeline");
+                scrollToTrip(clickedTrip)
+                mostRecentAnimation = clickedTrip;
+                let tripDuration = clickedTrip.points[clickedTrip.points.length - 1].secs - clickedTrip.points[0].secs;
+                let timeoutInterval = 1;
+                console.log("tripDuration: " + tripDuration);
+                animateTrip(clickedTrip, 0, 0, timeoutInterval);
+                return;
+            }
+        }
+    }
+    drawReportExcept(mostRecentAnimation);
+}
+
 function load(){
     canvasWidth = window.innerWidth;
     windowHeight = window.innerHeight;
@@ -213,12 +375,14 @@ function load(){
     dropdownHeight = document.getElementById('top').offsetHeight;
     // ?nocache= prevents annoying caching...mostly for debugging purposes
     reportImageUrl = `${bucketURL}${archiveDir}${selectedAgency}/${selectedAgency}-${selectedDate}.png?nocache=${(new Date()).getTime()}`;
+    img.crossOrigin = 'Anonymous';
     img.src = reportImageUrl;
 
     p = document.getElementById('download');
-    p.href = reportImageUrl;
-    p.download = `${selectedAgency}-${selectedDate}.png`;
+    //p.href = reportImageUrl;
+    //p.download = `${selectedAgency}-${selectedDate}.png`;
     p.style.display = "inline-block";
+    p.addEventListener('click', handleClick);
 
     showElement("click-here");
     rowCount = Math.ceil(trips.length / COLUMN_COUNT);
@@ -259,86 +423,8 @@ function load(){
         drawReport();
     };
 
-    document.body.addEventListener('click', function(event) {
-        console.log(event);
-        event.stopPropagation();
-        event.preventDefault();
-
-        let searchX = event.pageX;
-        let searchY = event.pageY;
-
-        scrollTop = document.documentElement.scrollTop; // Top of current screen
-        timelineScrollTop = scrollTop + dropdownHeight; // Top of current timeline
-        mapScrollTop = scrollTop + headerHeight;        // Top of current map
-        scrollBottom = scrollTop + windowHeight;        // Bottom of current map
-
-        if(searchY > scrollTop + dropdownHeight && instructionsVisible){
-            hideElement("box");
-            instructionsVisible = false;
-            return;
-        }
-
-        if (event.shiftKey && isZoomedIn) {
-            zoomOut();
-            return;
-        }
-
-        isNewPageSelect = false;
-
-        let searchObject = null;
-
-        // If the click occurs below the header, adjust y value and search map objects
-        // If the click occurs within the header, adjust y value and search timeline objects
-        if(searchY >= mapScrollTop){
-            // console.log("Click is BELOW header");
-            searchY -=headerHeight;
-            searchObject = "map";
-        } else {
-            // console.log("Click is ABOVE header");
-            searchY -=timelineScrollTop;
-            searchObject = "timeline";
-        }
-
-        if (isZoomedIn){
-            searchX += translateOffsetX;
-            searchY += translateOffsetY;
-            searchX /= 2;
-            searchY /= 2;
-        }
-
-        for (let i = 0; i < trips.length; i++){
-
-            if (objectContainsPoint(trips[i][searchObject], searchX, searchY)){
-                let clickedTrip = trips[i];
-                console.log("Found trip: " + clickedTrip.trip_name);
-                if (event.shiftKey && !isZoomedIn) {
-                    console.log("Zooming into this trip...");
-                    zoomTo(clickedTrip);
-                    scrollToTrip(clickedTrip)
-                }
-                if(mostRecentAnimation === trips[i]){
-                    console.log("Animation for this trip is already in progress.");
-                    return
-                }
-                else{
-                    console.log("Drawing background, metadata, etc...");
-                    drawReportExcept(clickedTrip);
-                    drawMetadata(clickedTrip);
-                    selectTrip(mapCtx, clickedTrip, "map");
-                    selectTrip(timelineCtx, clickedTrip, "timeline");
-                    scrollToTrip(clickedTrip)
-                    mostRecentAnimation = clickedTrip;
-                    let tripDuration = clickedTrip.points[clickedTrip.points.length - 1].secs - clickedTrip.points[0].secs;
-                    let timeoutInterval = 1;
-                    console.log("tripDuration: " + tripDuration);
-                    animateTrip(clickedTrip, 0, 0, timeoutInterval);
-                    return;
-                }
-            }
-        }
-        drawReportExcept(mostRecentAnimation);
-
-    });
+    timelineCanvas.addEventListener('click', handleCanvasClick);
+    mapCanvas.addEventListener('click', handleCanvasClick);
 }
 
 function objectContainsPoint(object, x, y){
