@@ -14,6 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.text.FieldPosition;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +100,7 @@ public class Main {
     }
 
     public static void main(String[] arg) throws Exception {
-        if (arg.length == 0) {
+        if (arg.length < 0) {
             usage();
         }
 
@@ -141,12 +144,16 @@ public class Main {
 
         g.drawImage(cimg, inset, inset, null);
 
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy");
+        String date = sdf.format(new Date(), new StringBuffer(), new FieldPosition(0)).toString();
+        log("- date: " + date);
+
         int fontSize = 20;
         Font f = new Font("", Font.BOLD, fontSize);
         g.setFont(f);
         g.setColor(Color.white);
 
-        String s  = arg[1];
+        String s  = arg[1] + " " + date;
         FontMetrics fm = g.getFontMetrics();
         Rectangle2D r =fm.getStringBounds(s, g);
 
