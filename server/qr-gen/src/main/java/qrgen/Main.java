@@ -100,7 +100,7 @@ public class Main {
     }
 
     public static void main(String[] arg) throws Exception {
-        if (arg.length < 0) {
+        if (arg.length < 2) {
             usage();
         }
 
