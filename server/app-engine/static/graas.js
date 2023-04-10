@@ -319,7 +319,6 @@ function handleKeyOkay() {
     dismissModal();
     p.value = "";
 
-    localStorage.setItem("lat-long-pem", value);
     initializeCallback(parseAgencyData(value));
 }
 
@@ -671,7 +670,6 @@ function scanQRCode() {
                 alert("not a valid key");
                 return;
             } else {
-                localStorage.setItem("lat-long-pem", value);
                 initializeCallback(parseAgencyData(value));
                 html5QrcodeScanner.clear();
 
@@ -934,7 +932,7 @@ async function initializeCallback(agencyData) {
             msg: str,
             sig: sig
         };
-        util.log(`hello: ${hello}`);
+
         if (agencyData.id) {
             hello.id = agencyData.id;
         }
@@ -944,7 +942,7 @@ async function initializeCallback(agencyData) {
         let response = await util.apiCall(hello, '/hello');
         let responseJson = await response.json();
         util.log("- responseJson: " + JSON.stringify(responseJson));
-        agencyIDCallback(responseJson);
+        keyVerificationCallback(responseJson, agencyData);
 
     } catch(e){
           util.log('*** initializeCallback() error: ' + e.message);
@@ -1098,9 +1096,17 @@ function styleCell(cell, w, align) {
     cell.style.padding = '5px';
 }
 
-async function agencyIDCallback(response) {
+async function keyVerificationCallback(response, agencyData) {
     agencyID = response.agencyID;
-    util.log("- agencyID: " + agencyID);
+    util.log(`- response: ${JSON.stringify(response)}`);
+    util.log(`- agencyData: ${JSON.stringify(agencyData)}`);
+
+    if (response.status === 'ok') {
+        localStorage.setItem("lat-long-pem", agencyData.id + '\n' + agencyData.pem);
+    } else {
+        alert('agency token doesn\'t contain a valid key');
+        return;
+    }
 
     if (!runTripInferenceTest) util.showElement(LOADING_TEXT_ELEMENT);
     util.hideElement(QR_READER_ELEMENT);
