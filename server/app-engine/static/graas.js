@@ -900,6 +900,7 @@ async function initializeCallback(agencyData) {
     util.log("- keyType: " + keyType);
 
     let b = atob(b64);
+    let keyLoaded = false;
 
     const binaryDer = util.str2ab(b);
     try{
@@ -920,6 +921,7 @@ async function initializeCallback(agencyData) {
             false,
             ["sign"]
         )
+        keyLoaded = true;
 
         util.log("- key.type: " + key.type);
         signatureKey = key;
@@ -946,11 +948,16 @@ async function initializeCallback(agencyData) {
         util.log("- responseJson: " + JSON.stringify(responseJson));
         agencyIDCallback(responseJson);
 
-    } catch(e){
-          util.log('*** initializeCallback() error: ' + e.message);
-          localStorage.removeItem("lat-long-pem");
-          alert("We've experienced an error and are refreshing the page. Please scan again");
-          window.location.reload();
+    } catch(e) {
+        util.log('*** initializeCallback() error: ' + e.message);
+
+        if (!keyLoaded) {
+            // if key didn't load it is most likely corrupt and needs to be removed
+            localStorage.removeItem("lat-long-pem");
+        }
+
+        alert("We've experienced an error and are refreshing the page. Please confirm device connectivity. Token may need rescanning.");
+        window.location.reload();
     }
 }
 
