@@ -274,16 +274,17 @@ def hello():
     print('/hello')
     sig = request.json['sig']
     print('- sig: ' + sig)
-    msg = json.dumps(request.json['msg'])
+    msg = request.json['msg']
     print('- msg: ' + msg)
     agency_id = request.json.get('id', 'not found');
 
-    if agency_id == 'not found':
-        print('*** no agency name found in request json')
-        # 12/13/21 removing logic that tries verifying private key with every public key in util.key_map
-        # This was expensive and resolved by passing the agency_id into every request.
-        # This removal would only impact one agency: CAE, if they tried running on tablets. There's no reason they would do so.
-    return '{"agencyID": "' + agency_id + '"}'
+    verified = util.verify_signature(agency_id, msg, sig)
+    print('- verified: ' + str(verified))
+
+    status = 'unverified'
+    if verified:
+        status = 'ok'
+    return Response(f'{{"command": "hello", "status": "{status}", "agencyID": "{agency_id}"}}', mimetype='application/json')
 
 @app.route('/post-alert', methods=['POST'])
 def post_alert():
@@ -294,7 +295,7 @@ def post_alert():
     data = request.json['data'];
     sig = request.json['sig'];
 
-    data_str = json.dumps(data,separators=(',',':'))
+    data_str = json.dumps(data, separators=(',',':'))
     print('- data_str: ' + data_str)
 
     agency = data['agency_key'];
