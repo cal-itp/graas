@@ -396,7 +396,7 @@ def verify_request(request, cmd):
         print('- verified: ' + str(verified))
 
         if not verified:
-            print(f'*** could not verify signature for command {cmd}, discarding')
+            print(f'*** could not verify signature for agency "{agency}"command "{cmd}", discarding...')
             return {
                 'verified': False,
                 'response': Response(f'{{"command": {cmd}, "status": "unverified"}}', mimetype='application/json')
