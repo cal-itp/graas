@@ -139,23 +139,19 @@ def service_alerts():
 
 @app.route('/service-alert-ui.pb', methods=['POST'])
 def service_alerts_no_cache():
-    print('//service-alert-ui.pb')
+    print('service-alerts-no-cache')
 
     data = request.json['data'];
-    sig = request.json['sig'];
-
-    data_str = json.dumps(data,separators=(',',':'))
-    print('- data_str: ' + data_str)
+    if not data:
+        print(f'* malformed request: "{request}", discarding...')
+        abort(400)
 
     agency = data['agency_key'];
     print('- agency: ' + agency)
 
-    verified = util.verify_signature(agency, data_str, sig)
-    print('- verified: ' + str(verified))
-
-    if not verified:
-        print('*** could not verify signature for new alert, discarding')
-        return Response('{"command": "/service-alert-ui.pb", "status": "unverified"}', mimetype='application/json')
+    result = verify_request(request, 'service-alerts-no-cache')
+    if not result['verified']:
+        return result['response']
 
     use_cache = False;
     include_future_alerts = True;
@@ -271,19 +267,19 @@ def bus():
 
 @app.route('/hello', methods=['POST'])
 def hello():
-    print('/hello')
-    sig = request.json['sig']
-    print('- sig: ' + sig)
-    msg = request.json['msg']
-    print('- msg: ' + msg)
-    agency_id = request.json.get('id', 'not found');
+    print('/hello');
+    data = request.json.get('data', None)
 
-    verified = util.verify_signature(agency_id, msg, sig)
-    print('- verified: ' + str(verified))
+    if not data:
+        abort(400)
+
+    agency_id = data.get('agency_id', 'not found');
+    result = verify_request(request, 'hello')
 
     status = 'unverified'
-    if verified:
+    if result['verified']:
         status = 'ok'
+
     return Response(f'{{"command": "hello", "status": "{status}", "agencyID": "{agency_id}"}}', mimetype='application/json')
 
 @app.route('/post-alert', methods=['POST'])
@@ -293,20 +289,14 @@ def post_alert():
     #print('- request.json: ' + json.dumps(request.json))
 
     data = request.json['data'];
-    sig = request.json['sig'];
 
-    data_str = json.dumps(data, separators=(',',':'))
-    print('- data_str: ' + data_str)
+    if not data:
+        print(f'* malformed request: "{request}", discarding...')
+        abort(400)
 
-    agency = data['agency_key'];
-    print('- agency: ' + agency)
-
-    verified = util.verify_signature(agency, data_str, sig)
-    print('- verified: ' + str(verified))
-
-    if not verified:
-        print('*** could not verify signature for new alert, discarding')
-        return Response('{"command": "post-alert", "status": "unverified"}', mimetype='application/json')
+    result = verify_request(request, 'post-alert')
+    if not result['verified']:
+        return result['response']
 
     gtfsrt.add_alert(util.datastore_client, data)
 
@@ -319,20 +309,14 @@ def delete_alert():
     #print('- request.json: ' + json.dumps(request.json))
 
     data = request.json['data'];
-    sig = request.json['sig'];
 
-    data_str = json.dumps(data,separators=(',',':'))
-    print('- data_str: ' + data_str)
+    if not data:
+        print(f'* malformed request: "{request}", discarding...')
+        abort(400)
 
-    agency = data['agency_key'];
-    print('- agency: ' + agency)
-
-    verified = util.verify_signature(agency, data_str, sig)
-    print('- verified: ' + str(verified))
-
-    if not verified:
-        print('*** could not verify signature for delete request, discarding')
-        return Response('{"command": "delete-alert", "status": "unverified"}', mimetype='application/json')
+    result = verify_request(request, 'delete-alert')
+    if not result['verified']:
+        return result['response']
 
     gtfsrt.delete_alert(util.datastore_client, data)
 
@@ -357,6 +341,8 @@ def verify_request(request, cmd):
     agency = data.get('agency-id', None)
     if agency is None:
         agency = data.get('agency_id', None)
+    if agency is None:
+        agency = data.get('agency_key', None)
     if agency is None:
         print(f'*** can\'t verify signature without agency')
         return {
@@ -396,7 +382,8 @@ def verify_request(request, cmd):
         print('- verified: ' + str(verified))
 
         if not verified:
-            print(f'*** could not verify signature for agency "{agency}"command "{cmd}", discarding...')
+            vehicle = data.get('vehicle-id', 'unknown')
+            print(f'*** could not verify signature for agency "{agency}", vehicle "{vehicle}", command "{cmd}", discarding...')
             return {
                 'verified': False,
                 'response': Response(f'{{"command": {cmd}, "status": "unverified"}}', mimetype='application/json')
