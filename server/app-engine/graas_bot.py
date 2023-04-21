@@ -171,7 +171,7 @@ def main(argv):
     print(f'- end_time  : {end_time}')
 
     kinds = ['position', 'alert']
-    counts = {'position': 8131, 'alert': 0}
+    counts = {'position': 0, 'alert': 0}
     agencies = set()
 
     for k in kinds:
