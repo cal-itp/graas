@@ -924,24 +924,12 @@ async function initializeCallback(agencyData) {
         util.log("- key.type: " + key.type);
         signatureKey = key;
 
-        let str = 'hello ' + Math.floor(Date.now() / 1000);
-
-        let buf = await util.sign(str, signatureKey)
-
-        let sig = btoa(util.ab2str(buf));
-        util.log(`sig: ${sig}`);
-        let hello = {
-            msg: str,
-            sig: sig
+        let data = {
+            text: 'hello ' + Math.floor(Date.now() / 1000),
+            agency_id: agencyData.id,
         };
 
-        if (agencyData.id) {
-            hello.id = agencyData.id;
-        }
-
-        util.log("- hello: " + JSON.stringify(hello));
-
-        let response = await util.apiCall(hello, '/hello');
+        let response = await util.signAndPost(data, signatureKey, '/hello');
         let responseJson = await response.json();
         util.log("- responseJson: " + JSON.stringify(responseJson));
         keyVerificationCallback(responseJson, agencyData);
