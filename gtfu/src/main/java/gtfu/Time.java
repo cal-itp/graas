@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.time.temporal.ChronoUnit;
 
 public class Time {
     public static final int SECONDS_PER_MINUTE = 60;
@@ -196,5 +197,20 @@ public class Time {
 
     public static long getNextDaySeconds(long timestamp) {
         return timestamp + SECONDS_PER_DAY;
+    }
+
+    public static Date getDateFromYYYYMMDD(String yyyyMMDD) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        try {
+            return dateFormat.parse(yyyyMMDD);
+        } catch (ParseException e) {
+            throw new RuntimeException("Error parsing date: " + e.getMessage(), e);
+        }
+    }
+
+    public static int getDaysUntilDateLong(String yyyyMMDD) {
+        Date input = getDateFromYYYYMMDD(yyyyMMDD);
+        long diffInMillis = Math.abs(input.getTime() - Util.now());
+        return (int) diffInMillis / MILLIS_PER_DAY;
     }
 }
