@@ -189,7 +189,6 @@ public class UpdateFeedData {
                     reporter.send();  
                 }
             }
-            break;
         }
     }
 
