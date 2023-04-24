@@ -17,7 +17,7 @@ public class HTTPClient {
 private static Map<String, String> EMPTY_MAP = Collections.EMPTY_MAP;
 
   static public Integer post(String url, String body) {
-    return post(url,body, null);
+    return post(url, body, null);
   }
 
   static public Integer post(String url, String body, Map<String, String> headerMap) {

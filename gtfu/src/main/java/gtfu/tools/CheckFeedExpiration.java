@@ -22,7 +22,7 @@ import java.util.Date;
  * Daily checks and updates on each active agency's feed.
  */
 public class CheckFeedExpiration {
-    private static final long MAX_FEED_EXPIRATION_WINDOW = 30;
+    private static final long MAX_FEED_EXPIRATION_WINDOW_DAYS = 14;
 
      /**
      * Runs CheckFeedExpiration for a single agency
@@ -34,7 +34,7 @@ public class CheckFeedExpiration {
     }
 
     /**
-     * Checks whether any feed has expired, and sends warning to graas_internal Slack channel if so.
+     * Checks whether any feed has expired, and sends warning via Email and/or Slack if so.
      * @param agencyIDList A list of agencyIDs
      */
     public static void CheckFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
@@ -44,28 +44,22 @@ public class CheckFeedExpiration {
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
 
-        for (String agencyID : agencyIDList){
-            String gtfsURL = yml.getURL(agencyID);
-            agencyURLMap.put(agencyID, gtfsURL);
-        }
-
         ConsoleProgressObserver progressObserver = new ConsoleProgressObserver(40);
         String cacheFolder = "src/main/resources/conf/cache";
         
-        for (String agencyID : agencyURLMap.keySet()) {
-            String gtfsURL = agencyURLMap.get(agencyID);
+        for (String agencyID : agencyIDList) {
+            String gtfsURL = yml.getURL(agencyID);
             Util.updateCacheIfNeeded(cacheFolder, agencyID, gtfsURL, progressObserver);
-            FeedInfo feedInfo = Util.loadFeedInfo(cacheFolder,agencyID);
+            FeedInfo feedInfo = Util.loadFeedInfo(cacheFolder, agencyID);
             String endDate = feedInfo.getEndDate();
             if (endDate == null){
-                Debug.log("No end date is listed, assume the feed doesn't expire");
+                Debug.log("No feed expiration date is listed, assume the feed doesn't expire");
             } else{
-                // int daysUntilEnd = Time.getDaysUntilDateLong(endDate);
-                int daysUntilEnd = -10;
+                int daysUntilEnd = Time.getDaysUntilDateLong(endDate);
                 Debug.log("endDate: " + endDate);
                 Debug.log("daysUntilEnd: " + daysUntilEnd);
 
-                if(daysUntilEnd <= MAX_FEED_EXPIRATION_WINDOW) {
+                if(daysUntilEnd <= MAX_FEED_EXPIRATION_WINDOW_DAYS) {
                     String messageSubject;
                     String messageBody;
                     
@@ -76,7 +70,7 @@ public class CheckFeedExpiration {
                         messageBody = "Error: the " + agencyID + " GTFS Schedule feed has expired, as of " + endDateFormatted;
                     } else {
                         messageSubject = "GRaaS Warning: feed will expire soon";
-                        messageBody = "Warning: " + agencyID + " GTFS Schedule feed will expire in " + daysUntilEnd + " days. We send automated warnings when feeds expire within " + MAX_FEED_EXPIRATION_WINDOW + " days.";
+                        messageBody = "Warning: " + agencyID + " GTFS Schedule feed will expire in " + daysUntilEnd + " days. We send automated warnings when feeds expire within " + MAX_FEED_EXPIRATION_WINDOW_DAYS + " days.";
                     }
 
                     FailureReporter reporter; 
