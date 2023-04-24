@@ -117,10 +117,10 @@ public class UpdateTripNames {
                 Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
             }
         }
-        if (prCount == 0) {
-            reporter.addLine("...no agencies. Everything looks up to date.");
+        // Send email only if a PR has been created.
+        if (prCount > 0) {
+            reporter.send();
         }
-        reporter.send();
     }
 
     private static void usage() {
