@@ -9,7 +9,7 @@ import java.io.IOException;
 
 /**
 * Creates a JSON object which desribes, for each agency, which dates they have a GRaaS Report for.
-* This file is generated nighly, upon GraphicReport completion, in order to create the dropdown values on the GRaaS Report webview.
+* This file is generated nightly, upon GraphicReport completion, in order to create the dropdown values on the GRaaS Report webview.
 */
 public class AgencyListGenerator {
 
