@@ -1,11 +1,7 @@
 package gtfu;
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.EntityBuilder;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import java.io.*;

@@ -8,7 +8,6 @@ import gtfu.EmailFailureReporter;
 import gtfu.FailureReporter;
 import gtfu.Recipients;
 
-import java.util.Date;
 import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -24,9 +23,9 @@ public class UpdateTripNames {
      * @param agencyID The agencyiD
      * @param regenerateAll A true value will run the comparison even if there is no recent update detected
      */
-    public static void UpdateTripNames(String agencyID, boolean regenerateAll) throws Exception {
+    public static void updateTripNames(String agencyID, boolean regenerateAll) throws Exception {
         String[] agencyIDList = {agencyID};
-        UpdateTripNames(agencyIDList, regenerateAll);
+        updateTripNames(agencyIDList, regenerateAll);
     }
 
     /**
@@ -34,7 +33,7 @@ public class UpdateTripNames {
      * @param agencyIDList A list of agencyIDs
      * @param regenerateAll     A true value will run the comparison even if there is no recent update detected
      */
-    public static void UpdateTripNames(String[] agencyIDList, boolean regenerateAll) throws Exception {
+    public static void updateTripNames(String[] agencyIDList, boolean regenerateAll) throws Exception {
         GitHubUtil gh = new GitHubUtil();
         AgencyYML yml = new AgencyYML();
 
@@ -161,10 +160,10 @@ public class UpdateTripNames {
             ProgressObserver po = new ConsoleProgressObserver(40);
             String context = Util.getURLContent(url, po);
             String[] agencyIDList = context.split("\n");
-            UpdateTripNames(agencyIDList, regenerateAll);
+            updateTripNames(agencyIDList, regenerateAll);
         }
         else{
-            UpdateTripNames(agencyID, regenerateAll);
+            updateTripNames(agencyID, regenerateAll);
         }
     }
 }

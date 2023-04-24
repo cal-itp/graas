@@ -1,10 +1,4 @@
 package gtfu.tools;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import gtfu.ConsoleProgressObserver;
 import gtfu.Debug;
@@ -28,18 +22,17 @@ public class CheckFeedExpiration {
      * Runs CheckFeedExpiration for a single agency
      * @param agencyID The agencyID
      */
-    public static void CheckFeedExpiration(String agencyID, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
+    public static void checkFeedExpiration(String agencyID, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
         String[] agencyIDList = {agencyID};
-        CheckFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
+        checkFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
     }
 
     /**
      * Checks whether any feed has expired, and sends warning via Email and/or Slack if so.
      * @param agencyIDList A list of agencyIDs
      */
-    public static void CheckFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
+    public static void checkFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
 
-        Map <String,String> agencyURLMap = new HashMap<>();
         AgencyYML yml = new AgencyYML();
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
@@ -55,8 +48,8 @@ public class CheckFeedExpiration {
             if (endDate == null){
                 Debug.log("No feed expiration date is listed, assume the feed doesn't expire");
             } else{
-                int daysUntilEnd = Time.getDaysUntilDateLong(endDate);
-                Debug.log("endDate: " + endDate);
+                Debug.log("endDate: " + endDate);                
+                int daysUntilEnd = Time.getDaysUntilDateInt(endDate);
                 Debug.log("daysUntilEnd: " + daysUntilEnd);
 
                 if(daysUntilEnd <= MAX_FEED_EXPIRATION_WINDOW_DAYS) {
@@ -135,10 +128,10 @@ public class CheckFeedExpiration {
             ProgressObserver po = new ConsoleProgressObserver(40);
             String context = Util.getURLContent(url, po);
             String[] agencyIDList = context.split("\n");
-            CheckFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
+            checkFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
         }
         else{
-            CheckFeedExpiration(agencyID, sendEmailAlert, sendSlackAlert);
+            checkFeedExpiration(agencyID, sendEmailAlert, sendSlackAlert);
         }
     }
 }
