@@ -13,7 +13,7 @@ public class Slack {
      * Initialize Slack connection
      */
     public Slack() {
-        this.webHookURL = System.getenv("GRAAS_BOT_WEBHOOKK");
+        this.webHookURL = System.getenv("GRAAS_BOT_WEBHOOK");
         Debug.error("* No env variable found with name GRAAS_BOT_WEBHOOK...exiting.");
         System.exit(1);
     }
