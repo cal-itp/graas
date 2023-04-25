@@ -19,20 +19,11 @@ import gtfu.Util;
 public class CheckFeedExpiration {
     private static final long MAX_FEED_EXPIRATION_WINDOW_DAYS = 14;
 
-     /**
-     * Runs CheckFeedExpiration for a single agency
-     * @param agencyID The agencyID
-     */
-    public static void checkFeedExpiration(String agencyID, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
-        String[] agencyIDList = {agencyID};
-        checkFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
-    }
-
     /**
      * Checks whether any feed has expired, and sends warning via Email and/or Slack if so.
      * @param agencyIDList A list of agencyIDs
      */
-    public static void checkFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
+    public CheckFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
         AgencyYML yml = new AgencyYML();
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
@@ -124,14 +115,16 @@ public class CheckFeedExpiration {
 
         if (agencyID == null && url == null) usage();
 
+        String[] agencyIDList;
         if(url != null){
             ProgressObserver po = new ConsoleProgressObserver(40);
             String context = Util.getURLContent(url, po);
-            String[] agencyIDList = context.split("\n");
-            checkFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
+            agencyIDList = context.split("\n");
+            
+        } else{
+            // Hacky way to convert string to array of strings
+            agencyIDList = agencyID.split("/n");
         }
-        else{
-            checkFeedExpiration(agencyID, sendEmailAlert, sendSlackAlert);
-        }
+        new CheckFeedExpiration(agencyIDList, sendEmailAlert, sendSlackAlert);
     }
 }

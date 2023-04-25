@@ -19,7 +19,11 @@ public class SlackFailureReporter extends FailureReporter {
             sb.append("0 lines\n");
         }
         
-        Slack s = new Slack();
-        s.send(sb.toString());
+        try {
+            Slack s = new Slack();
+            s.send(sb.toString());
+        } catch (Exception e) {
+            Debug.error("* " + e.getMessage());
+        }
     }
 }
