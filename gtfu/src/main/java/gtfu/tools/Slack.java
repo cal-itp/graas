@@ -13,10 +13,9 @@ public class Slack {
      * Initialize Slack connection
      */
     public Slack() {
-        this.webHookURL = System.getenv("GRAAS_BOT_WEBHOOK");
-        if(webHookURL == null){
-            Debug.log("GRAAS_BOT_WEBHOOK env variable not found");
-        }
+        this.webHookURL = System.getenv("GRAAS_BOT_WEBHOOKK");
+        Debug.error("* No env variable found with name GRAAS_BOT_WEBHOOK...exiting.");
+        System.exit(1);
     }
 
     /**

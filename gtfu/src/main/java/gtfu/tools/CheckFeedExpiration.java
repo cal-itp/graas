@@ -1,16 +1,17 @@
 package gtfu.tools;
 
+import java.util.Date;
+
 import gtfu.ConsoleProgressObserver;
 import gtfu.Debug;
 import gtfu.EmailFailureReporter;
-import gtfu.SlackFailureReporter;
 import gtfu.FailureReporter;
 import gtfu.FeedInfo;
 import gtfu.ProgressObserver;
 import gtfu.Recipients;
-import gtfu.Util;
+import gtfu.SlackFailureReporter;
 import gtfu.Time;
-import java.util.Date;
+import gtfu.Util;
 
 /**
  * Daily checks and updates on each active agency's feed.
@@ -32,7 +33,6 @@ public class CheckFeedExpiration {
      * @param agencyIDList A list of agencyIDs
      */
     public static void checkFeedExpiration(String[] agencyIDList, boolean sendEmailAlert, boolean sendSlackAlert) throws Exception {
-
         AgencyYML yml = new AgencyYML();
         Recipients r = new Recipients();
         String[] recipients = r.get("error_report");
