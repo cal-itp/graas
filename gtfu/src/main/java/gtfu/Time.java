@@ -197,4 +197,33 @@ public class Time {
     public static long getNextDaySeconds(long timestamp) {
         return timestamp + SECONDS_PER_DAY;
     }
+
+    public static Date getDateFromYYYYMMDD(String yyyyMMDD) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        try {
+            return dateFormat.parse(yyyyMMDD);
+        } catch (ParseException e) {
+            throw new RuntimeException("Error parsing date: " + e.getMessage(), e);
+        }
+    }
+
+    public static String millisToYYYYMMDD(long millis) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+        return formatter.format(new Date(millis));
+    }
+
+    public static int getDayDifferenceInt(String date1YYYYMMDD, String date2YYYYMMDD) {
+        Date date1 = getDateFromYYYYMMDD(date1YYYYMMDD);
+        Date date2 = getDateFromYYYYMMDD(date2YYYYMMDD);
+
+        long diffInMillis = date1.getTime() - date2.getTime();
+        long daysUntilEnd = diffInMillis / MILLIS_PER_DAY;
+
+        return (int) daysUntilEnd;
+    }
+
+    public static int getDaysUntilDateInt(String YYYYMMDD) {
+        String todayYYYYMMDD = millisToYYYYMMDD(Util.now());
+        return getDayDifferenceInt(YYYYMMDD, todayYYYYMMDD);
+    }
 }

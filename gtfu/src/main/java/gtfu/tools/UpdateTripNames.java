@@ -8,7 +8,6 @@ import gtfu.EmailFailureReporter;
 import gtfu.FailureReporter;
 import gtfu.Recipients;
 
-import java.util.Date;
 import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -19,22 +18,13 @@ import java.nio.charset.StandardCharsets;
  */
 public class UpdateTripNames {
     private static final double MAX_LENGTH_CHANGE = 0.05;
-    /**
-     * Runs UpdateTripNames for a single agency
-     * @param agencyID The agencyiD
-     * @param regenerateAll A true value will run the comparison even if there is no recent update detected
-     */
-    public static void UpdateTripNames(String agencyID, boolean regenerateAll) throws Exception {
-        String[] agencyIDList = {agencyID};
-        UpdateTripNames(agencyIDList, regenerateAll);
-    }
 
     /**
      * Checks whether each agency has updated their static GTFS feed since the latest update to trip-names.json. If they have, it runs TripListGenerator, compares the new trip with the old one, and creates a PR if the new one differs.
      * @param agencyIDList A list of agencyIDs
      * @param regenerateAll     A true value will run the comparison even if there is no recent update detected
      */
-    public static void UpdateTripNames(String[] agencyIDList, boolean regenerateAll) throws Exception {
+    public UpdateTripNames(String[] agencyIDList, boolean regenerateAll) throws Exception {
         GitHubUtil gh = new GitHubUtil();
         AgencyYML yml = new AgencyYML();
 
@@ -117,10 +107,10 @@ public class UpdateTripNames {
                 Debug.log("trip-names.json has been updated since the last static GTFS update. Continuing.");
             }
         }
-        if (prCount == 0) {
-            reporter.addLine("...no agencies. Everything looks up to date.");
+        // Send email only if a PR has been created.
+        if (prCount > 0) {
+            reporter.send();
         }
-        reporter.send();
     }
 
     private static void usage() {
@@ -157,14 +147,16 @@ public class UpdateTripNames {
 
         if (agencyID == null && url == null) usage();
 
+        String[] agencyIDList;
         if(url != null){
             ProgressObserver po = new ConsoleProgressObserver(40);
             String context = Util.getURLContent(url, po);
-            String[] agencyIDList = context.split("\n");
-            UpdateTripNames(agencyIDList, regenerateAll);
+            agencyIDList = context.split("\n");
+            
+        } else{
+            // Hacky way to convert string to array of strings
+            agencyIDList = agencyID.split("/n");
         }
-        else{
-            UpdateTripNames(agencyID, regenerateAll);
-        }
+        new UpdateTripNames(agencyIDList, regenerateAll);
     }
 }

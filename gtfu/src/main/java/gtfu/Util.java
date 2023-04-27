@@ -924,6 +924,17 @@ public class Util {
         return collections;
     }
 
+    public static FeedInfo loadFeedInfo(String cacheRoot, String agencyID) {
+        Debug.log("Util.loadFeedInfo()");
+        String path = cacheRoot + "/"  + agencyID;
+        Debug.log("- path: " + path);
+
+        File cd = new File(path + "/feed_info.txt");
+        if (cd.exists()) {
+            return new FeedInfo(path);
+        } else return null;
+    }
+        
     public static Map<String, Object> parseJSONasMap(String path) {
         try {
             return new ObjectMapper().readValue(new File(path), HashMap.class);

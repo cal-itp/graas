@@ -1,11 +1,7 @@
 package gtfu;
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.EntityBuilder;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import java.io.*;
@@ -15,6 +11,10 @@ import java.util.Map;
 public class HTTPClient {
 
 private static Map<String, String> EMPTY_MAP = Collections.EMPTY_MAP;
+
+  static public Integer post(String url, String body) {
+    return post(url, body, null);
+  }
 
   static public Integer post(String url, String body, Map<String, String> headerMap) {
     //Debug.log("- url: " + url);
