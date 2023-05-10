@@ -46,21 +46,23 @@ def create_entity(key=None, exclude_from_indexes=()):
         return datastore.Entity(key, exclude_from_indexes)
 
 # Pull agency IDs & public keys from datastore, save them
-def read_public_keys():
+def read_public_keys(verbose=True):
     """Read public keys for agencies from DB and return as dictionary that maps IDs to keys.
 
     Returns:
         dict: Dictionary that maps IDs to keys.
 
     """
-    print('reading agency IDs and public keys from DB:')
+    if verbose:
+        print('reading agency IDs and public keys from DB:')
     query = datastore_client.query(kind="agency")
     results = list(query.fetch())
     key_map = {}
 
     for agency in results:
-        print('-- id: ' + str(agency['agency-id']))
-        print('-- key: ' + str(agency['public-key']))
+        if verbose:
+            print('-- id: ' + str(agency['agency-id']))
+            print('-- key: ' + str(agency['public-key']))
         key_map[agency['agency-id']] = agency['public-key']
 
     return key_map
