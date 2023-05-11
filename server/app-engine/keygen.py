@@ -1,4 +1,4 @@
-from subprocess import call
+import ecdsa
 from google.cloud import ndb
 import sys
 import os
@@ -10,49 +10,35 @@ class agency(ndb.Model):
     agencyid = ndb.StringProperty('agency-id')
     publickey = ndb.StringProperty('public-key')
 
-def generate(agencyid, path):
+def generate(agencyid):
+	print(f'- ecdsa.__version__: {ecdsa.__version__}')
+
+	sk = ecdsa.SigningKey.generate(curve=ecdsa.NIST256p)
+	token = sk.to_pem(format='pkcs8').decode('utf-8')
+	token = token.replace("PRIVATE KEY", "TOKEN")
+	print(f'token:\n{agencyid}\n{token}')
+
+	vk = sk.get_verifying_key()
+	vkpem = vk.to_pem().decode('utf-8')
+	vkpem = vkpem.replace("\n", "")
+	vkpem = vkpem.replace("-----BEGIN PUBLIC KEY-----", "")
+	vkpem = vkpem.replace("-----END PUBLIC KEY-----", "")
+	print(f'public key:\n{vkpem}')
+
+	print()
+	print('++++++++++++++++++++++++++++++++++++++')
+	print('+++ make sure to add keys to vault +++')
+	print('++++++++++++++++++++++++++++++++++++++')
+
+	# Create gcloud entity and add public key
 	client = ndb.Client()
 
-	dirPath = path + agencyid
-	tmp = dirPath + '/id_ecdsa.tmp'
-	ecdsaPath = dirPath + '/id_ecdsa'
-	pubpem = dirPath + '/id_ecdsa.pub.pem'
-	pub = dirPath + '/id_ecdsa.pub'
-
-	dirExists = os.path.exists(dirPath)
-	if not dirExists:
-		os.mkdir(dirPath)
-
-	# These subprocess/calls should ideally be written in python. There are limitations to the python OpenSSL library but it may still be possible.
-	# A better version of this section wouldn't create actual files - it could read the values straight into python variables
-	call(['openssl','ecparam','-name','prime256v1','-genkey','-noout','-out',tmp])
-	call(['openssl','pkcs8','-topk8','-nocrypt','-in',tmp,'-out',ecdsaPath])
-	os.remove(tmp)
-	call(['openssl','ec','-in',ecdsaPath,'-pubout','-out',pubpem])
-	os.rename(pubpem, pub)
-
-	# Edit private key title
-	with open(ecdsaPath,'r') as file:
-		temp = file.read()
-	temp = temp.replace("PRIVATE KEY", "TOKEN")
-	with open(ecdsaPath,'w') as file:
-		file.write(agencyid  + '\n')
-		file.write(temp)
-
-	# Get public key text from file
-	f = open(pub,'r')
-	temp = f.read()
-	temp = temp.replace("\n", "")
-	temp = temp.replace("-----BEGIN PUBLIC KEY-----", "")
-	id_ecdsa_pub = temp.replace("-----END PUBLIC KEY-----", "")
-
-	# Create glcoud entity and add public key
 	with client.context():
 		print(f'creating entity for {agencyid} and adding public key')
 		newAgency = agency()
 		newAgency.populate(
 			agencyid=agencyid,
-			publickey=id_ecdsa_pub
+			publickey=vkpem
 			)
 		key = newAgency.put()
 
@@ -60,26 +46,34 @@ def generate(agencyid, path):
 
 	return key
 
+def usage(argv):
+	print('*\n* usage: keygen -a <agency-id>\n*')
+	exit(1)
+
 def main(argv):
 	argc = len(sys.argv)
-	path = ''
 	agencyid = None
 
 	for i in range(argc):
 		arg = sys.argv[i]
+
 		if arg == '-a' and i < argc - 1:
 			i += 1
 			agencyid = sys.argv[i]
 
-		if arg == '-p' and i < argc - 1:
-			i += 1
-			path = sys.argv[i]
-
 	if agencyid == None:
-		print('* agencyid is required')
+		usage(argv)
+
+	print('retrieving list of existing public keys...', end='')
+	key_map = util.read_public_keys(verbose=False)
+	print('done')
+	key = key_map.get(agencyid, None)
+
+	if key:
+		print(f'*\n* keys for agency "{agencyid}" already exist, aborting\n*')
 		exit(1)
 
-	generate(agencyid,path)
+	generate(agencyid)
 
 if __name__ == '__main__':
 	main(sys.argv[1:])

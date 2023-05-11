@@ -482,6 +482,57 @@ def new_pos_sig():
 
     return Response(json.dumps(obj), mimetype='application/json')
 
+@app.route('/web-admin', methods=['GET, POST'])
+def web_admin():
+    print('/web-admin')
+
+    if request.method == 'GET':
+        """
+        - check if web-admin token is present. If not, collect
+        - user picks betweem add and remove agency
+        - for add, collect many fields
+        - for remove, collect agency ID
+        - assemble json command and sign
+        - submit on user button press
+        - wait for reply, display token as QR code or error details if something went awry
+        """
+        fn = 'static/web-admin.html'
+        content = util.get_file(fn, 'r')
+        return Response(content, mimetype='text/html')
+
+    data = request.json.get('data', None)
+
+    if data == None:
+        abort(400)
+
+    agency = data.get('agency-id', None)
+
+    if agency != 'web-admin':
+        return Response(f'{{"command": "web-admin", "status": "unauthorized"}}', mimetype='application/json')
+
+    result = verify_request(request, 'web-admin')
+    if not result['verified']:
+        return result['response']
+
+    cmd = data.get('cmd', None)
+
+    if cmd == 'add-agency':
+        """
+        - create key pair
+        - add public key to DB
+        - create agency config file with fields from json command
+        - return token to client for display
+        - update live-agencies.txt
+        """
+    elif cmd == 'remove-agency':
+        """
+        - remove public key from DB
+        - remove agency config file
+        - updatd live-agencies.txt
+        """
+    else:
+        return Response(f'{{"command": "web-admin", "status": "unknown command"}}', mimetype='application/json')
+
 if __name__ == '__main__':
     argc = len(sys.argv)
     certfile = None
