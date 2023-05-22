@@ -1,6 +1,6 @@
 Flask==2.0.3
 google-auth<2
-requests==2.23.0
+requests==2.31.0
 gtfs-realtime-bindings==0.0.7
 six==1.14.0
 pycrypto==2.6.1
