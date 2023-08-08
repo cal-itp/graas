@@ -488,13 +488,38 @@ def web_admin():
 
     if request.method == 'GET':
         """
-        - check if web-admin token is present. If not, collect
-        - user picks betweem add and remove agency
-        - for add, collect many fields
-        - for remove, collect agency ID
+        - check if web-admin token is present. If not, collect [dialog overlay]. Confirm that token works by sending hello message. Save to local storage if valid
+        - command selection
+          -> list active agencies with associated config data [dynamically create table of config data tables]
+          -> edit active agency
+             + enter agency ID [text field]
+          -> add new agency
+             + enter agency ID [text field]
+             + enter agency display name [text field]
+             + enter GTFS URL [text field], confirm that URL points to a gtfz.zip file
+             + manual or bulk trip assignment [drop down] if user selects "manual" create manual div below
+               -> bulk: configure automatic block data generation
+                  . use-bulk-assignment-mode: true
+               -> manual
+                  . use-bulk-assignment-mode: false
+
+                  collect, with info button showing explanation upon click:
+
+                    +
+                    \  field name    |  input component | info icon |
+                    +
+
+                  . filter displayed trips by [label]
+                  .   current day of week? toggle (is-filter-by-day-of-week)
+                  .   matching start time? toggle and text field (max-mins-from-start)
+                  .   distance from first stop? toggle and text field (max-feet-from-stop)
+                  . generate display trip names from: dropdown (triplist-generator-namefield)
+                  . use trip direction for display trip names? toggle (triplist-generator-use-direction)
+          -> remove active agency:
+             + enter agency ID
         - assemble json command and sign
         - submit on user button press
-        - wait for reply, display token as QR code or error details if something went awry
+        - wait for reply, display response data(token as QR code, delete confirmation, etc.) or error details if something went awry. Delete token from local storage if no longer valid
         """
         fn = 'static/web-admin.html'
         content = util.get_file(fn, 'r')
