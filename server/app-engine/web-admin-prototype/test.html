@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Admin UI</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="test.js"></script>
+</head>
+<body>
+  <h3>Web Administration for GRaaS</h3>
+  <div class="form-group">
+    <label for="dropdown">Actions:</label>
+    <select id="action-dropdown" class="drop-down" onchange="handleDropDownChange(event)">
+      <option value="add-agency">Add Agency</option>
+      <option value="remove-agency">Remove Agency</option>
+    </select>
+  </div>
+
+ <hr>
+
+
+
+  <div class="form-group">
+    <label for="text-input">Text Input:</label>
+    <input type="text" id="text-input" class="input-field">
+  </div>
+  <div class="form-group">
+    <label for="email-input">Email Input:</label>
+    <input type="email" id="email-input" class="input-field">
+  </div>
+  <div class="form-group">
+    <label for="password-input">Password Input:</label>
+    <input type="password" id="password-input" class="input-field">
+  </div>
+  <div class="form-group">
+    <label for="checkbox">Checkbox:</label>
+    <input type="checkbox" id="checkbox" class="check-box">
+  </div>
+  <div class="form-group">
+    <label for="radio">Radio Button:</label>
+    <input type="radio" id="radio" class="radio-button">
+  </div>
+  <div class="form-group">
+    <label for="dropdown">Dropdown:</label>
+    <select id="dropdown" class="drop-down">
+      <option value="option1">Option 1</option>
+      <option value="option2">Option 2</option>
+      <option value="option3">Option 3</option>
+    </select>
+  </div>
+
+  <h1>Buttons</h1>
+  <div class="button-group">
+    <button class="primary-button">Primary Button</button>
+    <button class="secondary-button">Secondary Button</button>
+    <button class="success-button">Success Button</button>
+    <button class="danger-button">Danger Button</button>
+  </div>
+
+  <h1>Miscellaneous Components</h1>
+  <div class="misc-group">
+    <div class="alert">This is an alert message.</div>
+    <div class="tooltip">Hover me for a tooltip<span class="tooltip-text">This is a tooltip text.</span></div>
+    <div class="modal">
+      <h2>Modal Title</h2>
+      <p>This is the modal content.</p>
+    </div>
+  </div>
+  <h1>Sample Table</h1>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>John Doe</td>
+        <td>john.doe@example.com</td>
+        <td>Admin</td>
+      </tr>
+      <tr>
+        <td>Jane Smith</td>
+        <td>jane.smith@example.com</td>
+        <td>User</td>
+      </tr>
+      <!-- Add more rows as needed -->
+    </tbody>
+  </table>
+</body>
+</html>
+

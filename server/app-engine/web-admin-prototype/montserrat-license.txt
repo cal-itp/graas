@@ -1,0 +1,19 @@
+Font Details
+Internal Info
+copyright
+Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+license
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+licenseUrl
+http://scripts.sil.org/OFL
+designer
+Julieta Ulanovsky
+designerUrl
+http://www.zkysky.com.ar/
+version
+Version 7.200;PS 007.200;hotconv 1.0.88;makeotf.lib2.5.64775
+vendor
+Julieta Ulanovsky
+vendorUrl
+http://www.zkysky.com.ar/
+967 codepoints in 1853 glyphs
