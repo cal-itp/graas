@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import com.google.transit.realtime.GtfsRealtime.Position;
 
 public class MonitorPositionUpdates {
+    private static final String API_KEY_ARG = "-api-key";
+    private static final String API_KEY_NAME_ARG = "-api-key-name";
     private static final String RAW_ARG = "-raw";
     private static final String CSV_ARG = "-csvoutput";
     private static final String ID_ARG = "-id";
@@ -196,6 +200,8 @@ public class MonitorPositionUpdates {
     public static void main(String[] arg) throws Exception {
         String id = null;
         String lookupFile = null;
+        String apiKeyName = "x-api-key";
+        String apiKey = null;
         boolean raw = false;
         boolean csvoutput = false;
         boolean help = false;
@@ -208,6 +214,14 @@ public class MonitorPositionUpdates {
         });
 
         for (int i=0; i<arg.length; i++) {
+            if (arg[i].equals(API_KEY_ARG) && i + 1 < arg.length) {
+                apiKey = arg[++i];
+            }
+
+            if (arg[i].equals(API_KEY_NAME_ARG) && i + 1 < arg.length) {
+                apiKeyName = arg[++i];
+            }
+
             if (arg[i].equals(RAW_ARG)) {
                 raw = true;
             }
@@ -268,19 +282,35 @@ public class MonitorPositionUpdates {
                 Util.disableSSLChecking();
             }
 
-            try (InputStream is = url.openStream()) {
-                FeedMessage msg = FeedMessage.parseFrom(is);
+            URLConnection conn = url.openConnection();
 
-                if (!csvoutput) {
-                    dumpRawFeed(msg, id != null ? id : url.toString());
-                } else {
-                    dumpCSV(msg);
+            try (AutoCloseable ac = () -> ((HttpURLConnection)conn).disconnect()) {
+                if (apiKey != null ) {
+                    conn.setRequestProperty(apiKeyName, apiKey);
+                }
+
+                try (InputStream is = conn.getInputStream()) {
+                    FeedMessage msg = FeedMessage.parseFrom(is);
+
+                    if (!csvoutput) {
+                        dumpRawFeed(msg, id != null ? id : url.toString());
+                    } else {
+                        dumpCSV(msg);
+                    }
                 }
             }
         } else {
             for (;;) {
-                try (InputStream is = url.openStream()) {
-                    dumpFeed(FeedMessage.parseFrom(is), id);
+                URLConnection conn = url.openConnection();
+
+                try (AutoCloseable ac = () -> ((HttpURLConnection)conn).disconnect()) {
+                    if (apiKey != null ) {
+                        conn.setRequestProperty(apiKeyName, apiKey);
+                    }
+
+                    try (InputStream is = conn.getInputStream()) {
+                        dumpFeed(FeedMessage.parseFrom(is), id);
+                    }
                 }
 
                 Util.sleep(sleepMillis);
