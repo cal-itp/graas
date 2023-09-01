@@ -11,7 +11,8 @@ from batch_writer import BatchWriter
 import util
 
 STOP_UPDATE_MAX_LIFE = 3 * 60 # 3 minutes in seconds
-POS_MAX_LIFE = 30 * 60 # 30 minutes in seconds
+### TODO change to 15 mins after confirming that we can reproduce issue
+POS_MAX_LIFE = 15 * 60 # 30 minutes in seconds
 MAX_BLOCK_STALE_MILLIS = 60 * 1000
 WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000
 DAY_SECONDS = 24 * 60 * 60
@@ -876,11 +877,24 @@ def handle_pos_update(datastore_client, data):
             return result
 
     entity = util.create_entity(key=entity_key)
-    entity.update(data)
+    update_is_current = False
 
-    #then = time.time()
-    batch_writer.add(entity, 'current-position-' + entity['agency-id'] + '-' + entity['vehicle-id'])
+    with datastore_client.transaction():
+        persisted = datastore_client.get(entity_key)
 
-    #print(f'- profile datastore_client.put(): {time.time() - then} seconds')
+        if persisted == None:
+            # if there is no previous persisted position
+            # then new position is current
+            update_is_current = True
+        else:
+            pt = persisted.get('timestamp', 0)
+            if timestamp > pt:
+                update_is_current = True
 
-    return result
+        if update_is_current:
+            entity.update(data)
+            datastore_client.put(entity)
+            return result
+        else:
+            return {'status': 'out-of-sequence update'}
+
