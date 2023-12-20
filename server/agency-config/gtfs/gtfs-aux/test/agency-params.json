@@ -3,6 +3,6 @@
 "max-mins-from-start": 1440,
 "max-feet-from-stop": 1000000,
 "ignore-start-end-date": false,
-"use-bulk-assignment-mode": true
+"use-bulk-assignment-mode": false
 }
 
